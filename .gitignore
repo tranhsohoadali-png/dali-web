@@ -1,0 +1,46 @@
+# ─── Dependencies (cài lại bằng composer/npm trên hosting) ───
+/vendor
+/node_modules
+
+# ─── Build & cache ───
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/.phpunit.cache
+.phpunit.result.cache
+
+# ─── File nhạy cảm – TUYỆT ĐỐI không đẩy lên ───
+.env
+.env.backup
+.env.production
+auth.json
+
+# ─── Database SQLite local (dùng MySQL trên hosting) ───
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# ─── Cache tự sinh (Laravel tự tạo lại) ───
+/bootstrap/cache/*.php
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+
+# ─── Log & tạm ───
+npm-debug.log
+yarn-error.log
+/storage/logs/*.log
+
+# ─── IDE / công cụ local ───
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+/.claude
+
+# ─── Backup ───
+*.bak
+/public/images/logo_dali_original.jpg

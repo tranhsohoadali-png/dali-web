@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dat-hang
+Disallow: /kiem-tra-ma-giam-gia
+
+# Sitemap – thay YOUR_DOMAIN bằng domain thực tế
+Sitemap: https://YOUR_DOMAIN/sitemap.xml
