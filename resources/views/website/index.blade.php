@@ -305,15 +305,21 @@ section{padding:72px 5%}
 
 /* ─── CATEGORIES ─── */
 .categories{background:var(--wh)}
-.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
 .cat-card{
   position:relative;overflow:hidden;border-radius:18px;
-  height:250px;cursor:pointer;transition:transform .3s;
-  border:1.5px solid var(--bd);
+  aspect-ratio:1/1;cursor:pointer;transition:transform .3s,box-shadow .3s;
+  border:1.5px solid var(--bd);display:block;background:var(--gll);
 }
-.cat-card:hover{transform:scale(1.04)}
-.cat-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
-.cat-card:hover img{transform:scale(1.1)}
+.cat-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(58,122,10,.18);border-color:var(--g)}
+.cat-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s;display:block}
+.cat-card:hover img{transform:scale(1.05)}
+/* Nhãn "Xem chủ đề" hiện khi hover (cho banner đã có chữ sẵn) */
+.cat-hover{position:absolute;left:0;right:0;bottom:0;padding:14px;display:flex;justify-content:center;
+  background:linear-gradient(to top,rgba(28,82,0,.85),transparent);opacity:0;transition:opacity .3s}
+.cat-card:hover .cat-hover{opacity:1}
+.cat-hover span{background:var(--gn);color:var(--char);font-size:13px;font-weight:800;padding:8px 18px;border-radius:50px}
+/* Fallback (danh mục chưa có ảnh bìa) */
 .cat-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(28,82,0,.75) 0%,transparent 55%)}
 .cat-info{position:absolute;bottom:0;left:0;right:0;padding:18px;color:#fff}
 .cat-info h3{font-size:17px;font-weight:800;margin-bottom:3px}
@@ -746,15 +752,18 @@ footer{
     @forelse($categories as $cat)
     <a class="cat-card" href="{{ route('category', $cat->slug) }}" style="text-decoration:none">
       @if($cat->image)
+        {{-- Banner đã có chữ sẵn → hiện sạch, chỉ thêm nhãn khi hover --}}
         <img src="{{ asset('storage/'.$cat->image) }}" alt="{{ $cat->name }}">
+        <div class="cat-hover"><span>👉 Xem chủ đề {{ $cat->name }}</span></div>
       @else
+        {{-- Chưa có ảnh bìa → kiểu cũ có chữ --}}
         <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" alt="">
+        <div class="cat-overlay"></div>
+        <div class="cat-info">
+          <h3>{{ $cat->icon }} {{ $cat->name }}</h3>
+          <span>{{ $cat->products_count }} mẫu tranh</span>
+        </div>
       @endif
-      <div class="cat-overlay"></div>
-      <div class="cat-info">
-        <h3>{{ $cat->icon }} {{ $cat->name }}</h3>
-        <span>{{ $cat->products_count }} mẫu tranh</span>
-      </div>
     </a>
     @empty
     <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--tx3)">
