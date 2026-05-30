@@ -783,22 +783,8 @@ footer{
     <p>Được hàng nghìn khách hàng lựa chọn và đánh giá cao nhất.</p>
   </div>
 
-  {{-- Filter tabs theo danh mục --}}
-  @if($categories->count() > 0)
-  <div id="catTabs" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;justify-content:center">
-    <button class="cat-tab active" data-cat="all" onclick="filterByCategory('all')">
-      🎨 Tất cả
-    </button>
-    @foreach($categories as $cat)
-    <button class="cat-tab" data-cat="{{ $cat->id }}" onclick="filterByCategory('{{ $cat->id }}')">
-      {{ $cat->icon }} {{ $cat->name }}
-    </button>
-    @endforeach
-  </div>
-  @endif
-
   <div class="products-grid" id="productsGrid">
-    @forelse($products as $p)
+    @forelse($products->take(8) as $p)
     <div class="product-card" data-cat="{{ $p->category_id }}">
       <a href="{{ route('product', $p->slug) }}" class="product-img" style="display:block;text-decoration:none">
         @if($p->main_image)
