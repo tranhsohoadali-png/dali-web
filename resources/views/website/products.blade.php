@@ -177,7 +177,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 .pagination{display:flex;gap:6px;margin-top:28px;flex-wrap:wrap;justify-content:center}
 .pagination a,.pagination span{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1.5px solid var(--bd);color:var(--tx2);background:#fff;transition:all .2s}
 .pagination a:hover{background:var(--g);color:#fff;border-color:var(--g)}
-.pagination .active span{background:var(--g);color:#fff;border-color:var(--g)}
+.pagination .active{background:var(--g);color:#fff;border-color:var(--g)}
 .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .cat-tab{padding:7px 16px;border-radius:50px;border:1.5px solid var(--bd);background:#fff;font-size:12px;font-weight:700;color:var(--tx2);cursor:pointer;text-decoration:none;transition:all .2s}
 .cat-tab:hover,.cat-tab.active{background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border-color:var(--g)}
@@ -279,7 +279,25 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     @endforeach
   </div>
   @if($products->hasPages())
-  <div class="pagination">{{ $products->links() }}</div>
+  <div class="pagination">
+    @if($products->onFirstPage())
+      <span style="opacity:.35;cursor:default">‹ Trước</span>
+    @else
+      <a href="{{ $products->previousPageUrl() }}" rel="prev">‹ Trước</a>
+    @endif
+    @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+      @if($page == $products->currentPage())
+        <span class="active">{{ $page }}</span>
+      @else
+        <a href="{{ $url }}">{{ $page }}</a>
+      @endif
+    @endforeach
+    @if($products->hasMorePages())
+      <a href="{{ $products->nextPageUrl() }}" rel="next">Sau ›</a>
+    @else
+      <span style="opacity:.35;cursor:default">Sau ›</span>
+    @endif
+  </div>
   @endif
   @else
   <div class="no-products">

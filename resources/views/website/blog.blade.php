@@ -37,7 +37,7 @@ nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:68px;paddi
 .pagination{display:flex;gap:6px;margin-top:28px;flex-wrap:wrap;justify-content:center}
 .pagination a,.pagination span{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1.5px solid var(--bd);color:var(--tx2);background:#fff;transition:all .2s}
 .pagination a:hover{background:var(--g);color:#fff;border-color:var(--g)}
-.pagination .active span{background:var(--g);color:#fff;border-color:var(--g)}
+.pagination .active{background:var(--g);color:#fff;border-color:var(--g)}
 footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255,.7);padding:30px 5%;margin-top:32px}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:18px;display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.3)}
 @media(max-width:900px){.posts-grid{grid-template-columns:repeat(2,1fr)}}
@@ -104,7 +104,25 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   </div>
 
   @if($posts->hasPages())
-  <div class="pagination">{{ $posts->links() }}</div>
+  <div class="pagination">
+    @if($posts->onFirstPage())
+      <span style="opacity:.35;cursor:default">‹ Trước</span>
+    @else
+      <a href="{{ $posts->previousPageUrl() }}" rel="prev">‹ Trước</a>
+    @endif
+    @foreach($posts->getUrlRange(1, $posts->lastPage()) as $page => $url)
+      @if($page == $posts->currentPage())
+        <span class="active">{{ $page }}</span>
+      @else
+        <a href="{{ $url }}">{{ $page }}</a>
+      @endif
+    @endforeach
+    @if($posts->hasMorePages())
+      <a href="{{ $posts->nextPageUrl() }}" rel="next">Sau ›</a>
+    @else
+      <span style="opacity:.35;cursor:default">Sau ›</span>
+    @endif
+  </div>
   @endif
 </div>
 
