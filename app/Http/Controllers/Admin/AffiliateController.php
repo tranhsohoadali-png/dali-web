@@ -6,6 +6,7 @@ use App\Models\Affiliate;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class AffiliateController extends Controller
 {
@@ -28,6 +29,7 @@ class AffiliateController extends Controller
             'phone'           => 'nullable|string|max:20',
             'email'           => 'nullable|email|max:100',
             'code'            => 'nullable|string|max:30|unique:affiliates,code',
+            'password'        => 'nullable|string|min:4|max:50',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
@@ -35,6 +37,12 @@ class AffiliateController extends Controller
             'is_active'       => 'nullable|boolean',
             'note'            => 'nullable|string|max:500',
         ]);
+        // Mật khẩu đăng nhập CTV
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
         // Auto-generate code if empty
         if (empty($data['code'])) {
             $data['code'] = 'DALI_' . strtoupper(Str::slug($data['name'], '_'));
@@ -71,6 +79,7 @@ class AffiliateController extends Controller
             'name'            => 'required|string|max:100',
             'phone'           => 'nullable|string|max:20',
             'email'           => 'nullable|email|max:100',
+            'password'        => 'nullable|string|min:4|max:50',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
@@ -78,6 +87,12 @@ class AffiliateController extends Controller
             'is_active'       => 'nullable|boolean',
             'note'            => 'nullable|string|max:500',
         ]);
+        // Chỉ đổi mật khẩu khi admin nhập mới
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
         $data['is_active']       = $request->boolean('is_active', true);
         $data['commission_rate'] = $data['commission_rate'] ?? 5;
         $affiliate->update($data);

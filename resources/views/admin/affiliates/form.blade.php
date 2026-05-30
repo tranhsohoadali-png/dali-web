@@ -93,6 +93,14 @@
             </div>
 
             <div class="divider"></div>
+            <div class="sec-t">Đăng nhập cổng CTV</div>
+            <div class="g1">
+              <label class="flabel">Mật khẩu đăng nhập @if($affiliate)<span style="font-size:10px;color:var(--tx3);font-weight:400;margin-left:5px">(để trống = giữ mật khẩu cũ)</span>@endif</label>
+              <input type="text" name="password" class="dinput" value="" placeholder="{{ $affiliate ? 'Nhập mật khẩu mới để đổi…' : 'VD: 123456' }}" autocomplete="off">
+              <div class="fnote">CTV đăng nhập tại <b>{{ url('/ctv/dang-nhap') }}</b> bằng <b>Số điện thoại</b> + mật khẩu này.</div>
+            </div>
+
+            <div class="divider"></div>
             <div class="sec-t">Thông tin ngân hàng</div>
             <div class="g3">
               <div><label class="flabel">Ngân hàng</label><input type="text" name="bank_name" class="dinput" value="{{ old('bank_name',$affiliate->bank_name??'') }}" placeholder="Vietcombank"></div>

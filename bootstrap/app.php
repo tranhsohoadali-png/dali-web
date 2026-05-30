@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'admin.auth' => \App\Http\Middleware\AdminAuth::class,
+            'ctv.auth'   => \App\Http\Middleware\CtvAuth::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\TrackVisit::class,

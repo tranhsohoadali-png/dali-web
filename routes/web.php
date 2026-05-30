@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\WithdrawalController;
+use App\Http\Controllers\CtvController;
 
 // ─── FRONTEND ───────────────────────────────────
 Route::get('/',                  [WebsiteController::class, 'index'])->name('home');
@@ -40,6 +42,21 @@ Route::post('/kiem-tra-ma-giam-gia', [WebsiteController::class, 'checkCoupon'])-
 Route::post('/danh-gia',               [WebsiteController::class, 'submitReview'])->name('submit-review');
 Route::get('/sitemap.xml',             [WebsiteController::class, 'sitemap'])->name('sitemap');
 Route::post('/dat-hang/confirm',  [WebsiteController::class, 'confirmPayment'])->name('place-order.confirm');
+
+// ─── CỔNG CỘNG TÁC VIÊN (CTV) ───────────────────
+Route::prefix('ctv')->name('ctv.')->group(function () {
+    Route::get('dang-nhap',  [CtvController::class, 'showLogin'])->name('login');
+    Route::post('dang-nhap', [CtvController::class, 'login'])->name('login.post');
+    Route::get('dang-xuat',  [CtvController::class, 'logout'])->name('logout');
+
+    Route::middleware('ctv.auth')->group(function () {
+        Route::get('/',           [CtvController::class, 'dashboard'])->name('dashboard');
+        Route::get('don-hang',    [CtvController::class, 'orders'])->name('orders');
+        Route::get('len-don',     [CtvController::class, 'createOrder'])->name('order.create');
+        Route::post('len-don',    [CtvController::class, 'storeOrder'])->name('order.store');
+        Route::post('rut-tien',   [CtvController::class, 'withdraw'])->name('withdraw');
+    });
+});
 
 // ─── ADMIN AUTH ─────────────────────────────────
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -78,6 +95,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::resource('affiliates', AffiliateController::class)->except(['show']);
     Route::get('affiliates/{affiliate}/detail',   [AffiliateController::class, 'show'])->name('affiliates.show');
     Route::post('affiliates/{affiliate}/paid',    [AffiliateController::class, 'markPaid'])->name('affiliates.paid');
+
+    // Yêu cầu rút tiền
+    Route::get('withdrawals',                       [WithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::post('withdrawals/{withdrawal}/approve', [WithdrawalController::class, 'approve'])->name('withdrawals.approve');
+    Route::post('withdrawals/{withdrawal}/reject',  [WithdrawalController::class, 'reject'])->name('withdrawals.reject');
 
     // Mã giảm giá
     Route::resource('coupons', CouponController::class)->except(['show']);
