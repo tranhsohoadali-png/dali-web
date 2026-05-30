@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ReviewController;
 // ─── FRONTEND ───────────────────────────────────
 Route::get('/',                  [WebsiteController::class, 'index'])->name('home');
 Route::get('/san-pham',          [WebsiteController::class, 'products'])->name('products');
+Route::get('/chu-de/{category:slug}', [WebsiteController::class, 'categoryCombo'])->name('category');
 Route::get('/san-pham/{product:slug}', [WebsiteController::class, 'product'])->name('product');
 Route::get('/tra-cuu-don-hang',  [WebsiteController::class, 'trackOrder'])->name('track-order');
 Route::post('/dat-hang',         [WebsiteController::class, 'placeOrder'])->name('place-order');

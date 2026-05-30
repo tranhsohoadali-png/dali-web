@@ -47,6 +47,16 @@ class WebsiteController extends Controller
         return view('website.products', compact('products','categories','settings'));
     }
 
+    public function categoryCombo(Category $category)
+    {
+        if (!$category->is_active) abort(404);
+        $products = Product::where('category_id', $category->id)->where('is_active', true)
+            ->orderBy('sort_order')->orderByDesc('sold_count')->get();
+        $sizes    = \App\Models\Size::where('is_active', true)->orderBy('sort_order')->get();
+        $settings = DB::table('admin_settings')->pluck('value','key');
+        return view('website.category-combo', compact('category','products','sizes','settings'));
+    }
+
     public function product(Product $product)
     {
         if (!$product->is_active) abort(404);

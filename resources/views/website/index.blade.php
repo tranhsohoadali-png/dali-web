@@ -744,7 +744,7 @@ footer{
   </div>
   <div class="cat-grid">
     @forelse($categories as $cat)
-    <a class="cat-card" href="{{ route('products', ['category' => $cat->slug]) }}" style="text-decoration:none">
+    <a class="cat-card" href="{{ route('category', $cat->slug) }}" style="text-decoration:none">
       @if($cat->image)
         <img src="{{ asset('storage/'.$cat->image) }}" alt="{{ $cat->name }}">
       @else
