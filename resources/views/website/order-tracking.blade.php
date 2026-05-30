@@ -263,5 +263,6 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 <div class="zalo-chat-widget" data-oaid="{{ $settings['zalo_oa_id'] }}" data-welcome-message="Xin chào!" data-autopopup="0" data-width="350" data-height="420"></div>
 <script src="https://sp.zalo.me/plugins/sdk.js"></script>
 @endif
+@include('partials.float-widget')
 </body>
 </html>

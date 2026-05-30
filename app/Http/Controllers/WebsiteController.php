@@ -270,22 +270,35 @@ class WebsiteController extends Controller
     {
         $productId = (int) $request->input('product_id');
         $qty       = max(1, (int) $request->input('quantity', 1));
+        $sizeId    = (int) $request->input('size_id', 0);
         $product   = Product::find($productId);
         if (!$product) {
             return response()->json(['success'=>false,'message'=>'Sản phẩm không tồn tại']);
         }
+
+        // Lấy giá + tên theo kích thước đã chọn (từ bảng giá chung)
+        $size = $sizeId ? \App\Models\Size::find($sizeId) : null;
+        if (!$size) {
+            // fallback: kích thước nhỏ nhất của sản phẩm
+            $size = $product->sizes()->first();
+        }
+        $price     = $size ? (int) $size->price : (int) $product->price;
+        $sizeLabel = $size ? $size->label : ($product->size ?? '');
+        $sizeKey   = $size ? $size->id : 0;
+
         $cart = session('cart', []);
-        $key  = 'p' . $productId;
+        $key  = 'p' . $productId . '_s' . $sizeKey;
         if (isset($cart[$key])) {
             $cart[$key]['quantity'] += $qty;
         } else {
             $cart[$key] = [
-                'product_id'  => $productId,
-                'name'        => $product->name,
-                'size'        => $product->size,
-                'price'       => $product->price,
-                'main_image'  => $product->main_image,
-                'quantity'    => $qty,
+                'product_id' => $productId,
+                'size_id'    => $sizeKey,
+                'name'       => $product->name,
+                'size'       => $sizeLabel,
+                'price'      => $price,
+                'main_image' => $product->main_image,
+                'quantity'   => $qty,
             ];
         }
         session(['cart' => $cart]);
@@ -295,7 +308,7 @@ class WebsiteController extends Controller
 
     public function updateCart(Request $request)
     {
-        $key  = 'p' . (int)$request->input('product_id');
+        $key  = (string) $request->input('key');
         $qty  = max(0, (int)$request->input('quantity', 0));
         $cart = session('cart', []);
         if ($qty === 0) {
@@ -311,7 +324,7 @@ class WebsiteController extends Controller
 
     public function removeFromCart(Request $request)
     {
-        $key  = 'p' . (int)$request->input('product_id');
+        $key  = (string) $request->input('key');
         $cart = session('cart', []);
         unset($cart[$key]);
         session(['cart' => $cart]);

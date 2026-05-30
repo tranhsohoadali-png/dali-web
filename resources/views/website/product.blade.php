@@ -336,6 +336,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       </div>
 
       <button class="btn-order-main" onclick="openOrderDetail()">🛒 Đặt mua ngay</button>
+      <button class="btn-track" style="cursor:pointer;margin-bottom:10px" onclick="addDetailToCart()">➕ Thêm vào giỏ hàng</button>
       <a href="{{ route('track-order') }}" class="btn-track">🔍 Tra cứu đơn hàng đã đặt</a>
 
       <div class="trust-row">
@@ -624,6 +625,18 @@ function openOrderDetail(){
   var sub = (sizeLabel ? sizeLabel : '') + (sizeLabel && colors ? ' · ' : '') + colors;
   openOrder('{{ addslashes($product->name) }}', sub, priceStr, '{{ $product->main_image ? asset("storage/".$product->main_image) : "" }}', {{ $product->id }}, qty);
 }
+async function addDetailToCart(){
+  var qty=parseInt(document.getElementById('detailQty').value)||1;
+  var sizeId = SELECTED_SIZE ? SELECTED_SIZE.id : 0;
+  try{
+    var res=await fetch('{{ route("cart.add") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({product_id:{{ $product->id }},size_id:sizeId,quantity:qty})});
+    var d=await res.json();
+    if(d.success){
+      var badge=document.getElementById('cartCount'); if(badge) badge.textContent=d.count;
+      showToast('✅ Đã thêm vào giỏ! Bấm 🛒 để xem giỏ hàng');
+    } else showToast('❌ '+(d.message||'Có lỗi'));
+  }catch(e){showToast('❌ Lỗi kết nối');}
+}
 function openOrder(name,size,price,img,productId,qty){
   gOrder={name:name,size:size,price:parseVnd(price),priceStr:price,img:img||'',productId:productId||null};
   document.getElementById('oImg').src=img||'';
@@ -696,5 +709,6 @@ document.getElementById('qtyInput').addEventListener('input',updateSummary);
 <script src="https://sp.zalo.me/plugins/sdk.js"></script>
 @endif
 
+@include('partials.float-widget')
 </body>
 </html>

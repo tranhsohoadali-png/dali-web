@@ -198,7 +198,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   <div class="nav-right">
     <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone">📞 {{ $settings['shop_phone'] ?? '0123456789' }}</a>
     <a href="{{ route('track-order') }}" class="nav-tracuu" style="font-size:13px;color:rgba(255,255,255,.75);text-decoration:none;font-weight:500">🔍 Tra cứu đơn</a>
-    <a href="#" class="btn-order-nav" onclick="openOrder('Tranh DALI','Chọn khi đặt hàng','Liên hệ','');return false">Đặt hàng</a>
+    <a href="#" class="btn-order-nav" onclick="document.querySelector('.products-grid')?.scrollIntoView({behavior:'smooth'});return false">Mua ngay</a>
     <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
   </div>
 </nav>
@@ -525,5 +525,6 @@ document.querySelectorAll('.product-fav').forEach(b=>b.addEventListener('click',
 <div class="zalo-chat-widget" data-oaid="{{ $settings['zalo_oa_id'] }}" data-welcome-message="Xin chào!" data-autopopup="0" data-width="350" data-height="420"></div>
 <script src="https://sp.zalo.me/plugins/sdk.js"></script>
 @endif
+@include('partials.float-widget')
 </body>
 </html>

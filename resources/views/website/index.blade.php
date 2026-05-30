@@ -1149,4 +1149,7 @@ async function submitOrder(){
   }catch(e){showToast('❌ Lỗi kết nối. Vui lòng thử lại.');}
   btn.disabled=false;document.getElementById('submitText').textContent='Tiếp theo →';
 }
->
+</script>
+@include('partials.float-widget')
+</body>
+</html>

@@ -128,7 +128,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     @if(count($cart) > 0)
     <div id="cartItems">
       @foreach($cart as $key => $item)
-      <div class="cart-item" id="item-{{ $item['product_id'] }}">
+      <div class="cart-item" id="item-{{ $key }}">
         <div class="ci-img">
           @if($item['main_image'])
           <img src="{{ asset('storage/'.$item['main_image']) }}" alt="{{ $item['name'] }}" style="width:100%;height:100%;object-fit:cover;border-radius:9px">
@@ -143,12 +143,12 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
           <div class="qty-ctrl">
-            <button class="qty-b" onclick="changeQty({{ $item['product_id'] }},-1)">−</button>
-            <input class="qty-i" type="number" value="{{ $item['quantity'] }}" min="1" max="99" onchange="setQty({{ $item['product_id'] }},this.value)">
-            <button class="qty-b" onclick="changeQty({{ $item['product_id'] }},1)">+</button>
+            <button class="qty-b" onclick="changeQty('{{ $key }}',-1)">−</button>
+            <input class="qty-i" type="number" value="{{ $item['quantity'] }}" min="1" max="99" onchange="setQty('{{ $key }}',this.value)">
+            <button class="qty-b" onclick="changeQty('{{ $key }}',1)">+</button>
           </div>
-          <div style="font-size:14px;font-weight:900;color:var(--g)" id="sub-{{ $item['product_id'] }}">{{ number_format($item['price']*$item['quantity'],0,',','.')}}đ</div>
-          <button class="ci-del" onclick="removeItem({{ $item['product_id'] }})">✕</button>
+          <div style="font-size:14px;font-weight:900;color:var(--g)" id="sub-{{ $key }}">{{ number_format($item['price']*$item['quantity'],0,',','.')}}đ</div>
+          <button class="ci-del" onclick="removeItem('{{ $key }}')">✕</button>
         </div>
       </div>
       @endforeach
@@ -267,30 +267,30 @@ function fmtVnd(n){return Math.round(n).toLocaleString('vi-VN')+'đ';}
 function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 
 // Cart operations
-async function changeQty(id,delta){
-  var input=document.querySelector('#item-'+id+' .qty-i');
+async function changeQty(key,delta){
+  var input=document.querySelector('#item-'+key+' .qty-i');
   var newQty=Math.max(1,parseInt(input.value)+delta);
-  input.value=newQty; await setQty(id,newQty);
+  input.value=newQty; await setQty(key,newQty);
 }
-async function setQty(id,qty){
+async function setQty(key,qty){
   qty=Math.max(1,parseInt(qty)||1);
-  var res=await fetch('{{ route("cart.update") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({product_id:id,quantity:qty})});
+  var res=await fetch('{{ route("cart.update") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({key:key,quantity:qty})});
   var d=await res.json();
-  if(d.success){updateCartDisplay(id,qty);updateSummary();}
+  if(d.success){updateCartDisplay(key,qty);updateSummary();}
 }
-async function removeItem(id){
+async function removeItem(key){
   if(!confirm('Xoá sản phẩm khỏi giỏ hàng?'))return;
-  var res=await fetch('{{ route("cart.remove") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({product_id:id})});
+  var res=await fetch('{{ route("cart.remove") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({key:key})});
   var d=await res.json();
-  if(d.success){document.getElementById('item-'+id).remove();delete CART_DATA['p'+id];updateSummary();showToast('🗑️ Đã xoá khỏi giỏ hàng');}
+  if(d.success){document.getElementById('item-'+key).remove();delete CART_DATA[key];updateSummary();showToast('🗑️ Đã xoá khỏi giỏ hàng');if(Object.keys(CART_DATA).length===0)location.reload();}
 }
 async function clearCart(){
   if(!confirm('Xoá tất cả sản phẩm khỏi giỏ hàng?'))return;
-  for(var key in CART_DATA){var id=CART_DATA[key].product_id;await fetch('{{ route("cart.remove") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({product_id:id})});}
+  for(var key in CART_DATA){await fetch('{{ route("cart.remove") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({key:key})});}
   location.reload();
 }
-function updateCartDisplay(id,qty){
-  if(CART_DATA['p'+id]){CART_DATA['p'+id].quantity=qty;var price=CART_DATA['p'+id].price;document.getElementById('sub-'+id).textContent=fmtVnd(price*qty);}
+function updateCartDisplay(key,qty){
+  if(CART_DATA[key]){CART_DATA[key].quantity=qty;var price=CART_DATA[key].price;document.getElementById('sub-'+key).textContent=fmtVnd(price*qty);}
 }
 
 // Summary
@@ -364,5 +364,6 @@ async function doCheckout(){
 
 selectPay('BANK');
 </script>
+@include('partials.float-widget')
 </body>
 </html>
