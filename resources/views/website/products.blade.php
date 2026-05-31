@@ -159,8 +159,8 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
 .product-card{background:#fff;border-radius:18px;overflow:hidden;border:1.5px solid var(--bd);transition:transform .3s,box-shadow .3s}
 .product-card:hover{transform:translateY(-8px);box-shadow:0 16px 44px rgba(58,122,10,.12)}
-.product-img{position:relative;height:220px;overflow:hidden;display:block;text-decoration:none}
-.product-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.product-img{position:relative;height:240px;overflow:hidden;display:block;text-decoration:none;background:linear-gradient(135deg,var(--gll),#fff)}
+.product-img img{width:100%;height:100%;object-fit:contain;transition:transform .4s}
 .product-card:hover .product-img img{transform:scale(1.06)}
 .product-badge{position:absolute;top:12px;left:12px;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:50px;z-index:2}
 .product-info{padding:15px}
