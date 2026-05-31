@@ -54,6 +54,7 @@ Route::prefix('ctv')->name('ctv.')->group(function () {
         Route::get('don-hang',    [CtvController::class, 'orders'])->name('orders');
         Route::get('len-don',     [CtvController::class, 'createOrder'])->name('order.create');
         Route::post('len-don',    [CtvController::class, 'storeOrder'])->name('order.store');
+        Route::get('rut-tien',    [CtvController::class, 'withdrawPage'])->name('withdraw.page');
         Route::post('rut-tien',   [CtvController::class, 'withdraw'])->name('withdraw');
     });
 });

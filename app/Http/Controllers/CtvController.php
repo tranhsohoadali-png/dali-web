@@ -131,7 +131,15 @@ class CtvController extends Controller
             "Đã lên đơn {$code} thành công! Hoa hồng dự kiến: " . number_format($commission, 0, ',', '.') . 'đ');
     }
 
-    // ─── RÚT TIỀN ──────────────────────────────
+    // ─── TRANG RÚT TIỀN ────────────────────────
+    public function withdrawPage(Request $request)
+    {
+        $ctv = $request->attributes->get('ctv');
+        $withdrawals = $ctv->withdrawals()->paginate(15);
+        return view('ctv.withdraw', compact('ctv', 'withdrawals'));
+    }
+
+    // ─── XỬ LÝ RÚT TIỀN ───────────────────────
     public function withdraw(Request $request)
     {
         $ctv = $request->attributes->get('ctv');
@@ -159,6 +167,6 @@ class CtvController extends Controller
             'note'         => $data['note'] ?? null,
         ]);
 
-        return back()->with('success', 'Đã gửi yêu cầu rút ' . number_format($data['amount'], 0, ',', '.') . 'đ. Quản trị viên sẽ duyệt và chuyển khoản sớm.');
+        return redirect()->route('ctv.withdraw.page')->with('success', 'Đã gửi yêu cầu rút ' . number_format($data['amount'], 0, ',', '.') . 'đ. Quản trị viên sẽ duyệt và chuyển khoản sớm.');
     }
 }

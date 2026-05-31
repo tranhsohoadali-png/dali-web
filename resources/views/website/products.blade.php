@@ -194,6 +194,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <li><a href="{{ route('home') }}#ve-chung-toi">Về chúng tôi</a></li>
     <li><a href="{{ route('home') }}#huong-dan">Hướng dẫn</a></li>
     <li><a href="{{ route('home') }}#lien-he">Liên hệ</a></li>
+    <li><a href="{{ route('ctv.login') }}" style="background:rgba(198,241,53,.12);border:1.5px solid rgba(198,241,53,.35);border-radius:50px;padding:4px 12px;font-size:12.5px;font-weight:700;color:#C6F135;border-bottom:none">👥 Cộng Tác Viên</a></li>
   </ul>
   <div class="nav-right">
     <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone">📞 {{ $settings['shop_phone'] ?? '0123456789' }}</a>
@@ -207,6 +208,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   <a href="{{ route('products') }}">🎨 Sản phẩm</a>
   <a href="{{ route('track-order') }}">🔍 Tra cứu đơn hàng</a>
   <a href="{{ route('home') }}#lien-he">📞 Liên hệ</a>
+  <a href="{{ route('ctv.login') }}" style="background:rgba(198,241,53,.15);border:1px solid rgba(198,241,53,.4);color:#C6F135!important;border-radius:8px">👥 Đăng nhập CTV</a>
 </div>
 
 <div class="sakura-strip"><span class="petal">🌸</span><span class="petal">✿</span><span class="petal">🍃</span><span class="petal">🌸</span><span class="sak-text">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>

@@ -93,6 +93,8 @@ nav.nav-visible{box-shadow:0 4px 20px rgba(58,122,10,.3)}
   transition:all .2s;
 }
 .nav-links a:hover{color:#fff;border-bottom-color:var(--gn)}
+.nav-ctv-link{background:rgba(198,241,53,.12);border:1.5px solid rgba(198,241,53,.35)!important;border-radius:50px!important;padding:4px 12px!important;font-size:12.5px!important;font-weight:700!important;color:var(--gn)!important;border-bottom:none!important;transition:all .2s}
+.nav-ctv-link:hover{background:rgba(198,241,53,.25)!important;color:#fff!important;transform:translateY(-1px)}
 .nav-right{display:flex;align-items:center;gap:12px}
 .nav-phone{
   font-size:13px;font-weight:600;color:rgba(255,255,255,.85);
@@ -668,6 +670,7 @@ footer{
     <li><a href="{{ route('blog') }}">Blog</a></li>
     <li><a href="#ve-chung-toi">Về chúng tôi</a></li>
     <li><a href="#lien-he">Liên hệ</a></li>
+    <li><a href="{{ route('ctv.login') }}" class="nav-ctv-link">👥 Cộng Tác Viên</a></li>
   </ul>
   <div class="nav-right">
     <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone">📞 {{ $settings['shop_phone'] ?? '0123 456 789' }}</a>
@@ -691,6 +694,7 @@ footer{
   <a href="{{ route('cart') }}">🛒 Giỏ hàng</a>
   <a href="{{ route('track-order') }}">🔍 Tra cứu đơn hàng</a>
   <a href="#lien-he">📞 Liên hệ</a>
+  <a href="{{ route('ctv.login') }}" style="background:rgba(198,241,53,.15);border:1px solid rgba(198,241,53,.4);color:var(--gn)!important;border-radius:8px">👥 Đăng nhập CTV</a>
 </div>
 
 <!-- SAKURA -->
