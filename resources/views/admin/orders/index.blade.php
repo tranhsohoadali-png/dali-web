@@ -72,6 +72,7 @@ tr:hover td{background:var(--gll)}
           <input type="date" name="date" class="dinput" value="{{ request('date') }}">
           <button type="submit" class="btn-f">Lọc</button>
           @if(request()->hasAny(['search','date']))<a href="{{ route('admin.orders.index',['status'=>request('status')]) }}" style="font-size:12px;color:var(--pk);font-weight:700;text-decoration:none">✕ Xoá lọc</a>@endif
+          <a href="{{ route('admin.orders.export',request()->only(['status','date_from','date_to'])) }}" class="btn-f" style="background:linear-gradient(135deg,#16A34A,#22C55E);text-decoration:none">⬇ Xuất CSV</a>
         </div>
       </form>
 

@@ -142,6 +142,13 @@ tr:hover td{background:var(--gll)}
         </div>
       </div>
 
+      <!-- DOANH THU 12 THÁNG -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="rainbow"></div>
+        <div class="card-h"><div class="card-t">📅 Doanh thu theo tháng (12 tháng gần nhất)</div></div>
+        <div style="padding:16px 20px"><canvas id="monthlyChart" height="120"></canvas></div>
+      </div>
+
       <!-- TRUY CẬP + TỈNH/THÀNH -->
       <div class="grid2">
         <!-- Biểu đồ lượt truy cập 7 ngày -->
@@ -224,6 +231,30 @@ new Chart(ctx, {
     ]
   },
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v>=1000?Math.round(v/1000)+'K':v,font:{size:10}}},y1:{position:'right',beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{display:false}}}}
+});
+
+// ── Biểu đồ doanh thu 12 tháng ──
+var mctx = document.getElementById('monthlyChart').getContext('2d');
+var mlabels   = {!! json_encode(array_column($monthly_chart,'label')) !!};
+var mrevenues = {!! json_encode(array_column($monthly_chart,'revenue')) !!};
+var morders   = {!! json_encode(array_column($monthly_chart,'orders')) !!};
+new Chart(mctx, {
+  type:'bar',
+  data:{
+    labels:mlabels,
+    datasets:[
+      {label:'Doanh thu (đ)',data:mrevenues,backgroundColor:'rgba(107,191,31,.35)',borderColor:'#6BBF1F',borderWidth:2,borderRadius:6,yAxisID:'y'},
+      {label:'Đơn hàng',data:morders,type:'line',borderColor:'#FF8FB1',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#FF8FB1',fill:false,yAxisID:'y1'},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:11}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(c.datasetIndex===0?c.raw.toLocaleString('vi-VN')+'đ':c.raw+' đơn');}}}},
+    scales:{
+      y:{beginAtZero:true,ticks:{callback:v=>v>=1000000?Math.round(v/1000000)+'tr':(v>=1000?Math.round(v/1000)+'k':v),font:{size:10}}},
+      y1:{position:'right',beginAtZero:true,ticks:{stepSize:1,font:{size:10}},grid:{display:false}}
+    }
+  }
 });
 
 // ── Biểu đồ lượt truy cập 7 ngày ──

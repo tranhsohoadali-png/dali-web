@@ -202,6 +202,72 @@ class CtvController extends Controller
             'note'         => $data['note'] ?? null,
         ]);
 
+        // ── Telegram notification ──
+        $settings  = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value', 'key');
+        $tgToken   = $settings['tg_token'] ?? null;
+        $tgChat    = $settings['tg_chat_id'] ?? null;
+        if ($tgToken && $tgChat) {
+            $msg = "💸 YÊU CẦU RÚT TIỀN CTV\n"
+                 . "━━━━━━━━━━━━━━━━━━\n"
+                 . "👤 CTV: " . $ctv->name . " (" . $ctv->phone . ")\n"
+                 . "💰 Số tiền: " . number_format($data['amount'], 0, ',', '.') . "đ\n"
+                 . "🏦 Ngân hàng: " . $ctv->bank_name . "\n"
+                 . "💳 Số TK: " . $ctv->bank_acc . "\n"
+                 . "👤 Chủ TK: " . $ctv->bank_owner . "\n"
+                 . "🕐 Thời gian: " . now()->format('H:i d/m/Y') . "\n"
+                 . "━━━━━━━━━━━━━━━━━━\n"
+                 . "Vào trang admin để duyệt yêu cầu.";
+            $ch = curl_init("https://api.telegram.org/bot{$tgToken}/sendMessage");
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                'chat_id' => $tgChat,
+                'text'    => $msg,
+            ]));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_exec($ch);
+            curl_close($ch);
+        }
+
         return redirect()->route('ctv.withdraw.page')->with('success', 'Đã gửi yêu cầu rút ' . number_format($data['amount'], 0, ',', '.') . 'đ. Quản trị viên sẽ duyệt và chuyển khoản sớm.');
+    }
+
+    // ─── HỒ SƠ CTV ─────────────────────────────
+    public function profile(Request $request)
+    {
+        $ctv = $request->attributes->get('ctv');
+        return view('ctv.profile', compact('ctv'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $ctv = $request->attributes->get('ctv');
+
+        $data = $request->validate([
+            'bank_name'            => 'required|string|max:100',
+            'bank_acc'             => 'required|string|max:50',
+            'bank_owner'           => 'required|string|max:100',
+            'new_password'         => 'nullable|string|min:6|confirmed',
+        ], [
+            'bank_name.required'   => 'Vui lòng nhập tên ngân hàng.',
+            'bank_acc.required'    => 'Vui lòng nhập số tài khoản.',
+            'bank_owner.required'  => 'Vui lòng nhập tên chủ tài khoản.',
+            'new_password.min'     => 'Mật khẩu mới tối thiểu 6 ký tự.',
+            'new_password.confirmed' => 'Xác nhận mật khẩu không khớp.',
+        ]);
+
+        $update = [
+            'bank_name'  => $data['bank_name'],
+            'bank_acc'   => $data['bank_acc'],
+            'bank_owner' => $data['bank_owner'],
+        ];
+
+        if (!empty($data['new_password'])) {
+            $update['password'] = Hash::make($data['new_password']);
+        }
+
+        $ctv->update($update);
+
+        return redirect()->route('ctv.profile')->with('success', 'Đã cập nhật hồ sơ thành công.');
     }
 }

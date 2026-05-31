@@ -67,12 +67,32 @@ class WebsiteController extends Controller
 
     public function trackOrder(Request $request)
     {
-        $order = null;
+        $order  = null;
+        $orders = null; // nhiều đơn khi tìm bằng SĐT
+
         if ($request->filled('code')) {
-            $order = Order::with('items')->where('code', strtoupper(trim($request->code)))->first();
+            $q = strtoupper(trim($request->code));
+            // Tìm theo mã đơn
+            $order = Order::with('items.product')->where('code', $q)->first();
+            // Nếu không thấy mã đơn, thử tìm theo SĐT
+            if (!$order) {
+                $phone = preg_replace('/\D/', '', $q);
+                if (strlen($phone) >= 9) {
+                    $orders = Order::with('items')
+                        ->where('customer_phone', 'like', '%'.$phone.'%')
+                        ->latest()->take(20)->get();
+                    if ($orders->count() === 1) {
+                        $order  = $orders->first()->load('items.product');
+                        $orders = null;
+                    } elseif ($orders->isEmpty()) {
+                        $orders = null;
+                    }
+                }
+            }
         }
+
         $settings = \DB::table('admin_settings')->pluck('value','key');
-        return view('website.order-tracking', compact('order','settings'));
+        return view('website.order-tracking', compact('order','orders','settings'));
     }
 
     public function placeOrder(Request $request)

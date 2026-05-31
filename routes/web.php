@@ -56,6 +56,8 @@ Route::prefix('ctv')->name('ctv.')->group(function () {
         Route::post('len-don',    [CtvController::class, 'storeOrder'])->name('order.store');
         Route::get('rut-tien',    [CtvController::class, 'withdrawPage'])->name('withdraw.page');
         Route::post('rut-tien',   [CtvController::class, 'withdraw'])->name('withdraw');
+        Route::get('ho-so',       [CtvController::class, 'profile'])->name('profile');
+        Route::post('ho-so',      [CtvController::class, 'updateProfile'])->name('profile.update');
     });
 });
 
@@ -83,6 +85,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
 
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/export',                [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/{order}',               [OrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/status',       [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::delete('orders/{order}',            [OrderController::class, 'destroy'])->name('orders.destroy');

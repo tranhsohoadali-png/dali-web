@@ -174,6 +174,9 @@ td{padding:11px 10px;border-bottom:1px solid #EAF6D8;vertical-align:middle;color
   <a href="{{ route('ctv.withdraw.page') }}" class="{{ request()->routeIs('ctv.withdraw.page') ? 'act' : '' }}">
     <span class="ic">💳</span>Rút tiền
   </a>
+  <a href="{{ route('ctv.profile') }}" class="{{ request()->routeIs('ctv.profile') ? 'act' : '' }}">
+    <span class="ic">👤</span>Hồ sơ
+  </a>
 </nav>
 @endif
 

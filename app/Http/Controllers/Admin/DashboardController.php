@@ -50,6 +50,19 @@ class DashboardController extends Controller
             ->get();
         $province_total = (int) Order::whereNotNull('customer_city')->where('customer_city','!=','')->count();
 
+        // ── Doanh thu 12 tháng qua ──
+        $monthly_chart = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $m = now()->subMonths($i);
+            $ym = $m->format('Y-m');
+            $monthly_chart[] = [
+                'label'   => $m->format('m/Y'),
+                'orders'  => Order::where('created_at','like',$ym.'%')->count(),
+                'revenue' => (int) Order::where('created_at','like',$ym.'%')
+                    ->whereIn('status',['confirmed','packing','shipping','delivered'])->sum('total'),
+            ];
+        }
+
         $recent_orders = Order::latest()->take(8)->get();
 
         $top_products = Order::join('order_items','orders.id','=','order_items.order_id')
@@ -69,6 +82,6 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('admin.dashboard', compact('stats','recent_orders','top_products','chart_data','visit_chart','province_stats','province_total'));
+        return view('admin.dashboard', compact('stats','recent_orders','top_products','chart_data','visit_chart','province_stats','province_total','monthly_chart'));
     }
 }

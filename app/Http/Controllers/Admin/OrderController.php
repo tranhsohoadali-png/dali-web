@@ -42,4 +42,62 @@ class OrderController extends Controller
         $order->delete();
         return back()->with('success', 'Đã xoá đơn hàng!');
     }
+
+    // ── XUẤT CSV ──────────────────────────────────
+    public function export(Request $request)
+    {
+        $query = Order::with('items')->latest();
+        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('date_from')) $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('date_to'))   $query->whereDate('created_at', '<=', $request->date_to);
+        $orders = $query->get();
+
+        $filename = 'don-hang-dali-' . now()->format('Y-m-d') . '.csv';
+        $headers  = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($orders) {
+            $fh = fopen('php://output', 'w');
+            // BOM UTF-8 để Excel đọc tiếng Việt đúng
+            fputs($fh, "\xEF\xBB\xBF");
+            fputcsv($fh, ['Mã đơn','Ngày đặt','Khách hàng','SĐT','Tỉnh/TP','Sản phẩm','Kích thước','Số lượng','Đơn giá','Tiền hàng','Phí ship','Tổng','Thanh toán','Trạng thái','Mã CTV','Hoa hồng CTV','Ghi chú']);
+            foreach ($orders as $o) {
+                foreach ($o->items as $item) {
+                    fputcsv($fh, [
+                        $o->code,
+                        $o->created_at->format('d/m/Y H:i'),
+                        $o->customer_name,
+                        $o->customer_phone,
+                        $o->customer_city,
+                        $item->product_name,
+                        $item->product_size,
+                        $item->quantity,
+                        $item->price,
+                        $item->subtotal,
+                        $o->ship_fee,
+                        $o->total,
+                        $o->payment_label,
+                        $o->status_label,
+                        $o->affiliate_code ?? '',
+                        $o->affiliate_commission ?? 0,
+                        $o->note,
+                    ]);
+                }
+                if ($o->items->isEmpty()) {
+                    fputcsv($fh, [
+                        $o->code, $o->created_at->format('d/m/Y H:i'),
+                        $o->customer_name, $o->customer_phone, $o->customer_city,
+                        '', '', '', '', '', $o->ship_fee, $o->total,
+                        $o->payment_label, $o->status_label,
+                        $o->affiliate_code ?? '', $o->affiliate_commission ?? 0, $o->note,
+                    ]);
+                }
+            }
+            fclose($fh);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

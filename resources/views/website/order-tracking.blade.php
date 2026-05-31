@@ -98,24 +98,56 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 
 <div class="page-hero">
   <h1>🔍 Tra cứu đơn hàng</h1>
-  <p>Nhập mã đơn hàng để xem trạng thái giao hàng</p>
+  <p>Nhập mã đơn hoặc số điện thoại để xem trạng thái giao hàng</p>
 </div>
 
 <div class="search-section">
   <div class="search-card">
-    <div class="search-title">Nhập mã đơn hàng</div>
-    <div class="search-sub">Mã đơn có dạng DALI-XXXXXX, được gửi sau khi bạn đặt hàng thành công</div>
+    <div class="search-title">Tra cứu đơn hàng</div>
+    <div class="search-sub">Nhập <b>mã đơn</b> (DALI-XXXXXX) hoặc <b>số điện thoại</b> đặt hàng</div>
     <form method="GET" action="{{ route('track-order') }}" class="search-form">
-      <input type="text" name="code" class="search-input" placeholder="DALI-847291" value="{{ request('code') }}" autocomplete="off" style="text-transform:uppercase">
+      <input type="text" name="code" class="search-input" placeholder="DALI-847291 hoặc 0901234567" value="{{ request('code') }}" autocomplete="off">
       <button type="submit" class="search-btn">Tra cứu</button>
     </form>
-    @if(request('code') && !$order)
+    @if(request('code') && !$order && !isset($orders))
     <div style="margin-top:14px;background:#FFF0F0;border-left:3px solid #EF4444;border-radius:8px;padding:11px 14px;font-size:13px;color:#991B1B;font-weight:600">
-      ❌ Không tìm thấy đơn hàng với mã <b>{{ strtoupper(request('code')) }}</b>. Vui lòng kiểm tra lại.
+      ❌ Không tìm thấy đơn hàng với <b>{{ request('code') }}</b>. Vui lòng kiểm tra lại mã hoặc SĐT.
     </div>
     @endif
   </div>
 </div>
+
+{{-- DANH SÁCH ĐƠN KHI TÌM BẰNG SĐT (nhiều đơn) --}}
+@isset($orders)
+@if($orders && $orders->count() > 0)
+<div class="result-section">
+  <div style="font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:14px">
+    📋 Tìm thấy <b>{{ $orders->count() }}</b> đơn hàng với số điện thoại <b>{{ request('code') }}</b>:
+  </div>
+  @foreach($orders as $o)
+  <div class="order-card" style="margin-bottom:16px;cursor:pointer" onclick="window.location='{{ route('track-order') }}?code={{ $o->code }}'">
+    <div class="order-card-top"></div>
+    <div class="order-head" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="order-code">{{ $o->code }}</div>
+        <div class="order-date">{{ $o->created_at->format('d/m/Y H:i') }} · {{ $o->items->count() }} sản phẩm</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:18px;font-weight:900;color:var(--g)">{{ number_format($o->total,0,',','.') }}đ</div>
+        <span class="status-badge" style="color:{{ $o->status_color }};border-color:{{ $o->status_color }}">{{ $o->status_label }}</span>
+      </div>
+    </div>
+    <div style="padding:10px 20px 14px;font-size:13px;color:var(--tx2)">
+      @foreach($o->items as $item)
+        <div style="padding:4px 0">· {{ $item->product_name }} @if($item->product_size)<span style="color:var(--tx3)">({{ $item->product_size }})</span>@endif × {{ $item->quantity }}</div>
+      @endforeach
+      <div style="margin-top:6px;font-size:12px;color:var(--g);font-weight:700">Bấm để xem chi tiết →</div>
+    </div>
+  </div>
+  @endforeach
+</div>
+@endif
+@endisset
 
 @if($order)
 <div class="result-section">
