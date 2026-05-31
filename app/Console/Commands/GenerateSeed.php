@@ -76,13 +76,13 @@ class GenerateSeed extends Command
             $name  = addslashes($p->name);
             $slug  = addslashes($p->slug);
             $desc  = addslashes($p->description ?? '');
-            $img   = addslashes($p->image ?? '');
+            $img   = addslashes($p->main_image ?? '');
             $sizes = json_encode($p->size_ids ?? []);
             $act   = $p->is_active ? 'true' : 'false';
-            $feat  = $p->is_featured ? 'true' : 'false';
+
             $php .= "            ['id'=>{$p->id},'category_id'=>{$p->category_id},'name'=>'{$name}','slug'=>'{$slug}',"
-                 .  "'description'=>'{$desc}','image'=>'{$img}','price'=>{$p->price},'color_count'=>{$p->color_count},"
-                 .  "'size_ids'=>'{$sizes}','is_active'=>{$act},'is_featured'=>{$feat},'sort_order'=>{$p->sort_order},"
+                 .  "'description'=>'{$desc}','main_image'=>'{$img}','price'=>{$p->price},'colors_count'=>{$p->colors_count},"
+                 .  "'size_ids'=>'{$sizes}','is_active'=>{$act},'sort_order'=>{$p->sort_order},"
                  .  "'sold_count'=>{$p->sold_count},'created_at'=>\$now,'updated_at'=>\$now],\n";
         }
         $php .= "        ]);\n\n";
