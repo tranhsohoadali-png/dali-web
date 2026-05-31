@@ -90,7 +90,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <li><a href="{{ route('products') }}">Sản phẩm</a></li>
   </ul>
   <div class="nav-right">
-    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone">📞 {{ $settings['shop_phone'] ?? '0123456789' }}</a>
+    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ $settings['shop_phone'] ?? '0123456789' }}</a>
     <a href="{{ route('products') }}" class="btn-nav">Mua sắm</a>
   </div>
 </nav>

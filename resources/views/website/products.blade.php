@@ -194,11 +194,11 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <li><a href="{{ route('home') }}#ve-chung-toi">Về chúng tôi</a></li>
     <li><a href="{{ route('home') }}#huong-dan">Hướng dẫn</a></li>
     <li><a href="{{ route('home') }}#lien-he">Liên hệ</a></li>
-    <li><a href="{{ route('ctv.login') }}" style="background:rgba(198,241,53,.12);border:1.5px solid rgba(198,241,53,.35);border-radius:50px;padding:4px 12px;font-size:12.5px;font-weight:700;color:#C6F135;border-bottom:none">👥 Cộng Tác Viên</a></li>
+    <li><a href="{{ route('ctv.login') }}" style="background:rgba(198,241,53,.12);border:1.5px solid rgba(198,241,53,.35);border-radius:50px;padding:4px 12px;font-size:12.5px;font-weight:700;color:#C6F135;border-bottom:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="3.5"/></svg>Cộng Tác Viên</a></li>
   </ul>
   <div class="nav-right">
-    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone">📞 {{ $settings['shop_phone'] ?? '0123456789' }}</a>
-    <a href="{{ route('track-order') }}" class="nav-tracuu" style="font-size:13px;color:rgba(255,255,255,.75);text-decoration:none;font-weight:500">🔍 Tra cứu đơn</a>
+    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ $settings['shop_phone'] ?? '0123456789' }}</a>
+    <a href="{{ route('track-order') }}" class="nav-tracuu" style="font-size:13px;color:rgba(255,255,255,.75);text-decoration:none;font-weight:500"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Tra cứu đơn</a>
     <a href="#" class="btn-order-nav" onclick="document.querySelector('.products-grid')?.scrollIntoView({behavior:'smooth'});return false">Mua ngay</a>
     <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
   </div>

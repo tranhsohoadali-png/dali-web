@@ -684,17 +684,17 @@ footer{
     <li><a href="{{ route('blog') }}">Blog</a></li>
     <li><a href="#ve-chung-toi">Về chúng tôi</a></li>
     <li><a href="#lien-he">Liên hệ</a></li>
-    <li><a href="{{ route('ctv.login') }}" class="nav-ctv-link">👥 Cộng Tác Viên</a></li>
+    <li><a href="{{ route('ctv.login') }}" class="nav-ctv-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="3.5"/></svg>Cộng Tác Viên</a></li>
   </ul>
   <div class="nav-right">
-    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone">📞 {{ $settings['shop_phone'] ?? '0123 456 789' }}</a>
+    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ $settings['shop_phone'] ?? '0123 456 789' }}</a>
     <div class="nav-search">
       <input type="text" id="navSearch" placeholder="Tìm tranh..." oninput="timKiem(event)">
-      <span class="nav-search-icon">🔍</span>
+      <span class="nav-search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
       <div class="search-dropdown" id="searchDropdown"></div>
     </div>
     <button class="nav-cart" onclick="window.location='{{ route('cart') }}'" title="Giỏ hàng">
-      🛒<span class="cart-counter" id="cartCount">0</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.2l2.1 11.4a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.3L21 7H6.2"/></svg><span class="cart-counter" id="cartCount">0</span>
     </button>
     <a href="{{ route('products') }}" class="btn-order-nav">Mua ngay</a>
     <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
