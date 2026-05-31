@@ -307,12 +307,19 @@ section{padding:72px 5%}
 
 /* ─── CATEGORIES ─── */
 .categories{background:var(--wh);overflow:hidden}
-/* ── Marquee danh mục: tự trượt sang trái ── */
+/* ── Marquee danh mục: tự trượt + nút sang trang ── */
+.cat-marquee-wrap{position:relative;max-width:1340px;margin:0 auto;padding:0 8px}
 .cat-marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.cat-track{display:flex;gap:20px;width:max-content;animation:catScroll 90s linear infinite}
-.cat-track:hover{animation-play-state:paused}
-@keyframes catScroll{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 10px))}}
-@media(prefers-reduced-motion:reduce){.cat-track{animation:none}}
+.cat-track{display:flex;gap:20px;width:max-content;will-change:transform}
+/* Nút mũi tên */
+.cat-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:6;width:48px;height:48px;border-radius:50%;
+  background:#fff;border:1.5px solid var(--bd);color:var(--gd);font-size:26px;font-weight:700;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 18px rgba(58,122,10,.18);transition:all .2s}
+.cat-nav:hover{background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border-color:var(--g);transform:translateY(-50%) scale(1.08)}
+.cat-nav:active{transform:translateY(-50%) scale(.95)}
+.cat-prev{left:-2px}
+.cat-next{right:-2px}
+@media(max-width:600px){.cat-nav{width:40px;height:40px;font-size:22px}}
 .cat-card{
   position:relative;overflow:hidden;border-radius:18px;
   flex:0 0 clamp(210px,24vw,290px);aspect-ratio:1/1;
@@ -760,9 +767,12 @@ footer{
     <p>Từ phong cảnh thiên nhiên đến chân dung, từ hoa lá đến thành phố.</p>
   </div>
   @if($categories->count())
-  <div class="cat-marquee">
+  <div class="cat-marquee-wrap">
+    <button class="cat-nav cat-prev" type="button" aria-label="Danh mục trước" onclick="catJump(1)">‹</button>
+    <button class="cat-nav cat-next" type="button" aria-label="Danh mục tiếp" onclick="catJump(-1)">›</button>
+    <div class="cat-marquee">
     {{-- Nhân đôi danh sách (concat) để trượt lặp liền mạch --}}
-    <div class="cat-track">
+    <div class="cat-track" id="catTrack">
       @foreach($categories->concat($categories) as $cat)
       <a class="cat-card" href="{{ route('category', $cat->slug) }}" style="text-decoration:none" aria-hidden="{{ $loop->index >= $categories->count() ? 'true' : 'false' }}">
         @if($cat->image)
@@ -779,6 +789,7 @@ footer{
       </a>
       @endforeach
     </div>
+    </div>
   </div>
   @else
   <div style="text-align:center;padding:40px;color:var(--tx3)">
@@ -786,6 +797,30 @@ footer{
   </div>
   @endif
 </section>
+
+<script>
+(function(){
+  var track=document.getElementById('catTrack'); if(!track) return;
+  var wrap=track.parentNode;            // .cat-marquee
+  var pos=0, setW=0, speed=0, paused=false;
+  function measure(){ setW=track.scrollWidth/2; speed=setW/(90*60); }  // 1 vòng ~90s
+  function wrapPos(){ if(pos<=-setW) pos+=setW; if(pos>0) pos-=setW; }
+  function apply(){ track.style.transform='translateX('+pos+'px)'; }
+  measure(); window.addEventListener('resize', function(){ measure(); });
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function frame(){ if(!paused&&!reduce){ pos-=speed; wrapPos(); apply(); } requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+  var wrapEl=wrap.parentNode;           // .cat-marquee-wrap
+  wrapEl.addEventListener('mouseenter', function(){ paused=true; });
+  wrapEl.addEventListener('mouseleave', function(){ paused=false; });
+  // Nút sang trang: nhảy ~2 thẻ mỗi lần bấm (tức thì, không bị khoảng trắng)
+  window.catJump=function(dir){
+    var card=track.querySelector('.cat-card');
+    var step=card?(card.offsetWidth+20)*2:560;
+    pos+=dir*step; wrapPos(); apply();
+  };
+})();
+</script>
 
 {{-- ────────────────────────────────────────
    SECTION: PRODUCTS – lấy từ DB

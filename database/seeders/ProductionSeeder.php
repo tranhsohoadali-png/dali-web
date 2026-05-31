@@ -55,7 +55,7 @@ class ProductionSeeder extends Seeder
             ['id'=>4,'name'=>'Tranh trẻ em','slug'=>'tre-em','description'=>'Bộ tranh tô màu số mini khổ nhỏ 20×20, 30×30cm - dễ thương, dễ tô, phù hợp cho trẻ em và người mới bắt đầu.','image'=>'categories/tre-em.jpg','is_active'=>true,'created_at'=>$now,'updated_at'=>$now],
             ['id'=>5,'name'=>'Tranh Công giáo','slug'=>'cong-giao','description'=>'Tranh tô màu số chủ đề Công giáo - Chúa Giêsu, Đức Mẹ Maria, Thánh Gia... ý nghĩa thiêng liêng cho không gian thờ phượng.','image'=>'categories/cong-giao.jpg','is_active'=>true,'created_at'=>$now,'updated_at'=>$now],
             ['id'=>6,'name'=>'Tranh Phật','slug'=>'phat-giao','description'=>'Tranh tô màu số chủ đề Phật giáo - Đức Phật, Quan Âm Bồ Tát, Phật A Di Đà... khổ nhỏ 20×20, 30×30cm, thanh tịnh cho không gian thiền.','image'=>'categories/phat.jpg','is_active'=>true,'created_at'=>$now,'updated_at'=>$now],
-            ['id'=>7,'name'=>'Tranh Phật Khổ Lớn','slug'=>'phat-lon','description'=>'Tranh tô màu số Phật giáo khổ lớn 40×50 đến 80×100cm - Đức Phật, Quan Âm, Địa Tạng, Phật A Di Đà... trang nghiêm cho phòng thờ, phòng khách.','image'=>'categories/phat.jpg','is_active'=>true,'created_at'=>$now,'updated_at'=>$now],
+            ['id'=>7,'name'=>'Tranh Phật Khổ Lớn','slug'=>'phat-lon','description'=>'Tranh tô màu số Phật giáo khổ lớn 40×50 đến 80×100cm - Đức Phật, Quan Âm, Địa Tạng, Phật A Di Đà... trang nghiêm cho phòng thờ, phòng khách.','image'=>'categories/phat-lon.jpg','is_active'=>true,'created_at'=>$now,'updated_at'=>$now],
         ]);
 
         // ── Kích thước & giá ──
