@@ -65,9 +65,13 @@ class CtvController extends Controller
     public function createOrder(Request $request)
     {
         $ctv = $request->attributes->get('ctv');
-        $products = Product::where('is_active', true)->orderBy('name')->get();
+        $products = Product::with('category')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
         $sizes = Size::where('is_active', true)->orderBy('sort_order')->get()->keyBy('id');
-        return view('ctv.order-create', compact('ctv', 'products', 'sizes'));
+        $categories = $products->pluck('category.name','category_id')->filter()->unique()->sort();
+        return view('ctv.order-create', compact('ctv', 'products', 'sizes', 'categories'));
     }
 
     public function storeOrder(Request $request)
