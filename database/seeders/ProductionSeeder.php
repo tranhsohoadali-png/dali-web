@@ -21,7 +21,7 @@ class ProductionSeeder extends Seeder
             ['key'=>'bank_acc','value'=>'13001011945010','created_at'=>$now,'updated_at'=>$now],
             ['key'=>'bank_name','value'=>'DOAN ANH TUAN','created_at'=>$now,'updated_at'=>$now],
             ['key'=>'bank_label','value'=>'TT DALI TRANH','created_at'=>$now,'updated_at'=>$now],
-            ['key'=>'shop_phone','value'=>'0856.911.698','created_at'=>$now,'updated_at'=>$now],
+            ['key'=>'shop_phone','value'=>'0856911698','created_at'=>$now,'updated_at'=>$now],
             ['key'=>'shop_address','value'=>'Thôn Bắc Cường, Xã Minh Thái, Tỉnh Ninh Bình','created_at'=>$now,'updated_at'=>$now],
             ['key'=>'ga_id','value'=>'','created_at'=>$now,'updated_at'=>$now],
             ['key'=>'fb_pixel_id','value'=>'','created_at'=>$now,'updated_at'=>$now],
