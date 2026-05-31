@@ -128,7 +128,15 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   <div>
     <h1 class="c-title">{{ $category->icon }} Tổng hợp tranh tô màu số hóa chủ đề {{ $category->name }}</h1>
     <div class="c-meta">
-      <span class="c-stars">★★★★★ 4.9</span>
+      @php
+        $stars = '';
+        $full = floor($avgRating);
+        for($s=1;$s<=5;$s++) $stars .= $s<=$full ? '★' : ($avgRating-$s>-0.5?'★':'☆');
+      @endphp
+      <span class="c-stars">{{ $stars }} {{ number_format($avgRating,1) }}</span>
+      @if($reviewCount > 0)
+        <span style="color:var(--tx3);font-size:13px">({{ $reviewCount }} đánh giá)</span>
+      @endif
       <span>{{ $products->count() }} mẫu tranh</span>
       <span>Khổ chuẩn 40×50cm · đã căng khung</span>
     </div>

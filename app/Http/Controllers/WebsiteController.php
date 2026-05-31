@@ -54,7 +54,17 @@ class WebsiteController extends Controller
             ->orderBy('sort_order')->orderByDesc('sold_count')->get();
         $sizes    = \App\Models\Size::where('is_active', true)->orderBy('sort_order')->get();
         $settings = DB::table('admin_settings')->pluck('value','key');
-        return view('website.category-combo', compact('category','products','sizes','settings'));
+
+        // Tổng hợp đánh giá từ tất cả sản phẩm trong danh mục
+        $productIds   = $products->pluck('id');
+        $reviewStats  = \App\Models\Review::whereIn('product_id', $productIds)
+            ->where('is_approved', true)
+            ->selectRaw('COUNT(*) as total, AVG(rating) as avg')
+            ->first();
+        $reviewCount  = (int) ($reviewStats->total ?? 0);
+        $avgRating    = $reviewCount > 0 ? round((float)$reviewStats->avg, 1) : 5.0;
+
+        return view('website.category-combo', compact('category','products','sizes','settings','reviewCount','avgRating'));
     }
 
     public function product(Product $product)
