@@ -64,7 +64,15 @@ class WebsiteController extends Controller
         $reviewCount  = (int) ($reviewStats->total ?? 0);
         $avgRating    = $reviewCount > 0 ? round((float)$reviewStats->avg, 1) : 5.0;
 
-        return view('website.category-combo', compact('category','products','sizes','settings','reviewCount','avgRating'));
+        // Danh sách đánh giá đã duyệt của các tranh trong danh mục (mới nhất trước)
+        $reviews = \App\Models\Review::with('product')
+            ->whereIn('product_id', $productIds)
+            ->where('is_approved', true)
+            ->latest()
+            ->take(40)
+            ->get();
+
+        return view('website.category-combo', compact('category','products','sizes','settings','reviewCount','avgRating','reviews'));
     }
 
     public function product(Product $product)

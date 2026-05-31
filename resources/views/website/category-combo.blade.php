@@ -70,6 +70,38 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--char);color:#fff;padding:11px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;transition:transform .4s;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
 @media(max-width:880px){.wrap{grid-template-columns:1fr;gap:18px}.preview-box{position:static}.nav-links{display:none}.nav-hamburger{display:flex}.nav-phone{display:none}nav{padding:0 4%}.breadcrumb{padding:11px 4%}.wrap{padding:8px 4% 40px}}
+/* ── ĐÁNH GIÁ ── */
+.reviews-wrap{max-width:1120px;margin:0 auto;padding:0 5% 50px}
+.rv-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:18px 22px;margin-bottom:16px}
+.rv-title{font-size:18px;font-weight:900;color:var(--char)}
+.rv-avg{display:flex;align-items:center;gap:12px}
+.rv-avg-num{font-size:38px;font-weight:900;color:var(--g);line-height:1}
+.rv-avg-stars{color:#FFC107;font-size:17px}
+.rv-avg-count{font-size:12px;color:var(--tx3);margin-top:2px}
+.rv-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.rv-item{background:#fff;border:1.5px solid var(--bd);border-radius:14px;padding:16px}
+.rv-item-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.rv-author{display:flex;align-items:center;gap:10px}
+.rv-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gl),#CCEF90);border:2px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:var(--gd);flex-shrink:0}
+.rv-name{font-size:14px;font-weight:700;color:var(--char)}
+.rv-date{font-size:11px;color:var(--tx3)}
+.rv-prodcode{background:var(--gl);color:var(--gd);font-weight:700;padding:1px 7px;border-radius:20px;font-size:10px}
+.rv-stars{color:#FFC107;font-size:15px}
+.rv-badge{font-size:10px;font-weight:700;background:var(--gl);color:var(--gd);padding:2px 8px;border-radius:20px;margin-top:3px;display:inline-block}
+.rv-content{font-size:13px;color:var(--tx2);line-height:1.7}
+.rv-form{background:var(--gll);border-radius:14px;padding:22px;border:1.5px solid var(--bd)}
+.rv-form-title{font-size:16px;font-weight:800;color:var(--char);margin-bottom:16px}
+.rv-lbl{font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:6px}
+.rv-inp{width:100%;background:#fff;border:1.5px solid var(--bd);border-radius:9px;padding:10px 13px;font-size:13px;font-family:'Be Vietnam Pro',sans-serif;color:var(--tx);outline:none}
+.rv-inp:focus{border-color:var(--g)}
+.star-picker{display:flex;gap:6px}
+.star-btn{background:none;border:none;font-size:30px;color:#E0E0E0;cursor:pointer;padding:0;line-height:1;transition:color .15s}
+.star-btn.active{color:#FFC107}
+.rv-submit{width:100%;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;margin-top:6px}
+.rv-submit:hover{background:linear-gradient(135deg,#2E7D08,#5AAF15)}
+.rv-submit:disabled{background:#C8E89A;cursor:not-allowed}
+.rv-success{background:var(--gl);border-radius:10px;padding:14px;text-align:center;font-size:14px;font-weight:600;color:var(--gd);display:none;margin-bottom:14px}
+@media(max-width:700px){.rv-list{grid-template-columns:1fr}.rv-avg-num{font-size:30px}}
 </style>
 </head>
 <body>
@@ -189,6 +221,96 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   </div>
 </div>
 
+{{-- ════════ ĐÁNH GIÁ ════════ --}}
+<div class="reviews-wrap">
+  <div class="rv-head">
+    <div class="rv-title">⭐ Đánh giá tranh {{ $category->name }}</div>
+    <div class="rv-avg">
+      <span class="rv-avg-num">{{ number_format($avgRating,1) }}</span>
+      <div>
+        <div class="rv-avg-stars">{{ str_repeat('★', round($avgRating)) }}{{ str_repeat('☆', 5-round($avgRating)) }}</div>
+        <div class="rv-avg-count">{{ $reviewCount }} đánh giá</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Danh sách đánh giá --}}
+  <div class="rv-list">
+    @forelse($reviews as $rv)
+    @php $rvCode = preg_match('/([A-Za-z]+\d+)\s*$/u', $rv->product->name ?? '', $m) ? $m[1] : ''; @endphp
+    <div class="rv-item">
+      <div class="rv-item-top">
+        <div class="rv-author">
+          <div class="rv-avatar">{{ mb_substr($rv->customer_name,0,1) }}</div>
+          <div>
+            <div class="rv-name">{{ $rv->customer_name }}</div>
+            <div class="rv-date">{{ $rv->created_at->diffForHumans() }}@if($rvCode) · <span class="rv-prodcode">Mã {{ $rvCode }}</span>@endif</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="rv-stars">{{ $rv->stars }}</div>
+          @if($rv->order_code)<div class="rv-badge">✓ Đã mua</div>@endif
+        </div>
+      </div>
+      @if($rv->content)<div class="rv-content">{{ $rv->content }}</div>@endif
+      @if($rv->image)
+      <div style="margin-top:10px">
+        <img src="{{ asset('storage/'.$rv->image) }}" alt="Thành quả của {{ $rv->customer_name }}" loading="lazy"
+             style="max-width:160px;max-height:160px;border-radius:10px;border:1.5px solid var(--bd);cursor:zoom-in;object-fit:cover"
+             onclick="window.open(this.src,'_blank')">
+      </div>
+      @endif
+    </div>
+    @empty
+    <div style="text-align:center;padding:30px;color:var(--tx3);font-size:14px">
+      Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá! 🌸
+    </div>
+    @endforelse
+  </div>
+
+  {{-- Form viết đánh giá --}}
+  <div class="rv-form" id="reviewForm">
+    <div class="rv-form-title">✏️ Đánh giá &amp; khoe thành quả của bạn</div>
+    <div class="rv-success" id="reviewSuccess">🎉 Cảm ơn! Đánh giá của bạn đang chờ admin duyệt.</div>
+    <div id="reviewFormContent">
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">Đang đánh giá cho: <b id="rvForProduct" style="color:var(--gd)">—</b></div>
+      <div style="margin-bottom:12px">
+        <label class="rv-lbl">Đánh giá <span style="color:var(--pk)">*</span></label>
+        <div class="star-picker" id="starPicker">
+          @for($i=1;$i<=5;$i++)
+          <button type="button" class="star-btn" data-val="{{ $i }}" onclick="setStar({{ $i }})">★</button>
+          @endfor
+        </div>
+        <input type="hidden" id="ratingVal" value="5">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label class="rv-lbl">Họ tên <span style="color:var(--pk)">*</span></label>
+          <input type="text" id="rvName" class="rv-inp" placeholder="Nguyễn Văn A">
+        </div>
+        <div>
+          <label class="rv-lbl">Số điện thoại</label>
+          <input type="tel" id="rvPhone" class="rv-inp" placeholder="0912 345 678">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="rv-lbl">Mã đơn hàng <span style="font-size:10px;color:var(--tx3);font-weight:400">(không bắt buộc)</span></label>
+        <input type="text" id="rvOrder" class="rv-inp" placeholder="DALI-XXXXXX" style="text-transform:uppercase">
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="rv-lbl">Nội dung đánh giá</label>
+        <textarea id="rvContent" class="rv-inp" placeholder="Chia sẻ trải nghiệm của bạn..." rows="3" style="resize:vertical"></textarea>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="rv-lbl">📸 Khoe thành quả <span style="font-size:10px;color:var(--tx3);font-weight:400">(ảnh tranh bạn đã tô)</span></label>
+        <input type="file" id="rvImage" accept="image/*" style="width:100%;font-size:12px;color:var(--tx2)">
+        <div id="rvImgPreview" style="margin-top:8px"></div>
+      </div>
+      <button class="rv-submit" id="rvSubmitBtn" onclick="submitReview()">Gửi đánh giá →</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 @include('partials.float-widget')
 <script>
@@ -204,6 +326,7 @@ function selectPainting(id){
   if(!SELECTED) return;
   document.getElementById('previewImg').src = SELECTED.image;
   document.getElementById('previewCap').textContent = SELECTED.code ? ('Mã: '+SELECTED.code+' · '+SELECTED.name) : SELECTED.name;
+  var rvFor=document.getElementById('rvForProduct'); if(rvFor) rvFor.textContent = SELECTED.code ? (SELECTED.code+' · '+SELECTED.name) : SELECTED.name;
   document.querySelectorAll('.code-card').forEach(c=>c.classList.toggle('active', parseInt(c.dataset.id)===id));
   // lọc size theo sản phẩm (nếu có giới hạn)
   document.querySelectorAll('.size-opt').forEach(b=>{
@@ -244,6 +367,42 @@ document.addEventListener('DOMContentLoaded',function(){
   if(PRODUCTS.length) selectPainting(PRODUCTS[0].id);
   if(SIZES.length && !SELECTED_SIZE) selectSize(SIZES[0].id);
 });
+
+// ── ĐÁNH GIÁ ──
+function setStar(val){
+  document.getElementById('ratingVal').value=val;
+  document.querySelectorAll('.star-btn').forEach(function(b){
+    b.classList.toggle('active', parseInt(b.dataset.val)<=val);
+  });
+}
+setStar(5);
+(function(){var el=document.getElementById('rvImage');if(!el)return;el.addEventListener('change',function(){var p=document.getElementById('rvImgPreview');if(this.files&&this.files[0]){var r=new FileReader();r.onload=function(e){p.innerHTML='<img src="'+e.target.result+'" style="max-width:120px;max-height:120px;border-radius:8px;border:1.5px solid var(--bd);object-fit:cover">';};r.readAsDataURL(this.files[0]);}else{p.innerHTML='';}});})();
+
+async function submitReview(){
+  if(!SELECTED){showToast('⚠️ Vui lòng chọn mã tranh trước');return;}
+  var name=document.getElementById('rvName').value.trim();
+  var rating=parseInt(document.getElementById('ratingVal').value)||5;
+  if(!name){showToast('⚠️ Vui lòng nhập họ tên');return;}
+  var btn=document.getElementById('rvSubmitBtn');
+  btn.disabled=true; btn.textContent='⏳ Đang gửi...';
+  try{
+    var fd=new FormData();
+    fd.append('product_id',SELECTED.id);
+    fd.append('customer_name',name);
+    fd.append('customer_phone',document.getElementById('rvPhone').value.trim());
+    fd.append('rating',rating);
+    fd.append('content',document.getElementById('rvContent').value.trim());
+    fd.append('order_code',document.getElementById('rvOrder').value.trim().toUpperCase());
+    var imgEl=document.getElementById('rvImage');
+    if(imgEl && imgEl.files && imgEl.files[0]) fd.append('image',imgEl.files[0]);
+    var res=await fetch('{{ route("submit-review") }}',{method:'POST',headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}'},body:fd});
+    var d=await res.json();
+    if(d.success){
+      document.getElementById('reviewFormContent').style.display='none';
+      document.getElementById('reviewSuccess').style.display='block';
+    } else { showToast('❌ '+(d.message||'Có lỗi xảy ra')); btn.disabled=false; btn.textContent='Gửi đánh giá →'; }
+  }catch(e){ showToast('❌ Lỗi kết nối'); btn.disabled=false; btn.textContent='Gửi đánh giá →'; }
+}
 </script>
 </body>
 </html>
