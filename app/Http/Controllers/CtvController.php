@@ -71,7 +71,8 @@ class CtvController extends Controller
             ->get();
         $sizes = Size::where('is_active', true)->orderBy('sort_order')->get()->keyBy('id');
         $categories = $products->pluck('category.name','category_id')->filter()->unique()->sort();
-        return view('ctv.order-create', compact('ctv', 'products', 'sizes', 'categories'));
+        $settings = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value','key');
+        return view('ctv.order-create', compact('ctv', 'products', 'sizes', 'categories', 'settings'));
     }
 
     public function storeOrder(Request $request)
@@ -113,6 +114,13 @@ class CtvController extends Controller
             return back()->with('error', 'Vui lòng chọn ít nhất 1 sản phẩm.');
         }
 
+        // Tính phí ship (giống website chính)
+        $settings   = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value','key');
+        $freeFrom   = (int)($settings['free_ship_from'] ?? 299000);
+        $shipFee    = (int)($settings['ship_fee'] ?? 30000);
+        $ship       = $subtotal >= $freeFrom ? 0 : $shipFee;
+        $total      = $subtotal + $ship;
+
         $code = 'DALI-' . strtoupper(substr(uniqid(), -6));
 
         $order = Order::create([
@@ -129,8 +137,8 @@ class CtvController extends Controller
             'status'               => 'new',
             'subtotal'             => $subtotal,
             'discount'             => 0,
-            'ship_fee'             => 0,
-            'total'                => $subtotal,
+            'ship_fee'             => $ship,
+            'total'                => $total,
         ]);
 
         foreach ($lineItems as $li) {
@@ -147,8 +155,8 @@ class CtvController extends Controller
             $li['product']->increment('sold_count', $li['qty']);
         }
 
-        // Ghi nhận hoa hồng
-        $commission = (int) round($subtotal * $ctv->commission_rate / 100);
+        // Ghi nhận hoa hồng (tính trên tổng đơn sau ship)
+        $commission = (int) round($total * $ctv->commission_rate / 100);
         $order->update(['affiliate_commission' => $commission]);
         $ctv->increment('total_earned', $commission);
         $ctv->increment('total_orders');

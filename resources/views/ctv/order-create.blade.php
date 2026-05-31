@@ -40,10 +40,14 @@
 .cart-item .rm-btn{flex-shrink:0;background:none;border:none;font-size:20px;cursor:pointer;color:#FCA5A5;padding:2px;line-height:1;align-self:flex-start}
 .cart-item .rm-btn:hover{color:#EF4444}
 /* ── TOTAL BAR ── */
-.total-bar{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.total-bar .lbl{font-size:12px;font-weight:700;opacity:.85}
-.total-bar .num{font-size:18px;font-weight:900}
-.total-bar .comm{font-size:11px;opacity:.85}
+.total-bar{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.total-bar .row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px}
+.total-bar .row:last-child{margin-bottom:0;padding-top:8px;border-top:1px solid rgba(255,255,255,.25);margin-top:4px}
+.total-bar .row .k{font-weight:600;opacity:.9}
+.total-bar .row .v{font-weight:800}
+.total-bar .row.big .k{font-size:12px;font-weight:700;opacity:.85}
+.total-bar .row.big .v{font-size:19px;font-weight:900}
+.total-bar .row.green-row .v{color:#C6F135}
 </style>
 
 <div style="font-size:17px;font-weight:900;color:var(--gd);margin-bottom:14px">➕ Lên đơn mới</div>
@@ -102,11 +106,10 @@
 
     {{-- Tổng tiền --}}
     <div class="total-bar">
-      <div>
-        <div class="lbl">Tổng đơn hàng</div>
-        <div class="comm" id="commSummary"></div>
-      </div>
-      <div class="num" id="totalDisplay">0đ</div>
+      <div class="row"><span class="k">Tiền hàng</span><span class="v" id="subtotalDisplay">0đ</span></div>
+      <div class="row" id="shipRow"><span class="k" id="shipLabel">Phí ship</span><span class="v" id="shipDisplay">—</span></div>
+      <div class="row big"><span class="k">Tổng đơn</span><span class="v" id="totalDisplay">0đ</span></div>
+      <div class="row green-row"><span class="k">🌿 Hoa hồng của bạn</span><span class="v" id="commSummary">0đ</span></div>
     </div>
   </div>
 
@@ -154,6 +157,8 @@
 const SIZES_DATA = @json($sizes->map(fn($s)=>['id'=>$s->id,'name'=>$s->name,'price'=>(int)$s->price])->values());
 const sizeById = Object.fromEntries(SIZES_DATA.map(s=>[String(s.id), s]));
 const COMM_RATE = {{ $ctv->commission_rate }};
+const FREE_SHIP_FROM = {{ (int)($settings['free_ship_from'] ?? 299000) }};
+const SHIP_FEE = {{ (int)($settings['ship_fee'] ?? 30000) }};
 let activeCat = 'all';
 
 // cart = { productId: { name, img, price, sizeIds, selectedSizeId, qty } }
@@ -311,10 +316,26 @@ function calcSub(id) {
 }
 
 function updateTotal() {
-  const total = Object.keys(cart).reduce((s, id) => s + calcSub(id), 0);
+  const subtotal = Object.keys(cart).reduce((s, id) => s + calcSub(id), 0);
+  const ship = subtotal > 0 ? (subtotal >= FREE_SHIP_FROM ? 0 : SHIP_FEE) : 0;
+  const total = subtotal + ship;
   const comm = Math.round(total * COMM_RATE / 100);
+
+  document.getElementById('subtotalDisplay').textContent = subtotal.toLocaleString('vi-VN') + 'đ';
+
+  if (subtotal === 0) {
+    document.getElementById('shipDisplay').textContent = '—';
+    document.getElementById('shipLabel').textContent = 'Phí ship';
+  } else if (ship === 0) {
+    document.getElementById('shipDisplay').textContent = 'Miễn phí 🎉';
+    document.getElementById('shipLabel').textContent = 'Phí ship (≥' + FREE_SHIP_FROM.toLocaleString('vi-VN') + 'đ)';
+  } else {
+    document.getElementById('shipDisplay').textContent = ship.toLocaleString('vi-VN') + 'đ';
+    document.getElementById('shipLabel').textContent = 'Phí ship (còn thiếu ' + (FREE_SHIP_FROM - subtotal).toLocaleString('vi-VN') + 'đ để miễn)';
+  }
+
   document.getElementById('totalDisplay').textContent = total.toLocaleString('vi-VN') + 'đ';
-  document.getElementById('commSummary').textContent = 'Hoa hồng: +' + comm.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('commSummary').textContent = '+' + comm.toLocaleString('vi-VN') + 'đ';
 }
 </script>
 @endsection
