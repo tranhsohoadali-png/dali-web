@@ -35,7 +35,22 @@ nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:68px;paddi
 .post-content p{margin-bottom:16px}
 .post-content ul,.post-content ol{margin:0 0 16px 24px}
 .post-content li{margin-bottom:6px}
-.post-content img{max-width:100%;border-radius:12px;margin:16px 0;border:1.5px solid var(--bd)}
+.post-content img{max-width:100%;border-radius:12px;margin:0;border:1.5px solid var(--bd)}
+.post-content figure{margin:22px 0}
+.post-content figure img{width:100%}
+.post-content figcaption{font-size:13px;color:var(--tx3);text-align:center;margin-top:8px;font-style:italic}
+.post-content .img-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0}
+.post-content .img-row figure{margin:0}
+.post-content table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+.post-content th{background:var(--gll);color:var(--gd);font-weight:800;text-align:left;padding:10px 14px;border:1px solid var(--bd)}
+.post-content td{padding:10px 14px;border:1px solid var(--bd);color:var(--tx2)}
+.post-content .lead{font-size:17px;color:var(--tx);font-weight:500;line-height:1.8;margin-bottom:20px}
+.post-content .tip-box{background:linear-gradient(135deg,var(--gll),#fff);border:1.5px solid var(--bd);border-radius:14px;padding:16px 20px;margin:20px 0}
+.post-content .tip-box strong{color:var(--gd)}
+.post-content .faq-q{font-size:16px;font-weight:800;color:var(--char);margin:18px 0 6px}
+.post-content .faq-q::before{content:'❓ ';}
+.post-content a{color:var(--g);font-weight:600;text-decoration:underline}
+@media(max-width:600px){.post-content .img-row{grid-template-columns:1fr}}
 .post-content blockquote{background:var(--gll);border-left:4px solid var(--g);border-radius:0 12px 12px 0;padding:16px 20px;margin:20px 0;font-style:italic;color:var(--gd)}
 .post-content code{background:var(--gl);padding:2px 6px;border-radius:4px;font-size:14px}
 .post-content pre{background:var(--char);color:var(--gn);padding:16px 20px;border-radius:10px;overflow-x:auto;margin-bottom:16px;font-size:14px}
@@ -102,7 +117,11 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   </div>
 
   <div class="post-content">
-    {!! nl2br(e($post->content)) !!}
+    @if(\Illuminate\Support\Str::contains($post->content, ['<p>','<h2>','<ul>','<figure>','<div']))
+      {!! $post->content !!}
+    @else
+      {!! nl2br(e($post->content)) !!}
+    @endif
   </div>
 
   {{-- CTA trong bài --}}
