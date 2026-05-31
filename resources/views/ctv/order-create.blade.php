@@ -259,7 +259,7 @@ function renderCart() {
           <input type="number" value="${item.qty}" min="1" max="99" onchange="onQtyChange('${id}',this.value)">
           <span style="font-size:12px;font-weight:800;color:var(--gd)" id="sub-${id}">${sub.toLocaleString('vi-VN')}đ</span>
         </div>
-        <div class="ci-sub" id="comm-${id}">+${Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN')}đ HH</div>
+        <div class="ci-sub" id="comm-${id}">+${Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN')}đ hoa hồng</div>
         ${buildHiddenInputs(id, item)}
       </div>
       <button type="button" class="rm-btn" onclick="removeItem('${id}')">✕</button>
@@ -281,7 +281,7 @@ function onSizeChange(id, sizeId) {
   document.getElementById(`hi-size-${id}`).value = sizeId;
   const sub = calcSub(id);
   document.getElementById(`sub-${id}`).textContent = sub.toLocaleString('vi-VN') + 'đ';
-  document.getElementById(`comm-${id}`).textContent = '+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ HH';
+  document.getElementById(`comm-${id}`).textContent = '+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ hoa hồng';
   updateTotal();
 }
 
@@ -290,7 +290,7 @@ function onQtyChange(id, qty) {
   document.getElementById(`hi-qty-${id}`).value = cart[id].qty;
   const sub = calcSub(id);
   document.getElementById(`sub-${id}`).textContent = sub.toLocaleString('vi-VN') + 'đ';
-  document.getElementById(`comm-${id}`).textContent = '+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ HH';
+  document.getElementById(`comm-${id}`).textContent = '+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ hoa hồng';
   updateTotal();
 }
 
