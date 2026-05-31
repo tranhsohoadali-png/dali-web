@@ -77,63 +77,85 @@ class CtvController extends Controller
     public function storeOrder(Request $request)
     {
         $ctv = $request->attributes->get('ctv');
-        $data = $request->validate([
-            'customer_name'    => 'required|string|max:100',
-            'customer_phone'   => 'required|string|max:20',
-            'customer_city'    => 'nullable|string|max:100',
-            'customer_address' => 'nullable|string|max:255',
-            'note'             => 'nullable|string|max:500',
-            'product_id'       => 'required|exists:products,id',
-            'size_id'          => 'nullable|exists:sizes,id',
-            'quantity'         => 'required|integer|min:1|max:99',
-            'payment'          => 'nullable|in:COD,BANK',
+
+        $request->validate([
+            'customer_name'  => 'required|string|max:100',
+            'customer_phone' => 'required|string|max:20',
+            'items'          => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.size_id'    => 'nullable|exists:sizes,id',
+            'items.*.qty'        => 'required|integer|min:1|max:99',
         ]);
 
-        $product = Product::findOrFail($data['product_id']);
-        $size    = !empty($data['size_id']) ? Size::find($data['size_id']) : null;
-        $price   = $size ? (int) $size->price : (int) $product->price;
-        $qty     = (int) $data['quantity'];
-        $subtotal = $price * $qty;
-        $total    = $subtotal; // CTV order: chưa áp ship/giảm giá
+        $items = $request->input('items', []);
+
+        // Tính tổng
+        $subtotal = 0;
+        $lineItems = [];
+        foreach ($items as $row) {
+            $product = Product::find($row['product_id']);
+            if (!$product) continue;
+            $size    = !empty($row['size_id']) ? Size::find($row['size_id']) : null;
+            $price   = $size ? (int) $size->price : (int) $product->price;
+            $qty     = (int) $row['qty'];
+            $lineSub = $price * $qty;
+            $subtotal += $lineSub;
+            $lineItems[] = [
+                'product'      => $product,
+                'size'         => $size,
+                'price'        => $price,
+                'qty'          => $qty,
+                'subtotal'     => $lineSub,
+            ];
+        }
+
+        if (empty($lineItems)) {
+            return back()->with('error', 'Vui lòng chọn ít nhất 1 sản phẩm.');
+        }
 
         $code = 'DALI-' . strtoupper(substr(uniqid(), -6));
 
         $order = Order::create([
             'code'                 => $code,
-            'customer_name'        => $data['customer_name'],
-            'customer_phone'       => $data['customer_phone'],
-            'customer_city'        => $data['customer_city'] ?? '',
-            'customer_address'     => $data['customer_address'] ?? '',
-            'note'                 => $data['note'] ?? '',
+            'customer_name'        => $request->input('customer_name'),
+            'customer_phone'       => $request->input('customer_phone'),
+            'customer_city'        => $request->input('customer_city', ''),
+            'customer_address'     => $request->input('customer_address', ''),
+            'note'                 => $request->input('note', ''),
             'affiliate_code'       => $ctv->code,
             'affiliate_commission' => 0,
-            'payment_method'       => $data['payment'] ?? 'COD',
+            'payment_method'       => $request->input('payment', 'COD'),
             'payment_status'       => 'pending',
             'status'               => 'new',
             'subtotal'             => $subtotal,
             'discount'             => 0,
             'ship_fee'             => 0,
-            'total'                => $total,
+            'total'                => $subtotal,
         ]);
 
-        OrderItem::create([
-            'order_id'     => $order->id,
-            'product_id'   => $product->id,
-            'product_name' => $product->name,
-            'product_size' => $size?->name,
-            'price'        => $price,
-            'quantity'     => $qty,
-            'subtotal'     => $subtotal,
-        ]);
+        foreach ($lineItems as $li) {
+            OrderItem::create([
+                'order_id'     => $order->id,
+                'product_id'   => $li['product']->id,
+                'product_name' => $li['product']->name,
+                'product_size' => $li['size']?->name ?? '',
+                'price'        => $li['price'],
+                'quantity'     => $li['qty'],
+                'subtotal'     => $li['subtotal'],
+            ]);
+            // Tăng sold_count
+            $li['product']->increment('sold_count', $li['qty']);
+        }
 
         // Ghi nhận hoa hồng
-        $commission = (int) round($total * $ctv->commission_rate / 100);
+        $commission = (int) round($subtotal * $ctv->commission_rate / 100);
         $order->update(['affiliate_commission' => $commission]);
         $ctv->increment('total_earned', $commission);
         $ctv->increment('total_orders');
 
+        $itemCount = count($lineItems);
         return redirect()->route('ctv.dashboard')->with('success',
-            "Đã lên đơn {$code} thành công! Hoa hồng dự kiến: " . number_format($commission, 0, ',', '.') . 'đ');
+            "Đã lên đơn {$code} ({$itemCount} sản phẩm) thành công! Hoa hồng: +" . number_format($commission, 0, ',', '.') . 'đ');
     }
 
     // ─── TRANG RÚT TIỀN ────────────────────────
