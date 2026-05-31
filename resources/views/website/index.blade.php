@@ -309,7 +309,7 @@ section{padding:72px 5%}
 .categories{background:var(--wh);overflow:hidden}
 /* ── Marquee danh mục: tự trượt sang trái ── */
 .cat-marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.cat-track{display:flex;gap:20px;width:max-content;animation:catScroll 15s linear infinite}
+.cat-track{display:flex;gap:20px;width:max-content;animation:catScroll 60s linear infinite}
 .cat-track:hover{animation-play-state:paused}
 @keyframes catScroll{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 10px))}}
 @media(prefers-reduced-motion:reduce){.cat-track{animation:none}}
