@@ -306,11 +306,17 @@ section{padding:72px 5%}
 .section-header p{font-size:15px;color:var(--tx2);max-width:520px;margin:0 auto}
 
 /* ─── CATEGORIES ─── */
-.categories{background:var(--wh)}
-.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.categories{background:var(--wh);overflow:hidden}
+/* ── Marquee danh mục: tự trượt sang trái ── */
+.cat-marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.cat-track{display:flex;gap:20px;width:max-content;animation:catScroll 15s linear infinite}
+.cat-track:hover{animation-play-state:paused}
+@keyframes catScroll{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 10px))}}
+@media(prefers-reduced-motion:reduce){.cat-track{animation:none}}
 .cat-card{
   position:relative;overflow:hidden;border-radius:18px;
-  aspect-ratio:1/1;cursor:pointer;transition:transform .3s,box-shadow .3s;
+  flex:0 0 clamp(210px,24vw,290px);aspect-ratio:1/1;
+  cursor:pointer;transition:transform .3s,box-shadow .3s;
   border:1.5px solid var(--bd);display:block;background:var(--gll);
 }
 .cat-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(58,122,10,.18);border-color:var(--g)}
@@ -654,7 +660,8 @@ footer{
   .nav-search,.nav-phone{display:none}
   nav{padding:0 4%}
   .products-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-  .cat-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .cat-track{gap:12px}
+  .cat-card{flex-basis:clamp(150px,42vw,200px)}
 }
 .hidden{display:none!important}
 </style>
@@ -752,29 +759,32 @@ footer{
     <h2>Tìm tranh theo chủ đề yêu thích</h2>
     <p>Từ phong cảnh thiên nhiên đến chân dung, từ hoa lá đến thành phố.</p>
   </div>
-  <div class="cat-grid">
-    @forelse($categories as $cat)
-    <a class="cat-card" href="{{ route('category', $cat->slug) }}" style="text-decoration:none">
-      @if($cat->image)
-        {{-- Banner đã có chữ sẵn → hiện sạch, chỉ thêm nhãn khi hover --}}
-        <img src="{{ asset('storage/'.$cat->image) }}" alt="{{ $cat->name }}">
-        <div class="cat-hover"><span>👉 Xem chủ đề {{ $cat->name }}</span></div>
-      @else
-        {{-- Chưa có ảnh bìa → kiểu cũ có chữ --}}
-        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" alt="">
-        <div class="cat-overlay"></div>
-        <div class="cat-info">
-          <h3>{{ $cat->icon }} {{ $cat->name }}</h3>
-          <span>{{ $cat->products_count }} mẫu tranh</span>
-        </div>
-      @endif
-    </a>
-    @empty
-    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--tx3)">
-      Chưa có danh mục. <a href="/admin/categories/create" style="color:var(--g);font-weight:700">Thêm ngay →</a>
+  @if($categories->count())
+  <div class="cat-marquee">
+    {{-- Nhân đôi danh sách (concat) để trượt lặp liền mạch --}}
+    <div class="cat-track">
+      @foreach($categories->concat($categories) as $cat)
+      <a class="cat-card" href="{{ route('category', $cat->slug) }}" style="text-decoration:none" aria-hidden="{{ $loop->index >= $categories->count() ? 'true' : 'false' }}">
+        @if($cat->image)
+          <img src="{{ asset('storage/'.$cat->image) }}" alt="{{ $cat->name }}" loading="lazy">
+          <div class="cat-hover"><span>👉 Xem chủ đề {{ $cat->name }}</span></div>
+        @else
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" alt="" loading="lazy">
+          <div class="cat-overlay"></div>
+          <div class="cat-info">
+            <h3>{{ $cat->icon }} {{ $cat->name }}</h3>
+            <span>{{ $cat->products_count }} mẫu tranh</span>
+          </div>
+        @endif
+      </a>
+      @endforeach
     </div>
-    @endforelse
   </div>
+  @else
+  <div style="text-align:center;padding:40px;color:var(--tx3)">
+    Chưa có danh mục. <a href="/admin/categories/create" style="color:var(--g);font-weight:700">Thêm ngay →</a>
+  </div>
+  @endif
 </section>
 
 {{-- ────────────────────────────────────────
