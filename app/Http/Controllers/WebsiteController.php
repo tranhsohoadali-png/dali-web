@@ -116,22 +116,27 @@ class WebsiteController extends Controller
         $after    = $sub - $discount;
         $ship     = $after >= 299000 ? 0 : 30000;
         $total    = $after + $ship;
+        $affCode  = $this->getAffiliateCode($request);
         $code     = 'DALI-' . substr(time(), -6);
 
         $order = Order::create([
-            'code'             => $code,
-            'customer_name'    => $data['customer_name'],
-            'customer_phone'   => $data['customer_phone'],
-            'customer_city'    => $data['customer_city'],
-            'customer_address' => $data['customer_addr'],
-            'note'             => $data['note'] ?? null,
-            'payment_method'   => $data['payment'],
-            'payment_status'   => 'pending',
-            'status'           => 'new',
-            'subtotal'         => $sub,
-            'discount'         => $discount,
-            'ship_fee'         => $ship,
-            'total'            => $total,
+            'code'                 => $code,
+            'customer_name'        => $data['customer_name'],
+            'customer_phone'       => $data['customer_phone'],
+            'customer_city'        => $data['customer_city'],
+            'customer_address'     => $data['customer_addr'],
+            'note'                 => $data['note'] ?? '',
+            'coupon_code'          => $couponCode ?: null,
+            'coupon_discount'      => $couponDiscount,
+            'affiliate_code'       => $affCode ?: null,
+            'affiliate_commission' => 0,
+            'payment_method'       => $data['payment'],
+            'payment_status'       => 'pending',
+            'status'               => 'new',
+            'subtotal'             => $sub,
+            'discount'             => $discount,
+            'ship_fee'             => $ship,
+            'total'                => $total,
         ]);
 
         OrderItem::create([
@@ -143,6 +148,9 @@ class WebsiteController extends Controller
             'quantity'     => $qty,
             'subtotal'     => $sub,
         ]);
+
+        // Ghi hoa hồng CTV
+        $this->recordAffiliateCommission($order, $affCode, $total);
 
         // Tăng sold_count
         if (!empty($data['product_id'])) {
@@ -377,13 +385,8 @@ class WebsiteController extends Controller
             }
         }
 
-        // Affiliate
-        $affCode       = strtoupper(trim($request->input('affiliate_code', '') ?: session('affiliate_code', '')));
-        $affCommission = 0;
-        $affiliate     = null;
-        if ($affCode) {
-            $affiliate = Affiliate::where('code', $affCode)->where('is_active', true)->first();
-        }
+        // Affiliate (session + cookie 30 ngày)
+        $affCode = $this->getAffiliateCode($request);
 
         $afterDisc = $subtotal - $discount - $couponDiscount;
         $freeShip  = (int)($settings['free_ship_from'] ?? 299000);
@@ -424,13 +427,8 @@ class WebsiteController extends Controller
             ]);
         }
 
-        // Record affiliate commission
-        if ($affiliate) {
-            $commission = (int)round($total * $affiliate->commission_rate / 100);
-            $order->update(['affiliate_commission' => $commission]);
-            $affiliate->increment('total_earned', $commission);
-            $affiliate->increment('total_orders');
-        }
+        // Ghi hoa hồng CTV (dùng helper chung)
+        $this->recordAffiliateCommission($order, $affCode, $total);
 
         // Clear cart
         session()->forget('cart');
@@ -489,8 +487,35 @@ class WebsiteController extends Controller
         $affiliate = Affiliate::where('code', $code)->where('is_active', true)->first();
         if ($affiliate) {
             session(['affiliate_code' => $code]);
+            // Cookie 30 ngày — bảo lưu kể cả khi đóng browser
+            cookie()->queue('affiliate_code', $code, 60 * 24 * 30);
         }
         return redirect()->route('home');
+    }
+
+    // ── HÀM HELPER: lấy affiliate code từ session hoặc cookie ──
+    private function getAffiliateCode(Request $request): string
+    {
+        return strtoupper(trim(
+            $request->input('affiliate_code', '')
+            ?: session('affiliate_code', '')
+            ?: $request->cookie('affiliate_code', '')
+        ));
+    }
+
+    // ── HÀM HELPER: ghi hoa hồng cho affiliate ──
+    private function recordAffiliateCommission(Order $order, string $affCode, int $total): void
+    {
+        if (!$affCode) return;
+        $affiliate = Affiliate::where('code', $affCode)->where('is_active', true)->first();
+        if (!$affiliate) return;
+        $commission = (int) round($total * $affiliate->commission_rate / 100);
+        $order->update([
+            'affiliate_code'       => $affCode,
+            'affiliate_commission' => $commission,
+        ]);
+        $affiliate->increment('total_earned', $commission);
+        $affiliate->increment('total_orders');
     }
 
 }
