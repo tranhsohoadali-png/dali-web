@@ -16,7 +16,8 @@ class CtvController extends Controller
     public function showLogin()
     {
         if (session('ctv_id')) return redirect()->route('ctv.dashboard');
-        return view('ctv.login');
+        $settings = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value','key');
+        return view('ctv.login', compact('settings'));
     }
 
     public function login(Request $request)

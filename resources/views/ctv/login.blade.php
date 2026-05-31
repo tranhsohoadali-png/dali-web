@@ -67,7 +67,14 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);min-height:100
         <button type="submit" class="btn">Đăng nhập →</button>
       </form>
       <div class="note">
-        Chưa có tài khoản? <a href="tel:{{ config('app.shop_phone','0856911698') }}">Liên hệ DALI</a> để đăng ký.
+        @php
+          $phone = $settings['shop_phone'] ?? '0856911698';
+          $digits = preg_replace('/\D/', '', $phone);
+          $zaloLink = !empty($settings['zalo_link'])
+            ? $settings['zalo_link']
+            : 'https://zalo.me/' . preg_replace('/^0/', '84', $digits);
+        @endphp
+        Chưa có tài khoản? <a href="{{ $zaloLink }}" target="_blank" rel="noopener">Liên hệ DALI qua Zalo</a> để đăng ký.
       </div>
     </div>
     <div class="footer-link">
