@@ -5,6 +5,8 @@
 <title>{{ $category->name }} | DALI – Chọn mã tranh</title>
 <meta name="description" content="Bộ sưu tập tranh tô màu số hóa chủ đề {{ $category->name }} – chọn mã tranh yêu thích, nhiều kích thước.">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
 <style>
 :root{--g:#6BBF1F;--gd:#3E7A0A;--gl:#E8F9D0;--gll:#F4FDE8;--gn:#C6F135;--pk:#FF8FB1;--bd:#C8E89A;--bd2:#A8D870;--bg:#F2FDE8;--tx:#1A4D00;--tx2:#4A8A1A;--tx3:#8FC860;--char:#1C3A0A}
 *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
@@ -113,17 +115,17 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
     <li><a href="{{ route('blog') }}">Blog</a></li>
   </ul>
   <div class="nav-right">
-    <a href="tel:{{ $settings['shop_phone'] ?? '0856911698' }}" class="nav-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ $settings['shop_phone'] ?? '0856.911.698' }}</a>
+    <a href="tel:{{ $settings['shop_phone'] ?? '0856911698' }}" class="nav-phone"><i class="ri-phone-line" style="margin-right:5px"></i>{{ $settings['shop_phone'] ?? '0856.911.698' }}</a>
     <a href="{{ route('products') }}" class="btn-nav">Tất cả tranh</a>
     <button class="nav-hamburger" onclick="document.getElementById('mnav').classList.toggle('open')"><span></span><span></span><span></span></button>
   </div>
 </nav>
 <div class="mobile-nav" id="mnav">
-  <a href="{{ route('home') }}">🏠 Trang chủ</a>
-  <a href="{{ route('products') }}">🎨 Sản phẩm</a>
-  <a href="{{ route('blog') }}">📝 Blog</a>
-  <a href="{{ route('cart') }}">🛒 Giỏ hàng</a>
-  <a href="{{ route('track-order') }}">🔍 Tra cứu đơn</a>
+  <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
+  <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
+  <a href="{{ route('blog') }}"><i class="ri-quill-pen-line"></i> Blog</a>
+  <a href="{{ route('cart') }}"><i class="ri-shopping-cart-2-line"></i> Giỏ hàng</a>
+  <a href="{{ route('track-order') }}"><i class="ri-search-line"></i> Tra cứu đơn</a>
 </div>
 
 <div class="breadcrumb">
@@ -153,7 +155,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
       <img id="previewImg" src="" alt="{{ $category->name }}">
     </div>
     <div class="preview-cap" id="previewCap">—</div>
-    <div class="share-row">🎨 {{ $products->count() }} mẫu tranh · 📦 Đã căng khung sẵn</div>
+    <div class="share-row"><i class="ri-palette-line"></i> {{ $products->count() }} mẫu tranh · <i class="ri-box-3-line"></i> Đã căng khung sẵn</div>
   </div>
 
   <!-- RIGHT: chọn -->
@@ -175,12 +177,12 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 
     <div class="price-box">
       <div class="price-main" id="priceMain">{{ number_format($minPrice,0,',','.') }}đ</div>
-      <div class="price-note">💳 Chuyển khoản QR giảm thêm 5% · 🚚 Miễn phí ship từ 299K</div>
+      <div class="price-note"><i class="ri-bank-card-line"></i> Chuyển khoản QR giảm thêm 5% · <i class="ri-truck-line"></i> Miễn phí ship từ 299K</div>
     </div>
 
-    <div class="gift-banner">🎁 MUA 3 TRANH TẶNG 1 TRANH cùng khổ — áp dụng mọi mẫu trong chủ đề!</div>
+    <div class="gift-banner"><i class="ri-gift-line"></i> MUA 3 TRANH TẶNG 1 TRANH cùng khổ — áp dụng mọi mẫu trong chủ đề!</div>
 
-    <div class="sec-label">🖼️ Chọn mã tranh <span class="hint">bấm để xem & chọn — {{ $products->count() }} mẫu</span></div>
+    <div class="sec-label"><i class="ri-image-line"></i> Chọn mã tranh <span class="hint">bấm để xem & chọn — {{ $products->count() }} mẫu</span></div>
     <div class="code-grid" id="codeGrid">
       @foreach($products as $i => $p)
       @php $code = preg_match('/([A-Za-z]+\d+)\s*$/u', $p->name, $m) ? $m[1] : ''; @endphp
@@ -194,7 +196,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
       @endforeach
     </div>
 
-    <div class="sec-label">📐 Chọn kích thước</div>
+    <div class="sec-label"><i class="ri-ruler-2-line"></i> Chọn kích thước</div>
     <div class="size-row" id="sizeRow">
       @foreach($sizes as $s)
       <button type="button" class="size-opt" data-id="{{ $s->id }}" data-price="{{ $s->price }}" onclick="selectSize({{ $s->id }})">
@@ -215,8 +217,8 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
     </div>
 
     <div class="btn-row">
-      <button class="btn-cart" onclick="addCombo(false)">➕ Thêm vào giỏ</button>
-      <button class="btn-buy" onclick="addCombo(true)">🛒 Mua ngay</button>
+      <button class="btn-cart" onclick="addCombo(false)"><i class="ri-add-line"></i> Thêm vào giỏ</button>
+      <button class="btn-buy" onclick="addCombo(true)"><i class="ri-shopping-cart-2-line"></i> Mua ngay</button>
     </div>
   </div>
 </div>
@@ -270,7 +272,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 
   {{-- Form viết đánh giá --}}
   <div class="rv-form" id="reviewForm">
-    <div class="rv-form-title">✏️ Đánh giá &amp; khoe thành quả của bạn</div>
+    <div class="rv-form-title"><i class="ri-edit-line"></i> Đánh giá &amp; khoe thành quả của bạn</div>
     <div class="rv-success" id="reviewSuccess">🎉 Cảm ơn! Đánh giá của bạn đang chờ admin duyệt.</div>
     <div id="reviewFormContent">
       <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">Đang đánh giá cho: <b id="rvForProduct" style="color:var(--gd)">—</b></div>
@@ -302,7 +304,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
         <textarea id="rvContent" class="rv-inp" placeholder="Chia sẻ trải nghiệm của bạn..." rows="3" style="resize:vertical"></textarea>
       </div>
       <div style="margin-bottom:12px">
-        <label class="rv-lbl">📸 Khoe thành quả <span style="font-size:10px;color:var(--tx3);font-weight:400">(ảnh tranh bạn đã tô)</span></label>
+        <label class="rv-lbl"><i class="ri-camera-line"></i> Khoe thành quả <span style="font-size:10px;color:var(--tx3);font-weight:400">(ảnh tranh bạn đã tô)</span></label>
         <input type="file" id="rvImage" accept="image/*" style="width:100%;font-size:12px;color:var(--tx2)">
         <div id="rvImgPreview" style="margin-top:8px"></div>
       </div>

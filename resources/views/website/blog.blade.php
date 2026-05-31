@@ -4,6 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Blog | DALI – Tô Điểm Cuộc Sống</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
 <style>
 :root{--g:#6BBF1F;--gd:#3E7A0A;--gl:#E8F9D0;--gll:#F4FDE8;--gn:#C6F135;--bd:#C8E89A;--bg:#F2FDE8;--tx:#1A4D00;--tx2:#4A8A1A;--tx3:#8FC860;--char:#1C3A0A}
 *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
@@ -52,21 +54,21 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <li><a href="{{ route('products') }}">Sản phẩm</a></li>
     <li><a href="{{ route('blog') }}" class="act">Blog</a></li>
     <li><a href="{{ route('track-order') }}">Tra cứu đơn</a></li>
-    <li><a href="{{ route('ctv.login') }}" style="background:rgba(198,241,53,.15);border:1.5px solid rgba(198,241,53,.4);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:700;color:#C6F135;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="3.5"/></svg>CTV</a></li>
+    <li><a href="{{ route('ctv.login') }}" style="background:rgba(198,241,53,.15);border:1.5px solid rgba(198,241,53,.4);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:700;color:#C6F135;text-decoration:none"><i class="ri-team-line" style="margin-right:4px"></i>CTV</a></li>
   </ul>
   <a href="{{ route('products') }}" class="btn-nav">Mua sắm ngay</a>
 </nav>
-<div class="sak"><span>🌸</span><span>✿</span><span>🍃</span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
+<div class="sak"><span><i class="ri-flower-line"></i></span><span><i class="ri-flower-line"></i></span><span><i class="ri-leaf-line"></i></span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
 
 <div class="page-hero">
-  <h1>📖 Blog DALI</h1>
+  <h1><i class="ri-book-open-line"></i> Blog DALI</h1>
   <p>Hướng dẫn tô màu, cảm hứng nghệ thuật và tin tức mới nhất từ DALI</p>
 </div>
 
 <div class="blog-wrap">
   {{-- Category tabs --}}
   <div class="cat-tabs">
-    <a href="{{ route('blog') }}" class="cat-tab {{ !request('category') ? 'active' : '' }}">📚 Tất cả</a>
+    <a href="{{ route('blog') }}" class="cat-tab {{ !request('category') ? 'active' : '' }}"><i class="ri-book-2-line"></i> Tất cả</a>
     @foreach($categories as $cat)
     <a href="{{ route('blog') }}?category={{ $cat }}" class="cat-tab {{ request('category')==$cat ? 'active' : '' }}">{{ $cat }}</a>
     @endforeach
@@ -79,7 +81,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         @if($post->cover_image)
           <img src="{{ asset('storage/'.$post->cover_image) }}" alt="{{ $post->title }}">
         @else
-          📖
+          <i class="ri-book-open-line"></i>
         @endif
       </div>
       <div class="post-body">
@@ -89,15 +91,15 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <div class="post-excerpt">{{ Str::limit($post->excerpt, 100) }}</div>
         @endif
         <div class="post-meta">
-          <span>📅 {{ $post->published_at?->format('d/m/Y') }}</span>
-          <span>⏱ {{ $post->read_time }} phút đọc</span>
-          <span>👁 {{ number_format($post->view_count) }} lượt xem</span>
+          <span><i class="ri-calendar-line"></i> {{ $post->published_at?->format('d/m/Y') }}</span>
+          <span><i class="ri-timer-line"></i> {{ $post->read_time }} phút đọc</span>
+          <span><i class="ri-eye-line"></i> {{ number_format($post->view_count) }} lượt xem</span>
         </div>
       </div>
     </a>
     @empty
     <div class="no-posts">
-      <div class="no-posts-icon">📝</div>
+      <div class="no-posts-icon"><i class="ri-quill-pen-line"></i></div>
       <div style="font-size:18px;font-weight:800;color:var(--char);margin-bottom:8px">Chưa có bài viết nào</div>
       <div style="font-size:14px;color:var(--tx3)">Quay lại sau nhé!</div>
     </div>

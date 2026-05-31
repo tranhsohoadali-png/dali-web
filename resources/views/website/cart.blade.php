@@ -4,6 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Giỏ hàng | DALI</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
 <style>
 :root{--g:#6BBF1F;--gd:#3E7A0A;--gl:#E8F9D0;--gll:#F4FDE8;--gn:#C6F135;--pk:#FF8FB1;--bd:#C8E89A;--bd2:#A8D870;--bg:#F2FDE8;--tx:#1A4D00;--tx2:#4A8A1A;--tx3:#8FC860;--char:#1C3A0A}
 *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
@@ -107,10 +109,10 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   </ul>
   <a href="{{ route('products') }}" class="btn-nav">Tiếp tục mua sắm</a>
 </nav>
-<div class="sak-strip"><span>🌸</span><span>✿</span><span>🍃</span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
+<div class="sak-strip"><span><i class="ri-flower-line"></i></span><span><i class="ri-flower-line"></i></span><span><i class="ri-leaf-line"></i></span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
 
 <div class="page-hero">
-  <h1>🛒 Giỏ hàng của bạn</h1>
+  <h1><i class="ri-shopping-cart-2-line"></i> Giỏ hàng của bạn</h1>
   <p>{{ count($cart) }} sản phẩm · {{ array_sum(array_column($cart,'quantity')) }} món</p>
 </div>
 
@@ -121,7 +123,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <div class="cart-head">
       <div class="cart-title">Sản phẩm ({{ count($cart) }})</div>
       @if(count($cart) > 0)
-      <button class="btn-clear" onclick="clearCart()">🗑️ Xoá tất cả</button>
+      <button class="btn-clear" onclick="clearCart()"><i class="ri-delete-bin-line"></i> Xoá tất cả</button>
       @endif
     </div>
 
@@ -133,7 +135,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
           @if($item['main_image'])
           <img src="{{ asset('storage/'.$item['main_image']) }}" alt="{{ $item['name'] }}" style="width:100%;height:100%;object-fit:cover;border-radius:9px">
           @else
-          🎨
+          <i class="ri-palette-line"></i>
           @endif
         </div>
         <div style="flex:1">
@@ -155,10 +157,10 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     </div>
     @else
     <div class="empty-cart">
-      <div class="empty-icon">🛒</div>
+      <div class="empty-icon"><i class="ri-shopping-cart-2-line"></i></div>
       <div class="empty-title">Giỏ hàng trống</div>
       <div class="empty-sub">Hãy thêm sản phẩm vào giỏ hàng để tiến hành đặt mua</div>
-      <a href="{{ route('products') }}" class="btn-primary">🎨 Xem tất cả sản phẩm</a>
+      <a href="{{ route('products') }}" class="btn-primary"><i class="ri-palette-line"></i> Xem tất cả sản phẩm</a>
     </div>
     @endif
   </div>
@@ -179,11 +181,11 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       {{-- Payment --}}
       <div class="pay-opts">
         <div class="pay-opt" id="pay-cod" onclick="selectPay('COD')">
-          <span style="font-size:19px">💵</span>
+          <span style="font-size:19px"><i class="ri-money-dollar-circle-line"></i></span>
           <div><div class="pay-opt-txt">COD</div><div class="pay-sub">Trả khi nhận</div></div>
         </div>
         <div class="pay-opt active" id="pay-bank" onclick="selectPay('BANK')">
-          <span style="font-size:19px">📱</span>
+          <span style="font-size:19px"><i class="ri-smartphone-line"></i></span>
           <div><div class="pay-opt-txt">QR Chuyển khoản</div><div class="pay-sub">Giảm 5%</div></div>
           <div class="disc-tag">-5%</div>
         </div>
@@ -198,14 +200,14 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       <div id="summaryRows">
         <div class="s-row"><span>Tạm tính ({{ array_sum(array_column($cart,'quantity')) }} món)</span><span id="sumSubtotal">{{ number_format($subtotal,0,',','.')}}đ</span></div>
         <div class="s-row disc" id="discRow" style="display:none"><span>🎉 Giảm 5% chuyển khoản</span><span id="sumDisc">–</span></div>
-        <div class="s-row disc" id="couponRow" style="display:none"><span>🏷️ Mã giảm giá</span><span id="sumCoupon">–</span></div>
+        <div class="s-row disc" id="couponRow" style="display:none"><span><i class="ri-price-tag-3-line"></i> Mã giảm giá</span><span id="sumCoupon">–</span></div>
         <div class="s-row"><span>Phí giao hàng</span><span id="sumShip" style="color:var(--g)">{{ $subtotal >= $freeShip ? 'Miễn phí' : number_format($shipFee,0,',','.').'đ' }}</span></div>
         <div class="s-row total"><span>Tổng thanh toán</span><span class="v" id="sumTotal">{{ number_format($subtotal,0,',','.')}}đ</span></div>
       </div>
       <button class="btn-checkout" id="checkoutBtn" onclick="openCheckout()">
-        🛒 Đặt hàng ngay
+        <i class="ri-shopping-cart-2-line"></i> Đặt hàng ngay
       </button>
-      <p style="text-align:center;font-size:11px;color:var(--tx3);margin-top:8px">🔒 Thanh toán an toàn · Miễn phí ship từ {{ number_format($freeShip,0,',','.')}}đ</p>
+      <p style="text-align:center;font-size:11px;color:var(--tx3);margin-top:8px"><i class="ri-lock-line"></i> Thanh toán an toàn · Miễn phí ship từ {{ number_format($freeShip,0,',','.')}}đ</p>
     </div>
   </div>
   @endif
@@ -218,7 +220,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   <div class="modal">
     <div class="modal-header">
       <div>
-        <div style="font-size:18px;font-weight:900;color:var(--char)" id="modalTitle">📦 Thông tin giao hàng</div>
+        <div style="font-size:18px;font-weight:900;color:var(--char)" id="modalTitle"><i class="ri-box-3-line"></i> Thông tin giao hàng</div>
         <div style="font-size:12px;color:var(--tx3)">Điền thông tin để chúng tôi giao hàng đến bạn</div>
       </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -240,8 +242,8 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <b>Hình thức thanh toán:</b> <span id="payModeDisplay">QR Chuyển khoản (Giảm 5%)</span><br>
         <b>Tổng thanh toán:</b> <span id="modalTotal" style="color:var(--g);font-weight:900;font-size:15px">–</span>
       </div>
-      <button class="btn-submit" id="submitBtn" onclick="doCheckout()"><span id="submitText">✅ Xác nhận đặt hàng</span></button>
-      <p style="text-align:center;font-size:11px;color:var(--tx3);margin-top:8px">🔒 Thông tin được bảo mật</p>
+      <button class="btn-submit" id="submitBtn" onclick="doCheckout()"><span id="submitText"><i class="ri-checkbox-circle-line"></i> Xác nhận đặt hàng</span></button>
+      <p style="text-align:center;font-size:11px;color:var(--tx3);margin-top:8px"><i class="ri-lock-line"></i> Thông tin được bảo mật</p>
     </div>
     <div id="checkoutSuccess" class="modal-body" style="display:none">
       <div class="success-box">

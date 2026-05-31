@@ -9,7 +9,7 @@
 @endphp
 <div class="dali-fab">
   <a href="{{ route('cart') }}" class="fab-btn fab-cart" title="Giỏ hàng" aria-label="Giỏ hàng">
-    🛒<span class="fab-badge" id="fabCartCount" style="display:none">0</span>
+    <i class="ri-shopping-cart-2-line"></i><span class="fab-badge" id="fabCartCount" style="display:none">0</span>
   </a>
   @if(!empty($settings['fb_page']))
   <a href="https://m.me/{{ $settings['fb_page'] }}" target="_blank" rel="noopener" class="fab-btn fab-mes" title="Chat Messenger" aria-label="Messenger">
@@ -19,7 +19,7 @@
   <a href="{{ $fwZaloLink }}" target="_blank" rel="noopener" class="fab-btn fab-zalo" title="Chat Zalo" aria-label="Zalo">
     <span style="font-weight:900;font-size:12px;letter-spacing:-.5px">Zalo</span>
   </a>
-  <a href="tel:{{ $fwPhone }}" class="fab-btn fab-phone" title="Gọi điện" aria-label="Gọi điện">📞</a>
+  <a href="tel:{{ $fwPhone }}" class="fab-btn fab-phone" title="Gọi điện" aria-label="Gọi điện"><i class="ri-phone-line"></i></a>
 </div>
 <style>
 .dali-fab{position:fixed;right:16px;bottom:18px;z-index:900;display:flex;flex-direction:column;gap:11px}

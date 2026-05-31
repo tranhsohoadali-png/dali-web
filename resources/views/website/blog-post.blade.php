@@ -9,6 +9,8 @@
 <meta property="og:image" content="{{ $post->cover_image ? asset('storage/'.$post->cover_image) : asset('images/logo_dali.png') }}">
 @if(!empty($settings['ga_id']))<script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings['ga_id'] }}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $settings["ga_id"] }}');</script>@endif
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
 <style>
 :root{--g:#6BBF1F;--gd:#3E7A0A;--gl:#E8F9D0;--gll:#F4FDE8;--gn:#C6F135;--bd:#C8E89A;--bg:#F2FDE8;--tx:#1A4D00;--tx2:#4A8A1A;--tx3:#8FC860;--char:#1C3A0A}
 *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
@@ -85,7 +87,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   </ul>
   <a href="{{ route('products') }}" class="btn-nav">Mua sắm ngay</a>
 </nav>
-<div class="sak"><span>🌸</span><span>✿</span><span>🍃</span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
+<div class="sak"><span><i class="ri-flower-line"></i></span><span><i class="ri-flower-line"></i></span><span><i class="ri-leaf-line"></i></span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
 
 <div class="bc">
   <a href="{{ route('home') }}">Trang chủ</a>
@@ -102,9 +104,9 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <div class="post-cat-badge">{{ $post->category }}</div>
     <h1 class="post-title">{{ $post->title }}</h1>
     <div class="post-meta">
-      <span>📅 {{ $post->published_at?->format('d/m/Y') }}</span>
-      <span>⏱ {{ $post->read_time }} phút đọc</span>
-      <span>👁 {{ number_format($post->view_count) }} lượt xem</span>
+      <span><i class="ri-calendar-line"></i> {{ $post->published_at?->format('d/m/Y') }}</span>
+      <span><i class="ri-timer-line"></i> {{ $post->read_time }} phút đọc</span>
+      <span><i class="ri-eye-line"></i> {{ number_format($post->view_count) }} lượt xem</span>
     </div>
   </div>
 
@@ -126,7 +128,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 
   {{-- CTA trong bài --}}
   <div class="cta-box">
-    <h3>🎨 Muốn thử vẽ tranh số hóa?</h3>
+    <h3><i class="ri-palette-line"></i> Muốn thử vẽ tranh số hóa?</h3>
     <p>Khám phá hơn 500 mẫu tranh DALI – ai cũng có thể tạo ra kiệt tác của riêng mình!</p>
     <a href="{{ route('products') }}" class="btn-cta">Xem tất cả tranh DALI →</a>
   </div>

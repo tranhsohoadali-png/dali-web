@@ -4,6 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ $product->name }} | DALI</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
 <style>
 :root{--g:#6BBF1F;--gb:#8ED63A;--gd:#3E7A0A;--gl:#E8F9D0;--gll:#F4FDE8;--gn:#C6F135;--pk:#FF8FB1;--pkl:#FFF0F5;--bd:#C8E89A;--bd2:#A8D870;--bg:#F2FDE8;--tx:#1A4D00;--tx2:#4A8A1A;--tx3:#8FC860;--char:#1C3A0A;--shad:rgba(58,122,10,.10)}
 *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
@@ -232,18 +234,18 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <li><a href="{{ route('home') }}#lien-he">Liên hệ</a></li>
   </ul>
   <div class="nav-right">
-    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ $settings['shop_phone'] ?? '0123456789' }}</a>
-    <a href="{{ route('track-order') }}" class="nav-tracuu" style="font-size:13px;color:rgba(255,255,255,.75);text-decoration:none;font-weight:500"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Tra cứu đơn</a>
+    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><i class="ri-phone-line" style="margin-right:5px"></i>{{ $settings['shop_phone'] ?? '0123456789' }}</a>
+    <a href="{{ route('track-order') }}" class="nav-tracuu" style="font-size:13px;color:rgba(255,255,255,.75);text-decoration:none;font-weight:500"><i class="ri-search-line" style="margin-right:5px"></i>Tra cứu đơn</a>
     <a href="#" class="btn-order-nav" onclick="openOrderDetail();return false">Đặt hàng</a>
     <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
   </div>
 </nav>
 <div class="mobile-nav" id="mobileNav">
-  <a href="{{ route('home') }}">🏠 Trang chủ</a>
-  <a href="{{ route('products') }}">🎨 Sản phẩm</a>
-  <a href="{{ route('track-order') }}">🔍 Tra cứu đơn hàng</a>
+  <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
+  <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
+  <a href="{{ route('track-order') }}"><i class="ri-search-line"></i> Tra cứu đơn hàng</a>
 </div>
-<div class="sakura-strip"><span class="petal">🌸</span><span class="petal">✿</span><span class="petal">🍃</span><span class="petal">🌸</span><span class="sak-text">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
+<div class="sakura-strip"><span class="petal"><i class="ri-flower-line"></i></span><span class="petal"><i class="ri-flower-line"></i></span><span class="petal"><i class="ri-leaf-line"></i></span><span class="petal"><i class="ri-flower-line"></i></span><span class="sak-text">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
 
 {{-- Breadcrumb --}}
 <div class="breadcrumb">
@@ -299,7 +301,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       @php $psizes = $product->sizes(); $firstSize = $psizes->first(); @endphp
       <div class="price-box">
         <div class="price-main" id="detailPrice">{{ $firstSize ? $firstSize->display_price : $product->display_price }}</div>
-        <div class="price-discount" style="margin-top:8px;font-size:12px;color:var(--gd)">💳 Chuyển khoản QR → giảm thêm 5%</div>
+        <div class="price-discount" style="margin-top:8px;font-size:12px;color:var(--gd)"><i class="ri-bank-card-line"></i> Chuyển khoản QR → giảm thêm 5%</div>
       </div>
 
       @if($psizes->count())
@@ -335,14 +337,14 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <button class="qty-btn" onclick="changeDetailQty(1)">+</button>
       </div>
 
-      <button class="btn-order-main" onclick="openOrderDetail()">🛒 Đặt mua ngay</button>
-      <button class="btn-track" style="cursor:pointer;margin-bottom:10px" onclick="addDetailToCart()">➕ Thêm vào giỏ hàng</button>
-      <a href="{{ route('track-order') }}" class="btn-track">🔍 Tra cứu đơn hàng đã đặt</a>
+      <button class="btn-order-main" onclick="openOrderDetail()"><i class="ri-shopping-cart-2-line"></i> Đặt mua ngay</button>
+      <button class="btn-track" style="cursor:pointer;margin-bottom:10px" onclick="addDetailToCart()"><i class="ri-add-line"></i> Thêm vào giỏ hàng</button>
+      <a href="{{ route('track-order') }}" class="btn-track"><i class="ri-search-line"></i> Tra cứu đơn hàng đã đặt</a>
 
       <div class="trust-row">
-        <div class="trust-badge">🚚 Miễn phí ship từ 299K</div>
-        <div class="trust-badge">✅ Hoàn tiền 30 ngày</div>
-        <div class="trust-badge">🔒 Bảo mật 100%</div>
+        <div class="trust-badge"><i class="ri-truck-line"></i> Miễn phí ship từ 299K</div>
+        <div class="trust-badge"><i class="ri-checkbox-circle-line"></i> Hoàn tiền 30 ngày</div>
+        <div class="trust-badge"><i class="ri-lock-line"></i> Bảo mật 100%</div>
       </div>
     </div>
   </div>
@@ -350,7 +352,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   {{-- Description --}}
   @if($product->description)
   <div class="desc-box">
-    <div class="desc-title">📖 Mô tả sản phẩm</div>
+    <div class="desc-title"><i class="ri-book-open-line"></i> Mô tả sản phẩm</div>
     <div class="desc-content">{{ $product->description }}</div>
   </div>
   @endif
@@ -377,7 +379,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <a href="{{ route('product', $r->slug) }}" class="product-name" style="text-decoration:none;color:inherit;display:block">{{ $r->name }}</a>
         <div class="product-size">{{ $r->colors_count ? $r->colors_count.' màu' : '' }}</div>
         <div class="product-price">@if($r->has_multiple_sizes)<span style="font-size:11px;color:var(--tx3);font-weight:600">Từ </span>@endif{{ $r->display_price }}</div>
-        <button class="btn-buy" onclick="window.location='{{ route('product', $r->slug) }}'">🛒 Đặt mua</button>
+        <button class="btn-buy" onclick="window.location='{{ route('product', $r->slug) }}'"><i class="ri-shopping-cart-2-line"></i> Đặt mua</button>
       </div>
     </div>
     @endforeach
@@ -432,7 +434,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 
     {{-- Write review form --}}
     <div class="review-form" id="reviewForm">
-      <div class="review-form-title">✏️ Đánh giá &amp; khoe thành quả của bạn</div>
+      <div class="review-form-title"><i class="ri-edit-line"></i> Đánh giá &amp; khoe thành quả của bạn</div>
       <div class="review-success" id="reviewSuccess">🎉 Cảm ơn! Đánh giá của bạn đang chờ admin duyệt.</div>
       <div id="reviewFormContent">
         <div style="margin-bottom:12px">
@@ -463,7 +465,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
           <textarea id="rvContent" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..." rows="3" style="width:100%;background:var(--gll);border:1.5px solid var(--bd);border-radius:9px;padding:10px 13px;font-size:13px;font-family:'Be Vietnam Pro',sans-serif;color:var(--tx);outline:none;resize:vertical"></textarea>
         </div>
         <div style="margin-bottom:12px">
-          <label style="font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:6px">📸 Khoe thành quả <span style="font-size:10px;color:var(--tx3);font-weight:400">(ảnh tranh bạn đã tô — không bắt buộc)</span></label>
+          <label style="font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:6px"><i class="ri-camera-line"></i> Khoe thành quả <span style="font-size:10px;color:var(--tx3);font-weight:400">(ảnh tranh bạn đã tô — không bắt buộc)</span></label>
           <input type="file" id="rvImage" accept="image/*" style="width:100%;font-size:12px;color:var(--tx2)">
           <div id="rvImgPreview" style="margin-top:8px"></div>
         </div>
@@ -521,10 +523,10 @@ async function submitReview(){
 
 <footer id="lien-he">
   <div class="footer-grid">
-    <div class="footer-brand"><img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo"><p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam.</p><div class="social-links"><a href="#" class="social-btn">📘</a><a href="#" class="social-btn">📷</a><a href="#" class="social-btn">💬</a></div></div>
+    <div class="footer-brand"><img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo"><p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam.</p><div class="social-links"><a href="#" class="social-btn"><i class="ri-facebook-circle-line"></i></a><a href="#" class="social-btn"><i class="ri-camera-line"></i></a><a href="#" class="social-btn"><i class="ri-chat-3-line"></i></a></div></div>
     <div class="footer-col"><h4>Sản phẩm</h4><ul><li><a href="{{ route('products') }}">Xem tất cả</a></li></ul></div>
     <div class="footer-col"><h4>Hỗ trợ</h4><ul><li><a href="{{ route('track-order') }}">Tra cứu đơn hàng</a></li><li><a href="#">Chính sách đổi trả</a></li></ul></div>
-    <div class="footer-col"><h4>Liên hệ</h4><p>📞 <a href="tel:{{ $settings['shop_phone'] ?? '' }}" style="color:var(--gn);text-decoration:none">{{ $settings['shop_phone'] ?? '0123456789' }}</a></p><p>⏰ T2–T7: 8:00 – 20:00</p></div>
+    <div class="footer-col"><h4>Liên hệ</h4><p><i class="ri-phone-line"></i> <a href="tel:{{ $settings['shop_phone'] ?? '' }}" style="color:var(--gn);text-decoration:none">{{ $settings['shop_phone'] ?? '0123456789' }}</a></p><p><i class="ri-time-line"></i> T2–T7: 8:00 – 20:00</p></div>
   </div>
   <div class="footer-bottom"><span>© 2024 DALI Tranh Tô Màu Số Hóa</span><span>Thiết kế tại Việt Nam 🇻🇳</span></div>
 </footer>
@@ -532,7 +534,7 @@ async function submitReview(){
 {{-- Modal --}}
 <div class="modal-overlay" id="orderModal" onclick="if(event.target===this)closeOrder()">
   <div class="modal">
-    <div class="modal-header"><h2 id="modalTitle">🛒 Đặt hàng DALI</h2><p id="modalSub">Điền thông tin – xác nhận trong 30 phút</p><button class="modal-close" onclick="closeOrder()">✕</button></div>
+    <div class="modal-header"><h2 id="modalTitle"><i class="ri-shopping-cart-2-line"></i> Đặt hàng DALI</h2><p id="modalSub">Điền thông tin – xác nhận trong 30 phút</p><button class="modal-close" onclick="closeOrder()">✕</button></div>
     <div class="modal-state active" id="state-form">
       <div class="order-product"><img id="oImg" src="" alt="" onerror="this.style.display='none'"><div><div class="op-name" id="oName">–</div><div class="op-size" id="oSize">–</div><div class="op-price" id="oPrice">–</div></div></div>
       <div style="margin-bottom:13px"><label style="font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:7px">Số lượng</label><div class="qty-ctrl"><button class="qty-b" onclick="changeQty(-1)">−</button><input class="qty-i" id="qtyInput" type="number" value="1" min="1" max="99"><button class="qty-b" onclick="changeQty(1)">+</button></div></div>
@@ -543,23 +545,23 @@ async function submitReview(){
       <div class="form-row single"><div class="form-group"><label>Email <span style="font-size:10px;color:var(--tx3);font-weight:400">(nhận xác nhận đơn hàng)</span></label><input type="email" id="custEmail" placeholder="email@gmail.com" style="width:100%;background:var(--gll);border:1.5px solid var(--bd);border-radius:9px;padding:10px 13px;font-size:13px;font-family:'Be Vietnam Pro',sans-serif;color:var(--tx);outline:none"></div></div>
 <label style="font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:10px">Hình thức thanh toán <span class="req">*</span></label>
       <div class="payment-opts">
-        <label class="payment-opt" id="pay-cod" onclick="selectPay('COD')"><input type="radio" name="payment" value="COD"><span class="payment-opt-icon">💵</span><div><div class="payment-opt-text">COD</div><div class="payment-opt-sub">Trả khi nhận hàng</div></div></label>
-        <label class="payment-opt active" id="pay-bank" onclick="selectPay('BANK')"><input type="radio" name="payment" value="BANK" checked><span class="payment-opt-icon">📱</span><div><div class="payment-opt-text">QR Chuyển khoản</div><div class="payment-opt-sub">Giảm 5% ngay</div></div><div class="discount-badge">-5%</div></label>
+        <label class="payment-opt" id="pay-cod" onclick="selectPay('COD')"><input type="radio" name="payment" value="COD"><span class="payment-opt-icon"><i class="ri-money-dollar-circle-line"></i></span><div><div class="payment-opt-text">COD</div><div class="payment-opt-sub">Trả khi nhận hàng</div></div></label>
+        <label class="payment-opt active" id="pay-bank" onclick="selectPay('BANK')"><input type="radio" name="payment" value="BANK" checked><span class="payment-opt-icon"><i class="ri-smartphone-line"></i></span><div><div class="payment-opt-text">QR Chuyển khoản</div><div class="payment-opt-sub">Giảm 5% ngay</div></div><div class="discount-badge">-5%</div></label>
       </div>
       <div class="order-summary">
         <div class="summary-row"><span>Giá sản phẩm</span><span id="sumPrice">–</span></div>
         <div class="summary-row"><span>Số lượng</span><span id="sumQty">1</span></div>
         <div class="summary-row discount" id="discountRow" style="display:none"><span>🎉 Giảm 5% chuyển khoản</span><span id="sumDiscount">–</span></div>
-        <div class="summary-row discount" id="couponDiscRow" style="display:none"><span>🏷️ Mã giảm giá</span><span id="sumCouponDiscount">–</span></div>
+        <div class="summary-row discount" id="couponDiscRow" style="display:none"><span><i class="ri-price-tag-3-line"></i> Mã giảm giá</span><span id="sumCouponDiscount">–</span></div>
 <div class="summary-row"><span>Phí giao hàng</span><span id="sumShip" style="color:var(--g)">Miễn phí</span></div>
         <div class="summary-row total"><span>Tổng thanh toán</span><span class="val" id="sumTotal">–</span></div>
       </div>
       <button class="btn-submit" id="submitBtn" onclick="handleSubmit()"><span id="submitText">Tiếp theo →</span></button>
-      <p style="text-align:center;font-size:11px;color:var(--tx3);margin-top:9px">🔒 Thông tin của bạn được bảo mật</p>
+      <p style="text-align:center;font-size:11px;color:var(--tx3);margin-top:9px"><i class="ri-lock-line"></i> Thông tin của bạn được bảo mật</p>
     </div>
     <div class="modal-state" id="state-qr">
       <div class="qr-box">
-        <div style="background:var(--gl);border-radius:12px;padding:12px 15px;margin-bottom:16px;display:flex;align-items:center;gap:10px;border:1px solid var(--bd2)"><span style="font-size:20px;flex-shrink:0">💳</span><div><strong style="font-size:13px;display:block;margin-bottom:2px">Quét mã QR để thanh toán</strong><p style="font-size:12px;color:var(--gd);line-height:1.5">Nội dung CK <b>phải ghi đúng mã đơn</b></p></div></div>
+        <div style="background:var(--gl);border-radius:12px;padding:12px 15px;margin-bottom:16px;display:flex;align-items:center;gap:10px;border:1px solid var(--bd2)"><span style="font-size:20px;flex-shrink:0"><i class="ri-bank-card-line"></i></span><div><strong style="font-size:13px;display:block;margin-bottom:2px">Quét mã QR để thanh toán</strong><p style="font-size:12px;color:var(--gd);line-height:1.5">Nội dung CK <b>phải ghi đúng mã đơn</b></p></div></div>
         <div class="qr-frame"><img id="qrImg" src="" alt="QR"></div>
         <div class="qr-amount" id="qrAmount">–</div>
         <div class="qr-amount-label">Số tiền cần chuyển (đã giảm 5%)</div>
@@ -570,8 +572,8 @@ async function submitReview(){
           <div class="bank-row"><span class="label">Số tiền</span><span class="val" id="bi-amount">–</span><button class="copy-btn" onclick="copyAmountRaw()">Sao chép</button></div>
           <div class="bank-row"><span class="label">Nội dung CK</span><span class="val" id="bi-note">–</span><button class="copy-btn" onclick="copyText('bi-note')">Sao chép</button></div>
         </div>
-        <div class="countdown-wrap" id="countdownBox"><div class="countdown-title">⏱ Thời gian giữ đơn hàng</div><div class="countdown-timer" id="countdownDisplay">15:00</div><div class="countdown-sub">Đơn sẽ huỷ nếu quá thời gian</div></div>
-        <button class="btn-confirm-paid" id="paidBtn" onclick="customerConfirmPaid()">✅ Tôi đã chuyển khoản xong</button>
+        <div class="countdown-wrap" id="countdownBox"><div class="countdown-title"><i class="ri-timer-line"></i> Thời gian giữ đơn hàng</div><div class="countdown-timer" id="countdownDisplay">15:00</div><div class="countdown-sub">Đơn sẽ huỷ nếu quá thời gian</div></div>
+        <button class="btn-confirm-paid" id="paidBtn" onclick="customerConfirmPaid()"><i class="ri-checkbox-circle-line"></i> Tôi đã chuyển khoản xong</button>
         <span class="btn-back-link" onclick="showState('form')">← Quay lại chỉnh sửa đơn hàng</span>
       </div>
     </div>
@@ -580,7 +582,7 @@ async function submitReview(){
         <span class="waiting-anim">⏳</span><h3>Đang chờ xác nhận thanh toán</h3>
         <p>Chúng tôi đã nhận đơn hàng của bạn.</p>
         <div class="order-code-display" id="waitOrderCode">DALI-000000</div>
-        <div class="waiting-steps"><div class="ws-item">✅ Khách xác nhận đã chuyển khoản</div><div class="ws-item">🔍 Shop đang kiểm tra tài khoản</div><div class="ws-item">📦 Xác nhận → đóng gói & giao hàng</div></div>
+        <div class="waiting-steps"><div class="ws-item"><i class="ri-checkbox-circle-line"></i> Khách xác nhận đã chuyển khoản</div><div class="ws-item"><i class="ri-search-line"></i> Shop đang kiểm tra tài khoản</div><div class="ws-item"><i class="ri-box-3-line"></i> Xác nhận → đóng gói & giao hàng</div></div>
         <p style="font-size:12px;color:var(--g);font-weight:700">Thường xác nhận trong 15–30 phút</p>
         <button class="btn-close-modal" onclick="closeOrder()">Đóng & tiếp tục mua sắm</button>
       </div>

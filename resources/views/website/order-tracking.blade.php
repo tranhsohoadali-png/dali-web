@@ -7,6 +7,8 @@
 <meta property="og:title" content="Tra cứu đơn hàng | DALI">
 @if(!empty($settings['ga_id']))<script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings['ga_id'] }}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $settings["ga_id"] }}');</script>@endif
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
 <style>
 :root{--g:#6BBF1F;--gd:#3E7A0A;--gl:#E8F9D0;--gll:#F4FDE8;--gn:#C6F135;--pk:#FF8FB1;--bd:#C8E89A;--bd2:#A8D870;--bg:#F2FDE8;--tx:#1A4D00;--tx2:#4A8A1A;--tx3:#8FC860;--char:#1C3A0A}
 *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
@@ -90,14 +92,14 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <li><a href="{{ route('products') }}">Sản phẩm</a></li>
   </ul>
   <div class="nav-right">
-    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{{ $settings['shop_phone'] ?? '0123456789' }}</a>
+    <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><i class="ri-phone-line" style="margin-right:5px"></i>{{ $settings['shop_phone'] ?? '0123456789' }}</a>
     <a href="{{ route('products') }}" class="btn-nav">Mua sắm</a>
   </div>
 </nav>
-<div class="sakura-strip"><span class="petal">🌸</span><span class="petal">✿</span><span class="petal">🍃</span><span class="sak-text">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
+<div class="sakura-strip"><span class="petal"><i class="ri-flower-line"></i></span><span class="petal"><i class="ri-flower-line"></i></span><span class="petal"><i class="ri-leaf-line"></i></span><span class="sak-text">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
 
 <div class="page-hero">
-  <h1>🔍 Tra cứu đơn hàng</h1>
+  <h1><i class="ri-search-line"></i> Tra cứu đơn hàng</h1>
   <p>Nhập mã đơn hoặc số điện thoại để xem trạng thái giao hàng</p>
 </div>
 
@@ -111,7 +113,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     </form>
     @if(request('code') && !$order && !isset($orders))
     <div style="margin-top:14px;background:#FFF0F0;border-left:3px solid #EF4444;border-radius:8px;padding:11px 14px;font-size:13px;color:#991B1B;font-weight:600">
-      ❌ Không tìm thấy đơn hàng với <b>{{ request('code') }}</b>. Vui lòng kiểm tra lại mã hoặc SĐT.
+      <i class="ri-close-circle-line"></i> Không tìm thấy đơn hàng với <b>{{ request('code') }}</b>. Vui lòng kiểm tra lại mã hoặc SĐT.
     </div>
     @endif
   </div>
@@ -122,7 +124,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 @if($orders && $orders->count() > 0)
 <div class="result-section">
   <div style="font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:14px">
-    📋 Tìm thấy <b>{{ $orders->count() }}</b> đơn hàng với số điện thoại <b>{{ request('code') }}</b>:
+    <i class="ri-clipboard-line"></i> Tìm thấy <b>{{ $orders->count() }}</b> đơn hàng với số điện thoại <b>{{ request('code') }}</b>:
   </div>
   @foreach($orders as $o)
   <div class="order-card" style="margin-bottom:16px;cursor:pointer" onclick="window.location='{{ route('track-order') }}?code={{ $o->code }}'">
@@ -163,9 +165,9 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
           {{ $order->status_label }}
         </div>
         @if($order->payment_status === 'paid')
-        <div style="margin-top:6px;font-size:11px;font-weight:700;color:var(--g);text-align:right">✅ Đã thanh toán</div>
+        <div style="margin-top:6px;font-size:11px;font-weight:700;color:var(--g);text-align:right"><i class="ri-checkbox-circle-line"></i> Đã thanh toán</div>
         @elseif($order->payment_method === 'BANK')
-        <div style="margin-top:6px;font-size:11px;font-weight:700;color:#D97706;text-align:right">💳 Chờ xác nhận TT</div>
+        <div style="margin-top:6px;font-size:11px;font-weight:700;color:#D97706;text-align:right"><i class="ri-bank-card-line"></i> Chờ xác nhận TT</div>
         @endif
       </div>
     </div>
@@ -230,14 +232,14 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       </div>
 
       {{-- Order items --}}
-      <div class="items-title">🎨 Sản phẩm đã đặt</div>
+      <div class="items-title"><i class="ri-palette-line"></i> Sản phẩm đã đặt</div>
       @foreach($order->items as $item)
       <div class="item-row">
         <div class="item-img">
           @if($item->product && $item->product->main_image)
             <img src="{{ asset('storage/'.$item->product->main_image) }}" alt="{{ $item->product_name }}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
           @else
-            <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:20px">🎨</div>
+            <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:20px"><i class="ri-palette-line"></i></div>
           @endif
         </div>
         <div style="flex:1">
@@ -261,7 +263,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
           @if($order->ship_fee > 0)
           <div style="font-size:12px;color:var(--tx3)">Phí ship: {{ number_format($order->ship_fee,0,',','.') }}đ</div>
           @else
-          <div style="font-size:12px;color:var(--g)">🚚 Miễn phí vận chuyển</div>
+          <div style="font-size:12px;color:var(--g)"><i class="ri-truck-line"></i> Miễn phí vận chuyển</div>
           @endif
         </div>
         <div class="total-val">{{ number_format($order->total,0,',','.') }}đ</div>
