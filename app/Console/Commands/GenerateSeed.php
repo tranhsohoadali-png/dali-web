@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Size;
 use App\Models\Product;
 use App\Models\Affiliate;
+use App\Models\Post;
 
 class GenerateSeed extends Command
 {
@@ -22,6 +23,7 @@ class GenerateSeed extends Command
         $products = Product::with('category')->orderBy('id')->get();
         $settings = DB::table('admin_settings')->get();
         $affs     = Affiliate::all();
+        $posts    = Post::orderBy('id')->get();
 
         $php  = "<?php\n";
         $php .= "namespace Database\\Seeders;\n\n";
@@ -109,6 +111,35 @@ class GenerateSeed extends Command
                      .  "'total_earned'=>0,'total_paid'=>0,'total_orders'=>0,"
                      .  "'bank_name'=>'{$bname}','bank_acc'=>'{$bacc}','bank_owner'=>'{$bown}',"
                      .  "'is_active'=>{$act},'note'=>'{$note}','created_at'=>\$now,'updated_at'=>\$now],\n";
+            }
+            $php .= "        ]);\n";
+        }
+
+        // ── POSTS (Blog) ──────────────────────────
+        $php .= "\n        // ── Blog ({$posts->count()} bài) ──\n";
+        $php .= "        DB::table('posts')->truncate();\n";
+        if ($posts->count()) {
+            $php .= "        DB::table('posts')->insert([\n";
+            foreach ($posts as $p) {
+                // base64 cho các trường HTML/text dài để tránh lỗi escape
+                $title   = base64_encode($p->title ?? '');
+                $excerpt = base64_encode($p->excerpt ?? '');
+                $content = base64_encode($p->content ?? '');
+                $mtitle  = base64_encode($p->meta_title ?? '');
+                $mdesc   = base64_encode($p->meta_description ?? '');
+                $slug    = addslashes($p->slug ?? '');
+                $cover   = addslashes($p->cover_image ?? '');
+                $cat     = addslashes($p->category ?? '');
+                $pub     = $p->is_published ? 'true' : 'false';
+                $views   = (int) ($p->view_count ?? 0);
+                $sort    = (int) ($p->sort_order ?? 0);
+                $pubAt   = $p->published_at ? "'".$p->published_at->format('Y-m-d H:i:s')."'" : 'null';
+                $php .= "            ['title'=>base64_decode('{$title}'),'slug'=>'{$slug}',"
+                     .  "'excerpt'=>base64_decode('{$excerpt}'),'content'=>base64_decode('{$content}'),"
+                     .  "'cover_image'=>'{$cover}','category'=>'{$cat}',"
+                     .  "'meta_title'=>base64_decode('{$mtitle}'),'meta_description'=>base64_decode('{$mdesc}'),"
+                     .  "'is_published'=>{$pub},'view_count'=>{$views},'sort_order'=>{$sort},"
+                     .  "'published_at'=>{$pubAt},'created_at'=>\$now,'updated_at'=>\$now],\n";
             }
             $php .= "        ]);\n";
         }
