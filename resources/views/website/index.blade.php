@@ -651,9 +651,10 @@ footer{
 
 /* Responsive */
 @media(max-width:900px){
+  body{overflow-x:clip}
   .hero{grid-template-columns:1fr;padding-top:44px;gap:36px;min-height:auto}
-  .hero-image{order:-1}.hero-img-main{height:320px}
-  .hero-img-float{width:130px;height:105px}
+  .hero-image{order:-1;min-height:auto}.hero-img-main{height:320px}
+  .hero-img-float{width:120px;height:96px;bottom:-14px;left:-6px;border-width:4px}
   .footer-grid{grid-template-columns:1fr 1fr}
   .nav-links{display:none}.nav-hamburger{display:flex}
   .trust-bar{gap:24px}

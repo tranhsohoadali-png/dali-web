@@ -21,6 +21,11 @@ nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:68px;paddi
 .nav-right{display:flex;align-items:center;gap:12px}
 .nav-phone{font-size:13px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none}
 .btn-nav{background:var(--gn);color:var(--char);border:none;border-radius:50px;padding:9px 20px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px}
+.mobile-nav{display:none;position:fixed;top:68px;left:0;right:0;bottom:0;background:linear-gradient(175deg,#1C5200,#2D7A08);z-index:99;padding:28px 5%;flex-direction:column;gap:4px}
+.mobile-nav.open{display:flex}
+.mobile-nav a{font-size:17px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.1);border-radius:8px}
 .sakura-strip{background:linear-gradient(90deg,#fff8fa,#f6ffe8,#fff,#f6ffe8,#fff8fa);border-bottom:1px solid #F0EBF8;padding:7px 5%;display:flex;align-items:center;gap:6px}
 .petal{font-size:15px;animation:drift 5s ease-in-out infinite;display:inline-block}
 .petal:nth-child(2){animation-delay:1s}.petal:nth-child(3){animation-delay:2s}
@@ -81,7 +86,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 .footer-links{display:flex;gap:20px}
 .footer-links a{color:rgba(255,255,255,.5);text-decoration:none;font-size:13px}
 .footer-links a:hover{color:var(--gn)}
-@media(max-width:600px){.info-grid{grid-template-columns:1fr}.search-form{flex-direction:column}.footer-bottom{flex-direction:column;text-align:center}.nav-phone{display:none}nav{padding:0 4%}}
+@media(max-width:600px){.info-grid{grid-template-columns:1fr}.search-form{flex-direction:column}.footer-bottom{flex-direction:column;text-align:center}.nav-phone{display:none}.nav-links{display:none}.nav-hamburger{display:flex}nav{padding:0 4%}}
 </style>
 </head>
 <body>
@@ -94,8 +99,16 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   <div class="nav-right">
     <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="nav-phone"><i class="ri-phone-line" style="margin-right:5px"></i>{{ $settings['shop_phone'] ?? '0123456789' }}</a>
     <a href="{{ route('products') }}" class="btn-nav">Mua sắm</a>
+    <button class="nav-hamburger" onclick="document.getElementById('mnav').classList.toggle('open')"><span></span><span></span><span></span></button>
   </div>
 </nav>
+<div class="mobile-nav" id="mnav">
+  <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
+  <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
+  <a href="{{ route('blog') }}"><i class="ri-quill-pen-line"></i> Blog</a>
+  <a href="{{ route('cart') }}"><i class="ri-shopping-cart-2-line"></i> Giỏ hàng</a>
+  <a href="{{ route('track-order') }}"><i class="ri-search-line"></i> Tra cứu đơn</a>
+</div>
 <div class="sakura-strip"><span class="petal"><i class="ri-flower-line"></i></span><span class="petal"><i class="ri-flower-line"></i></span><span class="petal"><i class="ri-leaf-line"></i></span><span class="sak-text">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
 
 <div class="page-hero">

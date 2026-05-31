@@ -19,6 +19,13 @@ nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:68px;paddi
 .nav-logo-t{font-size:26px;font-weight:900;letter-spacing:3px;color:#fff;text-decoration:none}.nav-logo-t span{color:#C6F135}
 .nav-links{display:flex;gap:26px;list-style:none}.nav-links a{text-decoration:none;color:rgba(255,255,255,.75);font-size:14px;font-weight:500}.nav-links a:hover{color:#fff}
 .btn-nav{background:#C6F135;color:#1C3A0A;border:none;border-radius:50px;padding:9px 20px;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px}
+.mobile-nav{display:none;position:fixed;top:68px;left:0;right:0;bottom:0;background:linear-gradient(175deg,#1C5200,#2D7A08);z-index:99;padding:28px 5%;flex-direction:column;gap:4px}
+.mobile-nav.open{display:flex}
+.mobile-nav a{font-size:17px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.1);border-radius:8px}
+@media(max-width:820px){.nav-links{display:none}.nav-hamburger{display:flex}nav{padding:0 4%}}
 .sak{background:linear-gradient(90deg,#fff8fa,#f6ffe8,#fff);border-bottom:1px solid #F0EBF8;padding:7px 5%;display:flex;align-items:center;gap:6px}
 .sak-t{font-size:10px;color:#B8D8A0;letter-spacing:2.5px;font-weight:700;margin-left:8px}
 .bc{padding:14px 5%;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx3)}
@@ -85,8 +92,18 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <li><a href="{{ route('blog') }}">Blog</a></li>
     <li><a href="{{ route('track-order') }}">Tra cứu đơn</a></li>
   </ul>
-  <a href="{{ route('products') }}" class="btn-nav">Mua sắm ngay</a>
+  <div class="nav-right">
+    <a href="{{ route('products') }}" class="btn-nav">Mua sắm ngay</a>
+    <button class="nav-hamburger" onclick="document.getElementById('mnav').classList.toggle('open')"><span></span><span></span><span></span></button>
+  </div>
 </nav>
+<div class="mobile-nav" id="mnav">
+  <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
+  <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
+  <a href="{{ route('blog') }}"><i class="ri-quill-pen-line"></i> Blog</a>
+  <a href="{{ route('cart') }}"><i class="ri-shopping-cart-2-line"></i> Giỏ hàng</a>
+  <a href="{{ route('track-order') }}"><i class="ri-search-line"></i> Tra cứu đơn</a>
+</div>
 <div class="sak"><span><i class="ri-flower-line"></i></span><span><i class="ri-flower-line"></i></span><span><i class="ri-leaf-line"></i></span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
 
 <div class="bc">
