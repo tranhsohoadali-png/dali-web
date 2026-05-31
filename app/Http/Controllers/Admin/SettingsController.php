@@ -35,7 +35,7 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        $fields = ['tg_token','tg_chat_id','bank_id','bank_acc','bank_name','bank_label','shop_phone','shop_address','ga_id','fb_pixel_id','zalo_oa_id','meta_title','meta_description','meta_keywords','free_ship_from','ship_fee','discount_bank'];
+        $fields = ['tg_token','tg_chat_id','bank_id','bank_acc','bank_name','bank_label','shop_phone','shop_address','ga_id','fb_pixel_id','zalo_link','zalo_oa_id','meta_title','meta_description','meta_keywords','free_ship_from','ship_fee','discount_bank'];
         foreach ($fields as $key) {
             if ($request->has($key)) {
                 DB::table('admin_settings')->where('key',$key)->update(['value' => $request->$key]);

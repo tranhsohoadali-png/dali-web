@@ -1,8 +1,11 @@
-{{-- Nút nổi: Giỏ hàng + Zalo + Messenger + Gọi điện --}}
+{{-- Nút nổi: Giỏ hàng + Zalo + Gọi điện --}}
 @php
   $fwPhone  = $settings['shop_phone'] ?? '0856911698';
   $fwDigits = preg_replace('/\D/', '', $fwPhone);
-  $fwZalo   = preg_replace('/^0/', '84', $fwDigits); // 0856.. -> 84856..
+  // Ưu tiên link Zalo tuỳ chỉnh từ cài đặt, fallback sang số điện thoại
+  $fwZaloLink = !empty($settings['zalo_link'])
+    ? $settings['zalo_link']
+    : 'https://zalo.me/' . preg_replace('/^0/', '84', $fwDigits);
 @endphp
 <div class="dali-fab">
   <a href="{{ route('cart') }}" class="fab-btn fab-cart" title="Giỏ hàng" aria-label="Giỏ hàng">
@@ -13,7 +16,7 @@
     <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M12 2C6.5 2 2 6.1 2 11.2c0 2.9 1.4 5.5 3.7 7.2V22l3.4-1.9c.9.300 1.9.4 2.9.4 5.5 0 10-4.1 10-9.2S17.5 2 12 2zm1 12.4l-2.6-2.8-5 2.8 5.5-5.8 2.6 2.8 4.9-2.8-5.4 5.8z"/></svg>
   </a>
   @endif
-  <a href="https://zalo.me/{{ $fwZalo }}" target="_blank" rel="noopener" class="fab-btn fab-zalo" title="Chat Zalo" aria-label="Zalo">
+  <a href="{{ $fwZaloLink }}" target="_blank" rel="noopener" class="fab-btn fab-zalo" title="Chat Zalo" aria-label="Zalo">
     <span style="font-weight:900;font-size:12px;letter-spacing:-.5px">Zalo</span>
   </a>
   <a href="tel:{{ $fwPhone }}" class="fab-btn fab-phone" title="Gọi điện" aria-label="Gọi điện">📞</a>
