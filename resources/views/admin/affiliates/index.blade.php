@@ -106,7 +106,8 @@ tr:hover td{background:var(--gll)}
                 <a href="{{ route('admin.affiliates.show', $aff) }}" class="btn-e">📊</a>
                 <a href="{{ route('admin.affiliates.edit', $aff) }}" class="btn-e">✏️</a>
                 @if($aff->balance > 0)
-                <form method="POST" action="{{ route('admin.affiliates.paid', $aff) }}" onsubmit="return confirm('Đánh dấu đã thanh toán {{ number_format($aff->balance,0,\',\',\'.\') }}đ cho {{ $aff->name }}?')">
+                @php $confirmMsg = 'Đánh dấu đã thanh toán ' . number_format($aff->balance,0,',','.') . 'đ cho ' . $aff->name . '?'; @endphp
+                <form method="POST" action="{{ route('admin.affiliates.paid', $aff) }}" onsubmit="return confirm('{{ addslashes($confirmMsg) }}')">
                   @csrf <button type="submit" class="btn-paid">💸 Đã TT</button>
                 </form>
                 @endif
