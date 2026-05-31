@@ -29,6 +29,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 .topbar-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.8);display:none}
 .btn-out{color:rgba(255,255,255,.75);font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:5px 12px;transition:all .2s}
 .btn-out:hover{background:rgba(255,255,255,.12);color:#fff}
+/* topbar nav links */
+.topbar-nav{display:none;align-items:center;gap:2px;flex:1;justify-content:center}
+.topbar-nav a{color:rgba(255,255,255,.7);font-size:12.5px;font-weight:600;text-decoration:none;padding:6px 11px;border-radius:8px;transition:all .2s;white-space:nowrap}
+.topbar-nav a:hover{background:rgba(255,255,255,.12);color:#fff}
+.topbar-nav a.act{background:rgba(255,255,255,.18);color:#fff;font-weight:800}
 
 /* ── BOTTOM TABBAR (mobile-first) ── */
 .tabbar{
@@ -128,10 +133,16 @@ td{padding:11px 10px;border-bottom:1px solid #EAF6D8;vertical-align:middle;color
 /* ── DESKTOP sidebar layout ── */
 @media(min-width:860px){
   .tabbar{display:none}
-  .page-body{padding:24px 28px 32px;max-width:860px;margin:0 auto;width:100%}
+  .topbar-nav{display:flex}
+  .page-body{padding:24px 28px 32px;max-width:900px;margin:0 auto;width:100%;padding-bottom:32px}
   .topbar-name{display:block}
   .body-wrap{display:flex;flex-direction:column;flex:1}
   .stat-row{grid-template-columns:repeat(4,1fr)}
+}
+/* mobile: tabbar hiện, topbar chỉ logo + logout */
+@media(max-width:859px){
+  .topbar-nav{display:none!important}
+  .page-body{padding-bottom:80px}
 }
 @media(max-width:400px){
   .stat-row{grid-template-columns:1fr 1fr}
@@ -145,12 +156,19 @@ td{padding:11px 10px;border-bottom:1px solid #EAF6D8;vertical-align:middle;color
     <a href="{{ route('home') }}" class="logo">DAL<span>I</span></a>
     <span class="ctv-badge">CTV</span>
   </div>
+  @if(session('ctv_id'))
+  <nav class="topbar-nav">
+    <a href="{{ route('ctv.dashboard') }}" class="{{ request()->routeIs('ctv.dashboard') ? 'act' : '' }}">📊 Tổng quan</a>
+    <a href="{{ route('ctv.order.create') }}" class="{{ request()->routeIs('ctv.order.create') ? 'act' : '' }}">➕ Lên đơn</a>
+    <a href="{{ route('ctv.orders') }}" class="{{ request()->routeIs('ctv.orders') ? 'act' : '' }}">📦 Đơn hàng</a>
+    <a href="{{ route('ctv.withdraw.page') }}" class="{{ request()->routeIs('ctv.withdraw.page') ? 'act' : '' }}">💳 Rút tiền</a>
+    <a href="{{ route('ctv.profile') }}" class="{{ request()->routeIs('ctv.profile') ? 'act' : '' }}">👤 Hồ sơ</a>
+  </nav>
   <div class="topbar-right">
-    @if(session('ctv_id'))
-      <span class="topbar-name">{{ $ctv->name ?? '' }}</span>
-      <a href="{{ route('ctv.logout') }}" class="btn-out">Đăng xuất</a>
-    @endif
+    <span class="topbar-name">{{ $ctv->name ?? '' }}</span>
+    <a href="{{ route('ctv.logout') }}" class="btn-out">Đăng xuất</a>
   </div>
+  @endif
 </div>
 
 <div class="page-body">
