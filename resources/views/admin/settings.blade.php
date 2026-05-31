@@ -167,41 +167,21 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         {{-- ZALO --}}
         <div class="card">
           <div class="rainbow"></div>
-          <div class="card-head"><div class="card-icon">💬</div><div><div class="card-title">Kết nối Zalo</div><div class="card-sub">Nút chat nổi + widget Zalo OA trên website</div></div></div>
+          <div class="card-head"><div class="card-icon">💬</div><div><div class="card-title">Zalo liên hệ</div><div class="card-sub">Nút Zalo nổi góc phải màn hình</div></div></div>
           <div class="fb">
-
-            {{-- Hướng dẫn --}}
-            <div style="background:linear-gradient(135deg,#EEF8FF,#F0FBE4);border:1.5px solid #C8E89A;border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:12.5px;color:#1A4D00">
-              <div style="font-weight:800;margin-bottom:8px">📖 Có 2 cách liên kết Zalo:</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div style="background:#fff;border-radius:9px;padding:12px;border:1px solid #C8E89A">
-                  <div style="font-weight:800;color:#0068FF;margin-bottom:4px">① Zalo cá nhân / Page</div>
-                  <div style="color:#4A8A1A;line-height:1.6">Dán link Zalo của bạn vào ô <b>"Link Zalo"</b> bên dưới.<br>Lấy link tại: <b>Zalo → Trang cá nhân → Chia sẻ → Sao chép link</b><br>hoặc link page: <b>zalo.me/TênPage</b></div>
-                </div>
-                <div style="background:#fff;border-radius:9px;padding:12px;border:1px solid #C8E89A">
-                  <div style="font-weight:800;color:#0068FF;margin-bottom:4px">② Zalo Official Account (OA)</div>
-                  <div style="color:#4A8A1A;line-height:1.6">Đăng ký OA tại <b>oa.zalo.me</b> → Lấy OA ID → Dán vào ô <b>"Zalo OA ID"</b>.<br>Widget chat sẽ hiện trên trang sản phẩm (popup chính thức).</div>
-                </div>
-              </div>
-            </div>
-
             <div class="g2">
               <div>
-                <label class="flabel">🔗 Link Zalo (cá nhân / page)</label>
+                <label class="flabel">🔗 Link Zalo cá nhân</label>
                 <input type="text" name="zalo_link" class="dinput" value="{{ $settings['zalo_link'] ?? '' }}" placeholder="https://zalo.me/0856911698">
-                <div class="fnote">Link này gắn vào nút Zalo nổi góc phải màn hình. Để trống = dùng SĐT shop tự động.</div>
+                <div class="fnote">
+                  Cách lấy link: Mở Zalo → Trang cá nhân → Chia sẻ → Sao chép link.<br>
+                  Hoặc nhập thẳng: <b>https://zalo.me/0856911698</b> (thay bằng SĐT Zalo của bạn).
+                  <br>Trạng thái: <b style="color:{{ !empty($settings['zalo_link']) ? 'var(--g)' : 'var(--tx3)' }}">
+                    {{ !empty($settings['zalo_link']) ? '✅ '.$settings['zalo_link'] : 'Chưa đặt (tự dùng SĐT shop)' }}
+                  </b>
+                </div>
               </div>
-              <div>
-                <label class="flabel">🏢 Zalo OA ID <span class="hint">(Official Account)</span></label>
-                <input type="text" name="zalo_oa_id" class="dinput" value="{{ $settings['zalo_oa_id'] ?? '' }}" placeholder="VD: 3456789012345678">
-                <div class="fnote">Nhập OA ID từ <a href="https://oa.zalo.me" target="_blank" style="color:var(--g)">oa.zalo.me</a> → Cài đặt → ID trang. Hiện widget chat popup.</div>
-              </div>
-            </div>
-
-            {{-- Preview trạng thái --}}
-            <div style="background:var(--gll);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--tx2);display:flex;gap:20px;flex-wrap:wrap">
-              <div>🔵 Nút nổi: <b style="color:{{ !empty($settings['zalo_link']) || !empty($settings['shop_phone']) ? 'var(--g)' : '#EF4444' }}">{{ !empty($settings['zalo_link']) ? 'Dùng link Zalo' : (!empty($settings['shop_phone']) ? 'Dùng SĐT '.$settings['shop_phone'] : 'Chưa cấu hình') }}</b></div>
-              <div>💬 Widget OA: <b style="color:{{ !empty($settings['zalo_oa_id']) ? 'var(--g)' : '#9CA3AF' }}">{{ !empty($settings['zalo_oa_id']) ? 'Đã bật (ID: '.$settings['zalo_oa_id'].')' : 'Chưa cấu hình' }}</b></div>
+              <div></div>
             </div>
           </div>
         </div>

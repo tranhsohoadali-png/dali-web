@@ -703,11 +703,6 @@ function toggleMenu(){document.getElementById('mobileNav').classList.toggle('ope
 var lastST=0,navVis=true;window.addEventListener('scroll',function(){var nav=document.getElementById('mainNav');if(!nav)return;var st=window.scrollY;if(st>200){if(st>lastST&&navVis){nav.classList.add('nav-hidden');navVis=false;}else if(st<lastST&&!navVis){nav.classList.remove('nav-hidden');navVis=true;}}lastST=st<=0?0:st;});
 document.getElementById('qtyInput').addEventListener('input',updateSummary);
 </script>
-{{-- Zalo Chat Widget --}}
-@if(!empty($settings['zalo_oa_id']))
-<div class="zalo-chat-widget" data-oaid="{{ $settings['zalo_oa_id'] }}" data-welcome-message="Xin chào! Tôi có thể giúp gì cho bạn?" data-autopopup="0" data-width="350" data-height="420"></div>
-<script src="https://sp.zalo.me/plugins/sdk.js"></script>
-@endif
 
 @include('partials.float-widget')
 </body>
