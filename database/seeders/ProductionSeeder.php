@@ -93,7 +93,7 @@ class ProductionSeeder extends Seeder
         // ── Cộng tác viên ──
         DB::table('affiliates')->truncate();
         DB::table('affiliates')->insert([
-            ['name'=>'CTV Demo','phone'=>'0900000001','email'=>'','code'=>'DALI_DEMO','password'=>'$2y$12$EHewc5PCzthEutbLKpSyo.mkvtbwSwb7njquH9/qEhWvryRIhxGAy','commission_rate'=>20,'total_earned'=>0,'total_paid'=>0,'total_orders'=>0,'bank_name'=>'Vietcombank','bank_acc'=>'0123456789','bank_owner'=>'CTV DEMO','is_active'=>true,'note'=>'','created_at'=>$now,'updated_at'=>$now],
+            ['name'=>'CTV Demo','phone'=>'0900000001','email'=>'','code'=>'DALI_DEMO','password'=>'$2y$12$kDWZRFrqTISeFX82Kskd.OoYJK7TOFPo8uzvb3H.7jDgwh9WpCy5a','commission_rate'=>20,'total_earned'=>0,'total_paid'=>0,'total_orders'=>0,'bank_name'=>'Vietcombank','bank_acc'=>'0123456789','bank_owner'=>'CTV DEMO','is_active'=>true,'note'=>'','created_at'=>$now,'updated_at'=>$now],
         ]);
 
         // ── Blog (8 bài) ──
