@@ -161,12 +161,12 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
 .product-card{background:#fff;border-radius:18px;overflow:hidden;border:1.5px solid var(--bd);transition:transform .3s,box-shadow .3s}
 .product-card:hover{transform:translateY(-8px);box-shadow:0 16px 44px rgba(58,122,10,.12)}
-.product-img{position:relative;height:240px;overflow:hidden;display:block;text-decoration:none;background:linear-gradient(135deg,var(--gll),#fff)}
-.product-img img{width:100%;height:100%;object-fit:contain;transition:transform .4s}
+.product-img{position:relative;aspect-ratio:1/1;overflow:hidden;display:block;text-decoration:none;background:linear-gradient(135deg,var(--gll),#fff)}
+.product-img img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .4s}
 .product-card:hover .product-img img{transform:scale(1.06)}
 .product-badge{position:absolute;top:12px;left:12px;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:50px;z-index:2}
 .product-info{padding:15px}
-.product-name{font-size:14px;font-weight:700;color:var(--char);margin-bottom:4px;line-height:1.4}
+.product-name{font-size:14px;font-weight:700;color:var(--char);margin-bottom:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:39px}
 .product-size{font-size:12px;color:var(--tx3);margin-bottom:8px}
 .product-price{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .price-current{font-size:18px;font-weight:900;color:var(--g)}
@@ -271,7 +271,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         @endif
       </a>
       <div class="product-info">
-        <a href="{{ route('product', $p->slug) }}" class="product-name" style="text-decoration:none;color:inherit;display:block">{{ $p->name }}</a>
+        <a href="{{ route('product', $p->slug) }}" class="product-name" style="text-decoration:none;color:inherit">{{ $p->name }}</a>
         <div class="product-size">{{ $p->colors_count ? $p->colors_count.' màu' : '' }}{{ $p->sizes()->count() ? ($p->colors_count ? ' · ' : '').$p->sizes()->count().' kích thước' : '' }}</div>
         <div class="product-price">
           @if($p->has_multiple_sizes)<span style="font-size:12px;color:var(--tx3);font-weight:600">Từ</span>@endif
