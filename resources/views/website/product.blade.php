@@ -522,7 +522,7 @@ async function submitReview(){
 
 <footer id="lien-he">
   <div class="footer-grid">
-    <div class="footer-brand"><img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo"><p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam.</p><div class="social-links"><a href="#" class="social-btn"><i class="ri-facebook-circle-line"></i></a><a href="#" class="social-btn"><i class="ri-camera-line"></i></a><a href="#" class="social-btn"><i class="ri-chat-3-line"></i></a></div></div>
+    <div class="footer-brand"><img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo"><p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam.</p><div class="social-links"><a href="https://www.facebook.com/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook"><i class="ri-facebook-circle-line"></i></a><a href="https://m.me/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Messenger"><i class="ri-messenger-line"></i></a></div></div>
     <div class="footer-col"><h4>Sản phẩm</h4><ul><li><a href="{{ route('products') }}">Xem tất cả</a></li></ul></div>
     <div class="footer-col"><h4>Hỗ trợ</h4><ul><li><a href="{{ route('track-order') }}">Tra cứu đơn hàng</a></li><li><a href="#">Chính sách đổi trả</a></li></ul></div>
     <div class="footer-col"><h4>Liên hệ</h4><p><i class="ri-phone-line"></i> <a href="tel:{{ $settings['shop_phone'] ?? '' }}" style="color:var(--gn);text-decoration:none">{{ $settings['shop_phone'] ?? '0123456789' }}</a></p><p><i class="ri-time-line"></i> T2–T7: 8:00 – 20:00</p></div>

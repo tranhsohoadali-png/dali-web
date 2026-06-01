@@ -975,9 +975,8 @@ function filterByCategory(catId){
       <img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo">
       <p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam. Chúng tôi tin rằng mọi người đều có tâm hồn nghệ sĩ.</p>
       <div class="social-links">
-        <a href="#" class="social-btn"><i class="ri-facebook-circle-line"></i></a>
-        <a href="#" class="social-btn"><i class="ri-camera-line"></i></a>
-        <a href="#" class="social-btn"><i class="ri-chat-3-line"></i></a>
+        <a href="https://www.facebook.com/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook"><i class="ri-facebook-circle-line"></i></a>
+        <a href="https://m.me/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Messenger"><i class="ri-messenger-line"></i></a>
       </div>
     </div>
     <div class="footer-col"><h4>Sản phẩm</h4><ul>

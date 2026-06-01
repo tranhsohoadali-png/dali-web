@@ -319,7 +319,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <div class="footer-brand">
       <img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo">
       <p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam.</p>
-      <div class="social-links"><a href="#" class="social-btn"><i class="ri-facebook-circle-line"></i></a><a href="#" class="social-btn"><i class="ri-camera-line"></i></a><a href="#" class="social-btn"><i class="ri-chat-3-line"></i></a></div>
+      <div class="social-links"><a href="https://www.facebook.com/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook"><i class="ri-facebook-circle-line"></i></a><a href="https://m.me/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Messenger"><i class="ri-messenger-line"></i></a></div>
     </div>
     <div class="footer-col"><h4>Sản phẩm</h4><ul><li><a href="{{ route('products') }}?category=phong-canh">Phong cảnh</a></li><li><a href="{{ route('products') }}?category=hoa-thuc-vat">Hoa & Thực vật</a></li><li><a href="{{ route('products') }}?category=dong-vat">Động vật</a></li><li><a href="{{ route('products') }}">Xem tất cả</a></li></ul></div>
     <div class="footer-col"><h4>Hỗ trợ</h4><ul><li><a href="{{ route('track-order') }}">Tra cứu đơn hàng</a></li><li><a href="{{ route('home') }}#huong-dan">Hướng dẫn tô màu</a></li><li><a href="#">Chính sách đổi trả</a></li><li><a href="#">Câu hỏi thường gặp</a></li></ul></div>
