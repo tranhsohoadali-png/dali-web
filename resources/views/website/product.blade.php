@@ -707,5 +707,6 @@ document.getElementById('qtyInput').addEventListener('input',updateSummary);
 </script>
 
 @include('partials.float-widget')
+@include('partials.bottom-nav')
 </body>
 </html>

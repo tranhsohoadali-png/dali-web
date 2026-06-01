@@ -544,5 +544,6 @@ document.getElementById('qtyInput').addEventListener('input',updateSummary);
 document.querySelectorAll('.product-fav').forEach(b=>b.addEventListener('click',function(e){e.stopPropagation();this.textContent=this.textContent==='🤍'?'❤️':'🤍';}));
 </script>
 @include('partials.float-widget')
+@include('partials.bottom-nav')
 </body>
 </html>

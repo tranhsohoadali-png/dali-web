@@ -367,5 +367,6 @@ async function doCheckout(){
 selectPay('BANK');
 </script>
 @include('partials.float-widget')
+@include('partials.bottom-nav')
 </body>
 </html>

@@ -307,5 +307,6 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   </div>
 </footer>
 @include('partials.float-widget')
+@include('partials.bottom-nav')
 </body>
 </html>

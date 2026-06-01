@@ -315,6 +315,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 
 <div class="toast" id="toast"></div>
 @include('partials.float-widget')
+@include('partials.bottom-nav')
 <script>
 var PRODUCTS = @json($jsProducts);
 var SIZES = @json($jsSizes);
