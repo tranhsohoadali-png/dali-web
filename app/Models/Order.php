@@ -10,9 +10,29 @@ class Order extends Model
         'affiliate_code','affiliate_commission',
         'payment_method','payment_status','status',
         'subtotal','discount','ship_fee','total',
+        'vtp_order_number','vtp_status','vtp_status_name','vtp_status_at','vtp_service','weight',
+    ];
+
+    protected $casts = [
+        'vtp_status_at' => 'datetime',
     ];
 
     public function items()   { return $this->hasMany(OrderItem::class); }
+
+    /** Map mã trạng thái Viettel Post → trạng thái nội bộ DALI. */
+    public static function mapVtpStatus(int $code): ?string
+    {
+        return match (true) {
+            in_array($code, [101,107,201,503])      => 'cancelled',   // hủy / tiêu hủy
+            $code === 501                           => 'delivered',   // giao thành công
+            $code === 504                           => 'cancelled',   // hoàn về người gửi
+            $code >= 500                            => 'shipping',    // bưu tá đi phát / phát lại
+            $code >= 300                            => 'shipping',    // khai thác / vận chuyển
+            $code === 200                           => 'shipping',    // lấy hàng thành công
+            $code >= 102                            => 'packing',     // điều phối lấy hàng
+            default                                 => null,
+        };
+    }
 
     public function getStatusLabelAttribute(): string {
         return match($this->status) {

@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\TrackVisit::class,
         ]);
+        // Webhook bên ngoài (Viettel Post) không gửi CSRF token
+        $middleware->validateCsrfTokens(except: [
+            'webhook/viettelpost',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

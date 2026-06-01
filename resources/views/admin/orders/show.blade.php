@@ -126,6 +126,31 @@ body{background:var(--bg);color:var(--tx)}
 
           <div class="card">
             <div class="rainbow"></div>
+            <div class="card-h"><div class="card-t">🚚 Vận chuyển Viettel Post</div></div>
+            <div style="padding:14px 18px">
+              @if($order->vtp_order_number)
+                <div class="info-row"><span class="info-label">Mã vận đơn</span><span style="font-weight:800;font-size:13px;color:var(--g);user-select:all">{{ $order->vtp_order_number }}</span></div>
+                <div class="info-row"><span class="info-label">Trạng thái VTP</span><span style="font-weight:700;font-size:12px">{{ $order->vtp_status_name ?? '—' }}{{ $order->vtp_status ? ' ('.$order->vtp_status.')' : '' }}</span></div>
+                @if($order->vtp_status_at)<div class="info-row" style="border:none"><span class="info-label">Cập nhật</span><span style="font-size:12px;color:var(--tx3)">{{ $order->vtp_status_at->format('H:i d/m/Y') }}</span></div>@endif
+                <div style="display:flex;gap:8px;margin-top:12px">
+                  <a href="{{ route('admin.orders.vtp.print',$order) }}" target="_blank" class="btn-status" style="flex:1;text-align:center;text-decoration:none;background:#3A9A12;line-height:1.2">🖨️ In nhãn</a>
+                  <form method="POST" action="{{ route('admin.orders.vtp.cancel',$order) }}" style="flex:1" onsubmit="return confirm('Hủy vận đơn VTP này?')">
+                    @csrf
+                    <button type="submit" class="btn-status" style="width:100%;background:#EF4444">Hủy vận đơn</button>
+                  </form>
+                </div>
+              @else
+                <p style="font-size:12px;color:var(--tx3);margin-bottom:10px">Tạo vận đơn để VTP đến lấy hàng và tự cập nhật hành trình về hệ thống.</p>
+                <form method="POST" action="{{ route('admin.orders.vtp.create',$order) }}" onsubmit="return confirm('Tạo vận đơn Viettel Post cho đơn này?')">
+                  @csrf
+                  <button type="submit" class="btn-status" style="width:100%">🚚 Tạo vận đơn VTP</button>
+                </form>
+              @endif
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="rainbow"></div>
             <div class="card-h"><div class="card-t">💳 Thanh toán</div></div>
             <div style="padding:14px 18px">
               <div class="info-row"><span class="info-label">Hình thức</span><span style="font-weight:700;font-size:13px">{{ $order->payment_label }}</span></div>

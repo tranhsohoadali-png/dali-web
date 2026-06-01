@@ -15,6 +15,10 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\WithdrawalController;
 use App\Http\Controllers\CtvController;
+use App\Http\Controllers\WebhookController;
+
+// ─── WEBHOOK (ngoài, không CSRF) ────────────────
+Route::post('/webhook/viettelpost', [WebhookController::class, 'viettelpost'])->name('webhook.vtp');
 
 // ─── FRONTEND ───────────────────────────────────
 Route::get('/',                  [WebsiteController::class, 'index'])->name('home');
@@ -88,6 +92,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::get('orders/export',                [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/{order}',               [OrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/status',       [OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::post('orders/{order}/vtp-create',   [OrderController::class, 'vtpCreate'])->name('orders.vtp.create');
+    Route::post('orders/{order}/vtp-cancel',   [OrderController::class, 'vtpCancel'])->name('orders.vtp.cancel');
+    Route::get('orders/{order}/vtp-print',     [OrderController::class, 'vtpPrint'])->name('orders.vtp.print');
     Route::delete('orders/{order}',            [OrderController::class, 'destroy'])->name('orders.destroy');
 
     // Cài đặt

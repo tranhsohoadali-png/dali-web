@@ -35,11 +35,17 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        $fields = ['tg_token','tg_chat_id','bank_id','bank_acc','bank_name','bank_label','shop_phone','shop_address','ga_id','fb_pixel_id','zalo_link','zalo_oa_id','meta_title','meta_description','meta_keywords','free_ship_from','ship_fee','discount_bank'];
+        $fields = ['tg_token','tg_chat_id','bank_id','bank_acc','bank_name','bank_label','shop_phone','shop_address','ga_id','fb_pixel_id','zalo_link','zalo_oa_id','meta_title','meta_description','meta_keywords','free_ship_from','ship_fee','discount_bank',
+            'vtp_token','vtp_env','vtp_sender_name','vtp_sender_phone','vtp_sender_address','vtp_service','vtp_webhook_token','default_weight'];
         foreach ($fields as $key) {
             if ($request->has($key)) {
                 DB::table('admin_settings')->where('key',$key)->update(['value' => $request->$key]);
             }
+        }
+        // Checkbox bật/tắt VTP (chỉ xử lý khi form VTP được gửi)
+        if ($request->has('vtp_form')) {
+            DB::table('admin_settings')->where('key','vtp_enabled')
+                ->update(['value' => $request->boolean('vtp_enabled') ? '1' : '0']);
         }
         if ($request->filled('new_password')) {
             // Bảo vệ: chỉ đổi khi 2 ô khớp nhau (tránh trình duyệt autofill làm đổi mật khẩu ngoài ý muốn)

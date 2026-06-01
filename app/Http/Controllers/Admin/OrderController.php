@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\ViettelPostService;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -41,6 +42,54 @@ class OrderController extends Controller
     {
         $order->delete();
         return back()->with('success', 'Đã xoá đơn hàng!');
+    }
+
+    // ── VIETTEL POST ──────────────────────────────
+    /** Tạo vận đơn Viettel Post cho đơn hàng. */
+    public function vtpCreate(Request $request, Order $order, ViettelPostService $vtp)
+    {
+        if ($order->vtp_order_number) {
+            return back()->with('error', 'Đơn này đã có vận đơn VTP: ' . $order->vtp_order_number);
+        }
+        try {
+            $data = $vtp->createOrder($order, $request->input('service') ?: null);
+            $order->update([
+                'vtp_order_number' => $data['ORDER_NUMBER'] ?? null,
+                'vtp_service'      => $request->input('service') ?: ($order->vtp_service),
+                'vtp_status'       => 100,
+                'vtp_status_name'  => 'Đã tạo vận đơn',
+                'vtp_status_at'    => now(),
+                'ship_fee'         => (int) ($data['MONEY_TOTAL'] ?? $order->ship_fee),
+                'status'           => $order->status === 'new' ? 'confirmed' : $order->status,
+            ]);
+            return back()->with('success', 'Đã tạo vận đơn VTP: ' . ($data['ORDER_NUMBER'] ?? ''));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Tạo vận đơn thất bại: ' . $e->getMessage());
+        }
+    }
+
+    /** Hủy vận đơn Viettel Post. */
+    public function vtpCancel(Order $order, ViettelPostService $vtp)
+    {
+        if (!$order->vtp_order_number) return back()->with('error', 'Đơn chưa có vận đơn VTP.');
+        try {
+            $vtp->cancelOrder($order->vtp_order_number, 'Shop hủy đơn');
+            $order->update(['vtp_status' => 107, 'vtp_status_name' => 'Đã hủy vận đơn', 'vtp_status_at' => now(), 'status' => 'cancelled']);
+            return back()->with('success', 'Đã hủy vận đơn VTP.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Hủy vận đơn thất bại: ' . $e->getMessage());
+        }
+    }
+
+    /** Mở link in nhãn vận đơn. */
+    public function vtpPrint(Order $order, ViettelPostService $vtp)
+    {
+        if (!$order->vtp_order_number) return back()->with('error', 'Đơn chưa có vận đơn VTP.');
+        try {
+            return redirect()->away($vtp->printLink($order->vtp_order_number));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Không lấy được link in: ' . $e->getMessage());
+        }
     }
 
     // ── XUẤT CSV ──────────────────────────────────

@@ -225,6 +225,35 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               </div>
             </div>
             <div class="divider"></div>
+            <div class="sec-title" style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--tx3);text-transform:uppercase;margin-bottom:12px">Viettel Post <span style="color:var(--g)">(khuyên dùng)</span></div>
+            <input type="hidden" name="vtp_form" value="1">
+            <label style="display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--char);margin-bottom:14px;cursor:pointer">
+              <input type="checkbox" name="vtp_enabled" value="1" {{ ($settings['vtp_enabled'] ?? '0')==='1' ? 'checked' : '' }} style="width:18px;height:18px">
+              Bật tích hợp Viettel Post
+            </label>
+            <div class="g2">
+              <div><label class="flabel">VTP Token (bí mật)</label><input type="text" name="vtp_token" class="dinput" value="{{ $settings['vtp_token'] ?? '' }}" placeholder="Token từ viettelpost.vn → Cấu hình tài khoản"><div class="fnote">Lấy tại viettelpost.vn → Cấu hình tài khoản → Thêm mới token</div></div>
+              <div><label class="flabel">Môi trường</label>
+                <select name="vtp_env" class="dselect">
+                  <option value="prod" {{ ($settings['vtp_env']??'prod')==='prod'?'selected':'' }}>Production (thật)</option>
+                  <option value="dev" {{ ($settings['vtp_env']??'prod')==='dev'?'selected':'' }}>Development (thử nghiệm)</option>
+                </select>
+              </div>
+            </div>
+            <div class="g2">
+              <div><label class="flabel">Tên người gửi</label><input type="text" name="vtp_sender_name" class="dinput" value="{{ $settings['vtp_sender_name'] ?? 'DALI' }}"></div>
+              <div><label class="flabel">SĐT người gửi</label><input type="text" name="vtp_sender_phone" class="dinput" value="{{ $settings['vtp_sender_phone'] ?? '' }}" placeholder="0856911698"></div>
+            </div>
+            <div><label class="flabel">Địa chỉ lấy hàng (người gửi)</label><input type="text" name="vtp_sender_address" class="dinput" value="{{ $settings['vtp_sender_address'] ?? '' }}" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/TP"></div>
+            <div class="g2">
+              <div><label class="flabel">Mã dịch vụ</label><input type="text" name="vtp_service" class="dinput" value="{{ $settings['vtp_service'] ?? 'VCN' }}" placeholder="VCN"><div class="fnote">VD: VCN (Chuyển phát nhanh), VTK (Tiết kiệm)</div></div>
+              <div><label class="flabel">Webhook Secret</label><input type="text" name="vtp_webhook_token" class="dinput" value="{{ $settings['vtp_webhook_token'] ?? '' }}" placeholder="Chuỗi bí mật tự đặt"><div class="fnote">Đặt 1 chuỗi → khai báo cùng webhook trên VTP để xác thực</div></div>
+            </div>
+            <div style="background:var(--gll);border-radius:10px;padding:12px 16px;border:1px solid var(--bd);margin-top:6px;font-size:13px;color:var(--gd)">
+              🔗 <b>URL Webhook</b> (dán vào Bảng điều khiển Partner VTP): <br>
+              <code style="user-select:all;font-size:12px;color:var(--char)">{{ url('/webhook/viettelpost') }}</code>
+            </div>
+            <div class="divider"></div>
             <div class="sec-title" style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--tx3);text-transform:uppercase;margin-bottom:12px">Cấu hình mặc định</div>
             <div class="g2">
               <div><label class="flabel">Cân nặng mặc định (gram)</label><input type="number" name="default_weight" class="dinput" value="{{ $settings['default_weight'] ?? 500 }}" min="1" placeholder="500"><div class="fnote">Cân nặng ước tính của 1 bộ tranh</div></div>

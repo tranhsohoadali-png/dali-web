@@ -242,6 +242,16 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
           <div class="info-label">Trạng thái TT</div>
           <div class="info-value">{{ $order->payment_status_label }}</div>
         </div>
+        @if($order->vtp_order_number)
+        <div class="info-item">
+          <div class="info-label">Mã vận đơn (VTP)</div>
+          <div class="info-value" style="color:var(--g);user-select:all">{{ $order->vtp_order_number }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Hành trình ViettelPost</div>
+          <div class="info-value">{{ $order->vtp_status_name ?? 'Đã tạo vận đơn' }}</div>
+        </div>
+        @endif
       </div>
 
       {{-- Order items --}}
