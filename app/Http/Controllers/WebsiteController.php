@@ -113,6 +113,47 @@ class WebsiteController extends Controller
         return view('website.order-tracking', compact('order','orders','settings'));
     }
 
+    /**
+     * Tính phí giao hàng: miễn phí theo ngưỡng, nếu không thì lấy cước thật
+     * từ Viettel Post (getPrice); thất bại/tắt → phí cố định trong cài đặt.
+     * @return array [int $fee, int $weight]
+     */
+    private function shipFeeFor($settings, int $afterDisc, ?string $city, ?string $address, string $payment, int $qty): array
+    {
+        $freeFrom = (int)($settings['free_ship_from'] ?? 299000);
+        $weight   = max(1, (int)($settings['default_weight'] ?? 500) * max(1, $qty));
+        if ($afterDisc >= $freeFrom) return [0, $weight];
+
+        if ($city && $address) {
+            try {
+                $vtp = app(\App\Services\ViettelPostService::class);
+                if ($vtp->enabled()) {
+                    $cod  = $payment === 'COD' ? $afterDisc : 0;
+                    $data = $vtp->getPrice(trim($address . ', ' . $city, ', '), $weight, $afterDisc, $cod);
+                    $fee  = (int)($data['MONEY_TOTAL'] ?? 0);
+                    if ($fee > 0) return [$fee, $weight];
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('VTP getPrice fail: ' . $e->getMessage());
+            }
+        }
+        return [(int)($settings['ship_fee'] ?? 30000), $weight];
+    }
+
+    /** API xem trước phí giao hàng cho trang checkout. */
+    public function calcShip(Request $request)
+    {
+        $settings  = \DB::table('admin_settings')->pluck('value','key');
+        $afterDisc = max(0, (int)$request->input('amount', 0));
+        $qty       = (int)$request->input('qty', 1);
+        [$fee, $weight] = $this->shipFeeFor(
+            $settings, $afterDisc,
+            $request->input('city'), $request->input('address'),
+            $request->input('payment', 'COD'), $qty
+        );
+        return response()->json(['fee' => $fee, 'free' => $fee === 0, 'total' => $afterDisc + $fee]);
+    }
+
     public function placeOrder(Request $request)
     {
         $data = $request->validate([
@@ -152,7 +193,7 @@ class WebsiteController extends Controller
         $discount   = $data['payment'] === 'BANK' ? (int)round($sub * $discPct / 100) : 0;
         $discount  += $couponDiscount; // add coupon discount
         $after    = $sub - $discount;
-        $ship     = $after >= 299000 ? 0 : 30000;
+        [$ship, $weight] = $this->shipFeeFor($settings, $after, $data['customer_city'], $data['customer_addr'], $data['payment'], $qty);
         $total    = $after + $ship;
         $affCode  = $this->getAffiliateCode($request);
         $code     = 'DALI-' . substr(time(), -6);
@@ -175,6 +216,7 @@ class WebsiteController extends Controller
             'discount'             => $discount,
             'ship_fee'             => $ship,
             'total'                => $total,
+            'weight'               => $weight,
         ]);
 
         OrderItem::create([
@@ -427,8 +469,8 @@ class WebsiteController extends Controller
         $affCode = $this->getAffiliateCode($request);
 
         $afterDisc = $subtotal - $discount - $couponDiscount;
-        $freeShip  = (int)($settings['free_ship_from'] ?? 299000);
-        $shipFee   = $afterDisc >= $freeShip ? 0 : (int)($settings['ship_fee'] ?? 30000);
+        $cartQty   = (int) array_sum(array_column($cart, 'quantity'));
+        [$shipFee, $weight] = $this->shipFeeFor($settings, $afterDisc, $request->input('customer_city'), $request->input('customer_addr'), $request->input('payment','COD'), $cartQty);
         $total     = $afterDisc + $shipFee;
         $code      = 'DALI-' . strtoupper(substr(uniqid(), -6));
 
@@ -450,6 +492,7 @@ class WebsiteController extends Controller
             'discount'          => $discount,
             'ship_fee'          => $shipFee,
             'total'             => $total,
+            'weight'            => $weight,
         ]);
 
         // Create order items from cart

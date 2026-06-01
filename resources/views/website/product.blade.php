@@ -601,6 +601,7 @@ async function submitReview(){
 
 <script>
 var gOrder={},gCountdown=null,payMode='BANK';
+var liveShip=null, FREE_SHIP={{ (int)($settings['free_ship_from'] ?? 299000) }}, FLAT_SHIP={{ (int)($settings['ship_fee'] ?? 30000) }};
 var CFG_BANK_ID='{{ $settings["bank_id"] ?? "VCB" }}';
 var CFG_BANK_ACC='{{ $settings["bank_acc"] ?? "" }}';
 var CFG_BANK_NAME='{{ $settings["bank_name"] ?? "" }}';
@@ -654,10 +655,28 @@ function openOrder(name,size,price,img,productId,qty){
 }
 function closeOrder(){document.getElementById('orderModal').classList.remove('open');document.body.style.overflow='';if(gCountdown){clearInterval(gCountdown);gCountdown=null;}}
 function showState(s){document.querySelectorAll('.modal-state').forEach(e=>e.classList.remove('active'));document.getElementById('state-'+s).classList.add('active');}
-function selectPay(mode){payMode=mode;document.getElementById('pay-cod').classList.toggle('active',mode==='COD');document.getElementById('pay-bank').classList.toggle('active',mode==='BANK');updateSummary();}
+function selectPay(mode){payMode=mode;document.getElementById('pay-cod').classList.toggle('active',mode==='COD');document.getElementById('pay-bank').classList.toggle('active',mode==='BANK');updateSummary();refreshShip();}
+async function refreshShip(){
+  var city=(document.getElementById('custCity')||{}).value||'';
+  var addr=((document.getElementById('custAddr')||{}).value||'').trim();
+  var qty=parseInt(document.getElementById('qtyInput').value)||1;
+  var sub=gOrder.price*qty;var disc=payMode==='BANK'?Math.round(sub*.05):0;var after=sub-disc;
+  if(after>=FREE_SHIP||!city||!addr){liveShip=null;updateSummary();return;}
+  var el=document.getElementById('sumShip');if(el)el.textContent='Đang tính...';
+  try{
+    var res=await fetch('{{ route("calc-ship") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({amount:after,qty:qty,city:city,address:addr,payment:payMode})});
+    var d=await res.json();liveShip=(d&&typeof d.fee==='number')?d.fee:null;
+  }catch(e){liveShip=null;}
+  updateSummary();
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var c=document.getElementById('custCity'),a=document.getElementById('custAddr');
+  if(c)c.addEventListener('change',refreshShip);
+  if(a)a.addEventListener('blur',refreshShip);
+});
 function updateSummary(){
   var qty=parseInt(document.getElementById('qtyInput').value)||1;
-  var sub=gOrder.price*qty;var disc=payMode==='BANK'?Math.round(sub*.05):0;var after=sub-disc;var ship=after>=299000?0:30000;var total=after+ship;
+  var sub=gOrder.price*qty;var disc=payMode==='BANK'?Math.round(sub*.05):0;var after=sub-disc;var ship=after>=FREE_SHIP?0:(liveShip!=null?liveShip:FLAT_SHIP);var total=after+ship;
   document.getElementById('sumPrice').textContent=fmtVnd(gOrder.price);
   document.getElementById('sumQty').textContent=qty;
   document.getElementById('sumDiscount').textContent='-'+fmtVnd(disc);

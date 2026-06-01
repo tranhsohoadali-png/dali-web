@@ -34,6 +34,7 @@ Route::post('/gio-hang/cap-nhat',          [WebsiteController::class, 'updateCar
 Route::post('/gio-hang/xoa',               [WebsiteController::class, 'removeFromCart'])->name('cart.remove');
 Route::get('/gio-hang/so-luong',           [WebsiteController::class, 'cartCount'])->name('cart.count');
 Route::post('/gio-hang/dat-hang',          [WebsiteController::class, 'checkoutFromCart'])->name('cart.checkout');
+Route::post('/phi-van-chuyen',             [WebsiteController::class, 'calcShip'])->name('calc-ship');
 
 // ── BLOG ──
 Route::get('/blog',                        [WebsiteController::class, 'blog'])->name('blog');

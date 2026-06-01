@@ -264,6 +264,7 @@ var payMode='BANK',gCoupon=null;
 var CART_DATA = @json($cart);
 var FREE_SHIP = {{ (int)($settings['free_ship_from'] ?? 299000) }};
 var SHIP_FEE  = {{ (int)($settings['ship_fee'] ?? 30000) }};
+var liveShip  = null; // phí ViettelPost tính theo địa chỉ (null = chưa có)
 
 function fmtVnd(n){return Math.round(n).toLocaleString('vi-VN')+'đ';}
 function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
@@ -301,7 +302,7 @@ function selectPay(mode){
   document.getElementById('pay-cod').classList.toggle('active',mode==='COD');
   document.getElementById('pay-bank').classList.toggle('active',mode==='BANK');
   document.getElementById('payModeDisplay').textContent=mode==='BANK'?'QR Chuyển khoản (Giảm 5%)':'COD – Thanh toán khi nhận hàng';
-  updateSummary();
+  updateSummary();refreshShip();
 }
 function updateSummary(){
   var sub=0;
@@ -309,7 +310,7 @@ function updateSummary(){
   var disc=payMode==='BANK'?Math.round(sub*.05):0;
   var couponDisc=(gCoupon&&gCoupon.discount)?Math.min(gCoupon.discount,sub):0;
   var after=sub-disc-couponDisc;
-  var ship=after>=FREE_SHIP?0:SHIP_FEE;var total=after+ship;
+  var ship=after>=FREE_SHIP?0:(liveShip!=null?liveShip:SHIP_FEE);var total=after+ship;
   document.getElementById('sumSubtotal').textContent=fmtVnd(sub);
   document.getElementById('sumDisc').textContent='-'+fmtVnd(disc);
   document.getElementById('discRow').style.display=disc>0?'flex':'none';
@@ -319,6 +320,30 @@ function updateSummary(){
   document.getElementById('sumTotal').textContent=fmtVnd(total);
   document.getElementById('modalTotal').textContent=fmtVnd(total);
 }
+
+// Tính cước thật theo địa chỉ (ViettelPost). Gọi khi nhập tỉnh/địa chỉ.
+async function refreshShip(){
+  var city=(document.getElementById('cCity')||{}).value||'';
+  var addr=((document.getElementById('cAddr')||{}).value||'').trim();
+  var sub=Object.values(CART_DATA).reduce((s,i)=>s+(i.quantity>0?i.price*i.quantity:0),0);
+  var disc=payMode==='BANK'?Math.round(sub*.05):0;
+  var couponDisc=(gCoupon&&gCoupon.discount)?Math.min(gCoupon.discount,sub):0;
+  var after=sub-disc-couponDisc;
+  var qty=Object.values(CART_DATA).reduce((s,i)=>s+(i.quantity>0?i.quantity:0),0);
+  if(after>=FREE_SHIP||!city||!addr){liveShip=null;updateSummary();return;}
+  var el=document.getElementById('sumShip'); if(el)el.textContent='Đang tính...';
+  try{
+    var res=await fetch('{{ route("calc-ship") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({amount:after,qty:qty,city:city,address:addr,payment:payMode})});
+    var d=await res.json();
+    liveShip=(d&&typeof d.fee==='number')?d.fee:null;
+  }catch(e){liveShip=null;}
+  updateSummary();
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var c=document.getElementById('cCity'), a=document.getElementById('cAddr');
+  if(c)c.addEventListener('change',refreshShip);
+  if(a)a.addEventListener('blur',refreshShip);
+});
 
 // Coupon
 async function applyCoupon(){
@@ -331,7 +356,7 @@ async function applyCoupon(){
     var msg=document.getElementById('couponMsg');
     if(d.valid){gCoupon=d;msg.textContent='✅ '+d.message;msg.style.color='var(--g)';msg.style.display='block';document.getElementById('couponInput').style.borderColor='var(--g)';showToast('🏷️ '+d.message);}
     else{gCoupon=null;msg.textContent='❌ '+d.message;msg.style.color='#EF4444';msg.style.display='block';}
-    updateSummary();
+    updateSummary();refreshShip();
   }catch(e){showToast('❌ Lỗi kết nối');}
 }
 
