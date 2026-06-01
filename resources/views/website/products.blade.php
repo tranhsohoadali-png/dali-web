@@ -224,16 +224,16 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 <div class="filter-bar">
   <form method="GET" action="{{ route('products') }}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%">
     <select name="category" class="filter-select" onchange="this.form.submit()">
-      <option value=""><i class="ri-price-tag-3-line"></i> Tất cả danh mục</option>
+      <option value="">Tất cả danh mục</option>
       @foreach($categories as $cat)
-      <option value="{{ $cat->slug }}" { request('category') == $cat->slug ? 'selected' : '' }>{{ $cat->icon }} {{ $cat->name }}</option>
+      <option value="{{ $cat->slug }}" {{ request('category') == $cat->slug ? 'selected' : '' }}>{{ $cat->icon }} {{ $cat->name }}</option>
       @endforeach
     </select>
     <select name="sort" class="filter-select" onchange="this.form.submit()">
-      <option value="" { !request('sort') ? 'selected' : '' }><i class="ri-bar-chart-box-line"></i> Sắp xếp</option>
-      <option value="price_asc" { request('sort')=='price_asc' ? 'selected' : '' }><i class="ri-money-dollar-circle-line"></i> Giá tăng dần</option>
-      <option value="price_desc" { request('sort')=='price_desc' ? 'selected' : '' }><i class="ri-money-dollar-circle-line"></i> Giá giảm dần</option>
-      <option value="new" { request('sort')=='new' ? 'selected' : '' }>🆕 Mới nhất</option>
+      <option value="" {{ !request('sort') ? 'selected' : '' }}>Sắp xếp</option>
+      <option value="price_asc" {{ request('sort')=='price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
+      <option value="price_desc" {{ request('sort')=='price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
+      <option value="new" {{ request('sort')=='new' ? 'selected' : '' }}>🆕 Mới nhất</option>
     </select>
     <input type="text" name="search" class="filter-input" placeholder="🔍 Tìm tên tranh..." value="{{ request('search') }}" style="flex:1;min-width:180px">
     <button type="submit" class="btn-filter">Tìm kiếm</button>
@@ -247,9 +247,9 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   {{-- Tab danh mục --}}
   @if($categories->count())
   <div class="cat-tabs">
-    <a href="{{ route('products') }}" class="cat-tab { !request('category') ? 'active' : '' }"><i class="ri-palette-line"></i> Tất cả</a>
+    <a href="{{ route('products') }}" class="cat-tab {{ !request('category') ? 'active' : '' }}"><i class="ri-palette-line"></i> Tất cả</a>
     @foreach($categories as $cat)
-    <a href="{{ route('products') }}?category={{ $cat->slug }}" class="cat-tab { request('category')==$cat->slug ? 'active' : '' }">{{ $cat->icon }} {{ $cat->name }}</a>
+    <a href="{{ route('products') }}?category={{ $cat->slug }}" class="cat-tab {{ request('category')==$cat->slug ? 'active' : '' }}">{{ $cat->icon }} {{ $cat->name }}</a>
     @endforeach
   </div>
   @endif
