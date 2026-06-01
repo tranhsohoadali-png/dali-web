@@ -670,8 +670,29 @@ footer{
   .nav-search,.nav-phone{display:none}
   nav{padding:0 4%}
   .products-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-  .cat-track{gap:12px}
-  .cat-card{flex-basis:clamp(150px,42vw,200px)}
+  /* Nhịp section gọn hơn trên điện thoại */
+  section{padding:46px 5%}
+  .section-header{margin-bottom:26px}
+  .section-header h2{font-size:23px;margin-bottom:8px;line-height:1.25}
+  .section-header p{font-size:13.5px}
+  /* Danh mục: card to & nổi bật hơn (lấp đầy hơn, lộ nhẹ card kế) */
+  .cat-track{gap:14px}
+  .cat-card{flex-basis:clamp(230px,66vw,300px);border-radius:16px}
+  .cat-marquee-wrap{padding:0 4px}
+  .cat-prev{left:-4px}.cat-next{right:-4px}
+  /* Cách hoạt động: nén thành lưới 2×2 gọn */
+  .steps-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .step-card{padding:18px 12px}
+  .step-num{width:36px;height:36px;font-size:17px;margin-bottom:8px}
+  .step-icon{font-size:23px;margin-bottom:5px}
+  .step-card h3{font-size:13.5px;margin-bottom:5px}
+  .step-card p{font-size:11.5px;line-height:1.55}
+  /* Tại sao chọn DALI: 6 thẻ → lưới 2×3 gọn */
+  .features-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .feature-card{padding:18px 14px;border-radius:14px}
+  .feature-icon{font-size:27px;margin-bottom:9px}
+  .feature-card h3{font-size:14px;margin-bottom:6px}
+  .feature-card p{font-size:11.5px;line-height:1.55}
 }
 .hidden{display:none!important}
 </style>
