@@ -44,3 +44,4 @@ yarn-error.log
 # ─── Backup ───
 *.bak
 /public/images/logo_dali_original.jpg
+/storage/backups/*.sql.gz
