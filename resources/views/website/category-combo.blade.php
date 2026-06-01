@@ -71,7 +71,32 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .gift-banner{background:linear-gradient(90deg,#FFF7ED,#FEF3C7);border:1px dashed #F59E0B;border-radius:10px;padding:10px 14px;font-size:13px;color:#B45309;font-weight:600;margin-bottom:18px}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--char);color:#fff;padding:11px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;transition:transform .4s;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
-@media(max-width:880px){.wrap{grid-template-columns:1fr;gap:18px}.preview-box{position:static}.nav-links{display:none}.nav-hamburger{display:flex}.nav-phone{display:none}nav{padding:0 4%}.breadcrumb{padding:11px 4%}.wrap{padding:8px 4% 40px}}
+.combo-bar{display:none}
+@media(max-width:880px){
+  .wrap{grid-template-columns:1fr;gap:14px;padding:8px 4% 40px}
+  .preview-box{position:static}
+  .nav-links{display:none}.nav-hamburger{display:flex}.nav-phone{display:none}nav{padding:0 4%}.breadcrumb{padding:11px 4%}
+  /* Bố cục kiểu Shopee: ảnh → tên → chọn tranh → giá → chọn cỡ */
+  .combo-content{display:flex;flex-direction:column}
+  .c-title{order:-4;font-size:18px;line-height:1.3}
+  .pick-block{order:-3}
+  .price-box{order:-2}
+  .size-block{order:-1}
+  /* Hàng thumbnail mã tranh: cuộn ngang */
+  .code-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;max-height:none;gap:10px;-webkit-overflow-scrolling:touch}
+  .code-card{flex:0 0 auto;min-width:128px}
+  /* Thanh mua cố định đáy + ẩn thanh tab nav (gọn như trang SP Shopee) */
+  .dali-bottombar{display:none!important}
+  .btn-row{display:none}
+  body{padding-bottom:80px!important}
+  .dali-fab{bottom:calc(88px + env(safe-area-inset-bottom))!important}
+  .combo-bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:950;background:#fff;border-top:1px solid var(--bd);box-shadow:0 -3px 16px rgba(58,122,10,.12);padding:9px 12px;gap:9px;align-items:center;padding-bottom:calc(9px + env(safe-area-inset-bottom))}
+  .cb-price{display:flex;flex-direction:column;line-height:1.1}
+  .cb-price span{font-size:10px;color:var(--tx3)}
+  .cb-price b{font-size:16px;color:var(--g);font-weight:900;white-space:nowrap}
+  .cb-cart{flex:0 0 auto;background:#fff;color:var(--gd);border:1.5px solid var(--g);border-radius:10px;padding:11px 13px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer}
+  .cb-buy{flex:1;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:900;box-shadow:0 4px 14px rgba(107,191,31,.3);cursor:pointer}
+}
 /* ── ĐÁNH GIÁ ── */
 .reviews-wrap{max-width:1120px;margin:0 auto;padding:0 5% 50px}
 .rv-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:18px 22px;margin-bottom:16px}
@@ -159,7 +184,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   </div>
 
   <!-- RIGHT: chọn -->
-  <div>
+  <div class="combo-content">
     <h1 class="c-title">{{ $category->icon }} Tổng hợp tranh tô màu số hóa chủ đề {{ $category->name }}</h1>
     <div class="c-meta">
       @php
@@ -182,6 +207,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 
     <div class="gift-banner"><i class="ri-gift-line"></i> MUA 3 TRANH TẶNG 1 TRANH cùng khổ — áp dụng mọi mẫu trong chủ đề!</div>
 
+    <div class="pick-block">
     <div class="sec-label"><i class="ri-image-line"></i> Chọn mã tranh <span class="hint">bấm để xem & chọn — {{ $products->count() }} mẫu</span></div>
     <div class="code-grid" id="codeGrid">
       @foreach($products as $i => $p)
@@ -195,7 +221,9 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
       </div>
       @endforeach
     </div>
+    </div>
 
+    <div class="size-block">
     <div class="sec-label"><i class="ri-ruler-2-line"></i> Chọn kích thước</div>
     <div class="size-row" id="sizeRow">
       @foreach($sizes as $s)
@@ -205,6 +233,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
         <span class="so-p">{{ number_format($s->price,0,',','.') }}đ</span>
       </button>
       @endforeach
+    </div>
     </div>
 
     <div class="qty-row">
@@ -221,6 +250,13 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
       <button class="btn-buy" onclick="addCombo(true)"><i class="ri-shopping-cart-2-line"></i> Mua ngay</button>
     </div>
   </div>
+</div>
+
+<!-- Thanh mua cố định (mobile - giống Shopee) -->
+<div class="combo-bar">
+  <div class="cb-price"><span>Giá</span><b id="barPrice">{{ number_format($minPrice,0,',','.') }}đ</b></div>
+  <button class="cb-cart" onclick="addCombo(false)"><i class="ri-add-line"></i> Thêm giỏ</button>
+  <button class="cb-buy" onclick="addCombo(true)"><i class="ri-shopping-cart-2-line"></i> Mua ngay</button>
 </div>
 
 {{-- ════════ ĐÁNH GIÁ ════════ --}}
@@ -342,11 +378,19 @@ function selectPainting(id){
   if(!SELECTED_SIZE || !visible.find(b=>parseInt(b.dataset.id)===SELECTED_SIZE.id)){
     if(visible[0]) selectSize(parseInt(visible[0].dataset.id));
   }
+  // Mobile: cuộn lên cho khách thấy ngay ảnh vừa chọn
+  if(window.innerWidth<=880){
+    var box=document.querySelector('.preview-box');
+    if(box){var r=box.getBoundingClientRect();window.scrollTo({top:Math.max(0,window.scrollY+r.top-76),behavior:'smooth'});}
+  }
 }
 function selectSize(id){
   SELECTED_SIZE = SIZES.find(s=>s.id===id);
   document.querySelectorAll('.size-opt').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.id)===id));
-  if(SELECTED_SIZE) document.getElementById('priceMain').textContent = fmt(SELECTED_SIZE.price);
+  if(SELECTED_SIZE){
+    document.getElementById('priceMain').textContent = fmt(SELECTED_SIZE.price);
+    var bp=document.getElementById('barPrice'); if(bp) bp.textContent = fmt(SELECTED_SIZE.price);
+  }
 }
 function chgQty(d){var i=document.getElementById('qty');i.value=Math.min(99,Math.max(1,parseInt(i.value)+d));}
 
