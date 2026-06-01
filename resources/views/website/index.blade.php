@@ -721,11 +721,11 @@ footer{
       <i class="ri-shopping-cart-2-line" style="font-size:19px"></i><span class="cart-counter" id="cartCount">0</span>
     </button>
     <a href="{{ route('products') }}" class="btn-order-nav">Mua ngay</a>
-    <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+    <button class="nav-hamburger" id="hamburger" type="button" onclick="document.getElementById('mobileNav').classList.toggle('open');this.classList.toggle('open')"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
-<div class="mobile-nav" id="mobileNav">
+<div class="mobile-nav" id="mobileNav" onclick="if(event.target.closest('a')){this.classList.remove('open');document.getElementById('hamburger').classList.remove('open')}">
   <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
   <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
   <a href="{{ route('blog') }}"><i class="ri-quill-pen-line"></i> Blog</a>
