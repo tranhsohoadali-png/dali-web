@@ -141,6 +141,15 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
           </div>
         </div>
 
+        {{-- CÔNG CỤ TÁCH MÀU --}}
+        <div class="card">
+          <div class="rainbow"></div>
+          <div class="card-head"><div class="card-icon">🎨</div><div><div class="card-title">Công cụ tách màu</div><div class="card-sub">Địa chỉ công cụ tạo bản đồ màu + mã DALI (nhúng vào tab "Tách màu")</div></div></div>
+          <div class="fb">
+            <div><label class="flabel">URL công cụ tách màu</label><input type="text" name="color_tool_url" class="dinput" value="{{ $settings['color_tool_url'] ?? 'http://127.0.0.1:18001' }}" placeholder="http://127.0.0.1:18001"><div class="fnote">Mặc định <b>http://127.0.0.1:18001</b> (chạy run.bat trên máy này). Khi lên server, đổi thành địa chỉ công cụ trên server (vd http://localhost:18001 hoặc http://ten-mien:18001).</div></div>
+          </div>
+        </div>
+
         {{-- SEO --}}
         <div class="card">
           <div class="rainbow"></div>

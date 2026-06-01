@@ -124,4 +124,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('settings',   [SettingsController::class, 'index'])->name('settings');
     Route::post('settings',  [SettingsController::class, 'update'])->name('settings.update');
     Route::post('settings/sizes', [SettingsController::class, 'updateSizes'])->name('settings.sizes');
+
+    // Công cụ tách màu (Django chạy riêng cổng 18001) — nhúng iframe
+    Route::get('cong-cu-tach-mau', function () {
+        $toolUrl = \DB::table('admin_settings')->where('key', 'color_tool_url')->value('value') ?: 'http://127.0.0.1:18001';
+        return view('admin.colortool', compact('toolUrl'));
+    })->name('colortool');
 });
