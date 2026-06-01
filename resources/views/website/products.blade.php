@@ -361,12 +361,12 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 <label style="font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:10px">Hình thức thanh toán <span class="req">*</span></label>
       <div class="payment-opts">
         <label class="payment-opt" id="pay-cod" onclick="selectPay('COD')"><input type="radio" name="payment" value="COD"><span class="payment-opt-icon"><i class="ri-money-dollar-circle-line"></i></span><div><div class="payment-opt-text">COD</div><div class="payment-opt-sub">Trả khi nhận hàng</div></div></label>
-        <label class="payment-opt active" id="pay-bank" onclick="selectPay('BANK')"><input type="radio" name="payment" value="BANK" checked><span class="payment-opt-icon"><i class="ri-smartphone-line"></i></span><div><div class="payment-opt-text">QR Chuyển khoản</div><div class="payment-opt-sub">Giảm 5% ngay</div></div><div class="discount-badge">-5%</div></label>
+        <label class="payment-opt active" id="pay-bank" onclick="selectPay('BANK')"><input type="radio" name="payment" value="BANK" checked><span class="payment-opt-icon"><i class="ri-smartphone-line"></i></span><div><div class="payment-opt-text">QR Chuyển khoản</div><div class="payment-opt-sub">Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% ngay</div></div><div class="discount-badge">-{{ (int)($settings['discount_bank'] ?? 5) }}%</div></label>
       </div>
       <div class="order-summary">
         <div class="summary-row"><span>Giá sản phẩm</span><span id="sumPrice">–</span></div>
         <div class="summary-row"><span>Số lượng</span><span id="sumQty">1</span></div>
-        <div class="summary-row discount" id="discountRow" style="display:none"><span>🎉 Giảm 5% chuyển khoản</span><span id="sumDiscount">–</span></div>
+        <div class="summary-row discount" id="discountRow" style="display:none"><span>🎉 Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% chuyển khoản</span><span id="sumDiscount">–</span></div>
         <div class="summary-row"><span>Phí giao hàng</span><span id="sumShip" style="color:var(--g)">Miễn phí</span></div>
         <div class="summary-row total"><span>Tổng thanh toán</span><span class="val" id="sumTotal">–</span></div>
       </div>
@@ -378,7 +378,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <div class="qr-top-info"><span class="icon"><i class="ri-bank-card-line"></i></span><div><strong>Quét mã QR để thanh toán</strong>Dùng app ngân hàng quét mã. Nội dung CK <b>phải ghi đúng mã đơn</b>.</div></div>
         <div class="qr-frame"><img id="qrImg" src="" alt="QR"></div>
         <div class="qr-amount" id="qrAmount">–</div>
-        <div class="qr-amount-label">Số tiền cần chuyển (đã giảm 5%)</div>
+        <div class="qr-amount-label">Số tiền cần chuyển (đã giảm {{ (int)($settings['discount_bank'] ?? 5) }}%)</div>
         <div class="bank-info">
           <div class="bank-row"><span class="label">Ngân hàng</span><span class="val" id="bi-bank">–</span></div>
           <div class="bank-row"><span class="label">Số tài khoản</span><span class="val" id="bi-acc">–</span><button class="copy-btn" onclick="copyText('bi-acc')">Sao chép</button></div>

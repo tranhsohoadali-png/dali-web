@@ -775,7 +775,7 @@ footer{
 <div class="trust-bar">
   <div class="trust-item"><i class="ri-truck-line"></i> Miễn phí ship từ 299K</div>
   <div class="trust-item"><i class="ri-palette-line"></i> Màu cao cấp không độc hại</div>
-  <div class="trust-item"><i class="ri-bank-card-line"></i> Giảm 5% khi chuyển khoản</div>
+  <div class="trust-item"><i class="ri-bank-card-line"></i> Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% khi chuyển khoản</div>
 </div>
 
 <!-- CATEGORIES -->
@@ -947,7 +947,7 @@ function filterByCategory(catId){
     <div class="feature-card"><span class="feature-icon"><i class="ri-list-ordered-2"></i></span><h3>Số màu rõ nét</h3><p>Công nghệ in UV sắc nét, số màu không bị che khuất khi tô.</p></div>
     <div class="feature-card"><span class="feature-icon"><i class="ri-gift-line"></i></span><h3>Quà tặng ý nghĩa</h3><p>Hộp quà cao cấp – món quà độc đáo cho mọi dịp đặc biệt.</p></div>
     <div class="feature-card"><span class="feature-icon"><i class="ri-phone-line"></i></span><h3>Hỗ trợ tận tâm</h3><p>Đội ngũ hỗ trợ 7 ngày/tuần qua Zalo, Facebook và hotline.</p></div>
-    <div class="feature-card"><span class="feature-icon"><i class="ri-bank-card-line"></i></span><h3>Giảm 5% chuyển khoản</h3><p>Thanh toán trước qua QR ngân hàng – được giảm 5% toàn bộ đơn hàng.</p></div>
+    <div class="feature-card"><span class="feature-icon"><i class="ri-bank-card-line"></i></span><h3>Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% chuyển khoản</h3><p>Thanh toán trước qua QR ngân hàng – được giảm {{ (int)($settings['discount_bank'] ?? 5) }}% toàn bộ đơn hàng.</p></div>
   </div>
 </section>
 
@@ -964,7 +964,7 @@ function filterByCategory(catId){
 <!-- CTA -->
 <div class="cta-banner">
   <h2><i class="ri-gift-line"></i> Đặt hàng ngay hôm nay</h2>
-  <p>Chuyển khoản QR – giảm thêm 5%. Giao toàn quốc trong 2–3 ngày.</p>
+  <p>Chuyển khoản QR – giảm thêm {{ (int)($settings['discount_bank'] ?? 5) }}%. Giao toàn quốc trong 2–3 ngày.</p>
   <a href="{{ route('products') }}" class="btn-white">Xem tất cả sản phẩm →</a>
 </div>
 
@@ -1051,12 +1051,12 @@ function filterByCategory(catId){
 <label style="font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:10px">Hình thức thanh toán <span class="req">*</span></label>
       <div class="payment-opts">
         <label class="payment-opt" id="pay-cod" onclick="selectPay('COD')"><input type="radio" name="payment" value="COD"><span class="payment-opt-icon"><i class="ri-money-dollar-circle-line"></i></span><div><div class="payment-opt-text">COD</div><div class="payment-opt-sub">Trả khi nhận hàng</div></div></label>
-        <label class="payment-opt active" id="pay-bank" onclick="selectPay('BANK')"><input type="radio" name="payment" value="BANK" checked><span class="payment-opt-icon"><i class="ri-smartphone-line"></i></span><div><div class="payment-opt-text">QR Chuyển khoản</div><div class="payment-opt-sub">Giảm 5% ngay</div></div><div class="discount-badge">-5%</div></label>
+        <label class="payment-opt active" id="pay-bank" onclick="selectPay('BANK')"><input type="radio" name="payment" value="BANK" checked><span class="payment-opt-icon"><i class="ri-smartphone-line"></i></span><div><div class="payment-opt-text">QR Chuyển khoản</div><div class="payment-opt-sub">Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% ngay</div></div><div class="discount-badge">-{{ (int)($settings['discount_bank'] ?? 5) }}%</div></label>
       </div>
       <div class="order-summary">
         <div class="summary-row"><span>Giá sản phẩm</span><span id="sumPrice">–</span></div>
         <div class="summary-row"><span>Số lượng</span><span id="sumQty">1</span></div>
-        <div class="summary-row discount" id="discountRow" style="display:none"><span>🎉 Giảm 5% chuyển khoản</span><span id="sumDiscount">–</span></div>
+        <div class="summary-row discount" id="discountRow" style="display:none"><span>🎉 Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% chuyển khoản</span><span id="sumDiscount">–</span></div>
         <div class="summary-row discount" id="couponDiscRow" style="display:none"><span><i class="ri-price-tag-3-line"></i> Mã giảm giá</span><span id="sumCouponDiscount">–</span></div>
         <div class="summary-row"><span>Phí giao hàng</span><span id="sumShip" style="color:var(--g)">Miễn phí</span></div>
         <div class="summary-row total"><span>Tổng thanh toán</span><span class="val" id="sumTotal">–</span></div>
@@ -1069,7 +1069,7 @@ function filterByCategory(catId){
         <div class="qr-top-info"><span class="icon"><i class="ri-bank-card-line"></i></span><div><strong>Quét mã QR để thanh toán</strong>Dùng app ngân hàng quét mã hoặc chuyển khoản thủ công. Nội dung CK <b>phải ghi đúng mã đơn</b>.</div></div>
         <div class="qr-frame"><img id="qrImg" src="" alt="QR"></div>
         <div class="qr-amount" id="qrAmount">–</div>
-        <div class="qr-amount-label">Số tiền cần chuyển (đã giảm 5%)</div>
+        <div class="qr-amount-label">Số tiền cần chuyển (đã giảm {{ (int)($settings['discount_bank'] ?? 5) }}%)</div>
         <div class="bank-info">
           <div class="bank-row"><span class="label">Ngân hàng</span><span class="val" id="bi-bank">–</span></div>
           <div class="bank-row"><span class="label">Số tài khoản</span><span class="val" id="bi-acc">–</span><button class="copy-btn" onclick="copyText('bi-acc')">Sao chép</button></div>

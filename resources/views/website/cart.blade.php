@@ -186,8 +186,8 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         </div>
         <div class="pay-opt active" id="pay-bank" onclick="selectPay('BANK')">
           <span style="font-size:19px"><i class="ri-smartphone-line"></i></span>
-          <div><div class="pay-opt-txt">QR Chuyển khoản</div><div class="pay-sub">Giảm 5%</div></div>
-          <div class="disc-tag">-5%</div>
+          <div><div class="pay-opt-txt">QR Chuyển khoản</div><div class="pay-sub">Giảm {{ (int)($settings['discount_bank'] ?? 5) }}%</div></div>
+          <div class="disc-tag">-{{ (int)($settings['discount_bank'] ?? 5) }}%</div>
         </div>
       </div>
 
@@ -199,7 +199,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       @endphp
       <div id="summaryRows">
         <div class="s-row"><span>Tạm tính ({{ array_sum(array_column($cart,'quantity')) }} món)</span><span id="sumSubtotal">{{ number_format($subtotal,0,',','.')}}đ</span></div>
-        <div class="s-row disc" id="discRow" style="display:none"><span>🎉 Giảm 5% chuyển khoản</span><span id="sumDisc">–</span></div>
+        <div class="s-row disc" id="discRow" style="display:none"><span>🎉 Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% chuyển khoản</span><span id="sumDisc">–</span></div>
         <div class="s-row disc" id="couponRow" style="display:none"><span><i class="ri-price-tag-3-line"></i> Mã giảm giá</span><span id="sumCoupon">–</span></div>
         <div class="s-row"><span>Phí giao hàng</span><span id="sumShip" style="color:var(--g)">{{ $subtotal >= $freeShip ? 'Miễn phí' : number_format($shipFee,0,',','.').'đ' }}</span></div>
         <div class="s-row total"><span>Tổng thanh toán</span><span class="v" id="sumTotal">{{ number_format($subtotal,0,',','.')}}đ</span></div>
@@ -239,7 +239,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       <div class="form-row single"><div class="form-group"><label>Email <span style="font-size:10px;color:var(--tx3);font-weight:400">(nhận xác nhận đơn)</span></label><input type="email" id="cEmail" placeholder="email@gmail.com"></div></div>
       <div class="form-row single"><div class="form-group"><label>Ghi chú</label><textarea id="cNote" placeholder="Gọi trước khi giao..."></textarea></div></div>
       <div style="background:var(--gll);border-radius:10px;padding:12px 14px;border:1px solid var(--bd);margin-bottom:14px;font-size:13px;color:var(--tx2)">
-        <b>Hình thức thanh toán:</b> <span id="payModeDisplay">QR Chuyển khoản (Giảm 5%)</span><br>
+        <b>Hình thức thanh toán:</b> <span id="payModeDisplay">QR Chuyển khoản (Giảm {{ (int)($settings['discount_bank'] ?? 5) }}%)</span><br>
         <b>Tổng thanh toán:</b> <span id="modalTotal" style="color:var(--g);font-weight:900;font-size:15px">–</span>
       </div>
       <button class="btn-submit" id="submitBtn" onclick="doCheckout()"><span id="submitText"><i class="ri-checkbox-circle-line"></i> Xác nhận đặt hàng</span></button>
@@ -302,7 +302,7 @@ function selectPay(mode){
   payMode=mode;
   document.getElementById('pay-cod').classList.toggle('active',mode==='COD');
   document.getElementById('pay-bank').classList.toggle('active',mode==='BANK');
-  document.getElementById('payModeDisplay').textContent=mode==='BANK'?'QR Chuyển khoản (Giảm 5%)':'COD – Thanh toán khi nhận hàng';
+  document.getElementById('payModeDisplay').textContent=mode==='BANK'?'QR Chuyển khoản (Giảm {{ (int)($settings['discount_bank'] ?? 5) }}%)':'COD – Thanh toán khi nhận hàng';
   updateSummary();refreshShip();
 }
 function updateSummary(){

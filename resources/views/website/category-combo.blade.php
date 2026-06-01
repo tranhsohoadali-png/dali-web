@@ -177,7 +177,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 
     <div class="price-box">
       <div class="price-main" id="priceMain">{{ number_format($minPrice,0,',','.') }}đ</div>
-      <div class="price-note"><i class="ri-bank-card-line"></i> Chuyển khoản QR giảm thêm 5% · <i class="ri-truck-line"></i> Miễn phí ship từ 299K</div>
+      <div class="price-note"><i class="ri-bank-card-line"></i> Chuyển khoản QR giảm thêm {{ (int)($settings['discount_bank'] ?? 5) }}% · <i class="ri-truck-line"></i> Miễn phí ship từ 299K</div>
     </div>
 
     <div class="gift-banner"><i class="ri-gift-line"></i> MUA 3 TRANH TẶNG 1 TRANH cùng khổ — áp dụng mọi mẫu trong chủ đề!</div>
