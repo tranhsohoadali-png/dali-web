@@ -775,7 +775,6 @@ footer{
 <div class="trust-bar">
   <div class="trust-item"><i class="ri-truck-line"></i> Miễn phí ship từ 299K</div>
   <div class="trust-item"><i class="ri-palette-line"></i> Màu cao cấp không độc hại</div>
-  <div class="trust-item"><i class="ri-checkbox-circle-line"></i> Cam kết hoàn tiền 30 ngày</div>
   <div class="trust-item"><i class="ri-bank-card-line"></i> Giảm 5% khi chuyển khoản</div>
 </div>
 

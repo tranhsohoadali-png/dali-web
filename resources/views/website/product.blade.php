@@ -343,7 +343,6 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 
       <div class="trust-row">
         <div class="trust-badge"><i class="ri-truck-line"></i> Miễn phí ship từ 299K</div>
-        <div class="trust-badge"><i class="ri-checkbox-circle-line"></i> Hoàn tiền 30 ngày</div>
         <div class="trust-badge"><i class="ri-lock-line"></i> Bảo mật 100%</div>
       </div>
     </div>
