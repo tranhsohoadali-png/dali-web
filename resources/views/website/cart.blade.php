@@ -265,6 +265,7 @@ var CART_DATA = @json($cart);
 var FREE_SHIP = {{ (int)($settings['free_ship_from'] ?? 299000) }};
 var SHIP_FEE  = {{ (int)($settings['ship_fee'] ?? 30000) }};
 var liveShip  = null; // phí ViettelPost tính theo địa chỉ (null = chưa có)
+var DISCOUNT_PCT = {{ (int)($settings['discount_bank'] ?? 5) }};
 
 function fmtVnd(n){return Math.round(n).toLocaleString('vi-VN')+'đ';}
 function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
@@ -307,7 +308,7 @@ function selectPay(mode){
 function updateSummary(){
   var sub=0;
   Object.values(CART_DATA).forEach(i=>{if(i.quantity>0)sub+=i.price*i.quantity;});
-  var disc=payMode==='BANK'?Math.round(sub*.05):0;
+  var disc=payMode==='BANK'?Math.round(sub*DISCOUNT_PCT/100):0;
   var couponDisc=(gCoupon&&gCoupon.discount)?Math.min(gCoupon.discount,sub):0;
   var after=sub-disc-couponDisc;
   var ship=after>=FREE_SHIP?0:(liveShip!=null?liveShip:SHIP_FEE);var total=after+ship;
@@ -326,7 +327,7 @@ async function refreshShip(){
   var city=(document.getElementById('cCity')||{}).value||'';
   var addr=((document.getElementById('cAddr')||{}).value||'').trim();
   var sub=Object.values(CART_DATA).reduce((s,i)=>s+(i.quantity>0?i.price*i.quantity:0),0);
-  var disc=payMode==='BANK'?Math.round(sub*.05):0;
+  var disc=payMode==='BANK'?Math.round(sub*DISCOUNT_PCT/100):0;
   var couponDisc=(gCoupon&&gCoupon.discount)?Math.min(gCoupon.discount,sub):0;
   var after=sub-disc-couponDisc;
   var qty=Object.values(CART_DATA).reduce((s,i)=>s+(i.quantity>0?i.quantity:0),0);

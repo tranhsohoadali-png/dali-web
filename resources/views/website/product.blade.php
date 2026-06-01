@@ -602,6 +602,7 @@ async function submitReview(){
 <script>
 var gOrder={},gCountdown=null,payMode='BANK';
 var liveShip=null, FREE_SHIP={{ (int)($settings['free_ship_from'] ?? 299000) }}, FLAT_SHIP={{ (int)($settings['ship_fee'] ?? 30000) }};
+var DISCOUNT_PCT={{ (int)($settings['discount_bank'] ?? 5) }};
 var CFG_BANK_ID='{{ $settings["bank_id"] ?? "VCB" }}';
 var CFG_BANK_ACC='{{ $settings["bank_acc"] ?? "" }}';
 var CFG_BANK_NAME='{{ $settings["bank_name"] ?? "" }}';
@@ -625,7 +626,7 @@ function openOrderDetail(){
   var sizeLabel = SELECTED_SIZE ? SELECTED_SIZE.label : '';
   var priceStr  = SELECTED_SIZE ? SELECTED_SIZE.priceStr : '{{ $firstSize ? $firstSize->display_price : $product->display_price }}';
   var sub = (sizeLabel ? sizeLabel : '') + (sizeLabel && colors ? ' · ' : '') + colors;
-  openOrder('{{ addslashes($product->name) }}', sub, priceStr, '{{ $product->main_image ? asset("storage/".$product->main_image) : "" }}', {{ $product->id }}, qty);
+  openOrder(@js($product->name), sub, priceStr, '{{ $product->main_image ? asset("storage/".$product->main_image) : "" }}', {{ $product->id }}, qty);
 }
 async function addDetailToCart(){
   var qty=parseInt(document.getElementById('detailQty').value)||1;
@@ -660,7 +661,7 @@ async function refreshShip(){
   var city=(document.getElementById('custCity')||{}).value||'';
   var addr=((document.getElementById('custAddr')||{}).value||'').trim();
   var qty=parseInt(document.getElementById('qtyInput').value)||1;
-  var sub=gOrder.price*qty;var disc=payMode==='BANK'?Math.round(sub*.05):0;var after=sub-disc;
+  var sub=gOrder.price*qty;var disc=payMode==='BANK'?Math.round(sub*DISCOUNT_PCT/100):0;var after=sub-disc;
   if(after>=FREE_SHIP||!city||!addr){liveShip=null;updateSummary();return;}
   var el=document.getElementById('sumShip');if(el)el.textContent='Đang tính...';
   try{
@@ -676,7 +677,7 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 function updateSummary(){
   var qty=parseInt(document.getElementById('qtyInput').value)||1;
-  var sub=gOrder.price*qty;var disc=payMode==='BANK'?Math.round(sub*.05):0;var after=sub-disc;var ship=after>=FREE_SHIP?0:(liveShip!=null?liveShip:FLAT_SHIP);var total=after+ship;
+  var sub=gOrder.price*qty;var disc=payMode==='BANK'?Math.round(sub*DISCOUNT_PCT/100):0;var after=sub-disc;var ship=after>=FREE_SHIP?0:(liveShip!=null?liveShip:FLAT_SHIP);var total=after+ship;
   document.getElementById('sumPrice').textContent=fmtVnd(gOrder.price);
   document.getElementById('sumQty').textContent=qty;
   document.getElementById('sumDiscount').textContent='-'+fmtVnd(disc);
