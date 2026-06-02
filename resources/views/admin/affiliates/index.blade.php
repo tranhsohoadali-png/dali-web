@@ -82,7 +82,7 @@ tr:hover td{background:var(--gll)}
           <tr>
             <td style="color:var(--tx3);font-weight:600">{{ $aff->id }}</td>
             <td>
-              <div style="font-weight:700">{{ $aff->name }}</div>
+              <div style="font-weight:700">{{ $aff->name }}@if(($aff->type ?? 'ctv')==='agent')<span style="background:#EDE9FE;color:#6D28D9;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;margin-left:5px">ĐẠI LÝ</span>@endif</div>
               @if($aff->phone)<div style="font-size:10px;color:var(--tx3)">{{ $aff->phone }}</div>@endif
             </td>
             <td>
@@ -91,7 +91,7 @@ tr:hover td{background:var(--gll)}
                 <a href="{{ route('affiliate.track', $aff->code) }}" target="_blank" style="color:var(--g);text-decoration:none">{ url('/ref/'.$aff->code) }</a>
               </div>
             </td>
-            <td style="font-weight:800;color:var(--g)">{{ $aff->commission_rate }}%</td>
+            <td style="font-weight:800;color:var(--g)">@if(($aff->type ?? 'ctv')==='agent')<span style="color:#6D28D9;font-size:11px">Giá sỉ</span>@else{{ $aff->commission_rate }}%@endif</td>
             <td style="font-weight:700;color:var(--tx3)">{{ $aff->total_orders }}</td>
             <td style="font-weight:700">{{ number_format($aff->total_earned,0,',','.') }}đ</td>
             <td style="color:var(--tx3)">{{ number_format($aff->total_paid,0,',','.') }}đ</td>

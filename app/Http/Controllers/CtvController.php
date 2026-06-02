@@ -70,6 +70,13 @@ class CtvController extends Controller
             ->orderBy('name')
             ->get();
         $sizes = Size::where('is_active', true)->orderBy('sort_order')->get()->keyBy('id');
+        // Đại lý: hiển thị giá sỉ riêng thay cho giá lẻ (khớp với cách tính khi lên đơn)
+        if ($ctv->isAgent()) {
+            $agentMap = $ctv->agentPrices()->pluck('price', 'size_id')->toArray();
+            foreach ($sizes as $sz) {
+                if (!empty($agentMap[$sz->id])) $sz->price = (int) $agentMap[$sz->id];
+            }
+        }
         $categories = $products->pluck('category.name','category_id')->filter()->unique()->sort();
         $settings = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value','key');
         return view('ctv.order-create', compact('ctv', 'products', 'sizes', 'categories', 'settings'));
@@ -93,11 +100,15 @@ class CtvController extends Controller
         // Tính tổng
         $subtotal = 0;
         $lineItems = [];
+        // Đại lý: lấy bảng giá sỉ riêng (size_id => giá). CTV thường: rỗng.
+        $agentMap = $ctv->isAgent() ? $ctv->agentPrices()->pluck('price', 'size_id')->toArray() : [];
         foreach ($items as $row) {
             $product = Product::find($row['product_id']);
             if (!$product) continue;
             $size    = !empty($row['size_id']) ? Size::find($row['size_id']) : null;
-            $price   = $size ? (int) $size->price : (int) $product->price;
+            $price   = ($size && !empty($agentMap[$size->id]))
+                       ? (int) $agentMap[$size->id]                       // giá sỉ đại lý
+                       : ($size ? (int) $size->price : (int) $product->price); // giá lẻ
             $qty     = (int) $row['qty'];
             $lineSub = $price * $qty;
             $subtotal += $lineSub;
@@ -155,10 +166,10 @@ class CtvController extends Controller
             $li['product']->increment('sold_count', $li['qty']);
         }
 
-        // Ghi nhận hoa hồng (tính trên tổng đơn sau ship)
-        $commission = (int) round($total * $ctv->commission_rate / 100);
+        // Đại lý: KHÔNG hoa hồng (đã tính theo giá sỉ). CTV: hoa hồng %.
+        $commission = $ctv->isAgent() ? 0 : (int) round($total * $ctv->commission_rate / 100);
         $order->update(['affiliate_commission' => $commission]);
-        $ctv->increment('total_earned', $commission);
+        if ($commission > 0) $ctv->increment('total_earned', $commission);
         $ctv->increment('total_orders');
 
         $itemCount = count($lineItems);

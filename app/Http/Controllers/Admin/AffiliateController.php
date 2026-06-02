@@ -3,7 +3,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
+use App\Models\AgentPrice;
 use App\Models\Order;
+use App\Models\Size;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +21,11 @@ class AffiliateController extends Controller
 
     public function create()
     {
-        return view('admin.affiliates.form', ['affiliate' => null]);
+        return view('admin.affiliates.form', [
+            'affiliate' => null,
+            'sizes'     => Size::orderBy('sort_order')->get(),
+            'agentMap'  => [],
+        ]);
     }
 
     public function store(Request $request)
@@ -30,6 +36,7 @@ class AffiliateController extends Controller
             'email'           => 'nullable|email|max:100',
             'code'            => 'nullable|string|max:30|unique:affiliates,code',
             'password'        => 'nullable|string|min:4|max:50',
+            'type'            => 'nullable|in:ctv,agent',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
@@ -37,6 +44,7 @@ class AffiliateController extends Controller
             'is_active'       => 'nullable|boolean',
             'note'            => 'nullable|string|max:500',
         ]);
+        $data['type'] = $data['type'] ?? 'ctv';
         // Mật khẩu đăng nhập CTV
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -57,8 +65,9 @@ class AffiliateController extends Controller
         }
         $data['is_active']       = $request->boolean('is_active', true);
         $data['commission_rate'] = $data['commission_rate'] ?? 5;
-        Affiliate::create($data);
-        return redirect()->route('admin.affiliates.index')->with('success', 'Đã thêm CTV!');
+        $affiliate = Affiliate::create($data);
+        $this->saveAgentPrices($affiliate, $request);
+        return redirect()->route('admin.affiliates.index')->with('success', $affiliate->isAgent() ? 'Đã thêm Đại lý!' : 'Đã thêm CTV!');
     }
 
     public function show(Affiliate $affiliate)
@@ -70,7 +79,9 @@ class AffiliateController extends Controller
 
     public function edit(Affiliate $affiliate)
     {
-        return view('admin.affiliates.form', compact('affiliate'));
+        $sizes    = Size::orderBy('sort_order')->get();
+        $agentMap = $affiliate->agentPrices()->pluck('price', 'size_id')->toArray();
+        return view('admin.affiliates.form', compact('affiliate', 'sizes', 'agentMap'));
     }
 
     public function update(Request $request, Affiliate $affiliate)
@@ -80,6 +91,7 @@ class AffiliateController extends Controller
             'phone'           => 'nullable|string|max:20',
             'email'           => 'nullable|email|max:100',
             'password'        => 'nullable|string|min:4|max:50',
+            'type'            => 'nullable|in:ctv,agent',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
@@ -87,6 +99,7 @@ class AffiliateController extends Controller
             'is_active'       => 'nullable|boolean',
             'note'            => 'nullable|string|max:500',
         ]);
+        $data['type'] = $data['type'] ?? 'ctv';
         // Chỉ đổi mật khẩu khi admin nhập mới
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -96,7 +109,22 @@ class AffiliateController extends Controller
         $data['is_active']       = $request->boolean('is_active', true);
         $data['commission_rate'] = $data['commission_rate'] ?? 5;
         $affiliate->update($data);
-        return redirect()->route('admin.affiliates.index')->with('success', 'Đã cập nhật CTV!');
+        $this->saveAgentPrices($affiliate, $request);
+        return redirect()->route('admin.affiliates.index')->with('success', $affiliate->isAgent() ? 'Đã cập nhật Đại lý!' : 'Đã cập nhật CTV!');
+    }
+
+    /** Lưu bảng giá sỉ riêng của đại lý (theo kích thước). */
+    private function saveAgentPrices(Affiliate $affiliate, Request $request): void
+    {
+        if (!$affiliate->isAgent()) return;
+        foreach ((array) $request->input('agent_prices', []) as $sizeId => $price) {
+            $val = (int) preg_replace('/[^\d]/', '', (string) $price);
+            if ($val <= 0) continue;
+            AgentPrice::updateOrCreate(
+                ['affiliate_id' => $affiliate->id, 'size_id' => (int) $sizeId],
+                ['price' => $val]
+            );
+        }
     }
 
     public function markPaid(Affiliate $affiliate)

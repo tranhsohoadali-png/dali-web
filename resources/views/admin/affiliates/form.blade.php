@@ -79,9 +79,12 @@
             </div>
             <div class="g2">
               <div>
-                <label class="flabel">Tỷ lệ hoa hồng (%)</label>
-                <input type="number" name="commission_rate" class="dinput" value="{{ old('commission_rate',$affiliate->commission_rate??5) }}" min="0" max="50" step="0.5">
-                <div class="fnote">Ví dụ: 5 = CTV nhận 5% giá trị đơn hàng</div>
+                <label class="flabel">Loại tài khoản</label>
+                <select name="type" class="dinput" id="affType" onchange="toggleType()">
+                  <option value="ctv" {{ old('type',$affiliate->type??'ctv')=='ctv'?'selected':'' }}>CTV — hoa hồng %</option>
+                  <option value="agent" {{ old('type',$affiliate->type??'ctv')=='agent'?'selected':'' }}>Đại lý — giá sỉ cứng theo khổ</option>
+                </select>
+                <div class="fnote">CTV nhận % đơn · Đại lý lên đơn theo giá sỉ riêng (không hoa hồng).</div>
               </div>
               <div>
                 <label class="flabel">Trạng thái</label>
@@ -90,6 +93,35 @@
                   <span style="font-size:12px;font-weight:600;color:var(--tx2)">Đang hoạt động</span>
                 </div>
               </div>
+            </div>
+
+            <div id="ctvBlock">
+              <div style="max-width:48%">
+                <label class="flabel">Tỷ lệ hoa hồng (%)</label>
+                <input type="number" name="commission_rate" class="dinput" value="{{ old('commission_rate',$affiliate->commission_rate??5) }}" min="0" max="50" step="0.5">
+                <div class="fnote">Ví dụ: 5 = CTV nhận 5% giá trị đơn hàng</div>
+              </div>
+            </div>
+
+            <div id="agentBlock" style="display:none">
+              <label class="flabel">Bảng giá sỉ của đại lý (theo kích thước)</label>
+              <div class="fnote" style="margin-bottom:8px">Khi đại lý này lên đơn, mỗi khổ tính theo giá sỉ dưới đây. Để trống = dùng giá lẻ.</div>
+              <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead><tr style="text-align:left;color:var(--tx3);font-size:11px;text-transform:uppercase;letter-spacing:.5px">
+                  <th style="padding:7px 6px">Kích thước / phụ kiện</th>
+                  <th style="padding:7px 6px;width:120px">Giá lẻ</th>
+                  <th style="padding:7px 6px;width:180px">Giá sỉ đại lý (đ)</th>
+                </tr></thead>
+                <tbody>
+                  @foreach(($sizes ?? []) as $sz)
+                  <tr style="border-top:1px solid var(--bd)">
+                    <td style="padding:7px 6px;font-weight:700;color:var(--char)">{{ $sz->name }}@if($sz->note) <span style="font-size:11px;color:var(--pk)">· {{ $sz->note }}</span>@endif</td>
+                    <td style="padding:7px 6px;color:var(--tx3)">{{ number_format($sz->price,0,',','.') }}đ</td>
+                    <td style="padding:7px 6px"><input type="number" name="agent_prices[{{ $sz->id }}]" class="dinput" value="{{ old('agent_prices.'.$sz->id, $agentMap[$sz->id] ?? '') }}" min="0" step="1000" placeholder="để trống = giá lẻ" style="margin:0"></td>
+                  </tr>
+                  @endforeach
+                </tbody>
+              </table>
             </div>
 
             <div class="divider"></div>
@@ -127,6 +159,12 @@ function previewCode(name){
   var code='DALI_'+name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'_').replace(/_+/g,'_');
   document.getElementById('codePreview').textContent='{{ url("/ref/") }}/'+code;
 }
+function toggleType(){
+  var t=document.getElementById('affType').value;
+  document.getElementById('ctvBlock').style.display   = (t==='agent')?'none':'';
+  document.getElementById('agentBlock').style.display = (t==='agent')?'block':'none';
+}
+document.addEventListener('DOMContentLoaded', toggleType);
 </script>
 </body>
 </html>
