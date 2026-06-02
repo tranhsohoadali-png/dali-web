@@ -679,7 +679,7 @@ footer{
   /* ── HERO tối ưu cho mọi cỡ điện thoại (320–430px) ── */
   .hero{padding:30px 6% 36px;gap:24px}
   .hero-badge{font-size:12px;padding:6px 14px;margin-bottom:15px}
-  .hero h1{font-size:clamp(26px,7.6vw,35px);line-height:1.2;margin-bottom:13px}
+  .hero h1{font-size:clamp(23px,6.3vw,30px);line-height:1.25;margin-bottom:13px;letter-spacing:-.3px}
   .hero p{font-size:14.5px;line-height:1.7;margin-bottom:22px;max-width:none}
   .hero-btns{flex-direction:column;gap:11px;margin-bottom:26px}
   .hero-btns .btn-primary,.hero-btns .btn-outline{width:100%;text-align:center;padding:14px 20px}
