@@ -312,7 +312,7 @@ section{padding:72px 5%}
 /* ── Marquee danh mục: tự trượt + nút sang trang ── */
 .cat-marquee-wrap{position:relative;max-width:1340px;margin:0 auto;padding:0 8px}
 .cat-marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.cat-track{display:flex;gap:20px;width:max-content;will-change:transform}
+.cat-track{display:flex;gap:clamp(12px,1.4vw,20px);width:max-content;will-change:transform}
 /* Nút mũi tên */
 .cat-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:6;width:48px;height:48px;border-radius:50%;
   background:#fff;border:1.5px solid var(--bd);color:var(--gd);font-size:26px;font-weight:700;line-height:1;
@@ -324,7 +324,8 @@ section{padding:72px 5%}
 @media(max-width:600px){.cat-nav{width:40px;height:40px;font-size:22px}}
 .cat-card{
   position:relative;overflow:hidden;border-radius:18px;
-  flex:0 0 clamp(210px,24vw,290px);aspect-ratio:1/1;
+  /* Co giãn mượt theo bề ngang màn hình: nhỏ nhất 200px, lớn nhất 300px (không nhảy giật) */
+  flex:0 0 clamp(200px,30vw,300px);aspect-ratio:1/1;
   cursor:pointer;transition:transform .3s,box-shadow .3s;
   border:1.5px solid var(--bd);display:block;background:var(--gll);
 }
@@ -675,9 +676,8 @@ footer{
   .section-header{margin-bottom:26px}
   .section-header h2{font-size:23px;margin-bottom:8px;line-height:1.25}
   .section-header p{font-size:13.5px}
-  /* Danh mục: card to & nổi bật hơn (lấp đầy hơn, lộ nhẹ card kế) */
-  .cat-track{gap:14px}
-  .cat-card{flex-basis:clamp(230px,66vw,300px);border-radius:16px}
+  /* Danh mục: dùng chung công thức co giãn mượt ở trên, chỉ bo góc nhẹ hơn */
+  .cat-card{border-radius:16px}
   .cat-marquee-wrap{padding:0 4px}
   .cat-prev{left:-4px}.cat-next{right:-4px}
   /* Cách hoạt động: nén thành lưới 2×2 gọn */
@@ -839,7 +839,8 @@ footer{
   // Nút sang trang: nhảy ~2 thẻ mỗi lần bấm (tức thì, không bị khoảng trắng)
   window.catJump=function(dir){
     var card=track.querySelector('.cat-card');
-    var step=card?(card.offsetWidth+20)*2:560;
+    var gap=parseFloat(getComputedStyle(track).columnGap||getComputedStyle(track).gap)||16;
+    var step=card?(card.offsetWidth+gap)*2:560;
     pos+=dir*step; wrapPos(); apply();
   };
 })();
