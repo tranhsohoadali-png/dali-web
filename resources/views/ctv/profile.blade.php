@@ -21,8 +21,8 @@
       <div style="font-size:14px;font-weight:900;color:var(--gd)">{{ $ctv->code }}</div>
     </div>
     <div style="background:var(--gll);border-radius:12px;padding:12px">
-      <div class="muted" style="margin-bottom:3px">Hoa hồng</div>
-      <div style="font-size:18px;font-weight:900;color:var(--g)">{{ rtrim(rtrim(number_format($ctv->commission_rate,1),'0'),'.') }}%</div>
+      <div class="muted" style="margin-bottom:3px">{{ $ctv->isAgent() ? 'Loại tài khoản' : 'Hoa hồng' }}</div>
+      <div style="font-size:18px;font-weight:900;color:var(--g)">@if($ctv->isAgent())Đại lý 🏷️@else{{ rtrim(rtrim(number_format($ctv->commission_rate,1),'0'),'.') }}%@endif</div>
     </div>
   </div>
   <p class="muted" style="margin-top:10px;font-size:11px">Liên hệ DALI để cập nhật tên hoặc số điện thoại.</p>

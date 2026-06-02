@@ -109,7 +109,7 @@
       <div class="row"><span class="k">Tiền hàng</span><span class="v" id="subtotalDisplay">0đ</span></div>
       <div class="row" id="shipRow"><span class="k" id="shipLabel">Phí ship</span><span class="v" id="shipDisplay">—</span></div>
       <div class="row big"><span class="k">Tổng đơn</span><span class="v" id="totalDisplay">0đ</span></div>
-      <div class="row green-row"><span class="k">🌿 Hoa hồng của bạn</span><span class="v" id="commSummary">0đ</span></div>
+      <div class="row green-row"><span class="k">@if($ctv->isAgent())💰 Đặt cọc ({{ (int)($settings['agent_deposit_percent'] ?? 20) }}%)@else 🌿 Hoa hồng của bạn @endif</span><span class="v" id="commSummary">0đ</span></div>
     </div>
   </div>
 
@@ -148,15 +148,17 @@
   </div>
 
   <button type="submit" class="btn full" id="submitBtn" style="display:none">
-    Tạo đơn & nhận hoa hồng →
+    @if($ctv->isAgent())Tạo đơn & đặt cọc →@else Tạo đơn & nhận hoa hồng →@endif
   </button>
-  <p class="muted" style="text-align:center;margin-top:10px;display:none" id="submitNote">Hoa hồng tự động ghi nhận sau khi tạo đơn.</p>
+  <p class="muted" style="text-align:center;margin-top:10px;display:none" id="submitNote">@if($ctv->isAgent())Sau khi tạo đơn, bạn chuyển khoản đặt cọc theo hướng dẫn.@else Hoa hồng tự động ghi nhận sau khi tạo đơn.@endif</p>
 </form>
 
 <script>
 const SIZES_DATA = @json($sizes->map(fn($s)=>['id'=>$s->id,'name'=>$s->name,'price'=>(int)$s->price])->values());
 const sizeById = Object.fromEntries(SIZES_DATA.map(s=>[String(s.id), s]));
 const COMM_RATE = {{ $ctv->commission_rate }};
+const IS_AGENT = {{ $ctv->isAgent() ? 'true' : 'false' }};
+const DEPOSIT_PCT = {{ (int)($settings['agent_deposit_percent'] ?? 20) }};
 const FREE_SHIP_FROM = {{ (int)($settings['free_ship_from'] ?? 299000) }};
 const SHIP_FEE = {{ (int)($settings['ship_fee'] ?? 30000) }};
 let activeCat = 'all';
@@ -264,7 +266,7 @@ function renderCart() {
           <input type="number" value="${item.qty}" min="1" max="99" onchange="onQtyChange('${id}',this.value)">
           <span style="font-size:12px;font-weight:800;color:var(--gd)" id="sub-${id}">${sub.toLocaleString('vi-VN')}đ</span>
         </div>
-        <div class="ci-sub" id="comm-${id}">+${Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN')}đ hoa hồng</div>
+        <div class="ci-sub" id="comm-${id}">${IS_AGENT ? '' : '+'+Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN')+'đ hoa hồng'}</div>
         ${buildHiddenInputs(id, item)}
       </div>
       <button type="button" class="rm-btn" onclick="removeItem('${id}')">✕</button>
@@ -286,7 +288,7 @@ function onSizeChange(id, sizeId) {
   document.getElementById(`hi-size-${id}`).value = sizeId;
   const sub = calcSub(id);
   document.getElementById(`sub-${id}`).textContent = sub.toLocaleString('vi-VN') + 'đ';
-  document.getElementById(`comm-${id}`).textContent = '+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ hoa hồng';
+  document.getElementById(`comm-${id}`).textContent = IS_AGENT ? '' : ('+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ hoa hồng');
   updateTotal();
 }
 
@@ -295,7 +297,7 @@ function onQtyChange(id, qty) {
   document.getElementById(`hi-qty-${id}`).value = cart[id].qty;
   const sub = calcSub(id);
   document.getElementById(`sub-${id}`).textContent = sub.toLocaleString('vi-VN') + 'đ';
-  document.getElementById(`comm-${id}`).textContent = '+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ hoa hồng';
+  document.getElementById(`comm-${id}`).textContent = IS_AGENT ? '' : ('+' + Math.round(sub*COMM_RATE/100).toLocaleString('vi-VN') + 'đ hoa hồng');
   updateTotal();
 }
 
@@ -319,7 +321,7 @@ function updateTotal() {
   const subtotal = Object.keys(cart).reduce((s, id) => s + calcSub(id), 0);
   const ship = subtotal > 0 ? (subtotal >= FREE_SHIP_FROM ? 0 : SHIP_FEE) : 0;
   const total = subtotal + ship;
-  const comm = Math.round(total * COMM_RATE / 100);
+  const comm = IS_AGENT ? Math.round(total * DEPOSIT_PCT / 100) : Math.round(total * COMM_RATE / 100);
 
   document.getElementById('subtotalDisplay').textContent = subtotal.toLocaleString('vi-VN') + 'đ';
 
@@ -335,7 +337,7 @@ function updateTotal() {
   }
 
   document.getElementById('totalDisplay').textContent = total.toLocaleString('vi-VN') + 'đ';
-  document.getElementById('commSummary').textContent = '+' + comm.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('commSummary').textContent = (IS_AGENT ? '' : '+') + comm.toLocaleString('vi-VN') + 'đ';
 }
 </script>
 @endsection

@@ -26,7 +26,11 @@
       </div>
       <div class="orow-right">
         <div class="orow-total">{{ number_format($o->total,0,',','.') }}đ</div>
-        <div class="orow-comm">+{{ number_format($o->affiliate_commission,0,',','.') }}đ</div>
+        @if($ctv->isAgent())
+          @if(($o->deposit ?? 0) > 0)<div class="orow-comm" style="color:#6D28D9">Cọc {{ number_format($o->deposit,0,',','.') }}đ{{ $o->deposit_paid ? ' ✓' : '' }}</div>@endif
+        @else
+          <div class="orow-comm">+{{ number_format($o->affiliate_commission,0,',','.') }}đ</div>
+        @endif
         <span class="badge" style="margin-top:4px;background:{{ $o->status_color }}22;color:{{ $o->status_color }}">{{ $o->status_label }}</span>
       </div>
     </div>
