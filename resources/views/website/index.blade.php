@@ -672,11 +672,21 @@ footer{
   .modal-header{padding:16px 18px}
 }
 @media(max-width:600px){
-  .hero-stats{gap:18px}.footer-grid{grid-template-columns:1fr 1fr;gap:28px 18px}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:28px 18px}
   .footer-bottom{flex-direction:column;text-align:center}
   footer{padding:48px 6% 24px}
   .footer-brand p{font-size:13px;max-width:none}
-  .hero-btns{flex-direction:column}.hero-tag{display:none}
+  /* ── HERO tối ưu cho mọi cỡ điện thoại (320–430px) ── */
+  .hero{padding:30px 6% 36px;gap:24px}
+  .hero-badge{font-size:12px;padding:6px 14px;margin-bottom:15px}
+  .hero h1{font-size:clamp(26px,7.6vw,35px);line-height:1.2;margin-bottom:13px}
+  .hero p{font-size:14.5px;line-height:1.7;margin-bottom:22px;max-width:none}
+  .hero-btns{flex-direction:column;gap:11px;margin-bottom:26px}
+  .hero-btns .btn-primary,.hero-btns .btn-outline{width:100%;text-align:center;padding:14px 20px}
+  .hero-stats{gap:0;justify-content:space-between;padding-top:20px}
+  .stat-num{font-size:clamp(20px,6vw,24px)}
+  .stat-label{font-size:clamp(10px,3vw,12px)}
+  .hero-tag{display:none}
   .payment-opts{grid-template-columns:1fr}
   .nav-search,.nav-phone{display:none}
   nav{padding:0 4%}
