@@ -200,6 +200,9 @@ class CtvController extends Controller
     public function withdrawPage(Request $request)
     {
         $ctv = $request->attributes->get('ctv');
+        if ($ctv->isAgent()) {
+            return redirect()->route('ctv.dashboard')->with('error', 'Tài khoản đại lý không có hoa hồng để rút (bán trực tiếp giá sỉ).');
+        }
         $withdrawals = $ctv->withdrawals()->paginate(15);
         return view('ctv.withdraw', compact('ctv', 'withdrawals'));
     }
@@ -208,6 +211,10 @@ class CtvController extends Controller
     public function withdraw(Request $request)
     {
         $ctv = $request->attributes->get('ctv');
+
+        if ($ctv->isAgent()) {
+            return redirect()->route('ctv.dashboard')->with('error', 'Tài khoản đại lý không có hoa hồng để rút.');
+        }
 
         if (!$ctv->bank_acc || !$ctv->bank_name) {
             return back()->with('error', 'Bạn chưa có thông tin ngân hàng. Vui lòng liên hệ quản trị viên cập nhật trước khi rút.');

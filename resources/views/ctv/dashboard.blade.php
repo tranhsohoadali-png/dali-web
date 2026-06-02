@@ -6,7 +6,7 @@
 <div class="hero-banner">
   <div class="hero-sub">Xin chào,</div>
   <div class="hero-name">{{ $ctv->name }}</div>
-  <div class="hero-meta">Mã: <b>{{ $ctv->code }}</b> &nbsp;·&nbsp; Hoa hồng <b>{{ rtrim(rtrim(number_format($ctv->commission_rate,1),'0'),'.') }}%</b>/đơn</div>
+  <div class="hero-meta">Mã: <b>{{ $ctv->code }}</b> &nbsp;·&nbsp; @if($ctv->isAgent())<b>🏷️ Đại lý — giá sỉ</b>@else Hoa hồng <b>{{ rtrim(rtrim(number_format($ctv->commission_rate,1),'0'),'.') }}%</b>/đơn @endif</div>
   <div class="ref-row">
     <div class="ref-url">{{ url('/ref/'.$ctv->code) }}</div>
     <button class="copy-btn" onclick="copyText('{{ url('/ref/'.$ctv->code) }}',this)">Sao chép</button>
@@ -14,6 +14,17 @@
 </div>
 
 {{-- STATS --}}
+@if($ctv->isAgent())
+<div class="stat-grid" style="grid-template-columns:1fr">
+  <div class="stat-box">
+    <div class="sn" style="color:var(--g)">{{ $ctv->total_orders }}</div>
+    <div class="sl">📦 Tổng đơn đã lên</div>
+  </div>
+</div>
+<div style="background:#EDE9FE;border:1px solid #DDD6FE;border-radius:14px;padding:12px 14px;font-size:12.5px;color:#6D28D9;font-weight:600;margin-bottom:16px;line-height:1.6">
+  🏷️ Bạn là <b>ĐẠI LÝ</b> — mua theo <b>giá sỉ</b>, bán trực tiếp (không hoa hồng). Mỗi đơn cần <b>đặt cọc trước</b> theo quy định.
+</div>
+@else
 <div class="stat-grid">
   <div class="stat-box">
     <div class="sn" style="color:var(--gd)">{{ number_format($ctv->available,0,',','.') }}đ</div>
@@ -32,15 +43,22 @@
     <div class="sl">📦 Đơn hàng</div>
   </div>
 </div>
+@endif
 
 {{-- QUICK ACTIONS --}}
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
   <a href="{{ route('ctv.order.create') }}" class="btn" style="flex-direction:column;gap:4px;border-radius:16px;padding:16px 10px;text-decoration:none">
     <span style="font-size:26px">➕</span><span style="font-size:13px">Lên đơn mới</span>
   </a>
+  @if($ctv->isAgent())
+  <a href="{{ route('ctv.orders') }}" class="btn ghost" style="flex-direction:column;gap:4px;border-radius:16px;padding:16px 10px;text-decoration:none">
+    <span style="font-size:26px">📦</span><span style="font-size:13px">Đơn của tôi</span>
+  </a>
+  @else
   <a href="{{ route('ctv.withdraw.page') }}" class="btn ghost" style="flex-direction:column;gap:4px;border-radius:16px;padding:16px 10px;text-decoration:none">
     <span style="font-size:26px">💳</span><span style="font-size:13px">Rút tiền</span>
   </a>
+  @endif
 </div>
 
 {{-- ĐƠN GẦN ĐÂY --}}
@@ -55,7 +73,11 @@
       </div>
       <div class="orow-right">
         <div class="orow-total">{{ number_format($o->total,0,',','.') }}đ</div>
-        <div class="orow-comm">+{{ number_format($o->affiliate_commission,0,',','.') }}đ HH</div>
+        @if($ctv->isAgent())
+          @if(($o->deposit ?? 0) > 0)<div class="orow-comm" style="color:#6D28D9">Cọc {{ number_format($o->deposit,0,',','.') }}đ{{ $o->deposit_paid ? ' ✓' : '' }}</div>@endif
+        @else
+          <div class="orow-comm">+{{ number_format($o->affiliate_commission,0,',','.') }}đ HH</div>
+        @endif
         <span class="badge" style="margin-top:4px;background:{{ $o->status_color }}22;color:{{ $o->status_color }}">{{ $o->status_label }}</span>
       </div>
     </div>
@@ -73,13 +95,18 @@
 
 {{-- HƯỚNG DẪN --}}
 <div class="card" style="background:linear-gradient(135deg,var(--gll),#fff)">
-  <div class="card-title"><span class="ic">💡</span>Cách nhận hoa hồng</div>
-  @foreach([
+  <div class="card-title"><span class="ic">💡</span>{{ $ctv->isAgent() ? 'Quy trình đại lý' : 'Cách nhận hoa hồng' }}</div>
+  @foreach(($ctv->isAgent() ? [
+    ['Vào tab Lên đơn, chọn tranh — giá hiển thị là giá sỉ của bạn.','1'],
+    ['Tạo đơn → hệ thống tính tiền cọc → chuyển khoản đặt cọc.','2'],
+    ['Shop xác nhận cọc và xử lý, giao hàng cho khách của bạn.','3'],
+    ['Bạn bán trực tiếp giá lẻ và hưởng phần chênh lệch.','4'],
+  ] : [
     ['Chia sẻ link giới thiệu cho khách (sao chép ở trên).','1'],
     ['Hoặc lên đơn trực tiếp thay mặt khách tại tab Lên đơn.','2'],
     ['Hoa hồng tự ghi nhận ngay khi đơn được tạo.','3'],
     ['Đủ 50.000đ → Rút tiền → Admin duyệt → Chuyển khoản.','4'],
-  ] as [$t,$n])
+  ]) as [$t,$n])
   <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
     <span style="background:linear-gradient(135deg,var(--g),var(--gn));color:#1A4D00;font-weight:900;font-size:11px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">{{ $n }}</span>
     <span style="font-size:13px;color:var(--tx2);padding-top:2px">{{ $t }}</span>
