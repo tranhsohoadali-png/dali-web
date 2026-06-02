@@ -26,7 +26,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .mobile-nav a{font-size:17px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.1);border-radius:8px}
 .breadcrumb{padding:13px 5%;font-size:13px;color:var(--tx3);display:flex;gap:7px;flex-wrap:wrap}
 .breadcrumb a{color:var(--tx2);text-decoration:none}
-.wrap{max-width:1120px;margin:0 auto;padding:8px 5% 50px;display:grid;grid-template-columns:440px 1fr;gap:30px;align-items:start}
+.wrap{max-width:1340px;margin:0 auto;padding:8px 5% 50px;display:grid;grid-template-columns:minmax(420px,500px) 1fr;gap:40px;align-items:start}
 /* LEFT preview */
 .preview-box{position:sticky;top:84px}
 .preview-main{width:100%;aspect-ratio:1/1;border-radius:16px;overflow:hidden;border:1.5px solid var(--bd);background:linear-gradient(135deg,var(--gll),#fff);display:flex;align-items:center;justify-content:center}
@@ -111,7 +111,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   .cb-buy{flex:1;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:900;box-shadow:0 4px 14px rgba(107,191,31,.3);cursor:pointer}
 }
 /* ── ĐÁNH GIÁ ── */
-.reviews-wrap{max-width:1120px;margin:0 auto;padding:0 5% 50px}
+.reviews-wrap{max-width:1340px;margin:0 auto;padding:0 5% 50px}
 .rv-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:18px 22px;margin-bottom:16px}
 .rv-title{font-size:18px;font-weight:900;color:var(--char)}
 .rv-avg{display:flex;align-items:center;gap:12px}
