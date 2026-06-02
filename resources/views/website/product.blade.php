@@ -95,20 +95,26 @@ nav.nav-hidden{transform:translateY(-100%)}
 .product-price{font-size:17px;font-weight:900;color:var(--g);margin-bottom:10px}
 .btn-buy{width:100%;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
 .btn-buy:hover{background:linear-gradient(135deg,#2E7D08,#5AAF15)}
-footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255,.7);padding:52px 5% 26px}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;margin-bottom:40px}
-.footer-logo{height:34px;filter:brightness(0) invert(1);display:block;margin-bottom:13px}
-.footer-brand p{font-size:13px;line-height:1.9;margin-bottom:16px}
+footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255,.7);padding:60px 5% 26px}
+.footer-grid{display:grid;grid-template-columns:1.9fr 1fr 1.3fr;gap:48px;max-width:1180px;margin:0 auto 40px;align-items:start}
+.footer-logo{height:38px;filter:brightness(0) invert(1);display:block;margin-bottom:16px}
+.footer-brand p{font-size:13.5px;line-height:1.85;margin-bottom:20px;max-width:360px;color:rgba(255,255,255,.6)}
 .social-links{display:flex;gap:10px}
-.social-btn{width:35px;height:35px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px;transition:all .2s}
-.social-btn:hover{background:var(--g)}
-.footer-col h4{color:#fff;font-size:14px;font-weight:800;margin-bottom:16px}
+.social-btn{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-size:19px;transition:transform .2s,background .2s,border-color .2s}
+.social-btn:hover{transform:translateY(-3px)}
+.social-btn.fb:hover{background:#1877F2;border-color:#1877F2}
+.social-btn.mb:hover{background:#A033FF;border-color:#A033FF}
+.footer-col h4{color:#fff;font-size:14px;font-weight:800;margin-bottom:18px;letter-spacing:.3px;position:relative;padding-bottom:10px}
+.footer-col h4::after{content:'';position:absolute;left:0;bottom:0;width:28px;height:2.5px;border-radius:2px;background:var(--gn)}
 .footer-col ul{list-style:none}
-.footer-col li{margin-bottom:8px}
-.footer-col a{color:rgba(255,255,255,.5);text-decoration:none;font-size:13px;transition:color .2s}
-.footer-col a:hover{color:var(--gn)}
-.footer-contact p{font-size:13px;margin-bottom:6px}
-.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px;color:rgba(255,255,255,.3)}
+.footer-col li{margin-bottom:11px}
+.footer-col a{color:rgba(255,255,255,.55);text-decoration:none;font-size:13.5px;transition:color .2s,padding-left .2s;display:inline-block}
+.footer-col a:hover{color:var(--gn);padding-left:4px}
+.footer-contact p{font-size:13.5px;margin-bottom:13px;display:flex;align-items:flex-start;gap:9px;color:rgba(255,255,255,.62);line-height:1.55}
+.footer-contact p i{color:var(--gn);font-size:16px;margin-top:1px;flex-shrink:0}
+.footer-phone{display:inline-flex;align-items:center;gap:8px;background:rgba(123,201,42,.14);border:1px solid rgba(123,201,42,.32);color:var(--gn)!important;font-weight:800;font-size:15px;padding:9px 17px;border-radius:50px;text-decoration:none;margin-top:2px;transition:all .2s}
+.footer-phone:hover{background:var(--g);color:#fff!important;border-color:var(--g);transform:translateY(-2px)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:22px;max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;color:rgba(255,255,255,.35)}
 
 /* REVIEWS */
 .reviews-section{margin-top:32px;background:#fff;border-radius:16px;padding:24px;border:1.5px solid var(--bd)}
@@ -219,8 +225,8 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--char);color:#fff;padding:11px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;transition:transform .4s;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-@media(max-width:900px){.detail-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}.nav-hamburger{display:flex}}
-@media(max-width:600px){.specs-grid{grid-template-columns:1fr 1fr}.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column;text-align:center}.form-row{grid-template-columns:1fr}.payment-opts{grid-template-columns:1fr}.nav-phone,.nav-tracuu{display:none}nav{padding:0 4%}.breadcrumb{padding:12px 4%;flex-wrap:wrap}.product-detail{padding:20px 4% 40px}.size-opt{flex:1;min-width:calc(50% - 4px)!important}}
+@media(max-width:900px){.detail-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr 1fr;gap:34px}.footer-brand{grid-column:1/-1}.nav-links{display:none}.nav-hamburger{display:flex}}
+@media(max-width:600px){.specs-grid{grid-template-columns:1fr 1fr}.footer-grid{grid-template-columns:1fr 1fr;gap:28px 18px}.footer-brand p{max-width:none}.footer-bottom{flex-direction:column;text-align:center}.form-row{grid-template-columns:1fr}.payment-opts{grid-template-columns:1fr}.nav-phone,.nav-tracuu{display:none}nav{padding:0 4%}.breadcrumb{padding:12px 4%;flex-wrap:wrap}.product-detail{padding:20px 4% 40px}.size-opt{flex:1;min-width:calc(50% - 4px)!important}}
 </style>
 </head>
 <body>
@@ -522,10 +528,26 @@ async function submitReview(){
 
 <footer id="lien-he">
   <div class="footer-grid">
-    <div class="footer-brand"><img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo"><p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam.</p><div class="social-links"><a href="https://www.facebook.com/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Facebook"><i class="ri-facebook-circle-line"></i></a><a href="https://m.me/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn" aria-label="Messenger"><i class="ri-messenger-line"></i></a></div></div>
-    <div class="footer-col"><h4>Sản phẩm</h4><ul><li><a href="{{ route('products') }}">Xem tất cả</a></li></ul></div>
-    <div class="footer-col"><h4>Hỗ trợ</h4><ul><li><a href="{{ route('track-order') }}">Tra cứu đơn hàng</a></li><li><a href="#">Chính sách đổi trả</a></li></ul></div>
-    <div class="footer-col"><h4>Liên hệ</h4><p><i class="ri-phone-line"></i> <a href="tel:{{ $settings['shop_phone'] ?? '' }}" style="color:var(--gn);text-decoration:none">{{ $settings['shop_phone'] ?? '0123456789' }}</a></p><p><i class="ri-time-line"></i> T2–T7: 8:00 – 20:00</p></div>
+    <div class="footer-brand">
+      <img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="footer-logo">
+      <p>DALI – Thương hiệu tranh tô màu số hóa hàng đầu Việt Nam. Chúng tôi tin rằng mọi người đều có tâm hồn nghệ sĩ.</p>
+      <div class="social-links">
+        <a href="https://www.facebook.com/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn fb" aria-label="Facebook"><i class="ri-facebook-fill"></i></a>
+        <a href="https://m.me/tranhtomau.dali" target="_blank" rel="noopener" class="social-btn mb" aria-label="Messenger"><i class="ri-messenger-fill"></i></a>
+      </div>
+    </div>
+    <div class="footer-col"><h4>Sản phẩm</h4><ul>
+      <li><a href="{{ route('products') }}">Tất cả sản phẩm</a></li>
+      <li><a href="{{ route('products') }}?category=phong-canh">Tranh phong cảnh</a></li>
+      <li><a href="{{ route('products') }}?category=hoa-thuc-vat">Hoa &amp; Thực vật</a></li>
+      <li><a href="{{ route('products') }}?category=dong-vat">Động vật</a></li>
+      <li><a href="{{ route('track-order') }}">Tra cứu đơn hàng</a></li>
+    </ul></div>
+    <div class="footer-col footer-contact"><h4>Liên hệ</h4>
+      <p><i class="ri-map-pin-line"></i> {{ $settings['shop_address'] ?? 'Số 1 Đường ABC, Hà Nội' }}</p>
+      <p><i class="ri-time-line"></i> T2–T7: 8:00 – 20:00</p>
+      <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="footer-phone"><i class="ri-phone-fill"></i> {{ $settings['shop_phone'] ?? '0123 456 789' }}</a>
+    </div>
   </div>
   <div class="footer-bottom"><span>© 2024 DALI Tranh Tô Màu Số Hóa</span><span>Thiết kế tại Việt Nam 🇻🇳</span></div>
 </footer>
