@@ -38,6 +38,7 @@ class AffiliateController extends Controller
             'password'        => 'nullable|string|min:4|max:50',
             'type'            => 'nullable|in:ctv,agent',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
+            'deposit_percent' => 'nullable|integer|min:0|max:100',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
             'bank_owner'      => 'nullable|string|max:100',
@@ -45,6 +46,10 @@ class AffiliateController extends Controller
             'note'            => 'nullable|string|max:500',
         ]);
         $data['type'] = $data['type'] ?? 'ctv';
+        // deposit_percent chỉ áp dụng cho đại lý; CTV luôn null
+        if ($data['type'] !== 'agent') {
+            $data['deposit_percent'] = null;
+        }
         // Mật khẩu đăng nhập CTV
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -93,6 +98,7 @@ class AffiliateController extends Controller
             'password'        => 'nullable|string|min:4|max:50',
             'type'            => 'nullable|in:ctv,agent',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
+            'deposit_percent' => 'nullable|integer|min:0|max:100',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
             'bank_owner'      => 'nullable|string|max:100',
@@ -100,6 +106,10 @@ class AffiliateController extends Controller
             'note'            => 'nullable|string|max:500',
         ]);
         $data['type'] = $data['type'] ?? 'ctv';
+        // deposit_percent chỉ áp dụng cho đại lý; CTV luôn null
+        if ($data['type'] !== 'agent') {
+            $data['deposit_percent'] = null;
+        }
         // Chỉ đổi mật khẩu khi admin nhập mới
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class Affiliate extends Model
 {
     protected $fillable = [
-        'name','phone','email','password','code','type','commission_rate',
+        'name','phone','email','password','code','type','commission_rate','deposit_percent',
         'total_earned','total_paid','total_orders',
         'bank_name','bank_acc','bank_owner','is_active','note',
     ];
@@ -17,6 +17,16 @@ class Affiliate extends Model
     public function isAgent(): bool
     {
         return $this->type === 'agent';
+    }
+
+    /**
+     * % cọc thực tế áp dụng cho đại lý này.
+     * Dùng deposit_percent riêng nếu đã đặt (kể cả 0 = miễn cọc),
+     * ngược lại dùng mức chung $global.
+     */
+    public function effectiveDepositPercent(int $global): int
+    {
+        return $this->deposit_percent !== null ? (int) $this->deposit_percent : $global;
     }
 
     public function agentPrices()

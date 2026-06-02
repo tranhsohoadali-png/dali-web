@@ -109,7 +109,7 @@
       <div class="row"><span class="k">Tiền hàng</span><span class="v" id="subtotalDisplay">0đ</span></div>
       <div class="row" id="shipRow"><span class="k" id="shipLabel">Phí ship</span><span class="v" id="shipDisplay">—</span></div>
       <div class="row big"><span class="k">Tổng đơn</span><span class="v" id="totalDisplay">0đ</span></div>
-      <div class="row green-row"><span class="k">@if($ctv->isAgent())💰 Đặt cọc ({{ (int)($settings['agent_deposit_percent'] ?? 20) }}%)@else 🌿 Hoa hồng của bạn @endif</span><span class="v" id="commSummary">0đ</span></div>
+      <div class="row green-row"><span class="k">@if($ctv->isAgent())💰 Đặt cọc ({{ $ctv->effectiveDepositPercent((int)($settings['agent_deposit_percent'] ?? 20)) }}%)@else 🌿 Hoa hồng của bạn @endif</span><span class="v" id="commSummary">0đ</span></div>
     </div>
   </div>
 
@@ -158,7 +158,7 @@ const SIZES_DATA = @json($sizes->map(fn($s)=>['id'=>$s->id,'name'=>$s->name,'pri
 const sizeById = Object.fromEntries(SIZES_DATA.map(s=>[String(s.id), s]));
 const COMM_RATE = {{ $ctv->commission_rate }};
 const IS_AGENT = {{ $ctv->isAgent() ? 'true' : 'false' }};
-const DEPOSIT_PCT = {{ (int)($settings['agent_deposit_percent'] ?? 20) }};
+const DEPOSIT_PCT = {{ $ctv->effectiveDepositPercent((int)($settings['agent_deposit_percent'] ?? 20)) }};
 const FREE_SHIP_FROM = {{ (int)($settings['free_ship_from'] ?? 299000) }};
 const SHIP_FEE = {{ (int)($settings['ship_fee'] ?? 30000) }};
 let activeCat = 'all';

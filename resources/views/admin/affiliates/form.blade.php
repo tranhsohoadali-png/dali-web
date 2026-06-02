@@ -104,6 +104,10 @@
             </div>
 
             <div id="agentBlock" style="display:none">
+              <label class="flabel">% đặt cọc riêng của đại lý này</label>
+              <input type="number" name="deposit_percent" class="dinput" value="{{ old('deposit_percent', $affiliate->deposit_percent ?? '') }}" min="0" max="100" step="1" placeholder="để trống = dùng mức chung của hệ thống">
+              <div class="fnote" style="margin-bottom:14px">Để trống = áp dụng mức cọc chung trong Cài đặt. Nhập <b>0</b> = đại lý này <b>không cần đặt cọc</b> (lên đơn thẳng). Nhập số khác = ghi đè riêng cho đại lý này.</div>
+
               <label class="flabel">Bảng giá sỉ của đại lý (theo kích thước)</label>
               <div class="fnote" style="margin-bottom:8px">Khi đại lý này lên đơn, mỗi khổ tính theo giá sỉ dưới đây. Để trống = dùng giá lẻ.</div>
               <table style="width:100%;border-collapse:collapse;font-size:13px">

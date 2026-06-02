@@ -170,7 +170,7 @@ class CtvController extends Controller
         $commission = $ctv->isAgent() ? 0 : (int) round($total * $ctv->commission_rate / 100);
         $deposit = 0;
         if ($ctv->isAgent()) {
-            $depPct  = (int) ($settings['agent_deposit_percent'] ?? 20);
+            $depPct  = $ctv->effectiveDepositPercent((int) ($settings['agent_deposit_percent'] ?? 20));
             $deposit = (int) round($total * $depPct / 100);
         }
         $order->update(['affiliate_commission' => $commission, 'deposit' => $deposit]);
