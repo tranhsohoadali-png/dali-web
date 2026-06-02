@@ -62,7 +62,10 @@ class WebsiteController extends Controller
         } else {
             $query->orderBy('sort_order')->orderByDesc('sold_count');
         }
-        $products   = $query->paginate(12)->withQueryString();
+        // Số tranh mỗi trang: cho khách chọn 20 / 50 / 100 (mặc định 20)
+        $perPage = (int) $request->input('per_page', 20);
+        if (!in_array($perPage, [20, 50, 100], true)) $perPage = 20;
+        $products   = $query->paginate($perPage)->withQueryString();
         $categories = Category::where('is_active',true)->orderBy('sort_order')->get();
         $settings   = DB::table('admin_settings')->pluck('value','key');
         return view('website.products', compact('products','categories','settings'));

@@ -155,10 +155,11 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 .btn-filter{padding:9px 18px;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
 .btn-filter:hover{background:linear-gradient(135deg,#2E7D08,#5AAF15);transform:translateY(-1px)}
 .btn-clear{font-size:12px;color:var(--pk);font-weight:700;background:none;border:none;cursor:pointer;padding:5px}
-.products-section{padding:40px 5%}
+.products-section{padding:40px 5%;max-width:1760px;margin:0 auto}
 .result-count{font-size:13px;color:var(--tx3);margin-bottom:18px;font-weight:500}
 .result-count b{color:var(--g)}
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+/* Lưới co giãn: tự xếp số cột vừa khít mọi bề ngang màn hình */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
 .product-card{background:#fff;border-radius:18px;overflow:hidden;border:1.5px solid var(--bd);transition:transform .3s,box-shadow .3s}
 .product-card:hover{transform:translateY(-8px);box-shadow:0 16px 44px rgba(58,122,10,.12)}
 .product-img{position:relative;aspect-ratio:1/1;overflow:hidden;display:block;text-decoration:none;background:linear-gradient(135deg,var(--gll),#fff)}
@@ -222,7 +223,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 
 {{-- Filter bar --}}
 <div class="filter-bar">
-  <form method="GET" action="{{ route('products') }}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%">
+  <form method="GET" action="{{ route('products') }}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;max-width:1760px;margin:0 auto">
     <select name="category" class="filter-select" onchange="this.form.submit()">
       <option value="">Tất cả danh mục</option>
       @foreach($categories as $cat)
@@ -234,6 +235,11 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       <option value="price_asc" {{ request('sort')=='price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
       <option value="price_desc" {{ request('sort')=='price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
       <option value="new" {{ request('sort')=='new' ? 'selected' : '' }}>🆕 Mới nhất</option>
+    </select>
+    <select name="per_page" class="filter-select" onchange="this.form.submit()" title="Số tranh hiển thị mỗi trang">
+      <option value="20" {{ (int)request('per_page',20)==20 ? 'selected' : '' }}>Hiện 20 tranh</option>
+      <option value="50" {{ (int)request('per_page')==50 ? 'selected' : '' }}>Hiện 50 tranh</option>
+      <option value="100" {{ (int)request('per_page')==100 ? 'selected' : '' }}>Hiện 100 tranh</option>
     </select>
     <input type="text" name="search" class="filter-input" placeholder="🔍 Tìm tên tranh..." value="{{ request('search') }}" style="flex:1;min-width:180px">
     <button type="submit" class="btn-filter">Tìm kiếm</button>
