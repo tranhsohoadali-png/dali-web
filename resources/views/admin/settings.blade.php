@@ -49,42 +49,63 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
       @if(session('success'))<div class="alert-ok">✅ {{ session('success') }}</div>@endif
 
       {{-- ════════ BẢNG GIÁ THEO KÍCH THƯỚC (áp dụng cho TẤT CẢ tranh) ════════ --}}
-      <form method="POST" action="{{ route('admin.settings.sizes') }}">
-        @csrf
-        <div class="card">
-          <div class="rainbow"></div>
-          <div class="card-head"><div class="card-icon">📐</div><div><div class="card-title">Bảng giá theo kích thước</div><div class="card-sub">Sửa 1 lần → áp dụng đồng loạt cho tất cả tranh hiển thị với khách</div></div></div>
-          <div class="fb">
-            <div class="info-box">💡 Đây là giá chung theo từng khổ tranh. Ở trang sửa sản phẩm, bạn chỉ cần <b>tích</b> chọn tranh đó có những khổ nào — giá sẽ tự lấy từ bảng này.</div>
+      <div class="card">
+        <div class="rainbow"></div>
+        <div class="card-head"><div class="card-icon">📐</div><div><div class="card-title">Bảng giá theo kích thước & phụ kiện</div><div class="card-sub">Mỗi dòng = 1 lựa chọn khi đặt tranh (khổ tranh hoặc bộ màu / phụ kiện bán lẻ). Thêm / sửa / xoá tuỳ ý.</div></div></div>
+        <div class="fb">
+          <div class="info-box">💡 Mỗi dòng là 1 lựa chọn khách thấy khi đặt tranh — có thể là <b>kích thước</b> (40×50cm…) hoặc <b>phụ kiện</b> (vd: "Bộ màu riêng" 90.000đ). Ở trang sửa sản phẩm, tích chọn tranh đó áp dụng những dòng nào.</div>
+
+          {{-- Sửa + xoá các dòng hiện có --}}
+          <form method="POST" action="{{ route('admin.settings.sizes') }}">
+            @csrf
             <table style="width:100%;border-collapse:collapse;font-size:13px">
               <thead>
                 <tr style="text-align:left;color:var(--tx3);font-size:11px;text-transform:uppercase;letter-spacing:1px">
-                  <th style="padding:8px 6px">Kích thước</th>
-                  <th style="padding:8px 6px;width:200px">Giá (đ)</th>
-                  <th style="padding:8px 6px;width:90px;text-align:center">Hiển thị</th>
+                  <th style="padding:8px 6px">Tên (kích thước / phụ kiện)</th>
+                  <th style="padding:8px 6px;width:150px">Ghi chú</th>
+                  <th style="padding:8px 6px;width:140px">Giá (đ)</th>
+                  <th style="padding:8px 6px;width:60px;text-align:center">Hiện</th>
+                  <th style="padding:8px 6px;width:44px"></th>
                 </tr>
               </thead>
               <tbody>
                 @foreach($sizes as $sz)
-                <tr style="border-top:1px solid var(--bd)">
-                  <td style="padding:9px 6px;font-weight:700;color:var(--char)">
-                    {{ $sz->name }}
-                    @if($sz->note)<span style="font-size:11px;color:var(--pk);font-weight:600">· {{ $sz->note }}</span>@endif
-                  </td>
-                  <td style="padding:9px 6px">
-                    <input type="number" name="sizes[{{ $sz->id }}][price]" class="dinput" value="{{ $sz->price }}" min="0" step="1000" style="margin:0">
-                  </td>
-                  <td style="padding:9px 6px;text-align:center">
-                    <input type="checkbox" name="sizes[{{ $sz->id }}][is_active]" value="1" {{ $sz->is_active ? 'checked' : '' }} style="width:20px;height:20px;accent-color:var(--g);cursor:pointer">
-                  </td>
+                <tr id="szrow-{{ $sz->id }}" style="border-top:1px solid var(--bd)">
+                  <td style="padding:7px 6px"><input type="text" name="sizes[{{ $sz->id }}][name]" class="dinput" value="{{ $sz->name }}" style="margin:0;font-weight:700"></td>
+                  <td style="padding:7px 6px"><input type="text" name="sizes[{{ $sz->id }}][note]" class="dinput" value="{{ $sz->note }}" placeholder="(tuỳ chọn)" style="margin:0"></td>
+                  <td style="padding:7px 6px"><input type="number" name="sizes[{{ $sz->id }}][price]" class="dinput" value="{{ $sz->price }}" min="0" step="1000" style="margin:0"></td>
+                  <td style="padding:7px 6px;text-align:center"><input type="checkbox" name="sizes[{{ $sz->id }}][is_active]" value="1" {{ $sz->is_active ? 'checked' : '' }} style="width:20px;height:20px;accent-color:var(--g);cursor:pointer"></td>
+                  <td style="padding:7px 6px;text-align:center"><button type="button" title="Xoá dòng" onclick="delSize({{ $sz->id }})" style="background:#FFF0F0;color:#EF4444;border:1px solid #FECACA;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:14px">🗑</button></td>
                 </tr>
                 @endforeach
               </tbody>
             </table>
-            <button type="submit" class="btn-save" style="margin-top:16px">💾 Lưu bảng giá kích thước</button>
-          </div>
+            <button type="submit" class="btn-save" style="margin-top:16px">💾 Lưu bảng giá</button>
+          </form>
+
+          {{-- Thêm dòng mới --}}
+          <form method="POST" action="{{ route('admin.settings.sizes.add') }}" style="margin-top:18px;padding-top:16px;border-top:1.5px dashed var(--bd)">
+            @csrf
+            <div style="font-size:12px;font-weight:800;color:var(--char);margin-bottom:8px">➕ Thêm dòng mới (kích thước hoặc phụ kiện)</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input type="text" name="name" class="dinput" placeholder="Tên — vd: Bộ màu riêng" required style="margin:0;flex:1;min-width:170px">
+              <input type="text" name="note" class="dinput" placeholder="Ghi chú (tuỳ chọn)" style="margin:0;width:150px">
+              <input type="number" name="price" class="dinput" placeholder="Giá (đ) — vd: 90000" min="0" step="1000" required style="margin:0;width:160px">
+              <button type="submit" class="btn-save" style="margin:0">➕ Thêm</button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
+      <script>
+      function delSize(id){
+        var inp=document.querySelector('#szrow-'+id+' input[type=text]');
+        var name=inp?inp.value:'dòng này';
+        if(!confirm('Xoá "'+name+'" khỏi bảng giá?\n(Các tranh đang dùng dòng này sẽ không còn lựa chọn đó.)')) return;
+        fetch('{{ url("admin/settings/sizes") }}/'+id,{method:'DELETE',headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'}})
+          .then(r=>r.json()).then(d=>{ if(d.success){var row=document.getElementById('szrow-'+id); if(row) row.remove();} else alert('Lỗi khi xoá'); })
+          .catch(()=>alert('Lỗi kết nối'));
+      }
+      </script>
 
       <form method="POST" action="{{ route('admin.settings.update') }}">
         @csrf

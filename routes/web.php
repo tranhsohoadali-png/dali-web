@@ -124,6 +124,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('settings',   [SettingsController::class, 'index'])->name('settings');
     Route::post('settings',  [SettingsController::class, 'update'])->name('settings.update');
     Route::post('settings/sizes', [SettingsController::class, 'updateSizes'])->name('settings.sizes');
+    Route::post('settings/sizes/add', [SettingsController::class, 'addSize'])->name('settings.sizes.add');
+    Route::delete('settings/sizes/{size}', [SettingsController::class, 'deleteSize'])->name('settings.sizes.delete');
 
     // Công cụ tách màu (Django chạy riêng cổng 18001) — nhúng iframe
     Route::get('cong-cu-tach-mau', function () {

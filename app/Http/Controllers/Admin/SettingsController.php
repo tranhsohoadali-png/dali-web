@@ -26,11 +26,42 @@ class SettingsController extends Controller
             $size = Size::find($id);
             if (!$size) continue;
             $size->update([
+                'name'      => trim($row['name'] ?? $size->name) ?: $size->name,
+                'note'      => trim($row['note'] ?? '') ?: null,
                 'price'     => (int) preg_replace('/[^\d]/', '', $row['price'] ?? '0'),
                 'is_active' => !empty($row['is_active']),
             ]);
         }
-        return back()->with('success', 'Đã lưu bảng giá theo kích thước! Giá đã cập nhật cho tất cả tranh.');
+        return back()->with('success', 'Đã lưu bảng giá! Giá đã cập nhật cho tất cả tranh.');
+    }
+
+    /** Thêm 1 dòng mới vào bảng giá (kích thước / bộ màu / phụ kiện). */
+    public function addSize(Request $request)
+    {
+        $data = $request->validate([
+            'name'  => 'required|string|max:100',
+            'note'  => 'nullable|string|max:100',
+            'price' => 'required',
+        ], [
+            'name.required'  => 'Vui lòng nhập tên (vd: Bộ màu riêng)',
+            'price.required' => 'Vui lòng nhập giá',
+        ]);
+        Size::create([
+            'name'       => trim($data['name']),
+            'note'       => trim($data['note'] ?? '') ?: null,
+            'price'      => (int) preg_replace('/[^\d]/', '', $data['price']),
+            'sort_order' => (int) (Size::max('sort_order') + 1),
+            'is_active'  => true,
+        ]);
+        return back()->with('success', 'Đã thêm "' . trim($data['name']) . '" vào bảng giá!');
+    }
+
+    /** Xoá 1 dòng khỏi bảng giá. */
+    public function deleteSize(Size $size)
+    {
+        $name = $size->name;
+        $size->delete();
+        return response()->json(['success' => true, 'name' => $name]);
     }
 
     public function update(Request $request)
