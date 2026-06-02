@@ -867,7 +867,7 @@ footer{
   </div>
 
   <div class="products-grid" id="productsGrid">
-    @forelse($products->take(8) as $p)
+    @forelse($bestSellers as $p)
     <div class="product-card" data-cat="{{ $p->category_id }}">
       <a href="{{ route('product', $p->slug) }}" class="product-img" style="display:block;text-decoration:none">
         @if($p->main_image)

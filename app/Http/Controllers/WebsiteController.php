@@ -23,7 +23,28 @@ class WebsiteController extends Controller
         $categories = Category::where('is_active',true)->withCount(['products'])->orderBy('sort_order')->get();
         $products   = Product::with('category')->where('is_active',true)->orderBy('sort_order')->orderBy('sold_count','desc')->get();
         $settings   = DB::table('admin_settings')->pluck('value','key');
-        return view('website.index', compact('hero','categories','products','settings'));
+
+        // "Bán chạy nhất": mỗi danh mục góp 1 sản phẩm mua nhiều nhất, rồi đổ thêm cho đủ 8
+        $bestSellers = collect();
+        foreach ($categories as $cat) {
+            $top = Product::with('category')->where('is_active',true)
+                ->where('category_id',$cat->id)
+                ->orderByDesc('sold_count')->orderBy('sort_order')->first();
+            if ($top) $bestSellers->push($top);
+        }
+        // Nổi bật nhất (bán nhiều nhất) lên trước
+        $bestSellers = $bestSellers->sortByDesc('sold_count')->values();
+        // Bù thêm sản phẩm bán chạy còn lại nếu chưa đủ 8
+        if ($bestSellers->count() < 8) {
+            $fill = Product::with('category')->where('is_active',true)
+                ->whereNotIn('id', $bestSellers->pluck('id')->all())
+                ->orderByDesc('sold_count')->orderBy('sort_order')
+                ->take(8 - $bestSellers->count())->get();
+            $bestSellers = $bestSellers->concat($fill);
+        }
+        $bestSellers = $bestSellers->take(8)->values();
+
+        return view('website.index', compact('hero','categories','products','bestSellers','settings'));
     }
 
     public function products(Request $request)
