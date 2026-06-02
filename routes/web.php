@@ -59,6 +59,7 @@ Route::prefix('ctv')->name('ctv.')->group(function () {
         Route::get('don-hang',    [CtvController::class, 'orders'])->name('orders');
         Route::get('len-don',     [CtvController::class, 'createOrder'])->name('order.create');
         Route::post('len-don',    [CtvController::class, 'storeOrder'])->name('order.store');
+        Route::get('don/{code}/dat-coc', [CtvController::class, 'orderDeposit'])->name('order.deposit');
         Route::get('rut-tien',    [CtvController::class, 'withdrawPage'])->name('withdraw.page');
         Route::post('rut-tien',   [CtvController::class, 'withdraw'])->name('withdraw');
         Route::get('ho-so',       [CtvController::class, 'profile'])->name('profile');
@@ -93,6 +94,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::get('orders/export',                [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/{order}',               [OrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/status',       [OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::post('orders/{order}/deposit-paid', [OrderController::class, 'markDepositPaid'])->name('orders.deposit-paid');
     Route::post('orders/{order}/vtp-create',   [OrderController::class, 'vtpCreate'])->name('orders.vtp.create');
     Route::post('orders/{order}/vtp-cancel',   [OrderController::class, 'vtpCancel'])->name('orders.vtp.cancel');
     Route::get('orders/{order}/vtp-print',     [OrderController::class, 'vtpPrint'])->name('orders.vtp.print');

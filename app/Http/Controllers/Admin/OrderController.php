@@ -44,6 +44,13 @@ class OrderController extends Controller
         return back()->with('success', 'Đã xoá đơn hàng!');
     }
 
+    /** Xác nhận đã nhận tiền cọc của đại lý. */
+    public function markDepositPaid(Order $order)
+    {
+        $order->update(['deposit_paid' => true]);
+        return back()->with('success', 'Đã xác nhận nhận cọc ' . number_format($order->deposit, 0, ',', '.') . 'đ cho đơn ' . $order->code);
+    }
+
     // ── VIETTEL POST ──────────────────────────────
     /** Tạo vận đơn Viettel Post cho đơn hàng. */
     public function vtpCreate(Request $request, Order $order, ViettelPostService $vtp)

@@ -166,15 +166,34 @@ class CtvController extends Controller
             $li['product']->increment('sold_count', $li['qty']);
         }
 
-        // Đại lý: KHÔNG hoa hồng (đã tính theo giá sỉ). CTV: hoa hồng %.
+        // Đại lý: KHÔNG hoa hồng + bắt cọc %. CTV: hoa hồng %.
         $commission = $ctv->isAgent() ? 0 : (int) round($total * $ctv->commission_rate / 100);
-        $order->update(['affiliate_commission' => $commission]);
+        $deposit = 0;
+        if ($ctv->isAgent()) {
+            $depPct  = (int) ($settings['agent_deposit_percent'] ?? 20);
+            $deposit = (int) round($total * $depPct / 100);
+        }
+        $order->update(['affiliate_commission' => $commission, 'deposit' => $deposit]);
         if ($commission > 0) $ctv->increment('total_earned', $commission);
         $ctv->increment('total_orders');
 
         $itemCount = count($lineItems);
+        // Đại lý có cọc → sang trang đặt cọc (QR). CTV → về bảng điều khiển.
+        if ($ctv->isAgent() && $deposit > 0) {
+            return redirect()->route('ctv.order.deposit', $code);
+        }
         return redirect()->route('ctv.dashboard')->with('success',
-            "Đã lên đơn {$code} ({$itemCount} sản phẩm) thành công! Hoa hồng: +" . number_format($commission, 0, ',', '.') . 'đ');
+            "Đã lên đơn {$code} ({$itemCount} sản phẩm) thành công!"
+            . ($commission > 0 ? ' Hoa hồng: +' . number_format($commission, 0, ',', '.') . 'đ' : ''));
+    }
+
+    // ─── TRANG ĐẶT CỌC ĐẠI LÝ ──────────────────
+    public function orderDeposit(Request $request, $code)
+    {
+        $ctv   = $request->attributes->get('ctv');
+        $order = Order::where('code', $code)->where('affiliate_code', $ctv->code)->firstOrFail();
+        $settings = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value', 'key');
+        return view('ctv.order-deposit', compact('ctv', 'order', 'settings'));
     }
 
     // ─── TRANG RÚT TIỀN ────────────────────────

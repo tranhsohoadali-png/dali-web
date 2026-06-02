@@ -96,6 +96,19 @@ body{background:var(--bg);color:var(--tx)}
               @if($order->discount > 0)<div class="total-row" style="color:var(--gd)"><span>Giảm 5% CK</span><span>-{{ number_format($order->discount,0,',','.') }}đ</span></div>@endif
               <div class="total-row"><span style="color:var(--tx3)">Phí ship</span><span>{{ $order->ship_fee > 0 ? number_format($order->ship_fee,0,',','.') . 'đ' : 'Miễn phí' }}</span></div>
               <div class="total-row final"><span>Tổng thanh toán</span><span class="v">{{ number_format($order->total,0,',','.') }}đ</span></div>
+              @if(($order->deposit ?? 0) > 0)
+              <div class="total-row" style="color:#6D28D9;font-weight:800;border-top:1px dashed var(--bd);margin-top:6px;padding-top:10px">
+                <span>💰 Cọc đại lý</span>
+                <span>{{ number_format($order->deposit,0,',','.') }}đ
+                  @if($order->deposit_paid)<span style="color:#16A34A;font-size:11px;font-weight:700">· đã nhận</span>@else<span style="color:#EF4444;font-size:11px;font-weight:700">· chưa nhận</span>@endif
+                </span>
+              </div>
+              @if(!$order->deposit_paid)
+              <form method="POST" action="{{ route('admin.orders.deposit-paid', $order) }}" style="margin-top:8px">@csrf
+                <button type="submit" style="width:100%;background:#6D28D9;color:#fff;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer">✓ Đánh dấu đã nhận cọc</button>
+              </form>
+              @endif
+              @endif
             </div>
           </div>
         </div>

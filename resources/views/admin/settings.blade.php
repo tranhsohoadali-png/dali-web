@@ -157,7 +157,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
             </div>
             <div class="g2">
               <div><label class="flabel">Giảm giá chuyển khoản (%)</label><input type="number" name="discount_bank" class="dinput" value="{{ $settings['discount_bank'] ?? 5 }}" min="0" max="50"><div class="fnote">Khách chọn QR được giảm % này</div></div>
-              <div></div>
+              <div><label class="flabel">Đại lý đặt cọc trước (%)</label><input type="number" name="agent_deposit_percent" class="dinput" value="{{ $settings['agent_deposit_percent'] ?? 20 }}" min="0" max="100"><div class="fnote">Đại lý phải cọc % này khi lên đơn (0 = không bắt cọc)</div></div>
             </div>
           </div>
         </div>
