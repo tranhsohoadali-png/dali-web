@@ -71,8 +71,9 @@ class WebsiteController extends Controller
     public function categoryCombo(Category $category)
     {
         if (!$category->is_active) abort(404);
+        // Tranh bán chạy lên đầu, tranh chưa bán xuống cuối (sort_order chỉ là tiêu chí phụ)
         $products = Product::where('category_id', $category->id)->where('is_active', true)
-            ->orderBy('sort_order')->orderByDesc('sold_count')->get();
+            ->orderByDesc('sold_count')->orderBy('sort_order')->get();
         $sizes    = \App\Models\Size::where('is_active', true)->orderBy('sort_order')->get();
         $settings = DB::table('admin_settings')->pluck('value','key');
 
