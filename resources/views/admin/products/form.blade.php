@@ -136,8 +136,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
             <div class="sec-title">📐 Thông số kỹ thuật</div>
             <div class="g2">
               <div>
-                <label class="flabel">Số màu</label>
-                <input type="number" name="colors_count" class="dinput" value="{{ old('colors_count', $product->colors_count ?? 36) }}" min="1" max="200">
+                <label class="flabel">Số màu <span style="font-size:10px;color:var(--tx3);font-weight:400">(nhập 0 = ẩn số màu với khách)</span></label>
+                <input type="number" name="colors_count" class="dinput" value="{{ old('colors_count', $product->colors_count ?? 36) }}" min="0" max="200">
               </div>
               <div>
                 <label class="flabel">Trạng thái</label>
