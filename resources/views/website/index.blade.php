@@ -267,19 +267,13 @@ nav.nav-visible{box-shadow:0 4px 20px rgba(58,122,10,.3)}
 .hero-stats.in .stat:nth-child(2){transition-delay:.12s}
 .hero-stats.in .stat:nth-child(3){transition-delay:.24s}
 .hero-stats.in .stat:hover{transform:translateY(-4px)}
-.hero-image{position:relative;min-height:500px}
+.hero-image{position:relative}
 .hero-img-main{
-  width:100%;height:500px;object-fit:cover;
+  width:100%;aspect-ratio:5/4;max-height:520px;object-fit:cover;
   border-radius:22px;
   border:2px solid var(--bd);
-  box-shadow:0 12px 40px rgba(58,122,10,.12);
-}
-.hero-img-float{
-  position:absolute;bottom:-18px;left:-26px;
-  width:180px;height:145px;object-fit:cover;
-  border-radius:14px;border:5px solid #fff;
-  box-shadow:0 8px 28px var(--shad);
-  animation:floatY 5s ease-in-out infinite;
+  box-shadow:0 18px 50px rgba(58,122,10,.16);
+  display:block;
 }
 .hero-tag{
   position:absolute;top:22px;right:-14px;
@@ -672,8 +666,7 @@ footer{
 @media(max-width:900px){
   body{overflow-x:clip}
   .hero{grid-template-columns:1fr;padding-top:44px;gap:36px;min-height:auto}
-  .hero-image{order:-1;min-height:auto}.hero-img-main{height:320px}
-  .hero-img-float{width:120px;height:96px;bottom:-14px;left:-6px;border-width:4px}
+  .hero-image{order:-1}.hero-img-main{aspect-ratio:4/3;max-height:380px}
   .footer-grid{grid-template-columns:1fr 1fr;gap:34px}
   .footer-brand{grid-column:1/-1}
   .nav-links{display:none}.nav-hamburger{display:flex}
@@ -794,11 +787,9 @@ footer{
   <div class="hero-image anim-r">
     @if($hero)
     <img class="hero-img-main" src="{{ asset('storage/'.$hero->main_image) }}" alt="DALI">
-    <img class="hero-img-float" src="{{ asset('storage/'.$hero->float_image) }}" alt="Bộ màu">
     <div class="hero-tag">{{ $hero->tag_text }}<span>{{ $hero->tag_subtext }}</span></div>
     @else
     <img class="hero-img-main" src="https://images.unsplash.com/photo-1578926288207-a90a5366759d?w=700&q=80" alt="DALI">
-    <img class="hero-img-float" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80" alt="Bộ màu">
     <div class="hero-tag"><i class="ri-ruler-2-line"></i> BỘ TRANH<span>48 Màu</span></div>
     @endif
   </div>
