@@ -32,6 +32,16 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .preview-main{width:100%;aspect-ratio:1/1;border-radius:16px;overflow:hidden;border:1.5px solid var(--bd);background:linear-gradient(135deg,var(--gll),#fff);display:flex;align-items:center;justify-content:center}
 .preview-main img{width:100%;height:100%;object-fit:contain}
 .preview-cap{margin-top:10px;text-align:center;font-size:13px;color:var(--tx2);font-weight:600}
+/* Dải thumbnail dưới ảnh lớn (gallery kiểu Shopee) */
+.preview-thumbs{display:flex;align-items:center;gap:7px;margin-top:12px}
+.pt-arrow{flex:0 0 auto;width:26px;height:62px;border:1px solid var(--bd);background:#fff;border-radius:8px;cursor:pointer;color:var(--gd);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.pt-arrow:hover{background:var(--gl);border-color:var(--g)}
+.pt-track{display:flex;gap:7px;overflow-x:auto;flex:1;padding:2px;scroll-behavior:smooth}
+.pt-track::-webkit-scrollbar{height:5px}
+.pt-track::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+.pt-thumb{flex:0 0 62px;width:62px;height:62px;border-radius:9px;overflow:hidden;border:2px solid transparent;cursor:pointer;background:var(--gl);transition:border-color .15s}
+.pt-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pt-thumb.active{border-color:var(--g)}
 .share-row{display:flex;align-items:center;gap:10px;margin-top:14px;justify-content:center;font-size:13px;color:var(--tx3)}
 /* RIGHT */
 .c-title{font-size:22px;font-weight:900;color:var(--char);line-height:1.3;margin-bottom:10px}
@@ -44,10 +54,12 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .sec-label{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
 .sec-label .hint{font-size:11px;color:var(--tx3);font-weight:500}
 /* Mã tranh grid */
-.code-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:9px;max-height:340px;overflow-y:auto;padding:3px;margin-bottom:20px;border:1px solid var(--gl);border-radius:12px;padding:10px}
-.code-card{display:flex;align-items:center;gap:8px;border:1.5px solid var(--bd);border-radius:10px;padding:6px;cursor:pointer;background:#fff;transition:all .15s;text-align:left}
-.code-card:hover{border-color:var(--g)}
-.code-card.active{border-color:var(--g);background:var(--gl);box-shadow:0 0 0 1px var(--g) inset}
+.code-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:9px;max-height:360px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--gl);border-radius:12px;padding:11px}
+.code-grid::-webkit-scrollbar{width:6px}.code-grid::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+.code-card{position:relative;display:flex;align-items:center;gap:8px;border:1.5px solid var(--bd);border-radius:10px;padding:6px;cursor:pointer;background:#fff;transition:all .15s;text-align:left}
+.code-card:hover{border-color:var(--g);box-shadow:0 2px 8px rgba(107,191,31,.16)}
+.code-card.active{border-color:var(--g);background:var(--gl);box-shadow:0 0 0 1.5px var(--g) inset}
+.code-card.active::after{content:'\2713';position:absolute;top:-1px;right:-1px;width:19px;height:19px;background:var(--g);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;border-radius:0 9px 0 9px}
 .code-card img{width:42px;height:42px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--gl)}
 .code-card .cc-code{font-size:12px;font-weight:800;color:var(--char);line-height:1.2}
 .code-card .cc-sub{font-size:10px;color:var(--tx3)}
@@ -75,6 +87,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 @media(max-width:880px){
   .wrap{grid-template-columns:1fr;gap:14px;padding:8px 4% 40px}
   .preview-box{position:static}
+  .preview-thumbs{display:none}
   .nav-links{display:none}.nav-hamburger{display:flex}.nav-phone{display:none}nav{padding:0 4%}.breadcrumb{padding:11px 4%}
   /* Bố cục kiểu Shopee: ảnh → tên → chọn tranh → giá → chọn cỡ */
   .combo-content{display:flex;flex-direction:column}
@@ -180,6 +193,18 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
       <img id="previewImg" src="" alt="{{ $category->name }}">
     </div>
     <div class="preview-cap" id="previewCap">—</div>
+    <div class="preview-thumbs">
+      <button type="button" class="pt-arrow" onclick="ptScroll(-1)" aria-label="Trước">‹</button>
+      <div class="pt-track" id="ptTrack">
+        @foreach($products as $i => $p)
+        @php $tcode = preg_match('/([A-Za-z]+\d+)\s*$/u', $p->name, $m) ? $m[1] : ''; @endphp
+        <div class="pt-thumb" data-id="{{ $p->id }}" onclick="selectPainting({{ $p->id }})" title="{{ $tcode ?: 'Mẫu '.($i+1) }}">
+          <img src="{{ $p->main_image ? asset('storage/'.$p->main_image) : '' }}" alt="{{ $tcode }}" loading="lazy">
+        </div>
+        @endforeach
+      </div>
+      <button type="button" class="pt-arrow" onclick="ptScroll(1)" aria-label="Tiếp">›</button>
+    </div>
     <div class="share-row"><i class="ri-palette-line"></i> {{ $products->count() }} mẫu tranh · <i class="ri-box-3-line"></i> Đã căng khung sẵn</div>
   </div>
 
@@ -367,6 +392,12 @@ function selectPainting(id){
   document.getElementById('previewCap').textContent = SELECTED.code ? ('Mã: '+SELECTED.code+' · '+SELECTED.name) : SELECTED.name;
   var rvFor=document.getElementById('rvForProduct'); if(rvFor) rvFor.textContent = SELECTED.code ? (SELECTED.code+' · '+SELECTED.name) : SELECTED.name;
   document.querySelectorAll('.code-card').forEach(c=>c.classList.toggle('active', parseInt(c.dataset.id)===id));
+  // đồng bộ dải thumbnail (gallery) + cuộn vào tầm nhìn trên desktop
+  document.querySelectorAll('.pt-thumb').forEach(c=>c.classList.toggle('active', parseInt(c.dataset.id)===id));
+  if(window.innerWidth>880){
+    var at=document.querySelector('.pt-thumb.active');
+    if(at) at.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  }
   // lọc size theo sản phẩm (nếu có giới hạn)
   document.querySelectorAll('.size-opt').forEach(b=>{
     var sid=parseInt(b.dataset.id);
@@ -393,6 +424,7 @@ function selectSize(id){
   }
 }
 function chgQty(d){var i=document.getElementById('qty');i.value=Math.min(99,Math.max(1,parseInt(i.value)+d));}
+function ptScroll(d){var t=document.getElementById('ptTrack');if(t)t.scrollBy({left:d*215,behavior:'smooth'});}
 
 async function addCombo(buyNow){
   if(!SELECTED){showToast('⚠️ Vui lòng chọn mã tranh');document.getElementById('codeGrid').scrollIntoView({behavior:'smooth'});return;}
