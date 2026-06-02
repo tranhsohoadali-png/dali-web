@@ -80,7 +80,7 @@ tr:hover td{background:var(--gll)}
             <td>
               @if($w->status=='pending')
               <div style="display:flex;gap:5px">
-                <form method="POST" action="{{ route('admin.withdrawals.approve', $w) }}" onsubmit="return confirm('Xác nhận ĐÃ chuyển khoản {{ number_format($w->amount,0,\',\',\'.\') }}đ cho {{ $w->affiliate->name ?? \'CTV\' }}? Thao tác này sẽ trừ vào số dư của CTV.')">
+                <form method="POST" action="{{ route('admin.withdrawals.approve', $w) }}" onsubmit="return confirm('Xác nhận ĐÃ chuyển khoản {{ number_format($w->amount,0,',','.') }}đ cho {{ addslashes($w->affiliate->name ?? 'CTV') }}? Thao tác này sẽ trừ vào số dư của CTV.')">
                   @csrf <button type="submit" class="btn-ok">✓ Đã CK</button>
                 </form>
                 <form method="POST" action="{{ route('admin.withdrawals.reject', $w) }}" onsubmit="return confirm('Từ chối yêu cầu này?')">
