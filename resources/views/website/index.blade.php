@@ -251,11 +251,22 @@ nav.nav-visible{box-shadow:0 4px 20px rgba(58,122,10,.3)}
 }
 .btn-outline:hover{background:var(--g);color:#fff;transform:translateY(-2px)}
 .hero-stats{
-  display:flex;gap:28px;
-  padding-top:28px;border-top:1.5px solid var(--bd);
+  display:flex;gap:0;
+  padding-top:26px;border-top:1.5px solid var(--bd);
 }
-.stat-num{font-size:26px;font-weight:900;color:var(--g)}
-.stat-label{font-size:12px;color:var(--tx3);font-weight:500}
+.hero-stats .stat{flex:1;text-align:center;padding:2px 6px;position:relative;transition:transform .25s}
+/* vạch ngăn mảnh giữa các chỉ số */
+.hero-stats .stat + .stat::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);height:40px;width:1px;background:linear-gradient(transparent,var(--bd2),transparent)}
+.hero-stats .stat:hover{transform:translateY(-4px)}
+.stat-num{font-size:clamp(21px,2.5vw,28px);font-weight:900;color:var(--g);line-height:1.1;letter-spacing:-.5px;font-variant-numeric:tabular-nums;display:inline-block}
+.hero-stats .stat:hover .stat-num{filter:brightness(1.08)}
+.stat-label{font-size:12px;color:var(--tx3);font-weight:600;margin-top:5px;line-height:1.3}
+/* xuất hiện mượt khi cuộn tới */
+.hero-stats .stat{opacity:0;transform:translateY(14px)}
+.hero-stats.in .stat{opacity:1;transform:translateY(0);transition:opacity .5s ease,transform .5s ease}
+.hero-stats.in .stat:nth-child(2){transition-delay:.12s}
+.hero-stats.in .stat:nth-child(3){transition-delay:.24s}
+.hero-stats.in .stat:hover{transform:translateY(-4px)}
 .hero-image{position:relative;min-height:500px}
 .hero-img-main{
   width:100%;height:500px;object-fit:cover;
@@ -683,9 +694,11 @@ footer{
   .hero p{font-size:14.5px;line-height:1.7;margin-bottom:22px;max-width:none}
   .hero-btns{flex-direction:column;gap:11px;margin-bottom:26px}
   .hero-btns .btn-primary,.hero-btns .btn-outline{width:100%;text-align:center;padding:14px 20px}
-  .hero-stats{gap:0;justify-content:space-between;padding-top:20px}
-  .stat-num{font-size:clamp(20px,6vw,24px)}
-  .stat-label{font-size:clamp(10px,3vw,12px)}
+  .hero-stats{padding-top:20px}
+  .hero-stats .stat{padding:2px 4px}
+  .stat-num{font-size:clamp(20px,6vw,25px)}
+  .stat-label{font-size:clamp(10px,3vw,12px);margin-top:4px}
+  .hero-stats .stat + .stat::before{height:34px}
   .hero-tag{display:none}
   .payment-opts{grid-template-columns:1fr}
   .nav-search,.nav-phone{display:none}
@@ -772,10 +785,10 @@ footer{
       <a href="#san-pham" class="btn-primary">Khám phá tranh ngay</a>
       <a href="#huong-dan" class="btn-outline">Xem cách hoạt động</a>
     </div>
-    <div class="hero-stats">
-      <div><div class="stat-num">500+</div><div class="stat-label">Mẫu tranh độc quyền</div></div>
-      <div><div class="stat-num">15K+</div><div class="stat-label">Khách hàng hài lòng</div></div>
-      <div><div class="stat-num">4.9★</div><div class="stat-label">Đánh giá trung bình</div></div>
+    <div class="hero-stats" id="heroStats">
+      <div class="stat"><div class="stat-num" data-to="500" data-suffix="+">0</div><div class="stat-label">Mẫu tranh độc quyền</div></div>
+      <div class="stat"><div class="stat-num" data-to="15" data-suffix="K+">0</div><div class="stat-label">Khách hàng hài lòng</div></div>
+      <div class="stat"><div class="stat-num" data-to="4.9" data-suffix="★" data-dec="1">0</div><div class="stat-label">Đánh giá trung bình</div></div>
     </div>
   </div>
   <div class="hero-image anim-r">
@@ -863,6 +876,29 @@ footer{
     var step=card?(card.offsetWidth+gap)*2:560;
     pos+=dir*step; wrapPos(); apply();
   };
+})();
+// ── Hiệu ứng đếm số cho 3 chỉ số hero (chạy 1 lần khi cuộn tới) ──
+(function(){
+  var box=document.getElementById('heroStats'); if(!box) return;
+  function fmt(v,dec){ return dec>0 ? v.toFixed(dec) : Math.round(v).toLocaleString('vi-VN'); }
+  function run(){
+    box.classList.add('in');
+    box.querySelectorAll('.stat-num').forEach(function(el){
+      var to=parseFloat(el.dataset.to)||0, dec=parseInt(el.dataset.dec||0), suf=el.dataset.suffix||'';
+      var dur=1200, t0=null;
+      function step(ts){
+        if(!t0)t0=ts; var p=Math.min(1,(ts-t0)/dur);
+        var e=1-Math.pow(1-p,3);            // easeOutCubic
+        el.textContent=fmt(to*e,dec)+suf;
+        if(p<1) requestAnimationFrame(step); else el.textContent=fmt(to,dec)+suf;
+      }
+      requestAnimationFrame(step);
+    });
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ run(); io.disconnect(); } }); },{threshold:.4});
+    io.observe(box);
+  } else { run(); }
 })();
 </script>
 
