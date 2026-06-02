@@ -268,13 +268,17 @@ nav.nav-visible{box-shadow:0 4px 20px rgba(58,122,10,.3)}
 .hero-stats.in .stat:nth-child(3){transition-delay:.24s}
 .hero-stats.in .stat:hover{transform:translateY(-4px)}
 .hero-image{position:relative}
-.hero-img-main{
-  width:100%;aspect-ratio:5/4;max-height:520px;object-fit:cover;
-  border-radius:22px;
+.hero-slides{
+  position:relative;width:100%;aspect-ratio:5/4;max-height:520px;
+  border-radius:22px;overflow:hidden;
   border:2px solid var(--bd);
   box-shadow:0 18px 50px rgba(58,122,10,.16);
-  display:block;
 }
+.hero-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease}
+.hero-slide.active{opacity:1}
+.hero-dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:7px;z-index:3}
+.hd-dot{width:8px;height:8px;border-radius:50%;border:none;background:rgba(255,255,255,.6);cursor:pointer;padding:0;transition:all .25s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.hd-dot.active{background:#fff;width:22px;border-radius:5px}
 .hero-tag{
   position:absolute;top:22px;right:-14px;
   background:#fff;border-radius:12px;
@@ -666,7 +670,7 @@ footer{
 @media(max-width:900px){
   body{overflow-x:clip}
   .hero{grid-template-columns:1fr;padding-top:44px;gap:36px;min-height:auto}
-  .hero-image{order:-1}.hero-img-main{aspect-ratio:4/3;max-height:380px}
+  .hero-image{order:-1}.hero-slides{aspect-ratio:4/3;max-height:380px}
   .footer-grid{grid-template-columns:1fr 1fr;gap:34px}
   .footer-brand{grid-column:1/-1}
   .nav-links{display:none}.nav-hamburger{display:flex}
@@ -785,13 +789,24 @@ footer{
     </div>
   </div>
   <div class="hero-image anim-r">
-    @if($hero)
-    <img class="hero-img-main" src="{{ asset('storage/'.$hero->main_image) }}" alt="DALI">
-    <div class="hero-tag">{{ $hero->tag_text }}<span>{{ $hero->tag_subtext }}</span></div>
-    @else
-    <img class="hero-img-main" src="https://images.unsplash.com/photo-1578926288207-a90a5366759d?w=700&q=80" alt="DALI">
-    <div class="hero-tag"><i class="ri-ruler-2-line"></i> BỘ TRANH<span>48 Màu</span></div>
-    @endif
+    @php
+      $slides = ($hero && method_exists($hero,'slideImages')) ? $hero->slideImages() : [];
+      $slideUrls = array_map(fn($s) => asset('storage/'.$s), $slides);
+      if (empty($slideUrls)) $slideUrls = ['https://images.unsplash.com/photo-1578926288207-a90a5366759d?w=700&q=80'];
+    @endphp
+    <div class="hero-slides" id="heroSlides">
+      @foreach($slideUrls as $i => $url)
+      <img class="hero-slide{{ $i===0 ? ' active' : '' }}" src="{{ $url }}" alt="DALI"@if($i>0) loading="lazy"@endif>
+      @endforeach
+      @if(count($slideUrls) > 1)
+      <div class="hero-dots">
+        @foreach($slideUrls as $i => $url)
+        <button type="button" class="hd-dot{{ $i===0 ? ' active' : '' }}" onclick="heroGo({{ $i }})" aria-label="Ảnh {{ $i+1 }}"></button>
+        @endforeach
+      </div>
+      @endif
+    </div>
+    <div class="hero-tag">@if($hero && $hero->tag_text){{ $hero->tag_text }}<span>{{ $hero->tag_subtext }}</span>@else<i class="ri-ruler-2-line"></i> BỘ TRANH<span>48 Màu</span>@endif</div>
   </div>
 </section>
 
@@ -890,6 +905,22 @@ footer{
     var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ run(); io.disconnect(); } }); },{threshold:.4});
     io.observe(box);
   } else { run(); }
+})();
+// ── Slideshow hero: tự đổi ảnh mỗi 15 giây ──
+(function(){
+  var box=document.getElementById('heroSlides'); if(!box) return;
+  var slides=box.querySelectorAll('.hero-slide');
+  var dots=box.querySelectorAll('.hd-dot');
+  if(slides.length<2) return;
+  var idx=0, timer=null;
+  function show(n){
+    slides[idx].classList.remove('active'); if(dots[idx]) dots[idx].classList.remove('active');
+    idx=(n+slides.length)%slides.length;
+    slides[idx].classList.add('active'); if(dots[idx]) dots[idx].classList.add('active');
+  }
+  function start(){ timer=setInterval(function(){ show(idx+1); }, 15000); }
+  window.heroGo=function(n){ show(n); clearInterval(timer); start(); };  // bấm chấm: chuyển + đặt lại hẹn giờ
+  start();
 })();
 </script>
 

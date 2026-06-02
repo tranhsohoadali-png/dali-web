@@ -383,67 +383,68 @@
                     <div class="form-body">
 
                         <!-- HÌNH ẢNH -->
-                        <div class="section-heading">🖼️ Hình ảnh</div>
+                        <div class="section-heading">🖼️ Ảnh Hero (tự đổi mỗi 15 giây)</div>
 
-                        <div class="grid2">
-                            <!-- Ảnh chính -->
-                            <div>
-                                <div class="field-label">
-                                    <svg fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
-                                    Ảnh Hero Chính
-                                </div>
-                                <div class="field-hint">Định dạng JPG, PNG hoặc GIF · Tối đa 5MB</div>
-                                <input type="file" id="main_image" name="main_image" accept="image/*" style="display:none" onchange="xemTruoc(this,'prev_main')">
-                                <label for="main_image" class="upload-drop">
-                                    <svg class="drop-icon" fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-12l-3.172-3.172a4 4 0 00-5.656 0L28 20m0 0l-3.172-3.172a4 4 0 00-5.656 0l-10.172 10.172"/>
-                                    </svg>
-                                    <div class="drop-text">
-                                        Nhấn vào đây hoặc kéo thả file<br>
-                                        <span style="font-size:11px;opacity:.6">để tải ảnh lên</span>
-                                    </div>
-                                </label>
-                                @if($hero->main_image)
-                                <div class="preview-box" id="prev_main">
-                                    <img src="{{ asset('storage/'.$hero->main_image) }}" alt="Ảnh chính">
-                                    <button type="button" onclick="xoaAnh('main_image','prev_main')" class="preview-del">
-                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                    </button>
-                                </div>
-                                @else
-                                <div id="prev_main"></div>
-                                @endif
+                        <!-- Ảnh chính (slide đầu tiên) -->
+                        <div>
+                            <div class="field-label">
+                                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
+                                Ảnh chính (slide đầu tiên)
                             </div>
+                            <div class="field-hint">Định dạng JPG, PNG hoặc GIF · Tối đa 5MB</div>
+                            <input type="file" id="main_image" name="main_image" accept="image/*" style="display:none" onchange="xemTruoc(this,'prev_main')">
+                            <label for="main_image" class="upload-drop">
+                                <svg class="drop-icon" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-12l-3.172-3.172a4 4 0 00-5.656 0L28 20m0 0l-3.172-3.172a4 4 0 00-5.656 0l-10.172 10.172"/>
+                                </svg>
+                                <div class="drop-text">
+                                    Nhấn vào đây hoặc kéo thả file<br>
+                                    <span style="font-size:11px;opacity:.6">để tải ảnh lên</span>
+                                </div>
+                            </label>
+                            @if($hero->main_image)
+                            <div class="preview-box" id="prev_main" style="max-width:340px">
+                                <img src="{{ asset('storage/'.$hero->main_image) }}" alt="Ảnh chính">
+                                <button type="button" onclick="xoaAnh('main_image','prev_main')" class="preview-del">
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                </button>
+                            </div>
+                            @else
+                            <div id="prev_main"></div>
+                            @endif
+                        </div>
 
-                            <!-- Ảnh nổi -->
-                            <div>
-                                <div class="field-label">
-                                    <svg fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
-                                    Ảnh Hero Nổi
-                                </div>
-                                <div class="field-hint">Ảnh phụ hiển thị nổi · Tối đa 5MB</div>
-                                <input type="file" id="float_image" name="float_image" accept="image/*" style="display:none" onchange="xemTruoc(this,'prev_float')">
-                                <label for="float_image" class="upload-drop">
-                                    <svg class="drop-icon" fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-12l-3.172-3.172a4 4 0 00-5.656 0L28 20m0 0l-3.172-3.172a4 4 0 00-5.656 0l-10.172 10.172"/>
-                                    </svg>
-                                    <div class="drop-text">
-                                        Nhấn vào đây hoặc kéo thả file<br>
-                                        <span style="font-size:11px;opacity:.6">để tải ảnh lên</span>
-                                    </div>
+                        <div class="divider"></div>
+
+                        <!-- Ảnh slideshow thêm -->
+                        <div class="section-heading">🎞️ Ảnh slideshow thêm</div>
+                        <div>
+                            <div class="field-hint">Chọn <b>nhiều ảnh cùng lúc</b>. Trang chủ sẽ tự chuyển sang ảnh tiếp theo mỗi 15 giây (ảnh chính ở trên là ảnh đầu).</div>
+                            <input type="file" id="gallery_images" name="gallery_images[]" accept="image/*" multiple style="display:none" onchange="xemTruocNhieu(this)">
+                            <label for="gallery_images" class="upload-drop">
+                                <svg class="drop-icon" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-12l-3.172-3.172a4 4 0 00-5.656 0L28 20m0 0l-3.172-3.172a4 4 0 00-5.656 0l-10.172 10.172"/>
+                                </svg>
+                                <div class="drop-text">Nhấn để chọn nhiều ảnh<br><span style="font-size:11px;opacity:.6">có thể chọn 2, 3, 4… ảnh một lúc</span></div>
+                            </label>
+                            <div id="prev_gallery_new" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px"></div>
+                        </div>
+
+                        @if(!empty($hero->gallery))
+                        <div>
+                            <div class="field-label">Ảnh slideshow hiện có ({{ count($hero->gallery) }}) — tích để xoá</div>
+                            <div style="display:flex;flex-wrap:wrap;gap:12px">
+                                @foreach($hero->gallery as $g)
+                                <label style="position:relative;width:130px;border-radius:10px;overflow:hidden;border:1.5px solid var(--bd);cursor:pointer;display:block">
+                                    <img src="{{ asset('storage/'.$g) }}" alt="slide" style="width:100%;height:90px;object-fit:cover;display:block">
+                                    <span style="display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:11px;font-weight:700;color:var(--pk);background:var(--pkl)">
+                                        <input type="checkbox" name="remove_gallery[]" value="{{ $g }}" style="accent-color:#FF8FB1"> Xoá ảnh này
+                                    </span>
                                 </label>
-                                @if($hero->float_image)
-                                <div class="preview-box" id="prev_float">
-                                    <img src="{{ asset('storage/'.$hero->float_image) }}" alt="Ảnh nổi">
-                                    <button type="button" onclick="xoaAnh('float_image','prev_float')" class="preview-del">
-                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                    </button>
-                                </div>
-                                @else
-                                <div id="prev_float"></div>
-                                @endif
+                                @endforeach
                             </div>
                         </div>
+                        @endif
 
                         <div class="divider"></div>
 
@@ -514,6 +515,21 @@ function xemTruoc(input, previewId) {
 function xoaAnh(inputId, previewId) {
     document.getElementById(inputId).value = '';
     document.getElementById(previewId).innerHTML = '';
+}
+function xemTruocNhieu(input) {
+    const box = document.getElementById('prev_gallery_new');
+    box.innerHTML = '';
+    if (!input.files || !input.files.length) return;
+    [...input.files].forEach(f => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const d = document.createElement('div');
+            d.style.cssText = 'width:130px;height:90px;border-radius:10px;overflow:hidden;border:1.5px solid var(--bd)';
+            d.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+            box.appendChild(d);
+        };
+        reader.readAsDataURL(f);
+    });
 }
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
