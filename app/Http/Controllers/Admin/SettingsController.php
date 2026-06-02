@@ -29,6 +29,7 @@ class SettingsController extends Controller
                 'name'      => trim($row['name'] ?? $size->name) ?: $size->name,
                 'note'      => trim($row['note'] ?? '') ?: null,
                 'price'     => (int) preg_replace('/[^\d]/', '', $row['price'] ?? '0'),
+                'weight'    => max(1, (int) preg_replace('/[^\d]/', '', $row['weight'] ?? '500')),
                 'is_active' => !empty($row['is_active']),
             ]);
         }
@@ -39,9 +40,10 @@ class SettingsController extends Controller
     public function addSize(Request $request)
     {
         $data = $request->validate([
-            'name'  => 'required|string|max:100',
-            'note'  => 'nullable|string|max:100',
-            'price' => 'required',
+            'name'   => 'required|string|max:100',
+            'note'   => 'nullable|string|max:100',
+            'price'  => 'required',
+            'weight' => 'nullable',
         ], [
             'name.required'  => 'Vui lòng nhập tên (vd: Bộ màu riêng)',
             'price.required' => 'Vui lòng nhập giá',
@@ -50,6 +52,7 @@ class SettingsController extends Controller
             'name'       => trim($data['name']),
             'note'       => trim($data['note'] ?? '') ?: null,
             'price'      => (int) preg_replace('/[^\d]/', '', $data['price']),
+            'weight'     => max(1, (int) preg_replace('/[^\d]/', '', $data['weight'] ?? '500')),
             'sort_order' => (int) (Size::max('sort_order') + 1),
             'is_active'  => true,
         ]);

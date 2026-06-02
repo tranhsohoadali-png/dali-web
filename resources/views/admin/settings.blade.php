@@ -64,6 +64,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
                   <th style="padding:8px 6px">Tên (kích thước / phụ kiện)</th>
                   <th style="padding:8px 6px;width:150px">Ghi chú</th>
                   <th style="padding:8px 6px;width:140px">Giá (đ)</th>
+                  <th style="padding:8px 6px;width:120px">Cân nặng (g)</th>
                   <th style="padding:8px 6px;width:60px;text-align:center">Hiện</th>
                   <th style="padding:8px 6px;width:44px"></th>
                 </tr>
@@ -74,6 +75,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
                   <td style="padding:7px 6px"><input type="text" name="sizes[{{ $sz->id }}][name]" class="dinput" value="{{ $sz->name }}" style="margin:0;font-weight:700"></td>
                   <td style="padding:7px 6px"><input type="text" name="sizes[{{ $sz->id }}][note]" class="dinput" value="{{ $sz->note }}" placeholder="(tuỳ chọn)" style="margin:0"></td>
                   <td style="padding:7px 6px"><input type="number" name="sizes[{{ $sz->id }}][price]" class="dinput" value="{{ $sz->price }}" min="0" step="1000" style="margin:0"></td>
+                  <td style="padding:7px 6px"><input type="number" name="sizes[{{ $sz->id }}][weight]" class="dinput" value="{{ $sz->weight }}" min="1" step="50" placeholder="500" style="margin:0"></td>
                   <td style="padding:7px 6px;text-align:center"><input type="checkbox" name="sizes[{{ $sz->id }}][is_active]" value="1" {{ $sz->is_active ? 'checked' : '' }} style="width:20px;height:20px;accent-color:var(--g);cursor:pointer"></td>
                   <td style="padding:7px 6px;text-align:center"><button type="button" title="Xoá dòng" onclick="delSize({{ $sz->id }})" style="background:#FFF0F0;color:#EF4444;border:1px solid #FECACA;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:14px">🗑</button></td>
                 </tr>
@@ -91,6 +93,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               <input type="text" name="name" class="dinput" placeholder="Tên — vd: Bộ màu riêng" required style="margin:0;flex:1;min-width:170px">
               <input type="text" name="note" class="dinput" placeholder="Ghi chú (tuỳ chọn)" style="margin:0;width:150px">
               <input type="number" name="price" class="dinput" placeholder="Giá (đ) — vd: 90000" min="0" step="1000" required style="margin:0;width:160px">
+              <input type="number" name="weight" class="dinput" placeholder="Cân nặng (g) — vd: 500" min="1" step="50" style="margin:0;width:170px">
               <button type="submit" class="btn-save" style="margin:0">➕ Thêm</button>
             </div>
           </form>
@@ -286,7 +289,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
             <div class="divider"></div>
             <div class="sec-title" style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--tx3);text-transform:uppercase;margin-bottom:12px">Cấu hình mặc định</div>
             <div class="g2">
-              <div><label class="flabel">Cân nặng mặc định (gram)</label><input type="number" name="default_weight" class="dinput" value="{{ $settings['default_weight'] ?? 500 }}" min="1" placeholder="500"><div class="fnote">Cân nặng ước tính của 1 bộ tranh</div></div>
+              <div><label class="flabel">Cân nặng mặc định (gram)</label><input type="number" name="default_weight" class="dinput" value="{{ $settings['default_weight'] ?? 500 }}" min="1" placeholder="500"><div class="fnote">Dùng dự phòng khi khổ tranh chưa đặt cân nặng riêng. Cân nặng theo từng kích thước cài ở mục <b>Bảng giá theo kích thước</b> bên trên.</div></div>
               <div></div>
             </div>
           </div>

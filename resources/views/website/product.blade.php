@@ -665,7 +665,7 @@ async function refreshShip(){
   if(after>=FREE_SHIP||!city||!addr){liveShip=null;updateSummary();return;}
   var el=document.getElementById('sumShip');if(el)el.textContent='Đang tính...';
   try{
-    var res=await fetch('{{ route("calc-ship") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({amount:after,qty:qty,city:city,address:addr,payment:payMode})});
+    var res=await fetch('{{ route("calc-ship") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({amount:after,qty:qty,city:city,address:addr,payment:payMode,size_id:(typeof SELECTED_SIZE!=='undefined'&&SELECTED_SIZE?SELECTED_SIZE.id:0)})});
     var d=await res.json();liveShip=(d&&typeof d.fee==='number')?d.fee:null;
   }catch(e){liveShip=null;}
   updateSummary();

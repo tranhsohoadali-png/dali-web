@@ -118,10 +118,11 @@ class WebsiteController extends Controller
      * từ Viettel Post (getPrice); thất bại/tắt → phí cố định trong cài đặt.
      * @return array [int $fee, int $weight]
      */
-    private function shipFeeFor($settings, int $afterDisc, ?string $city, ?string $address, string $payment, int $qty): array
+    private function shipFeeFor($settings, int $afterDisc, ?string $city, ?string $address, string $payment, int $qty, ?int $weightOverride = null): array
     {
         $freeFrom = (int)($settings['free_ship_from'] ?? 299000);
-        $weight   = max(1, (int)($settings['default_weight'] ?? 500) * max(1, $qty));
+        // Ưu tiên cân nặng tính theo từng kích thước (weightOverride); nếu không có → mức mặc định × số lượng.
+        $weight   = max(1, $weightOverride ?? ((int)($settings['default_weight'] ?? 500) * max(1, $qty)));
         if ($afterDisc >= $freeFrom) return [0, $weight];
 
         if ($city && $address) {
@@ -140,16 +141,39 @@ class WebsiteController extends Controller
         return [(int)($settings['ship_fee'] ?? 30000), $weight];
     }
 
+    /**
+     * Tổng cân nặng (gram) của giỏ hàng, cộng theo cân nặng từng kích thước.
+     * @param array $items mỗi phần tử có 'quantity' và ('size_id' hoặc 'size_name')
+     */
+    private function cartWeight(array $items, $settings): int
+    {
+        $default = (int)($settings['default_weight'] ?? 500);
+        $total = 0;
+        foreach ($items as $it) {
+            $qty = max(1, (int)($it['quantity'] ?? 1));
+            $w = null;
+            if (!empty($it['size_id'])) {
+                $w = optional(\App\Models\Size::find($it['size_id']))->weight;
+            }
+            if ($w === null && !empty($it['size_name'])) {
+                $w = \App\Models\Size::weightForName($it['size_name']);
+            }
+            $total += (int)($w ?? $default) * $qty;
+        }
+        return max(1, $total);
+    }
+
     /** API xem trước phí giao hàng cho trang checkout. */
     public function calcShip(Request $request)
     {
         $settings  = \DB::table('admin_settings')->pluck('value','key');
         $afterDisc = max(0, (int)$request->input('amount', 0));
         $qty       = (int)$request->input('qty', 1);
+        $estWeight = $this->cartWeight([['quantity' => $qty, 'size_id' => $request->input('size_id'), 'size_name' => $request->input('size_name')]], $settings);
         [$fee, $weight] = $this->shipFeeFor(
             $settings, $afterDisc,
             $request->input('city'), $request->input('address'),
-            $request->input('payment', 'COD'), $qty
+            $request->input('payment', 'COD'), $qty, $estWeight
         );
         return response()->json(['fee' => $fee, 'free' => $fee === 0, 'total' => $afterDisc + $fee]);
     }
@@ -193,7 +217,8 @@ class WebsiteController extends Controller
         $discount   = $data['payment'] === 'BANK' ? (int)round($sub * $discPct / 100) : 0;
         $discount  += $couponDiscount; // add coupon discount
         $after    = $sub - $discount;
-        [$ship, $weight] = $this->shipFeeFor($settings, $after, $data['customer_city'], $data['customer_addr'], $data['payment'], $qty);
+        $orderWeight = $this->cartWeight([['quantity' => $qty, 'size_id' => $request->input('size_id'), 'size_name' => $data['product_size'] ?? null]], $settings);
+        [$ship, $weight] = $this->shipFeeFor($settings, $after, $data['customer_city'], $data['customer_addr'], $data['payment'], $qty, $orderWeight);
         $total    = $after + $ship;
         $affCode  = $this->getAffiliateCode($request);
         $code     = 'DALI-' . substr(time(), -6);
@@ -470,7 +495,9 @@ class WebsiteController extends Controller
 
         $afterDisc = $subtotal - $discount - $couponDiscount;
         $cartQty   = (int) array_sum(array_column($cart, 'quantity'));
-        [$shipFee, $weight] = $this->shipFeeFor($settings, $afterDisc, $request->input('customer_city'), $request->input('customer_addr'), $request->input('payment','COD'), $cartQty);
+        $cartItems = array_map(fn($i) => ['quantity' => $i['quantity'], 'size_id' => $i['size_id'] ?? null, 'size_name' => $i['size'] ?? null], $cart);
+        $orderWeight = $this->cartWeight($cartItems, $settings);
+        [$shipFee, $weight] = $this->shipFeeFor($settings, $afterDisc, $request->input('customer_city'), $request->input('customer_addr'), $request->input('payment','COD'), $cartQty, $orderWeight);
         $total     = $afterDisc + $shipFee;
         $code      = 'DALI-' . strtoupper(substr(uniqid(), -6));
 
