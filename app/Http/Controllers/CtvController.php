@@ -276,6 +276,28 @@ class CtvController extends Controller
         return view('ctv.profile', compact('ctv'));
     }
 
+    /** Trang tìm sản phẩm & lấy link giới thiệu */
+    public function products(Request $request)
+    {
+        $ctv  = $request->attributes->get('ctv');
+        $q    = trim($request->input('q', ''));
+        $catSlug = $request->input('category', '');
+
+        $query = Product::with('category')->where('is_active', true);
+        if ($q)       $query->where('name', 'like', "%{$q}%");
+        if ($catSlug) $query->whereHas('category', fn($c) => $c->where('slug', $catSlug));
+        $query->orderBy('sort_order')->orderByDesc('sold_count');
+
+        $products   = $query->paginate(24)->withQueryString();
+        $categories = \App\Models\Category::where('is_active', true)->orderBy('sort_order')->get();
+        $settings   = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value', 'key');
+
+        // Link giới thiệu gốc (trang chủ)
+        $baseRef = url('/ref/' . $ctv->code);
+
+        return view('ctv.products', compact('ctv', 'products', 'categories', 'settings', 'baseRef', 'q', 'catSlug'));
+    }
+
     public function updateProfile(Request $request)
     {
         $ctv = $request->attributes->get('ctv');

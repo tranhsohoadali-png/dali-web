@@ -64,6 +64,7 @@ Route::prefix('ctv')->name('ctv.')->group(function () {
         Route::post('rut-tien',   [CtvController::class, 'withdraw'])->name('withdraw');
         Route::get('ho-so',       [CtvController::class, 'profile'])->name('profile');
         Route::post('ho-so',      [CtvController::class, 'updateProfile'])->name('profile.update');
+        Route::get('san-pham',    [CtvController::class, 'products'])->name('products');
     });
 });
 

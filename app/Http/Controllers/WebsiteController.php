@@ -100,9 +100,18 @@ class WebsiteController extends Controller
         return view('website.category-combo', compact('category','products','sizes','settings','reviewCount','avgRating','reviews'));
     }
 
-    public function product(Product $product)
+    public function product(Product $product, \Illuminate\Http\Request $request)
     {
         if (!$product->is_active) abort(404);
+        // Nếu URL có ?ref=CODE → lưu affiliate code vào session/cookie ngay
+        $refCode = strtoupper(trim($request->input('ref', '')));
+        if ($refCode) {
+            $aff = Affiliate::where('code', $refCode)->where('is_active', true)->first();
+            if ($aff) {
+                session(['affiliate_code' => $refCode]);
+                cookie()->queue('affiliate_code', $refCode, 60 * 24 * 30);
+            }
+        }
         $related  = Product::where('category_id',$product->category_id)->where('id','!=',$product->id)->where('is_active',true)->take(4)->get();
         $settings = DB::table('admin_settings')->pluck('value','key');
         return view('website.product', compact('product','related','settings'));

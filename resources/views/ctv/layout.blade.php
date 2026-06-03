@@ -198,6 +198,7 @@ img{max-width:100%;display:block}
     <a href="{{ route('ctv.dashboard') }}" class="{{ request()->routeIs('ctv.dashboard')?'act':'' }}">📊 Tổng quan</a>
     <a href="{{ route('ctv.order.create') }}" class="{{ request()->routeIs('ctv.order.create')?'act':'' }}">➕ Lên đơn</a>
     <a href="{{ route('ctv.orders') }}" class="{{ request()->routeIs('ctv.orders')?'act':'' }}">📦 Đơn hàng</a>
+    <a href="{{ route('ctv.products') }}" class="{{ request()->routeIs('ctv.products')?'act':'' }}">🔗 Tìm tranh</a>
     @unless(optional($ctv)->isAgent())<a href="{{ route('ctv.withdraw.page') }}" class="{{ request()->routeIs('ctv.withdraw.page')?'act':'' }}">💳 Rút tiền</a>@endunless
     <a href="{{ route('ctv.profile') }}" class="{{ request()->routeIs('ctv.profile')?'act':'' }}">👤 Hồ sơ</a>
   </nav>
@@ -227,6 +228,9 @@ img{max-width:100%;display:block}
   </a>
   <a href="{{ route('ctv.orders') }}" class="{{ request()->routeIs('ctv.orders')?'act':'' }}">
     <span class="ic">📦</span>Đơn hàng
+  </a>
+  <a href="{{ route('ctv.products') }}" class="{{ request()->routeIs('ctv.products')?'act':'' }}">
+    <span class="ic">🔗</span>Tìm tranh
   </a>
   @unless(optional($ctv)->isAgent())
   <a href="{{ route('ctv.withdraw.page') }}" class="{{ request()->routeIs('ctv.withdraw.page')?'act':'' }}">
