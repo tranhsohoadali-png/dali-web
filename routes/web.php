@@ -130,9 +130,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::post('settings/sizes/add', [SettingsController::class, 'addSize'])->name('settings.sizes.add');
     Route::delete('settings/sizes/{size}', [SettingsController::class, 'deleteSize'])->name('settings.sizes.delete');
 
-    // Công cụ tách màu (Django chạy riêng cổng 18001) — nhúng iframe
-    Route::get('cong-cu-tach-mau', function () {
-        $toolUrl = \DB::table('admin_settings')->where('key', 'color_tool_url')->value('value') ?: 'http://127.0.0.1:18001';
-        return view('admin.colortool', compact('toolUrl'));
-    })->name('colortool');
+    // Công cụ tách màu — proxy qua Laravel để tránh mixed-content (HTTPS→HTTP)
+    Route::get('cong-cu-tach-mau',           [\App\Http\Controllers\Admin\ColorToolController::class, 'index'])->name('colortool');
+    Route::any('cong-cu-tach-mau/proxy/{path?}', [\App\Http\Controllers\Admin\ColorToolController::class, 'proxy'])->where('path', '.*')->name('colortool.proxy');
 });
