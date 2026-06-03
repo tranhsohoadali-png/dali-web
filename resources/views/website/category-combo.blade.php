@@ -84,37 +84,103 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--char);color:#fff;padding:11px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;transition:transform .4s;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .combo-bar{display:none}
+
+/* ══════════════════════════════════════════
+   MOBILE (≤880px) — layout kiểu Shopee
+   Thứ tự: ảnh → tên → chọn tranh → giá → chọn cỡ → SL → mua
+══════════════════════════════════════════ */
 @media(max-width:880px){
-  .wrap{grid-template-columns:1fr!important;gap:0;padding:0}
-  .preview-box{position:static;max-width:none}
-  /* Ảnh chính: full width, không crop, không white space */
-  .preview-main{aspect-ratio:auto;max-height:72vw;border-radius:0;border:none;box-shadow:none;background:#fff}
-  .preview-main img{object-fit:contain;max-height:72vw;width:100%;height:auto}
-  .preview-cap{margin:8px 4% 0;text-align:left}
-  .share-row{margin:4px 4% 12px;justify-content:flex-start}
+
+  /* ── Nav ── */
+  .nav-links{display:none}.nav-hamburger{display:flex}.nav-phone{display:none}
+  nav{padding:0 4%}
+  .breadcrumb{padding:10px 4%;font-size:12px}
+
+  /* ── Grid wrap: 1 cột, không padding (ảnh edge-to-edge) ── */
+  .wrap{grid-template-columns:1fr!important;gap:0;padding:0 0 8px}
+
+  /* ── Preview box (cột trái → lên trên) ── */
+  .preview-box{position:static;max-width:none;width:100%}
+
+  /* ── Ảnh chính: full width, co theo tỉ lệ thật ── */
+  .preview-main{
+    aspect-ratio:auto;width:100%;max-height:75vw;
+    border-radius:0;border:none;box-shadow:none;
+    background:var(--gll);display:block;
+  }
+  .preview-main img{
+    width:100%;height:auto;max-height:75vw;
+    object-fit:contain;display:block;
+  }
+
+  /* ── Caption & share dưới ảnh ── */
+  .preview-cap{margin:8px 4% 2px;font-size:12px;text-align:left}
+  .share-row{margin:2px 4% 10px;justify-content:flex-start;font-size:12px}
   .preview-thumbs{display:none}
-  .combo-content{padding:0 4%}
-  .nav-links{display:none}.nav-hamburger{display:flex}.nav-phone{display:none}nav{padding:0 4%}.breadcrumb{padding:11px 4%}
-  /* Bố cục kiểu Shopee: ảnh → tên → chọn tranh → giá → chọn cỡ */
-  .combo-content{display:flex;flex-direction:column}
-  .c-title{order:-4;font-size:18px;line-height:1.3}
-  .pick-block{order:-3}
-  .price-box{order:-2}
-  .size-block{order:-1}
-  /* Hàng thumbnail mã tranh: cuộn ngang */
-  .code-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;max-height:none;gap:10px;-webkit-overflow-scrolling:touch}
-  .code-card{flex:0 0 auto;min-width:128px}
-  /* Thanh mua cố định đáy + ẩn thanh tab nav (gọn như trang SP Shopee) */
+
+  /* ── Combo content: stack dọc, padding 2 bên ── */
+  .combo-content{display:flex;flex-direction:column;padding:0 4% 4px;width:100%}
+
+  /* Thứ tự Shopee */
+  .c-title  {order:-10;font-size:clamp(16px,4.5vw,20px);line-height:1.35;margin-bottom:6px;font-weight:900}
+  .c-meta   {order:-9;font-size:12px;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+  .pick-block{order:-8;margin-bottom:14px}
+  .price-box {order:-7;padding:11px 14px;margin-bottom:12px}
+  .gift-banner{order:-6;margin-bottom:12px;font-size:12px;padding:9px 12px}
+  .size-block{order:-5;margin-bottom:12px}
+  .qty-row  {order:-4;margin-bottom:12px}
+  .btn-row  {display:none}  /* ẩn, dùng combo-bar cố định đáy */
+
+  /* ── Giá chính ── */
+  .price-main{font-size:clamp(22px,6vw,28px)}
+  .price-note{font-size:11px}
+
+  /* ── Chọn mã tranh: cuộn ngang, card nhỏ gọn ── */
+  .code-grid{
+    display:flex;flex-wrap:nowrap;overflow-x:auto;max-height:none;
+    gap:8px;padding:4px 2px 6px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+    border:none;background:transparent;
+  }
+  .code-grid::-webkit-scrollbar{display:none}
+  .code-card{flex:0 0 auto;min-width:110px;max-width:120px;padding:5px}
+  .code-card img{width:36px;height:36px}
+  .code-card .cc-code{font-size:11px}
+  .code-card .cc-sub{font-size:9px}
+
+  /* ── Chọn kích thước: wrap gọn ── */
+  .size-row{display:flex;flex-wrap:wrap;gap:7px}
+  .size-opt{padding:7px 10px;flex:0 0 auto}
+  .size-opt .so-n{font-size:12px}
+  .size-opt .so-p{font-size:11px}
+  .size-opt .so-note{font-size:9px}
+
+  /* ── Thanh mua cố định đáy (giống Shopee) ── */
   .dali-bottombar{display:none!important}
-  .btn-row{display:none}
-  body{padding-bottom:80px!important}
-  .dali-fab{bottom:calc(88px + env(safe-area-inset-bottom))!important}
-  .combo-bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:950;background:#fff;border-top:1px solid var(--bd);box-shadow:0 -3px 16px rgba(58,122,10,.12);padding:9px 12px;gap:9px;align-items:center;padding-bottom:calc(9px + env(safe-area-inset-bottom))}
-  .cb-price{display:flex;flex-direction:column;line-height:1.1}
-  .cb-price span{font-size:10px;color:var(--tx3)}
-  .cb-price b{font-size:16px;color:var(--g);font-weight:900;white-space:nowrap}
-  .cb-cart{flex:0 0 auto;background:#fff;color:var(--gd);border:1.5px solid var(--g);border-radius:10px;padding:11px 13px;font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer}
-  .cb-buy{flex:1;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:900;box-shadow:0 4px 14px rgba(107,191,31,.3);cursor:pointer}
+  body{padding-bottom:calc(68px + env(safe-area-inset-bottom))!important}
+  .dali-fab{bottom:calc(80px + env(safe-area-inset-bottom))!important}
+  .combo-bar{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:950;
+    background:#fff;border-top:1.5px solid var(--bd);
+    box-shadow:0 -3px 16px rgba(58,122,10,.13);
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    gap:9px;align-items:center;
+  }
+  .cb-price{display:flex;flex-direction:column;line-height:1.15;min-width:70px}
+  .cb-price span{font-size:10px;color:var(--tx3);font-weight:500}
+  .cb-price b{font-size:clamp(14px,4vw,17px);color:var(--g);font-weight:900;white-space:nowrap}
+  .cb-cart{
+    flex:0 0 auto;background:#fff;color:var(--gd);
+    border:1.5px solid var(--g);border-radius:10px;
+    padding:11px 12px;font-size:13px;font-weight:800;
+    white-space:nowrap;cursor:pointer;min-width:80px;text-align:center;
+  }
+  .cb-buy{
+    flex:1;background:linear-gradient(135deg,#3A9A12,var(--g));
+    color:#fff;border:none;border-radius:10px;
+    padding:13px;font-size:15px;font-weight:900;
+    box-shadow:0 4px 14px rgba(107,191,31,.3);cursor:pointer;text-align:center;
+  }
 }
 /* ── ĐÁNH GIÁ ── */
 .reviews-wrap{max-width:1340px;margin:0 auto;padding:0 5% 50px}
@@ -147,7 +213,14 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .rv-submit:hover{background:linear-gradient(135deg,#2E7D08,#5AAF15)}
 .rv-submit:disabled{background:#C8E89A;cursor:not-allowed}
 .rv-success{background:var(--gl);border-radius:10px;padding:14px;text-align:center;font-size:14px;font-weight:600;color:var(--gd);display:none;margin-bottom:14px}
-@media(max-width:700px){.rv-list{grid-template-columns:1fr}.rv-avg-num{font-size:30px}}
+@media(max-width:700px){
+  .rv-list{grid-template-columns:1fr}
+  .rv-avg-num{font-size:30px}
+  .reviews-wrap{padding:0 4% 40px}
+  .rv-head{padding:14px 16px}
+  .rv-form{padding:16px}
+  .star-btn{font-size:26px}
+}
 </style>
 </head>
 <body>
