@@ -187,7 +187,9 @@ class WebsiteController extends Controller
             $qty = max(1, (int)($it['quantity'] ?? 1));
             $w = null;
             if (!empty($it['size_id'])) {
-                $w = optional(\App\Models\Size::find($it['size_id']))->weight;
+                try {
+                    $w = optional(\App\Models\Size::find($it['size_id']))->getAttribute('weight');
+                } catch (\Throwable $e) { $w = null; }
             }
             if ($w === null && !empty($it['size_name'])) {
                 $w = \App\Models\Size::weightForName($it['size_name']);
