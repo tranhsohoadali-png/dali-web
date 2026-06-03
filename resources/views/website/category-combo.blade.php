@@ -85,9 +85,15 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 .toast.show{transform:translateX(-50%) translateY(0)}
 .combo-bar{display:none}
 @media(max-width:880px){
-  .wrap{grid-template-columns:1fr;gap:14px;padding:8px 4% 40px}
-  .preview-box{position:static}
+  .wrap{grid-template-columns:1fr!important;gap:0;padding:0}
+  .preview-box{position:static;max-width:none}
+  /* Ảnh chính: full width, không crop, không white space */
+  .preview-main{aspect-ratio:auto;max-height:72vw;border-radius:0;border:none;box-shadow:none;background:#fff}
+  .preview-main img{object-fit:contain;max-height:72vw;width:100%;height:auto}
+  .preview-cap{margin:8px 4% 0;text-align:left}
+  .share-row{margin:4px 4% 12px;justify-content:flex-start}
   .preview-thumbs{display:none}
+  .combo-content{padding:0 4%}
   .nav-links{display:none}.nav-hamburger{display:flex}.nav-phone{display:none}nav{padding:0 4%}.breadcrumb{padding:11px 4%}
   /* Bố cục kiểu Shopee: ảnh → tên → chọn tranh → giá → chọn cỡ */
   .combo-content{display:flex;flex-direction:column}
