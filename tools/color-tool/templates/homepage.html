@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Index Color + DALI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    body { background: var(--bs-body-bg); }
+    .dropzone {
+      border: 2px dashed var(--bs-border-color);
+      border-radius: .75rem; padding: 1.5rem; text-align: center;
+      cursor: pointer; transition: .15s; background: var(--bs-tertiary-bg);
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: var(--bs-success); background: var(--bs-success-bg-subtle); }
+    .preview-img { max-height: 260px; width: auto; max-width: 100%; border-radius: .5rem; }
+    .result-img { width: 100%; border-radius: .5rem; border: 1px solid var(--bs-border-color); cursor: zoom-in; }
+    .swatch { width: 100%; height: 46px; border-radius: .4rem; border: 1px solid rgba(0,0,0,.15); }
+    .color-card { border: 1px solid var(--bs-border-color); border-radius: .6rem; padding: .5rem; height: 100%; }
+    .color-card .hex { font-family: monospace; font-size: .8rem; }
+    .color-card .dali { font-weight: 700; }
+    .history-item { cursor: pointer; }
+    .history-item:hover { background: var(--bs-tertiary-bg); }
+    .badge-num { min-width: 1.6rem; }
+    #lightbox { background: rgba(0,0,0,.85); }
+    #lightbox img { max-width: 95vw; max-height: 95vh; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand bg-success" data-bs-theme="dark">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h1"><i class="bi bi-palette-fill"></i> Index Color + DALI</span>
+    <div class="d-flex align-items-center gap-2">
+      <a href="dali-colors" class="btn btn-outline-light btn-sm"><i class="bi bi-collection"></i> Bảng màu DALI</a>
+      <button id="theme_toggle" class="btn btn-outline-light btn-sm" type="button" title="Chế độ sáng/tối">
+        <i class="bi bi-moon-stars"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid py-3">
+  <div class="row g-3">
+
+    <!-- Cột trái: Upload + Lịch sử -->
+    <div class="col-xl-3 col-lg-4">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-cloud-arrow-up"></i> Tải ảnh lên</div>
+        <div class="card-body">
+          <form id="upload_form" action="homepage" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div id="dropzone" class="dropzone mb-3">
+              <i class="bi bi-image fs-2 text-secondary"></i>
+              <div class="small text-secondary mt-1">Kéo–thả ảnh vào đây<br>hoặc bấm để chọn</div>
+              <input type="file" id="image" name="image" accept="image/*" class="d-none"/>
+            </div>
+            <div id="preview_wrap" class="text-center mb-3" hidden>
+              <img id="preview_img" class="preview-img" src="#" alt="preview">
+              <div id="file_meta" class="small text-secondary mt-1"></div>
+            </div>
+            <button type="submit" id="submit_btn" class="btn btn-success w-100" disabled>
+              <i class="bi bi-magic"></i> Xử lý ảnh
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold"><i class="bi bi-clock-history"></i> Lịch sử gần đây</div>
+        <div class="px-3 pt-2">
+          <input id="history_search" type="text" class="form-control form-control-sm"
+                 placeholder="Tìm trong lịch sử…">
+        </div>
+        <div id="history_list" class="list-group list-group-flush mt-2" style="max-height: 300px; overflow:auto;">
+          {% for q in last_query %}
+          <button type="button" class="list-group-item list-group-item-action history-item small"
+                  data-name="{{ q.name|lower }}" onclick="get_result('{{ q.url }}')">
+            <i class="bi bi-file-image text-secondary"></i> {{ q.name }}
+          </button>
+          {% empty %}
+          <div class="list-group-item text-secondary small">Chưa có ảnh nào.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột giữa: Ảnh gốc + kết quả -->
+    <div class="col-xl-5 col-lg-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold"><i class="bi bi-images"></i> Ảnh gốc & Kết quả</span>
+          <div id="spinner_loading" class="d-none align-items-center text-success small">
+            <span class="spinner-border spinner-border-sm me-1"></span> <span id="status_text">Đang xử lý…</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="error_box" class="alert alert-danger d-none" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> <span id="error_text"></span>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="small text-secondary mb-1">Ảnh gốc</div>
+              <img id="img_origin" src="{{ file_url }}" class="result-img" alt="">
+            </div>
+            <div class="col-6">
+              <div class="small text-secondary mb-1">Bản đồ màu đánh số</div>
+              <img id="img_result" src="#" class="result-img" alt="" hidden>
+            </div>
+          </div>
+
+          <div class="border-top pt-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-4">
+                <label class="form-label small mb-1">Tên ảnh (in lên bản)</label>
+                <input id="txt_image_name" type="text" class="form-control form-control-sm" placeholder="VD: N0097">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small mb-1">Khổ (cm)</label>
+                <select id="scale_option" class="form-select form-select-sm">
+                  <option value="20x20" selected>20 x 20</option>
+                  <option value="30x30">30 x 30</option>
+                  <option value="40x40">40 x 40</option>
+                  <option value="50x50">50 x 50</option>
+                  <option value="40x50">40 x 50</option>
+                  <option value="50x65">50 x 65</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small mb-1">Hướng</label>
+                <select id="orientation_option" class="form-select form-select-sm">
+                  <option value="auto" selected>Tự động</option>
+                  <option value="portrait">Dọc</option>
+                  <option value="landscape">Ngang</option>
+                </select>
+              </div>
+            </div>
+            <button id="btn_download_result" type="button" class="btn btn-success btn-sm mt-3" hidden>
+              <i class="bi bi-download"></i> Tải bản in + A3
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải: Bảng màu + DALI -->
+    <div class="col-xl-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold"><i class="bi bi-palette"></i> Bảng màu &amp; mã DALI</span>
+          <span id="color_count" class="badge text-bg-secondary" hidden>0 màu</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <button id="btn_download_xlsx" type="button" class="btn btn-success btn-sm" hidden>
+              <i class="bi bi-file-earmark-excel"></i> Tải Excel
+            </button>
+            <button id="btn_download_legend" type="button" class="btn btn-primary btn-sm" hidden>
+              <i class="bi bi-card-image"></i> Ảnh + chú giải DALI
+            </button>
+            <button id="btn_download_csv" type="button" class="btn btn-outline-success btn-sm" hidden>
+              <i class="bi bi-filetype-csv"></i> Tải CSV
+            </button>
+            <button id="btn_download_color" type="button" class="btn btn-outline-secondary btn-sm" hidden>
+              <i class="bi bi-image"></i> Bảng màu (PNG)
+            </button>
+          </div>
+          <div id="colors_table" class="row g-2"></div>
+          <div id="colors_empty" class="text-secondary small text-center py-4">
+            Tải một ảnh lên để xem bảng màu kèm mã DALI.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox xem ảnh phóng to -->
+<div id="lightbox" class="position-fixed top-0 start-0 w-100 h-100 d-none justify-content-center align-items-center"
+     style="z-index:1080;" onclick="this.classList.add('d-none');this.classList.remove('d-flex');">
+  <img id="lightbox_img" src="#" alt="">
+</div>
+
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="app_toast" class="toast align-items-center text-bg-dark border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toast_body"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- Tiện ích ----------
+  function showToast(msg) {
+    $('#toast_body').text(msg);
+    new bootstrap.Toast(document.getElementById('app_toast'), {delay: 2000}).show();
+  }
+
+  // ---------- Chế độ sáng/tối ----------
+  (function () {
+    var saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-bs-theme', saved);
+    $('#theme_toggle').on('click', function () {
+      var cur = document.documentElement.getAttribute('data-bs-theme');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-bs-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  })();
+
+  // ---------- Upload: kéo-thả + xem trước ----------
+  var dz = document.getElementById('dropzone');
+  var fileInput = document.getElementById('image');
+  dz.addEventListener('click', function () { fileInput.click(); });
+  ['dragover', 'dragenter'].forEach(function (e) {
+    dz.addEventListener(e, function (ev) { ev.preventDefault(); dz.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function (e) {
+    dz.addEventListener(e, function (ev) { ev.preventDefault(); dz.classList.remove('dragover'); });
+  });
+  dz.addEventListener('drop', function (ev) {
+    if (ev.dataTransfer.files.length) { fileInput.files = ev.dataTransfer.files; onFilePicked(); }
+  });
+  fileInput.addEventListener('change', onFilePicked);
+
+  function onFilePicked() {
+    var f = fileInput.files[0];
+    if (!f) return;
+    $('#submit_btn').prop('disabled', false);
+    var sizeKb = (f.size / 1024).toFixed(0);
+    $('#file_meta').text(f.name + ' · ' + sizeKb + ' KB');
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      $('#preview_img').attr('src', e.target.result);
+      $('#preview_wrap').attr('hidden', false);
+    };
+    reader.readAsDataURL(f);
+  }
+
+  // ---------- Lightbox ----------
+  $('#img_origin, #img_result').on('click', function () {
+    var src = $(this).attr('src');
+    if (!src || src === '#') return;
+    $('#lightbox_img').attr('src', src);
+    $('#lightbox').removeClass('d-none').addClass('d-flex');
+  });
+
+  // ---------- Tải bảng màu thành PNG ----------
+  function downloadColorsTable() {
+    html2canvas(document.querySelector('#colors_table'), {backgroundColor: '#ffffff'}).then(function (canvas) {
+      var a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'bang_mau.png';
+      a.click();
+    });
+  }
+  $('#btn_download_color').on('click', downloadColorsTable);
+
+  // ---------- Tải CSV ----------
+  var currentFileUrl = "";
+  function dl(url) {
+    if (!currentFileUrl) return;
+    var a = document.createElement('a');
+    a.href = url + "?file_url=" + encodeURIComponent(currentFileUrl);
+    a.click();
+  }
+  $('#btn_download_csv').on('click', function () { dl("export-colors"); });
+  $('#btn_download_xlsx').on('click', function () { showToast('Đang tạo file Excel…'); dl("export-xlsx"); });
+  $('#btn_download_legend').on('click', function () {
+    if (!currentFileUrl) return;
+    showToast('Đang tạo ảnh chú giải…');
+    var title = $('#txt_image_name').val() || '';
+    var a = document.createElement('a');
+    a.href = "download-legend?file_url=" + encodeURIComponent(currentFileUrl) +
+             "&title=" + encodeURIComponent(title);
+    a.click();
+  });
+
+  // ---------- Lọc lịch sử ----------
+  $('#history_search').on('input', function () {
+    var kw = $(this).val().toLowerCase();
+    $('#history_list .history-item').each(function () {
+      var name = $(this).attr('data-name') || '';
+      $(this).toggle(name.indexOf(kw) !== -1);
+    });
+  });
+
+  // ---------- Render bảng màu ----------
+  function renderColors(pages) {
+    var rows = [];
+    pages.forEach(function (p) { rows = rows.concat(p); });
+    $('#colors_table').empty();
+    if (!rows.length) { $('#colors_empty').show(); return; }
+    $('#colors_empty').hide();
+    $('#color_count').attr('hidden', false).text(rows.length + ' màu');
+    rows.forEach(function (r) {
+      // r = [stt, "#HEX", dali, percent]
+      var stt = r[0], hex = r[1], dali = r[2] || '', pct = (r[3] != null ? r[3] : '');
+      var card =
+        '<div class="col-6 col-md-4 col-xl-6">' +
+          '<div class="color-card">' +
+            '<div class="swatch mb-1" style="background:' + hex + '"></div>' +
+            '<div class="d-flex justify-content-between align-items-center">' +
+              '<span class="badge text-bg-secondary badge-num">' + stt + '</span>' +
+              '<span class="dali small">' + dali + '</span>' +
+            '</div>' +
+            '<div class="d-flex justify-content-between align-items-center mt-1">' +
+              '<span class="hex" role="button" title="Bấm để sao chép" ' +
+                'onclick="copyHex(\'' + hex + '\')">' + hex + ' <i class="bi bi-clipboard"></i></span>' +
+              (pct !== '' ? '<span class="small text-secondary">' + pct + '%</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      $('#colors_table').append(card);
+    });
+  }
+
+  function copyHex(hex) {
+    navigator.clipboard.writeText(hex).then(function () { showToast('Đã sao chép ' + hex); });
+  }
+
+  // ---------- Polling kết quả ----------
+  function setStatus(text) { $('#status_text').text(text); }
+  function showSpinner(on) {
+    if (on) { $('#spinner_loading').removeClass('d-none').addClass('d-flex'); }
+    else { $('#spinner_loading').addClass('d-none').removeClass('d-flex'); }
+  }
+
+  function get_result(file_url, onDone, onStillWaiting) {
+    currentFileUrl = file_url;
+    if (!file_url.startsWith('/media/') && !file_url.startsWith('data:')) {
+      $('#img_origin').attr('src', '/media/' + file_url);
+    }
+    $('#error_box').addClass('d-none');
+    showSpinner(true);
+    $.ajax({
+      type: "POST",
+      url: "result",
+      data: {"file_url": file_url},
+      headers: {"X-CSRFToken": "{{ csrf_token }}"},
+      success: function (res) {
+        if (res.status === 'processing') {
+          setStatus('Đang xử lý…');
+          if (onStillWaiting) onStillWaiting();
+          return;
+        }
+        showSpinner(false);
+        if (res.status === 'error') {
+          $('#error_text').text(res.error || 'Xử lý ảnh thất bại.');
+          $('#error_box').removeClass('d-none');
+          if (onDone) onDone();
+          return;
+        }
+        // done
+        $('#img_result').attr('src', res.img_output).attr('hidden', false);
+        $('#btn_download_result').attr('hidden', false);
+        $('#btn_download_xlsx').attr('hidden', false);
+        $('#btn_download_legend').attr('hidden', false);
+        $('#btn_download_csv').attr('hidden', false);
+        $('#btn_download_color').attr('hidden', false);
+        renderColors(res.colors || []);
+        if (onDone) onDone();
+      },
+      error: function () {
+        showSpinner(false);
+        $('#error_text').text('Không kết nối được máy chủ.');
+        $('#error_box').removeClass('d-none');
+        if (onDone) onDone();
+      }
+    });
+  }
+
+  // ---------- Tự động poll sau khi submit ----------
+  var file_url_decode = decodeURIComponent("{{ file_url|safe }}");
+  if (file_url_decode) {
+    var MAX_WAIT = 180000, waited = 0, STEP = 2000;
+    showSpinner(true);
+    var poll = setInterval(function () {
+      get_result(file_url_decode,
+        function () { clearInterval(poll); },              // done/error -> dừng
+        function () {                                      // vẫn đang xử lý
+          waited += STEP;
+          if (waited > MAX_WAIT) {
+            clearInterval(poll); showSpinner(false);
+            $('#error_text').text('Quá thời gian chờ xử lý.');
+            $('#error_box').removeClass('d-none');
+          }
+        });
+    }, STEP);
+  }
+
+  // ---------- Tải bản in + A3 ----------
+  function triggerDownload(href) {
+    var a = document.createElement('a');
+    a.href = href; a.download = href.split('/').pop();
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+  $('#btn_download_result').on('click', function () {
+    var result_url = decodeURIComponent($('#img_result').attr('src'));
+    var image_name = $('#txt_image_name').val() || 'result';
+    var scale = $('#scale_option').val();
+    var orientation = $('#orientation_option').val();
+    showToast('Đang tạo bản in…');
+    $.ajax({
+      type: "GET", url: "/download-result",
+      data: {
+        "result_url": result_url,
+        "image_name": image_name + ' (' + scale.toUpperCase() + 'CM)',
+        "scale_option": scale,
+        "orientation_option": orientation
+      },
+      success: function (res) {
+        triggerDownload(res.origin_result);
+        triggerDownload(res.file_paint);
+        triggerDownload(res.file_a3);
+      },
+      error: function () { showToast('Tạo bản in thất bại.'); }
+    });
+  });
+</script>
+</body>
+</html>
