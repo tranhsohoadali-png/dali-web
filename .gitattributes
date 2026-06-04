@@ -1,0 +1,2 @@
+# Script shell PHẢI dùng LF để chạy được trên Linux (server Ubuntu)
+*.sh text eol=lf

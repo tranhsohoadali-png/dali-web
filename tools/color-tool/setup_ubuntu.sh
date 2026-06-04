@@ -41,6 +41,9 @@ chown -R $TOOL_USER:$TOOL_USER "$TOOL_DIR/media" "$TOOL_DIR/database" 2>/dev/nul
 echo "Migrate Django database..."
 python "$TOOL_DIR/manage.py" migrate --run-syncdb 2>/dev/null || true
 
+# File sqlite vừa tạo do root sở hữu -> trả lại cho service user (ghi được)
+chown -R $TOOL_USER:$TOOL_USER "$TOOL_DIR/database" "$TOOL_DIR/media" 2>/dev/null || true
+
 # 7. Tạo systemd service
 echo "Tạo systemd service..."
 cat > "$SERVICE_FILE" <<EOF

@@ -15,14 +15,18 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
 from django.conf import settings
-from django.conf.urls.static import static
+from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('app/', include('app.urls')),
-    path('', include('app.urls'))
+    path('', include('app.urls')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Phục vụ ảnh kết quả trong /media/ KHÔNG phụ thuộc DEBUG.
+    # (static() chỉ chạy khi DEBUG=True; trên server systemd đặt DEBUG=false
+    #  -> ảnh sẽ 404. Tool chỉ lắng nghe 127.0.0.1 sau proxy admin nên an toàn.)
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
 
