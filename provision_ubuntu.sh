@@ -42,6 +42,11 @@ fi
 cd "$APP_DIR"
 
 echo "==> 3/6  Cau hinh Apache (DocumentRoot -> $APP_DIR/public)"
+# Neu co nginx (vd Hostinger/Kodee tu cai) -> tat di de Apache chiem cong 80
+if systemctl is-enabled nginx >/dev/null 2>&1 || systemctl is-active nginx >/dev/null 2>&1; then
+  echo "    Phat hien nginx -> tat de tranh tranh cong 80 voi Apache"
+  systemctl disable --now nginx >/dev/null 2>&1 || true
+fi
 a2enmod rewrite >/dev/null 2>&1 || true
 cat > /etc/apache2/sites-available/dali-web.conf <<EOF
 <VirtualHost *:80>

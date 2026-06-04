@@ -7,6 +7,14 @@
 set -e
 cd "$(dirname "$0")"
 
+echo "==> 0/7  Tạo thư mục runtime (clone từ git thường thiếu các thư mục này)"
+mkdir -p bootstrap/cache \
+         storage/framework/cache/data \
+         storage/framework/sessions \
+         storage/framework/views \
+         storage/logs \
+         storage/app/public
+
 echo "==> 1/7  Cài thư viện PHP (vendor)"
 composer install --no-dev --optimize-autoloader
 
