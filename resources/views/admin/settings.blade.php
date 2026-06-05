@@ -75,7 +75,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
                   <td style="padding:7px 6px"><input type="text" name="sizes[{{ $sz->id }}][name]" class="dinput" value="{{ $sz->name }}" style="margin:0;font-weight:700"></td>
                   <td style="padding:7px 6px"><input type="text" name="sizes[{{ $sz->id }}][note]" class="dinput" value="{{ $sz->note }}" placeholder="(tuỳ chọn)" style="margin:0"></td>
                   <td style="padding:7px 6px"><input type="number" name="sizes[{{ $sz->id }}][price]" class="dinput" value="{{ $sz->price }}" min="0" step="1000" style="margin:0"></td>
-                  <td style="padding:7px 6px"><input type="number" name="sizes[{{ $sz->id }}][weight]" class="dinput" value="{{ $sz->weight }}" min="1" step="50" placeholder="500" style="margin:0"></td>
+                  <td style="padding:7px 6px"><input type="number" name="sizes[{{ $sz->id }}][weight]" class="dinput" value="{{ $sz->weight }}" min="1" step="1" placeholder="500" style="margin:0"></td>
                   <td style="padding:7px 6px;text-align:center"><input type="checkbox" name="sizes[{{ $sz->id }}][is_active]" value="1" {{ $sz->is_active ? 'checked' : '' }} style="width:20px;height:20px;accent-color:var(--g);cursor:pointer"></td>
                   <td style="padding:7px 6px;text-align:center"><button type="button" title="Xoá dòng" onclick="delSize({{ $sz->id }})" style="background:#FFF0F0;color:#EF4444;border:1px solid #FECACA;border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:14px">🗑</button></td>
                 </tr>
@@ -93,7 +93,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               <input type="text" name="name" class="dinput" placeholder="Tên — vd: Bộ màu riêng" required style="margin:0;flex:1;min-width:170px">
               <input type="text" name="note" class="dinput" placeholder="Ghi chú (tuỳ chọn)" style="margin:0;width:150px">
               <input type="number" name="price" class="dinput" placeholder="Giá (đ) — vd: 90000" min="0" step="1000" required style="margin:0;width:160px">
-              <input type="number" name="weight" class="dinput" placeholder="Cân nặng (g) — vd: 500" min="1" step="50" style="margin:0;width:170px">
+              <input type="number" name="weight" class="dinput" placeholder="Cân nặng (g) — vd: 500" min="1" step="1" style="margin:0;width:170px">
               <button type="submit" class="btn-save" style="margin:0">➕ Thêm</button>
             </div>
           </form>
