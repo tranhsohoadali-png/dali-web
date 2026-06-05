@@ -51,17 +51,6 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-echo "==> 6b/7  Công cụ tách màu (Django - port 18001) auto-start"
-if systemctl list-unit-files 2>/dev/null | grep -q '^dali-color-tool.service'; then
-  echo "    Service dali-color-tool đã cài -> chỉ restart."
-  sudo systemctl restart dali-color-tool || true
-elif [ -f tools/color-tool/setup_ubuntu.sh ]; then
-  echo "    Lần đầu: cài venv + systemd service cho công cụ tách màu..."
-  sudo bash tools/color-tool/setup_ubuntu.sh
-else
-  echo "    Bỏ qua: không thấy tools/color-tool/setup_ubuntu.sh."
-fi
-
 echo "==> 7/7  Phân quyền cho Apache (www-data)"
 # Thư mục database PHẢI ghi được (SQLite tạo file -journal/-wal cùng chỗ)
 sudo chown -R www-data:www-data storage bootstrap/cache database

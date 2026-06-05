@@ -66,8 +66,7 @@ a2dissite 000-default.conf >/dev/null 2>&1 || true
 a2ensite dali-web.conf >/dev/null 2>&1 || true
 
 echo "==> 4/6  Trien khai ung dung (goi deploy.sh)"
-# deploy.sh: composer install, .env + key, migrate, seed, cache,
-#            cai service cong cu mau (dali-color-tool), phan quyen.
+# deploy.sh: composer install, .env + key, migrate, seed, cache, phan quyen.
 bash deploy.sh
 
 echo "==> 5/6  Chuyen .env sang che do PRODUCTION"
@@ -87,5 +86,4 @@ echo ""
 echo "============================================================"
 echo "  XONG! Mo trinh duyet: http://$SERVER_NAME"
 echo "  Admin:               http://$SERVER_NAME/admin/login"
-echo "  Cong cu mau (service): systemctl status dali-color-tool"
 echo "============================================================"

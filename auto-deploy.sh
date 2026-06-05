@@ -39,9 +39,4 @@ php artisan view:cache
 chown -R www-data:www-data storage bootstrap/cache database
 chmod -R 775 storage bootstrap/cache database
 
-# Restart cong cu mau neu co thay doi trong tools/color-tool
-if systemctl is-active --quiet dali-color-tool 2>/dev/null; then
-  systemctl restart dali-color-tool || true
-fi
-
 echo "=== $(date '+%F %T')  Deploy xong ==="

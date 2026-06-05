@@ -28,10 +28,3 @@ sudo chmod -R 775 storage bootstrap/cache database
 echo ""
 echo "✅ Cập nhật xong! Tải lại tranhdali.vn để kiểm tra."
 echo "   (Nếu tôi báo 'lần này có đổi thư viện' thì cần cập nhật thêm vendor — xem README.)"
-
-# Restart color tool nếu service đã được cài
-if systemctl is-active --quiet dali-color-tool 2>/dev/null; then
-    echo "==> Restart công cụ tách màu..."
-    sudo systemctl restart dali-color-tool
-    echo "   ✅ dali-color-tool restarted"
-fi

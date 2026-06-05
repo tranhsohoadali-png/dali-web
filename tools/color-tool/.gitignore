@@ -1,9 +1,0 @@
-venv/
-python_embed/
-__pycache__/
-*.pyc
-*.pyo
-media/
-database/*.sqlite3
-.env
-static/

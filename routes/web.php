@@ -129,8 +129,4 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::post('settings/sizes', [SettingsController::class, 'updateSizes'])->name('settings.sizes');
     Route::post('settings/sizes/add', [SettingsController::class, 'addSize'])->name('settings.sizes.add');
     Route::delete('settings/sizes/{size}', [SettingsController::class, 'deleteSize'])->name('settings.sizes.delete');
-
-    // Công cụ tách màu — proxy qua Laravel để tránh mixed-content (HTTPS→HTTP)
-    Route::get('cong-cu-tach-mau',           [\App\Http\Controllers\Admin\ColorToolController::class, 'index'])->name('colortool');
-    Route::any('cong-cu-tach-mau/proxy/{path?}', [\App\Http\Controllers\Admin\ColorToolController::class, 'proxy'])->where('path', '.*')->name('colortool.proxy');
 });
