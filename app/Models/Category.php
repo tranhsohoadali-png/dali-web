@@ -6,7 +6,9 @@ use Illuminate\Support\Str;
 
 class Category extends Model
 {
-    protected $fillable = ['name', 'slug', 'icon', 'image', 'description', 'sort_order', 'is_active'];
+    protected $fillable = ['name', 'slug', 'icon', 'image', 'description', 'sort_order', 'is_active', 'combo_only'];
+
+    protected $casts = ['is_active' => 'boolean', 'combo_only' => 'boolean'];
 
     public function products()
     {

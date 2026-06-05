@@ -28,8 +28,10 @@ class CategoryController extends Controller
             'description' => 'nullable|string|max:500',
             'sort_order'  => 'nullable|integer',
             'is_active'   => 'nullable|boolean',
+            'combo_only'  => 'nullable|boolean',
             'image'       => 'nullable|image|max:5120',
         ]);
+        $data['combo_only'] = $request->boolean('combo_only');
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('categories', 'public');
         }
@@ -53,8 +55,10 @@ class CategoryController extends Controller
             'description' => 'nullable|string|max:500',
             'sort_order'  => 'nullable|integer',
             'is_active'   => 'nullable|boolean',
+            'combo_only'  => 'nullable|boolean',
             'image'       => 'nullable|image|max:5120',
         ]);
+        $data['combo_only'] = $request->boolean('combo_only');
         if ($request->hasFile('image')) {
             if ($category->image) Storage::disk('public')->delete($category->image);
             $data['image'] = $request->file('image')->store('categories', 'public');

@@ -21,12 +21,16 @@ class WebsiteController extends Controller
     {
         $hero       = HeroSection::first();
         $categories = Category::where('is_active',true)->withCount(['products'])->orderBy('sort_order')->get();
-        $products   = Product::with('category')->where('is_active',true)->orderBy('sort_order')->orderBy('sold_count','desc')->get();
+        // Ẩn sản phẩm lẻ của danh mục "chỉ bán dạng tổng hợp" khỏi trang chủ
+        $products   = Product::with('category')->where('is_active',true)
+            ->whereHas('category', fn($q) => $q->where('combo_only', false))
+            ->orderBy('sort_order')->orderBy('sold_count','desc')->get();
         $settings   = DB::table('admin_settings')->pluck('value','key');
 
         // "Bán chạy nhất": mỗi danh mục góp 1 sản phẩm mua nhiều nhất, rồi đổ thêm cho đủ 8
         $bestSellers = collect();
         foreach ($categories as $cat) {
+            if ($cat->combo_only) continue;   // danh mục chỉ bán combo -> không góp tranh lẻ
             $top = Product::with('category')->where('is_active',true)
                 ->where('category_id',$cat->id)
                 ->orderByDesc('sold_count')->orderBy('sort_order')->first();
@@ -37,6 +41,7 @@ class WebsiteController extends Controller
         // Bù thêm sản phẩm bán chạy còn lại nếu chưa đủ 8
         if ($bestSellers->count() < 8) {
             $fill = Product::with('category')->where('is_active',true)
+                ->whereHas('category', fn($q) => $q->where('combo_only', false))
                 ->whereNotIn('id', $bestSellers->pluck('id')->all())
                 ->orderByDesc('sold_count')->orderBy('sort_order')
                 ->take(8 - $bestSellers->count())->get();
@@ -49,7 +54,17 @@ class WebsiteController extends Controller
 
     public function products(Request $request)
     {
-        $query = Product::with('category')->where('is_active',true);
+        // Nếu lọc theo danh mục "chỉ bán combo" -> chuyển thẳng sang trang combo
+        if ($request->filled('category')) {
+            $cat = Category::where('slug', $request->category)->first();
+            if ($cat && $cat->combo_only) {
+                return redirect()->route('category', $cat->slug);
+            }
+        }
+
+        $query = Product::with('category')->where('is_active',true)
+            // Ẩn sản phẩm lẻ của các danh mục "chỉ bán dạng tổng hợp"
+            ->whereHas('category', fn($q) => $q->where('combo_only', false));
         if ($request->filled('category')) $query->whereHas('category', fn($q) => $q->where('slug',$request->category));
         if ($request->filled('search'))   $query->where('name','like','%'.$request->search.'%');
         if ($request->filled('sort')) {
@@ -103,6 +118,10 @@ class WebsiteController extends Controller
     public function product(Product $product, \Illuminate\Http\Request $request)
     {
         if (!$product->is_active) abort(404);
+        // Danh mục "chỉ bán dạng tổng hợp" -> không có trang tranh lẻ, chuyển sang combo
+        if ($product->category && $product->category->combo_only) {
+            return redirect()->route('category', $product->category->slug);
+        }
         // Nếu URL có ?ref=CODE → lưu affiliate code vào session/cookie ngay
         $refCode = strtoupper(trim($request->input('ref', '')));
         if ($refCode) {

@@ -126,6 +126,14 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
                 </label>
                 <span style="font-size:13px;font-weight:600;color:var(--tx2)">Hiển thị trên website</span>
               </div>
+              <div class="toggle-wrap" style="margin-top:10px">
+                <label class="toggle">
+                  <input type="checkbox" name="combo_only" value="1" {{ old('combo_only', $category->combo_only ?? false) ? 'checked' : '' }}>
+                  <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size:13px;font-weight:600;color:var(--tx2)">Chỉ bán dạng tổng hợp (combo)</span>
+              </div>
+              <div class="fnote" style="margin-top:4px">Bật: ẩn các tranh lẻ của danh mục này khỏi trang Sản phẩm &amp; trang chủ — chỉ còn trang combo. Các tranh vẫn là "mẫu" trong combo.</div>
             </div>
           </div>
           <div class="g1">
