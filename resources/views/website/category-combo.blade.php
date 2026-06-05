@@ -97,7 +97,8 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   .breadcrumb{padding:10px 4%;font-size:12px}
 
   /* ── Grid wrap: 1 cột, không padding (ảnh edge-to-edge) ── */
-  .wrap{grid-template-columns:1fr!important;gap:0;padding:0 0 8px}
+  /* QUAN TRỌNG: minmax(0,1fr) chống cột grid bị nội dung "thổi phồng" quá màn hình */
+  .wrap{display:block!important;grid-template-columns:minmax(0,1fr)!important;gap:0;padding:0 0 8px}
 
   /* ── Preview box (cột trái → lên trên) ── */
   .preview-box{position:static;max-width:none;width:100%}
