@@ -16,7 +16,8 @@ mkdir -p bootstrap/cache \
          storage/app/public
 
 echo "==> 1/7  Cài thư viện PHP (vendor)"
-composer install --no-dev --optimize-autoloader
+export COMPOSER_ALLOW_SUPERUSER=1   # chay bang root -> khoi hoi xac nhan
+composer install --no-dev --optimize-autoloader --no-interaction
 
 echo "==> 2/7  Tạo file .env + APP_KEY (nếu chưa có)"
 if [ ! -f .env ]; then
