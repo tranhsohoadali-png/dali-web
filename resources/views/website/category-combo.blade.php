@@ -102,14 +102,15 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   /* ── Preview box (cột trái → lên trên) ── */
   .preview-box{position:static;max-width:none;width:100%}
 
-  /* ── Ảnh chính: full width, co theo tỉ lệ thật ── */
+  /* ── Ảnh chính: ô vuông full-width (giống gallery Shopee) ── */
   .preview-main{
-    aspect-ratio:auto;width:100%;max-height:75vw;
+    position:relative;width:100%;height:0;padding-bottom:100%;  /* vuông chắc chắn mọi trình duyệt */
+    max-height:none;aspect-ratio:auto;
     border-radius:0;border:none;box-shadow:none;
-    background:var(--gll);display:block;
+    background:var(--gll);overflow:hidden;display:block;
   }
   .preview-main img{
-    width:100%;height:auto;max-height:75vw;
+    position:absolute;top:0;left:0;width:100%;height:100%;max-height:none;
     object-fit:contain;display:block;
   }
 
