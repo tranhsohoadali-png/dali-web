@@ -26,6 +26,19 @@ class ViettelPostService
         return ($this->cfg['vtp_enabled'] ?? '0') === '1' && !empty($this->cfg['vtp_token']);
     }
 
+    /**
+     * Lấy giá trị cấu hình, fallback sang key khác khi RỖNG (không chỉ khi null).
+     * (Trước đây dùng ?? nên chuỗi rỗng '' không fallback -> gửi SENDER_* rỗng -> VTP từ chối.)
+     */
+    protected function val(string $key, string $fallbackKey = ''): string
+    {
+        $v = trim((string) ($this->cfg[$key] ?? ''));
+        if ($v === '' && $fallbackKey !== '') {
+            $v = trim((string) ($this->cfg[$fallbackKey] ?? ''));
+        }
+        return $v;
+    }
+
     protected function baseUrl(): string
     {
         return ($this->cfg['vtp_env'] ?? 'prod') === 'dev'
@@ -85,7 +98,7 @@ class ViettelPostService
     {
         $service ??= $this->cfg['vtp_service'] ?? 'VCN';
         $payload = [
-            'SENDER_ADDRESS'    => $this->cfg['vtp_sender_address'] ?? ($this->cfg['shop_address'] ?? ''),
+            'SENDER_ADDRESS'    => $this->val('vtp_sender_address', 'shop_address'),
             'RECEIVER_ADDRESS'  => $receiverAddress,
             'PRODUCT_TYPE'      => 'HH',
             'PRODUCT_WEIGHT'    => max(1, $weight),
@@ -114,9 +127,9 @@ class ViettelPostService
 
         $payload = [
             'ORDER_NUMBER'      => $order->code,                    // mã tham chiếu phía DALI
-            'SENDER_FULLNAME'   => $this->cfg['vtp_sender_name']  ?? 'DALI',
-            'SENDER_PHONE'      => $this->cfg['vtp_sender_phone'] ?? ($this->cfg['shop_phone'] ?? ''),
-            'SENDER_ADDRESS'    => $this->cfg['vtp_sender_address'] ?? ($this->cfg['shop_address'] ?? ''),
+            'SENDER_FULLNAME'   => $this->val('vtp_sender_name') ?: 'DALI',
+            'SENDER_PHONE'      => $this->val('vtp_sender_phone', 'shop_phone'),
+            'SENDER_ADDRESS'    => $this->val('vtp_sender_address', 'shop_address'),
             'RECEIVER_FULLNAME' => $order->customer_name,
             'RECEIVER_PHONE'    => $order->customer_phone,
             'RECEIVER_ADDRESS'  => trim($order->customer_address . ', ' . $order->customer_city, ', '),
