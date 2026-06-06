@@ -45,6 +45,22 @@ tr:hover td{background:var(--gll)}
 .btn-view:hover{background:var(--g);color:#fff;border-color:var(--g)}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--g);display:inline-block;animation:blink 1.5s ease-in-out infinite;margin-right:6px}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* ── Mobile responsive ── */
+@media(max-width:820px){
+  .cnt{padding:16px 12px}
+  .tb{height:auto;min-height:64px;padding:10px 14px 10px 58px;flex-wrap:wrap;gap:4px}
+  .grid4{grid-template-columns:repeat(2,1fr);gap:10px}
+  .grid2{grid-template-columns:1fr;gap:12px}
+  .stat{padding:14px 14px}
+  .stat-num{font-size:24px}
+  .table-wrap table{min-width:680px}
+}
+@media(max-width:400px){
+  .stat-icon{font-size:21px;margin-bottom:7px}
+  .stat-num{font-size:21px}
+  .stat-label{font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -192,6 +208,7 @@ tr:hover td{background:var(--gll)}
           <div class="card-t">🛒 Đơn hàng gần đây</div>
           <a href="{{ route('admin.orders.index') }}" style="font-size:12px;color:var(--g);text-decoration:none;font-weight:700">Xem tất cả →</a>
         </div>
+        <div class="table-wrap">
         <table>
           <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>SĐT</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái</th><th>Thời gian</th><th></th></tr></thead>
           <tbody>
@@ -211,6 +228,7 @@ tr:hover td{background:var(--gll)}
           @endforelse
           </tbody>
         </table>
+        </div>
       </div>
 
     </div>

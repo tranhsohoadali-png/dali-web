@@ -51,7 +51,19 @@ tr:hover td{background:var(--gll)}
 .tgl-s{position:absolute;inset:0;background:#D1D5DB;border-radius:50px;cursor:pointer;transition:background .2s}
 .tgl-s::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
 .tgl input:checked + .tgl-s{background:var(--g)}
-.tgl input:checked + .tgl-s::before{transform:translateX(18px)}</style></head>
+.tgl input:checked + .tgl-s::before{transform:translateX(18px)}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* ── Mobile responsive ── */
+@media(max-width:820px){
+  .cnt{padding:16px 12px}
+  .tb{height:auto;min-height:64px;padding:10px 14px 10px 58px;flex-wrap:wrap;gap:8px}
+  .btn-add{padding:8px 14px;font-size:11px}
+  .stat-boxes{grid-template-columns:repeat(2,1fr);gap:10px}
+  .table-wrap table{min-width:760px}
+}
+@media(max-width:560px){
+  .cnt [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+}</style></head>
 <body>
 <div class="layout">
   @include('admin.partials.sidebar')
@@ -72,6 +84,7 @@ tr:hover td{background:var(--gll)}
       <div class="card">
         <div class="rainbow"></div>
         <div class="card-head"><div class="card-title">{{ $affiliates->count() }} cộng tác viên</div></div>
+        <div class="table-wrap">
         <table>
           <thead><tr>
             <th>#</th><th>Tên CTV</th><th>Mã ref</th><th>Hoa hồng</th>
@@ -88,7 +101,7 @@ tr:hover td{background:var(--gll)}
             <td>
               <span class="aff-code">{{ $aff->code }}</span>
               <div style="font-size:9px;color:var(--tx3);margin-top:3px">
-                <a href="{{ route('affiliate.track', $aff->code) }}" target="_blank" style="color:var(--g);text-decoration:none">{ url('/ref/'.$aff->code) }</a>
+                <a href="{{ route('affiliate.track', $aff->code) }}" target="_blank" style="color:var(--g);text-decoration:none">{{ url('/ref/'.$aff->code) }}</a>
               </div>
             </td>
             <td style="font-weight:800;color:var(--g)">@if(($aff->type ?? 'ctv')==='agent')<span style="color:#6D28D9;font-size:11px">Giá sỉ</span>@else{{ $aff->commission_rate }}%@endif</td>
@@ -122,6 +135,7 @@ tr:hover td{background:var(--gll)}
           @endforelse
           </tbody>
         </table>
+        </div>
       </div>
       <div style="background:#fff;border-radius:14px;border:1.5px solid var(--bd);padding:18px;font-size:13px;color:var(--tx2)">
         <div style="font-weight:800;color:var(--char);margin-bottom:10px">📖 Hướng dẫn sử dụng Affiliate</div>
