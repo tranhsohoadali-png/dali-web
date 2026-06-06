@@ -1,0 +1,16 @@
+{
+  "name": "DALI Quản Lý",
+  "short_name": "DALI QL",
+  "description": "Quản lý đơn hàng, sản phẩm & cài đặt cửa hàng DALI",
+  "lang": "vi",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2FDE8",
+  "theme_color": "#1C5200",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

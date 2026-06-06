@@ -8,6 +8,22 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    /** API nhẹ cho app quản lý: số đơn "mới" + thông tin đơn mới nhất (để báo). */
+    public function newCount()
+    {
+        $count  = Order::where('status', 'new')->count();
+        $latest = Order::where('status', 'new')->latest()->first();
+        return response()->json([
+            'count'  => $count,
+            'latest' => $latest ? [
+                'code'     => $latest->code,
+                'customer' => $latest->customer_name,
+                'total'    => (int) $latest->total,
+                'at'       => optional($latest->created_at)->toIso8601String(),
+            ] : null,
+        ]);
+    }
+
     public function index(Request $request)
     {
         $query = Order::with('items')->latest();

@@ -93,6 +93,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/export',                [OrderController::class, 'export'])->name('orders.export');
+    Route::get('orders/new-count',             [OrderController::class, 'newCount'])->name('orders.new-count');
     Route::get('orders/{order}',               [OrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/status',       [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('orders/{order}/deposit-paid', [OrderController::class, 'markDepositPaid'])->name('orders.deposit-paid');

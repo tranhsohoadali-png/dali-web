@@ -71,3 +71,90 @@
     <a href="{{ route('admin.logout') }}" style="font-size:10px;color:rgba(255,255,255,.3);text-decoration:none;letter-spacing:1px">Đăng xuất →</a>
   </div>
 </div>
+
+{{-- ───────── PWA "App Quản Lý" + Thông báo đơn mới ───────── --}}
+<div id="dali-pwa-dock" style="position:fixed;right:14px;bottom:14px;z-index:9000;display:flex;flex-direction:column;gap:8px;align-items:flex-end"></div>
+<div id="dali-toast" style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(140px);z-index:9001;background:#1C3A0A;color:#fff;padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.25);transition:transform .4s;max-width:92vw;text-align:center;font-family:'Be Vietnam Pro',sans-serif"></div>
+<script>
+(function(){
+  // 1) Chèn thẻ PWA vào <head>
+  var h=document.head;
+  var lk=document.createElement('link'); lk.rel='manifest'; lk.href='/manifest.json'; h.appendChild(lk);
+  function meta(n,c){var m=document.createElement('meta'); m.setAttribute('name',n); m.content=c; h.appendChild(m);}
+  meta('theme-color','#1C5200');
+  meta('apple-mobile-web-app-capable','yes');
+  meta('apple-mobile-web-app-status-bar-style','black-translucent');
+  meta('apple-mobile-web-app-title','DALI QL');
+  var ai=document.createElement('link'); ai.rel='apple-touch-icon'; ai.href='/icons/icon-180.png'; h.appendChild(ai);
+
+  // 2) Đăng ký service worker
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/admin-sw.js').catch(function(){}); }
+
+  var dock=document.getElementById('dali-pwa-dock');
+  function chip(id,html,css){var b=document.createElement('button');b.id=id;b.innerHTML=html;b.style.cssText='border:none;border-radius:50px;padding:11px 16px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.2);font-family:inherit;'+css;dock.appendChild(b);return b;}
+
+  // 3) Nút "Cài app"
+  var deferred=null;
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;
+    if(document.getElementById('dali-install'))return;
+    var b=chip('dali-install','⬇️ Cài app quản lý','background:linear-gradient(135deg,#3A9A12,#6BBF1F);color:#fff');
+    b.onclick=function(){ if(deferred){deferred.prompt();deferred.userChoice.finally(function(){b.remove();deferred=null;});} };
+  });
+  window.addEventListener('appinstalled',function(){var b=document.getElementById('dali-install');if(b)b.remove();});
+
+  // 4) Nút "Bật thông báo"
+  (function notifBtn(){
+    if(!('Notification' in window)) return;
+    if(Notification.permission==='granted') return;
+    if(document.getElementById('dali-notif')) return;
+    var b=chip('dali-notif','🔔 Bật thông báo đơn','background:#fff;color:#3E7A0A;border:1.5px solid #C8E89A');
+    b.onclick=function(){ Notification.requestPermission().then(function(p){ if(p==='granted'){b.remove();toast('✅ Đã bật thông báo đơn hàng');} }); };
+  })();
+
+  // 5) Toast trong app
+  var tEl=document.getElementById('dali-toast'),tTm=null;
+  function toast(msg){ tEl.textContent=msg; tEl.style.transform='translateX(-50%) translateY(0)'; clearTimeout(tTm); tTm=setTimeout(function(){tEl.style.transform='translateX(-50%) translateY(140px)';},4500); }
+
+  // 6) Chuông báo
+  function beep(){try{var a=new (window.AudioContext||window.webkitAudioContext)();var o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type='sine';o.frequency.value=900;g.gain.setValueAtTime(.0001,a.currentTime);g.gain.exponentialRampToValueAtTime(.18,a.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.45);o.start();o.stop(a.currentTime+.47);}catch(e){}}
+
+  // 7) Cập nhật số đơn mới ở sidebar
+  function setBadge(n){
+    var link=document.querySelector('nav a[href*="/admin/orders"]'); if(!link) return;
+    var b=link.querySelector('.dali-order-badge')||link.querySelector('span[style*="EF4444"]');
+    if(n>0){ if(!b){b=document.createElement('span');b.className='dali-order-badge';b.style.cssText='position:absolute;right:10px;background:#EF4444;color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px';link.appendChild(b);} b.textContent=n; }
+    else if(b){ b.remove(); }
+  }
+
+  // 8) Thông báo đơn mới
+  function notifyOrder(o){
+    beep();
+    var title='🛒 Đơn hàng mới!';
+    var body=(o.customer||'Khách')+' • '+((o.total||0).toLocaleString('vi-VN'))+'đ • #'+o.code;
+    toast(title+'  '+body);
+    if('Notification' in window && Notification.permission==='granted'){
+      var opt={body:body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'dali-'+o.code,vibrate:[200,100,200],requireInteraction:true,data:{url:'{{ route("admin.orders.index") }}'}};
+      if(navigator.serviceWorker && navigator.serviceWorker.ready){ navigator.serviceWorker.ready.then(function(r){r.showNotification(title,opt);}).catch(function(){try{new Notification(title,opt);}catch(e){}}); }
+      else { try{new Notification(title,opt);}catch(e){} }
+    }
+  }
+
+  // 9) Hỏi server số đơn mới mỗi 25 giây
+  var KEY='dali_last_order_at';
+  function poll(){
+    fetch('{{ route("admin.orders.new-count") }}',{headers:{'X-Requested-With':'XMLHttpRequest'},cache:'no-store'})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){
+        if(!d) return;
+        setBadge(d.count);
+        if(d.latest && d.latest.at){
+          var last=localStorage.getItem(KEY);
+          if(!last){ localStorage.setItem(KEY,d.latest.at); }
+          else if(d.latest.at>last){ localStorage.setItem(KEY,d.latest.at); notifyOrder(d.latest); }
+        }
+      }).catch(function(){});
+  }
+  poll();
+  setInterval(poll,25000);
+})();
+</script>
