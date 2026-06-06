@@ -48,7 +48,32 @@ nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:68px;paddi
 .pagination .active{background:var(--g);color:#fff;border-color:var(--g)}
 footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255,.7);padding:30px 5%;margin-top:32px}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:18px;display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.3)}
+/* ── Bài nổi bật (featured) ── */
+.featured{display:grid;grid-template-columns:1.15fr 1fr;background:#fff;border:1.5px solid var(--bd);border-radius:22px;overflow:hidden;margin-bottom:30px;text-decoration:none;color:inherit;box-shadow:0 10px 36px rgba(58,122,10,.08);transition:transform .3s,box-shadow .3s}
+.featured:hover{transform:translateY(-4px);box-shadow:0 22px 54px rgba(58,122,10,.16)}
+.featured-cover{position:relative;min-height:330px;background:linear-gradient(135deg,var(--gl),#CCEF90);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:70px;color:var(--gd)}
+.featured-cover img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.featured:hover .featured-cover img{transform:scale(1.05)}
+.featured-pin{position:absolute;top:16px;left:16px;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;font-size:11px;font-weight:800;padding:6px 13px;border-radius:20px;letter-spacing:.5px;box-shadow:0 6px 16px rgba(58,122,10,.3)}
+.featured-body{padding:32px 34px;display:flex;flex-direction:column;justify-content:center}
+.featured-body .fb-cat{font-size:11px;font-weight:800;color:var(--g);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.featured-body h2{font-size:clamp(20px,2.4vw,28px);font-weight:900;color:var(--char);line-height:1.3;margin-bottom:12px}
+.featured-body p{font-size:14px;color:var(--tx2);line-height:1.75;margin-bottom:18px}
+.featured-meta{display:flex;gap:14px;font-size:12px;color:var(--tx3);margin-bottom:18px;flex-wrap:wrap}
+.featured-readmore{font-size:13px;font-weight:800;color:var(--g);display:inline-flex;align-items:center;gap:6px}
+.featured:hover .featured-readmore{gap:10px}
+
+/* ── Thẻ bài viết: nhãn chủ đề nổi trên ảnh ── */
+.post-cover{position:relative}
+.post-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(28,58,10,.18),transparent 45%);opacity:0;transition:opacity .3s}
+.post-card:hover .post-cover::after{opacity:1}
+.post-cat-ov{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.95);color:var(--gd);font-size:10.5px;font-weight:800;padding:4px 11px;border-radius:20px;letter-spacing:.4px;z-index:2;box-shadow:0 4px 12px rgba(0,0,0,.08);backdrop-filter:blur(4px)}
+.post-readmore{font-size:12px;font-weight:800;color:var(--g);display:inline-flex;align-items:center;gap:5px;margin-top:12px;transition:gap .25s}
+.post-card:hover .post-readmore{gap:9px}
+.post-meta{border-top:1px dashed var(--bd);padding-top:10px;margin-top:12px}
+
 @media(max-width:900px){.posts-grid{grid-template-columns:repeat(2,1fr)}.nav-links{display:none}.nav-hamburger{display:flex}nav{padding:0 4%}}
+@media(max-width:760px){.featured{grid-template-columns:1fr}.featured-cover{min-height:210px}.featured-body{padding:24px}}
 @media(max-width:600px){.posts-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -90,37 +115,74 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     @endforeach
   </div>
 
-  <div class="posts-grid">
-    @forelse($posts as $post)
-    <a href="{{ route('blog.post', $post->slug) }}" class="post-card">
-      <div class="post-cover">
-        @if($post->cover_image)
-          <img src="{{ asset('storage/'.$post->cover_image) }}" alt="{{ $post->title }}">
+  @if($posts->count())
+    @php
+      $showFeatured = $posts->currentPage() == 1 && !request('category');
+      $featured  = $showFeatured ? $posts->first() : null;
+      $gridPosts = $showFeatured ? $posts->slice(1) : $posts;
+    @endphp
+
+    {{-- Bài nổi bật --}}
+    @if($featured)
+    <a href="{{ route('blog.post', $featured->slug) }}" class="featured">
+      <div class="featured-cover">
+        <span class="featured-pin"><i class="ri-fire-fill"></i> Nổi bật</span>
+        @if($featured->cover_image)
+          <img src="{{ asset('storage/'.$featured->cover_image) }}" alt="{{ $featured->title }}">
         @else
           <i class="ri-book-open-line"></i>
         @endif
       </div>
-      <div class="post-body">
-        <div class="post-cat">{{ $post->category }}</div>
-        <div class="post-title">{{ $post->title }}</div>
-        @if($post->excerpt)
-        <div class="post-excerpt">{{ Str::limit($post->excerpt, 100) }}</div>
-        @endif
-        <div class="post-meta">
-          <span><i class="ri-calendar-line"></i> {{ $post->published_at?->format('d/m/Y') }}</span>
-          <span><i class="ri-timer-line"></i> {{ $post->read_time }} phút đọc</span>
-          <span><i class="ri-eye-line"></i> {{ number_format($post->view_count) }} lượt xem</span>
+      <div class="featured-body">
+        <div class="fb-cat">{{ $featured->category }}</div>
+        <h2>{{ $featured->title }}</h2>
+        @if($featured->excerpt)<p>{{ Str::limit($featured->excerpt, 180) }}</p>@endif
+        <div class="featured-meta">
+          <span><i class="ri-calendar-line"></i> {{ $featured->published_at?->format('d/m/Y') }}</span>
+          <span><i class="ri-timer-line"></i> {{ $featured->read_time }} phút đọc</span>
+          <span><i class="ri-eye-line"></i> {{ number_format($featured->view_count) }} lượt xem</span>
         </div>
+        <span class="featured-readmore">Đọc bài viết <i class="ri-arrow-right-line"></i></span>
       </div>
     </a>
-    @empty
-    <div class="no-posts">
-      <div class="no-posts-icon"><i class="ri-quill-pen-line"></i></div>
-      <div style="font-size:18px;font-weight:800;color:var(--char);margin-bottom:8px">Chưa có bài viết nào</div>
-      <div style="font-size:14px;color:var(--tx3)">Quay lại sau nhé!</div>
+    @endif
+
+    @if($gridPosts->count())
+    <div class="posts-grid">
+      @foreach($gridPosts as $post)
+      <a href="{{ route('blog.post', $post->slug) }}" class="post-card">
+        <div class="post-cover">
+          <span class="post-cat-ov">{{ $post->category }}</span>
+          @if($post->cover_image)
+            <img src="{{ asset('storage/'.$post->cover_image) }}" alt="{{ $post->title }}">
+          @else
+            <i class="ri-book-open-line"></i>
+          @endif
+        </div>
+        <div class="post-body">
+          <div class="post-title">{{ $post->title }}</div>
+          @if($post->excerpt)
+          <div class="post-excerpt">{{ Str::limit($post->excerpt, 100) }}</div>
+          @endif
+          <span class="post-readmore">Đọc bài <i class="ri-arrow-right-line"></i></span>
+          <div class="post-meta">
+            <span><i class="ri-calendar-line"></i> {{ $post->published_at?->format('d/m/Y') }}</span>
+            <span><i class="ri-timer-line"></i> {{ $post->read_time }} phút đọc</span>
+          </div>
+        </div>
+      </a>
+      @endforeach
     </div>
-    @endforelse
-  </div>
+    @endif
+  @else
+    <div class="posts-grid">
+      <div class="no-posts">
+        <div class="no-posts-icon"><i class="ri-quill-pen-line"></i></div>
+        <div style="font-size:18px;font-weight:800;color:var(--char);margin-bottom:8px">Chưa có bài viết nào</div>
+        <div style="font-size:14px;color:var(--tx3)">Quay lại sau nhé!</div>
+      </div>
+    </div>
+  @endif
 
   @if($posts->hasPages())
   <div class="pagination">

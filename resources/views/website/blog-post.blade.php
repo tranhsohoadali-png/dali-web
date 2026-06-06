@@ -80,10 +80,24 @@ nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:68px;paddi
 .related-date{font-size:11px;color:var(--tx3);margin-top:4px}
 footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255,.7);padding:30px 5%}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:18px;display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.3)}
-@media(max-width:600px){.related-grid{grid-template-columns:1fr}}
+/* ── Thanh tiến độ đọc ── */
+.read-progress{position:fixed;top:0;left:0;height:4px;width:0;background:linear-gradient(90deg,var(--gn),var(--g),var(--gd));z-index:200;transition:width .12s ease-out}
+/* ── Chữ cái đầu lớn (drop cap) ── */
+.post-content>p:first-of-type::first-letter{float:left;font-size:60px;line-height:.82;font-weight:900;color:var(--g);margin:6px 12px 0 0}
+/* ── Tiêu đề h2 có vạch nhấn ── */
+.post-content h2{position:relative;padding-left:15px}
+.post-content h2::before{content:'';position:absolute;left:0;top:5px;bottom:5px;width:5px;border-radius:4px;background:linear-gradient(var(--g),var(--gd))}
+/* ── Nút chia sẻ ── */
+.share-row{display:flex;align-items:center;gap:10px;margin:28px 0 6px;flex-wrap:wrap}
+.share-row .sh-label{font-size:13px;font-weight:700;color:var(--tx3)}
+.share-btn{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--bd);background:#fff;color:var(--tx2);font-size:13px;font-weight:700;padding:8px 15px;border-radius:50px;cursor:pointer;text-decoration:none;transition:all .2s}
+.share-btn:hover{transform:translateY(-2px);background:var(--gl);border-color:var(--g);color:var(--gd)}
+.share-btn.fb:hover{background:#1877F2;border-color:#1877F2;color:#fff}
+@media(max-width:600px){.related-grid{grid-template-columns:1fr}.post-cover-wrap{height:230px}}
 </style>
 </head>
 <body>
+<div class="read-progress" id="readbar"></div>
 <nav>
   <a href="{{ route('home') }}" class="nav-logo-t">DAL<span>I</span></a>
   <ul class="nav-links">
@@ -143,6 +157,18 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     @endif
   </div>
 
+  {{-- Chia sẻ --}}
+  <div class="share-row">
+    <span class="sh-label"><i class="ri-share-line"></i> Chia sẻ:</span>
+    <a class="share-btn fb" target="_blank" rel="noopener"
+       href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}">
+      <i class="ri-facebook-fill"></i> Facebook
+    </a>
+    <button type="button" class="share-btn" onclick="copyPostLink(this)">
+      <i class="ri-link"></i> <span>Sao chép liên kết</span>
+    </button>
+  </div>
+
   {{-- CTA trong bài --}}
   <div class="cta-box">
     <h3><i class="ri-palette-line"></i> Muốn thử vẽ tranh số hóa?</h3>
@@ -174,5 +200,26 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 <footer><div class="footer-bottom"><span>© 2024 DALI Tranh Tô Màu Số Hóa</span><span>🇻🇳 Việt Nam</span></div></footer>
 @include('partials.float-widget')
 @include('partials.bottom-nav')
+<script>
+// Thanh tiến độ đọc
+(function(){
+  var bar=document.getElementById('readbar');
+  function upd(){
+    var h=document.documentElement,b=document.body;
+    var st=h.scrollTop||b.scrollTop;
+    var sh=(h.scrollHeight||b.scrollHeight)-h.clientHeight;
+    bar.style.width=(sh>0?(st/sh*100):0)+'%';
+  }
+  window.addEventListener('scroll',upd,{passive:true});
+  window.addEventListener('resize',upd);upd();
+})();
+// Sao chép liên kết
+function copyPostLink(btn){
+  var url=window.location.href;
+  var done=function(){var s=btn.querySelector('span');var old=s.textContent;s.textContent='Đã sao chép!';setTimeout(function(){s.textContent=old;},1600);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(done);}
+  else{var t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(t);done();}
+}
+</script>
 </body>
 </html>
