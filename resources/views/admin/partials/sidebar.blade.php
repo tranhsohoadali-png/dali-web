@@ -1,4 +1,21 @@
-<div style="width:220px;flex-shrink:0;background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);display:flex;flex-direction:column;min-height:100vh">
+<style>
+/* ── Admin responsive: sidebar thành ngăn kéo trên điện thoại ── */
+#adminHamb{display:none;position:fixed;top:11px;left:11px;z-index:1300;width:40px;height:40px;border:none;border-radius:10px;background:linear-gradient(135deg,#1C5200,#3A9A12);color:#fff;font-size:20px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.28);line-height:1}
+#adminBackdrop{display:none}
+@media(max-width:820px){
+  #adminSidebar{position:fixed!important;top:0;left:0;bottom:0;z-index:1200;width:248px!important;min-height:100vh;transform:translateX(-104%);transition:transform .26s ease;box-shadow:8px 0 34px rgba(0,0,0,.32);overflow-y:auto}
+  #adminSidebar.open{transform:none}
+  #adminHamb{display:flex}
+  #adminBackdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;opacity:0;pointer-events:none;transition:opacity .26s}
+  #adminBackdrop.show{opacity:1;pointer-events:auto}
+  /* chừa chỗ cho nút ☰ ở 2 kiểu topbar */
+  .tb{padding-left:60px!important}
+  .topbar{padding-left:60px!important}
+}
+</style>
+<button id="adminHamb" type="button" onclick="adminSb(true)" aria-label="Mở menu">☰</button>
+<div id="adminBackdrop" onclick="adminSb(false)"></div>
+<div id="adminSidebar" style="width:220px;flex-shrink:0;background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);display:flex;flex-direction:column;min-height:100vh">
   <div style="padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.12)">
     <a href="{{ route('admin.dashboard') }}" style="display:block;text-decoration:none" title="Về trang Tổng quan">
       <img src="{{ asset('images/logo_dali.png') }}" alt="DALI" style="height:38px;filter:brightness(0) invert(1);display:block">
@@ -76,6 +93,20 @@
 <div id="dali-pwa-dock" style="position:fixed;right:14px;bottom:14px;z-index:9000;display:flex;flex-direction:column;gap:8px;align-items:flex-end"></div>
 <div id="dali-toast" style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(140px);z-index:9001;background:#1C3A0A;color:#fff;padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.25);transition:transform .4s;max-width:92vw;text-align:center;font-family:'Be Vietnam Pro',sans-serif"></div>
 <script>
+// Bật/tắt ngăn kéo sidebar trên điện thoại
+function adminSb(open){
+  var s=document.getElementById('adminSidebar'), b=document.getElementById('adminBackdrop');
+  if(!s)return;
+  if(open===undefined) open=!s.classList.contains('open');
+  s.classList.toggle('open',open);
+  if(b)b.classList.toggle('show',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+// Bấm 1 mục menu -> đóng ngăn kéo cho gọn
+document.addEventListener('DOMContentLoaded',function(){
+  var sb=document.getElementById('adminSidebar');
+  if(sb)sb.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){adminSb(false);});});
+});
 (function(){
   // 1) Chèn thẻ PWA vào <head>
   var h=document.head;
