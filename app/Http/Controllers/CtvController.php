@@ -125,12 +125,11 @@ class CtvController extends Controller
             return back()->with('error', 'Vui lòng chọn ít nhất 1 sản phẩm.');
         }
 
-        // Tính phí ship (giống website chính)
+        // Đơn sỉ/CTV: KHÔNG tính phí ship (không áp miễn phí, không cộng phí ship).
+        // Phí ship báo sau qua tin nhắn / gọi điện -> admin cập nhật khi chốt.
         $settings   = \Illuminate\Support\Facades\DB::table('admin_settings')->pluck('value','key');
-        $freeFrom   = (int)($settings['free_ship_from'] ?? 299000);
-        $shipFee    = (int)($settings['ship_fee'] ?? 30000);
-        $ship       = $subtotal >= $freeFrom ? 0 : $shipFee;
-        $total      = $subtotal + $ship;
+        $ship       = 0;
+        $total      = $subtotal;
 
         $code = 'DALI-' . strtoupper(substr(uniqid(), -6));
 

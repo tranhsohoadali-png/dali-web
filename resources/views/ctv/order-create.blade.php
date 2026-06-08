@@ -110,6 +110,7 @@
       <div class="row" id="shipRow"><span class="k" id="shipLabel">Phí ship</span><span class="v" id="shipDisplay">—</span></div>
       <div class="row big"><span class="k">Tổng đơn</span><span class="v" id="totalDisplay">0đ</span></div>
       <div class="row green-row"><span class="k">@if($ctv->isAgent())💰 Đặt cọc ({{ $ctv->effectiveDepositPercent((int)($settings['agent_deposit_percent'] ?? 20)) }}%)@else 🌿 Hoa hồng của bạn @endif</span><span class="v" id="commSummary">0đ</span></div>
+      <div style="font-size:11px;opacity:.9;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.25);line-height:1.5">🚚 Đơn sỉ chưa tính phí ship — <b>shop sẽ báo phí ship sau</b> qua tin nhắn / gọi điện.</div>
     </div>
   </div>
 
@@ -319,22 +320,14 @@ function calcSub(id) {
 
 function updateTotal() {
   const subtotal = Object.keys(cart).reduce((s, id) => s + calcSub(id), 0);
-  const ship = subtotal > 0 ? (subtotal >= FREE_SHIP_FROM ? 0 : SHIP_FEE) : 0;
-  const total = subtotal + ship;
+  // Đơn sỉ/CTV: KHÔNG áp miễn phí ship, KHÔNG cộng phí ship vào đơn.
+  // Phí ship sẽ báo sau qua tin nhắn / gọi điện.
+  const total = subtotal;
   const comm = IS_AGENT ? Math.round(total * DEPOSIT_PCT / 100) : Math.round(total * COMM_RATE / 100);
 
   document.getElementById('subtotalDisplay').textContent = subtotal.toLocaleString('vi-VN') + 'đ';
-
-  if (subtotal === 0) {
-    document.getElementById('shipDisplay').textContent = '—';
-    document.getElementById('shipLabel').textContent = 'Phí ship';
-  } else if (ship === 0) {
-    document.getElementById('shipDisplay').textContent = 'Miễn phí 🎉';
-    document.getElementById('shipLabel').textContent = 'Phí ship (≥' + FREE_SHIP_FROM.toLocaleString('vi-VN') + 'đ)';
-  } else {
-    document.getElementById('shipDisplay').textContent = ship.toLocaleString('vi-VN') + 'đ';
-    document.getElementById('shipLabel').textContent = 'Phí ship (còn thiếu ' + (FREE_SHIP_FROM - subtotal).toLocaleString('vi-VN') + 'đ để miễn)';
-  }
+  document.getElementById('shipLabel').textContent = 'Phí ship';
+  document.getElementById('shipDisplay').textContent = subtotal === 0 ? '—' : 'Báo sau';
 
   document.getElementById('totalDisplay').textContent = total.toLocaleString('vi-VN') + 'đ';
   document.getElementById('commSummary').textContent = (IS_AGENT ? '' : '+') + comm.toLocaleString('vi-VN') + 'đ';
