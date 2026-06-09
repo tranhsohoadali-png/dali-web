@@ -24,6 +24,58 @@ class OrderController extends Controller
         ]);
     }
 
+    /** Trích mã tranh ở đuôi tên sản phẩm (vd "Tranh ... D003" -> "D003"). */
+    private function itemCode(string $name): string
+    {
+        return preg_match('/([A-Za-z]{1,5}\d{1,4})\s*$/u', trim($name), $m) ? strtoupper($m[1]) : '';
+    }
+
+    /** Xuất CSV (mở bằng Excel) các mã tranh khách đặt + thông tin khách. */
+    public function exportCsv(Order $order)
+    {
+        $order->load('items');
+        $filename = 'don-' . $order->code . '.csv';
+
+        return response()->streamDownload(function () use ($order) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 để Excel đọc tiếng Việt
+            // Truyền đủ tham số (kể cả escape) để tránh cảnh báo deprecated PHP 8.4+
+            $put = fn(array $row) => fputcsv($out, $row, ',', '"', '');
+            $put(['ĐƠN HÀNG', $order->code]);
+            $put(['Khách hàng', $order->customer_name]);
+            $put(['Số điện thoại', $order->customer_phone]);
+            $put(['Địa chỉ', trim(($order->customer_address ?? '') . ', ' . ($order->customer_city ?? ''), ', ')]);
+            $put(['Ngày đặt', optional($order->created_at)->format('d/m/Y H:i')]);
+            $put([]);
+            $put(['STT', 'Mã tranh', 'Tên tranh', 'Kích thước', 'Số lượng', 'Đơn giá', 'Thành tiền']);
+            $i = 1;
+            foreach ($order->items as $it) {
+                $put([$i++, $this->itemCode($it->product_name), $it->product_name, $it->product_size, $it->quantity, (int) $it->price, (int) $it->subtotal]);
+            }
+            $put([]);
+            $put(['', '', '', 'Tổng số lượng', (int) $order->items->sum('quantity'), '', '']);
+            $put(['', '', '', 'Tiền hàng', '', '', (int) $order->subtotal]);
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /** Trang in gọn (A4) các mã tranh khách đặt + thông tin khách -> lưu PDF qua Ctrl+P. */
+    public function printOrder(Order $order)
+    {
+        $order->load('items');
+        $items = $order->items->map(function ($it) {
+            return [
+                'code' => $this->itemCode($it->product_name),
+                'name' => $it->product_name,
+                'size' => $it->product_size,
+                'qty'  => (int) $it->quantity,
+                'price' => (int) $it->price,
+                'subtotal' => (int) $it->subtotal,
+            ];
+        });
+        return view('admin.orders.print', compact('order', 'items'));
+    }
+
     public function index(Request $request)
     {
         $query = Order::with('items')->latest();

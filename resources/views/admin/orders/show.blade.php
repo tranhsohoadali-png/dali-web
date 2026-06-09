@@ -53,7 +53,11 @@ body{background:var(--bg);color:var(--tx)}
   <div class="main">
     <div class="tb">
       <div><div class="tb-bc"><a href="{{ route('admin.orders.index') }}">Đơn hàng</a> › <b>{{ $order->code }}</b></div><div class="tb-title">Chi tiết đơn hàng</div></div>
-      <a href="{{ route('admin.orders.index') }}" class="btn-back">← Quay lại</a>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a href="{{ route('admin.orders.export-csv', $order) }}" class="btn-back" style="border-color:#A8D870;color:#3E7A0A;font-weight:700"> 📊 Xuất Excel</a>
+        <a href="{{ route('admin.orders.print', $order) }}" target="_blank" rel="noopener" class="btn-back" style="border-color:#A8D870;color:#3E7A0A;font-weight:700">📄 Xuất PDF / In</a>
+        <a href="{{ route('admin.orders.index') }}" class="btn-back">← Quay lại</a>
+      </div>
     </div>
     <div class="sak"><span style="font-size:14px">🌸</span><span style="font-size:14px">✿</span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
     <div class="cnt">

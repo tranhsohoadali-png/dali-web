@@ -95,6 +95,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::get('orders/export',                [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/new-count',             [OrderController::class, 'newCount'])->name('orders.new-count');
     Route::get('orders/{order}',               [OrderController::class, 'show'])->name('orders.show');
+    Route::get('orders/{order}/export-csv',    [OrderController::class, 'exportCsv'])->name('orders.export-csv');
+    Route::get('orders/{order}/print',         [OrderController::class, 'printOrder'])->name('orders.print');
     Route::post('orders/{order}/status',       [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('orders/{order}/deposit-paid', [OrderController::class, 'markDepositPaid'])->name('orders.deposit-paid');
     Route::post('orders/{order}/vtp-create',   [OrderController::class, 'vtpCreate'])->name('orders.vtp.create');
