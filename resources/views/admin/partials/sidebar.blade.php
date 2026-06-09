@@ -8,9 +8,18 @@
   #adminHamb{display:flex}
   #adminBackdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;opacity:0;pointer-events:none;transition:opacity .26s}
   #adminBackdrop.show{opacity:1;pointer-events:auto}
-  /* chừa chỗ cho nút ☰ ở 2 kiểu topbar */
-  .tb{padding-left:60px!important}
-  .topbar{padding-left:60px!important}
+  /* chừa chỗ cho nút ☰ ở 2 kiểu topbar + cho topbar xuống dòng */
+  .tb,.topbar{padding-left:60px!important;flex-wrap:wrap;height:auto!important;min-height:54px;row-gap:6px}
+
+  /* ── Nội dung: gọn lề, bảng cuộn ngang, form 2 cột -> 1 cột ── */
+  .cnt{padding-left:12px!important;padding-right:12px!important}
+  /* Thẻ chứa bảng cuộn ngang được (mọi trang đều .cnt > .card > table) */
+  .card{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  .card table{min-width:560px}
+  /* Lưới/biểu mẫu 2-3 cột -> 1 cột cho dễ thao tác */
+  .grid2,.g2,.g3,.fb .g2,.form-row{grid-template-columns:1fr!important}
+  /* Ảnh/preview không tràn */
+  img{max-width:100%;height:auto}
 }
 </style>
 <button id="adminHamb" type="button" onclick="adminSb(true)" aria-label="Mở menu">☰</button>
