@@ -5,31 +5,32 @@
 <title>Đơn {{ $order->code }} — Mã tranh & khách hàng</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
-  body{color:#1a1a1a;padding:24px;font-size:13px;line-height:1.5}
-  .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #3A9A12;padding-bottom:12px;margin-bottom:14px}
-  .brand{font-size:24px;font-weight:900;color:#2D7A08;letter-spacing:1px}
+  body{color:#1a1a1a;padding:12px 14px;font-size:9px;line-height:1.35}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #3A9A12;padding-bottom:7px;margin-bottom:9px}
+  .brand{font-size:16px;font-weight:900;color:#2D7A08;letter-spacing:1px}
   .brand span{color:#6BBF1F}
-  .brand small{display:block;font-size:10px;letter-spacing:3px;color:#8FC860;font-weight:600}
+  .brand small{display:block;font-size:7px;letter-spacing:2px;color:#8FC860;font-weight:600}
   .ohead{text-align:right}
-  .ohead .code{font-size:18px;font-weight:900;color:#2D7A08}
-  .ohead .date{font-size:12px;color:#666;margin-top:2px}
-  .cust{background:#F4FDE8;border:1px solid #C8E89A;border-radius:8px;padding:12px 16px;margin-bottom:16px}
-  .cust .r{display:flex;margin-bottom:4px}
-  .cust .k{width:120px;color:#4A8A1A;font-weight:600}
+  .ohead .code{font-size:12px;font-weight:900;color:#2D7A08}
+  .ohead .date{font-size:8.5px;color:#666;margin-top:1px}
+  .cust{background:#F4FDE8;border:1px solid #C8E89A;border-radius:6px;padding:7px 10px;margin-bottom:9px}
+  .cust .r{display:flex;margin-bottom:2px}
+  .cust .k{width:92px;color:#4A8A1A;font-weight:600}
   .cust .v{font-weight:700;flex:1}
-  table{width:100%;border-collapse:collapse;margin-bottom:14px}
-  th{background:#2D7A08;color:#fff;font-size:12px;text-align:left;padding:8px 10px}
+  table{width:100%;border-collapse:collapse;margin-bottom:8px}
+  th{background:#2D7A08;color:#fff;font-size:9px;text-align:left;padding:4px 7px}
   th.r,td.r{text-align:right}
   th.c,td.c{text-align:center}
-  td{padding:7px 10px;border-bottom:1px solid #ddd;font-size:12.5px}
+  td{padding:3px 7px;border-bottom:1px solid #ddd;font-size:9px}
   tr:nth-child(even) td{background:#FaFFf2}
   .code{font-weight:800;color:#2D7A08}
-  tfoot td{font-weight:800;background:#E8F9D0;border-top:2px solid #2D7A08}
-  .note{font-size:11px;color:#888;margin-top:8px}
-  .bar{position:fixed;top:0;left:0;right:0;background:#1C5200;color:#fff;padding:10px 16px;display:flex;gap:10px;justify-content:center;align-items:center}
-  .bar button{background:#C6F135;color:#1C3A0A;border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:800;cursor:pointer}
-  .bar a{color:#fff;font-size:12px;text-decoration:underline}
-  @media print{ .bar{display:none} body{padding:6px} }
+  tfoot td{font-weight:800;background:#E8F9D0;border-top:1.5px solid #2D7A08}
+  .note{font-size:8px;color:#888;margin-top:6px}
+  .bar{position:fixed;top:0;left:0;right:0;background:#1C5200;color:#fff;padding:8px 16px;display:flex;gap:10px;justify-content:center;align-items:center}
+  .bar button{background:#C6F135;color:#1C3A0A;border:none;border-radius:7px;padding:7px 16px;font-size:12px;font-weight:800;cursor:pointer}
+  .bar a{color:#fff;font-size:11px;text-decoration:underline}
+  .spacer{height:42px}
+  @media print{ .bar,.spacer{display:none} body{padding:3px} @page{margin:8mm} }
 </style>
 </head>
 <body>
@@ -37,7 +38,7 @@
     <button onclick="window.print()">🖨️ In / Lưu PDF</button>
     <a href="{{ route('admin.orders.show', $order) }}">← Quay lại đơn hàng</a>
   </div>
-  <div style="height:46px"></div>
+  <div class="spacer"></div>
 
   <div class="head">
     <div class="brand">DAL<span>I</span><small>TÔ ĐIỂM CUỘC SỐNG</small></div>
