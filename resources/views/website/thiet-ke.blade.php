@@ -1,350 +1,441 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="scroll-smooth">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>Thiết kế tranh theo yêu cầu | DALI</title>
-<meta name="description" content="Tải ảnh của bạn lên — AI DALI tăng cường & tạo bản đồ màu tô số. Mỗi máy 3 lượt miễn phí, đặt hàng nhận thêm 5 lượt.">
+<title>Tranh Tô Màu Số Hóa Theo Ảnh — Thiết Kế Từ Ảnh Của Bạn | DALI</title>
+<meta name="description" content="Biến ảnh của bạn thành tranh tô màu số hóa độc bản. Thiết kế từ ảnh thật, tặng bộ màu & cọ, giao toàn quốc. Tải ảnh xem trước miễn phí.">
+<meta property="og:title" content="Tranh Tô Màu Số Hóa Theo Ảnh Cá Nhân | DALI">
+<meta property="og:description" content="Tải ảnh — AI thiết kế thành tranh tô màu độc bản. Tặng màu & cọ, giao toàn quốc.">
+<meta property="og:image" content="{{ asset('images/logo_dali.png') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
-<style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Be Vietnam Pro',sans-serif}
-:root{--g:#6BBF1F;--gd:#3E7A0A;--gl:#E8F9D0;--gll:#F4FDE8;--gn:#C6F135;--bd:#C8E89A;--bd2:#A8D870;--bg:#F2FDE8;--tx:#1A4D00;--tx2:#4A8A1A;--tx3:#8FC860;--char:#1C3A0A}
-body{background:var(--bg);color:var(--tx);line-height:1.6}
-nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:64px;padding:0 5%;display:flex;align-items:center;justify-content:space-between}
-.logo{font-size:24px;font-weight:900;letter-spacing:2px;color:#fff;text-decoration:none}.logo span{color:#C6F135}
-nav a.back{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;font-weight:600}
-.hero{background:linear-gradient(175deg,#1C5200,#2D7A08);color:#fff;text-align:center;padding:34px 5% 28px}
-.hero h1{font-size:clamp(22px,3.4vw,32px);font-weight:900;margin-bottom:8px}
-.hero p{font-size:14px;opacity:.85;max-width:560px;margin:0 auto}
-.wrap{max-width:920px;margin:0 auto;padding:22px 5% 60px}
-.card{background:#fff;border:1.5px solid var(--bd);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 8px 28px rgba(58,122,10,.06)}
-.quota{display:flex;align-items:center;gap:10px;background:var(--gll);border:1.5px solid var(--bd);border-radius:50px;padding:9px 18px;font-size:13px;font-weight:700;color:var(--gd);margin-bottom:16px;width:fit-content}
-.quota b{font-size:16px;color:var(--g)}
-.drop{border:2px dashed var(--bd2);border-radius:14px;background:var(--gll);padding:30px;text-align:center;cursor:pointer;transition:all .2s}
-.drop:hover{border-color:var(--g);background:#EAFFC8}
-.drop .ic{font-size:40px;color:var(--bd2);margin-bottom:8px}
-.drop .t{font-weight:700;color:var(--tx)}.drop .s{font-size:12px;color:var(--tx3);margin-top:4px}
-.preview-img{max-width:100%;max-height:340px;border-radius:12px;border:1.5px solid var(--bd);margin-top:14px;display:block}
-.btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;border:none;border-radius:12px;padding:13px 26px;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;text-decoration:none}
-.btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(107,191,31,.3)}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-out{background:#fff;color:var(--gd);border:1.5px solid var(--bd)}
-.muted{font-size:12px;color:var(--tx3)}
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.result-grid figure{margin:0}
-.result-grid img{width:100%;border-radius:12px;border:1.5px solid var(--bd);background:var(--gll)}
-.result-grid figcaption{font-size:12px;color:var(--tx2);font-weight:600;text-align:center;margin-top:6px}
-.swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.sw{width:30px;height:30px;border-radius:7px;border:1px solid var(--bd)}
-.hidden{display:none}
-/* Popup */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
-.modal.show{display:flex}
-.modal-box{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:26px;text-align:center}
-.modal-box .mi{font-size:42px;margin-bottom:10px}
-.modal-box h3{font-size:19px;font-weight:900;color:var(--char);margin-bottom:8px}
-.modal-box p{font-size:14px;color:var(--tx2);margin-bottom:18px;line-height:1.7}
-.modal-actions{display:flex;gap:10px;justify-content:center}
-.spinner{width:42px;height:42px;border:4px solid var(--gl);border-top-color:var(--g);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 14px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.field{margin-bottom:12px;text-align:left}
-.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--tx)}
-.field input{width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:11px 13px;font-size:14px;background:var(--gll);outline:none}
-.field input:focus{border-color:var(--g);background:#fff}
-@media(max-width:600px){.result-grid{grid-template-columns:1fr}}
-/* So sánh Trước → Sau */
-.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
-.ba .arrow{font-size:26px;color:var(--g);font-weight:900}
-.ba figure{margin:0;text-align:center}
-.ba img{width:100%;border-radius:12px;border:1.5px solid var(--bd);background:var(--gll);aspect-ratio:1/1;object-fit:contain}
-.ba figcaption{font-size:12px;font-weight:700;margin-top:6px;color:var(--tx2)}
-.ba .tag-before{color:var(--tx3)} .ba .tag-after{color:var(--g)}
-@media(max-width:640px){.ba{grid-template-columns:1fr}.ba .arrow{transform:rotate(90deg)}}
-/* Hook banner */
-.hook{background:linear-gradient(135deg,#FFF7E0,#FFFBEF);border:1.5px solid #F0D98A;border-radius:14px;padding:14px 18px;margin:16px 0;font-size:14px;color:#8A6D1A;font-weight:600;text-align:center}
-.hook b{color:#B8860B}
-.order-cta{background:linear-gradient(135deg,var(--gll),#fff);border:2px solid var(--g);border-radius:16px;padding:20px;text-align:center;margin-top:8px}
-.order-cta .big{font-size:17px;font-weight:900;color:var(--char);margin-bottom:6px}
-.order-cta .sub{font-size:13px;color:var(--tx2);margin-bottom:14px}
-.btn-lg{font-size:16px;padding:15px 34px}
-/* Hướng dẫn 3 bước */
-.section-t{text-align:center;font-size:22px;font-weight:900;color:var(--char);margin:6px 0 4px}
-.section-s{text-align:center;font-size:13px;color:var(--tx3);margin-bottom:20px}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.step{background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:20px 16px;text-align:center}
-.step .n{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:16px}
-.step .ic{font-size:30px;margin-bottom:6px}
-.step h4{font-size:15px;font-weight:800;color:var(--char);margin-bottom:5px}
-.step p{font-size:12.5px;color:var(--tx2);line-height:1.6}
-/* Trust + reviews */
-.trust{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0}
-.trust .b{background:#fff;border:1.5px solid var(--bd);border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--gd)}
-.trust .b b{color:var(--g);font-size:15px}
-.reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.rv{background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:18px}
-.rv .stars{color:#FFB400;font-size:14px;letter-spacing:1px;margin-bottom:8px}
-.rv .txt{font-size:13px;color:var(--tx);line-height:1.7;margin-bottom:12px}
-.rv .who{display:flex;align-items:center;gap:9px}
-.rv .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gl),#CCEF90);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--gd);font-size:14px}
-.rv .who .nm{font-size:13px;font-weight:800;color:var(--char)}.rv .who .ro{font-size:11px;color:var(--tx3)}
-@media(max-width:760px){.steps,.reviews{grid-template-columns:1fr}}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary:   '#4CAF50',
+        primaryd:  '#2E7D32',
+        bgsoft:    '#F8FAF5',
+        ink:       '#1A1A1A',
+        accent:    '#FFB74D',
+      },
+      fontFamily: { sans: ['Be Vietnam Pro','sans-serif'] },
+      boxShadow: { xl2: '0 24px 60px -12px rgba(46,125,50,.22)' },
+    }
+  }
+}
+</script>
+<style>
+  body{font-family:'Be Vietnam Pro',sans-serif;background:#F8FAF5;color:#1A1A1A}
+  [class^="ri-"],[class*=" ri-"]{vertical-align:-.125em}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  .glass{background:rgba(255,255,255,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .grad{background:linear-gradient(135deg,#2E7D32,#4CAF50)}
+  .grad-btn{background:linear-gradient(135deg,#2E7D32,#4CAF50);transition:transform .2s,box-shadow .2s}
+  .grad-btn:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(76,175,80,.35)}
+  .no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{scrollbar-width:none}
+  details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-marker{display:none}
+  details[open] .faq-ic{transform:rotate(45deg)}
 </style>
 </head>
-<body>
-<nav>
-  <a href="{{ route('home') }}" class="logo">DAL<span>I</span></a>
-  <a href="{{ route('home') }}" class="back"><i class="ri-arrow-left-line"></i> Trang chủ</a>
-</nav>
+<body class="text-ink">
 
-<div class="hero">
-  <h1><i class="ri-magic-line"></i> Biến ảnh của bạn thành tranh treo tường</h1>
-  <p>Tải 1 tấm ảnh kỷ niệm lên — AI DALI biến nó thành <b>tranh tô màu số hóa độc bản</b> chỉ trong 1 phút. <b>Thử miễn phí {{ \App\Models\DesignQuota::FREE }} lần</b>, ưng ý rồi mới đặt. Món quà không đụng hàng cho người bạn thương ❤️</p>
-</div>
-
-<div class="wrap">
-  <div class="quota">
-    <i class="ri-flashlight-line"></i> Lượt tạo còn lại: <b id="remainBadge">…</b>
+{{-- ════════ HEADER (sticky) ════════ --}}
+<header class="sticky top-0 z-40 glass border-b border-green-100">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <a href="{{ route('home') }}" class="text-2xl font-black tracking-wide text-primaryd">DAL<span class="text-primary">I</span></a>
+    <nav class="hidden md:flex items-center gap-7 text-sm font-semibold text-gray-600">
+      <a href="#mau-tranh" class="hover:text-primary">Mẫu tranh</a>
+      <a href="#danh-gia" class="hover:text-primary">Đánh giá</a>
+      <a href="#bang-gia" class="hover:text-primary">Bảng giá</a>
+      <a href="#faq" class="hover:text-primary">FAQ</a>
+    </nav>
+    <a href="#upload" class="grad-btn text-white text-sm font-extrabold px-5 py-2.5 rounded-full">Tải ảnh ngay</a>
   </div>
+</header>
 
-  <div class="card">
-    <input type="file" id="fileInput" accept="image/*" class="hidden">
-    <div class="drop" id="dropZone">
-      <div class="ic"><i class="ri-image-add-line"></i></div>
-      <div class="t">Nhấn để chọn ảnh của bạn</div>
-      <div class="s">JPG, PNG · ảnh càng rõ kết quả càng đẹp</div>
+{{-- ════════ SECTION 1 — HERO + TRUST ════════ --}}
+<section class="relative overflow-hidden">
+  <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+  <div class="max-w-6xl mx-auto px-4 pt-12 pb-6 grid md:grid-cols-2 gap-10 items-center relative">
+    <div class="reveal">
+      <div class="inline-flex items-center gap-2 bg-white border border-green-200 rounded-full px-3 py-1 text-xs font-bold text-primaryd mb-5 shadow-sm">
+        <i class="ri-fire-fill text-accent"></i> Hơn 10.000 khách hàng đã đặt tranh
+      </div>
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+        Biến <span class="text-primary">ảnh của bạn</span> thành bức tranh số hóa độc nhất
+      </h1>
+      <ul class="mt-6 space-y-2.5 text-[15px] font-semibold text-gray-700">
+        <li class="flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary text-lg"></i> Thiết kế từ ảnh thật</li>
+        <li class="flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary text-lg"></i> Tặng bộ màu &amp; cọ</li>
+        <li class="flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary text-lg"></i> Giao toàn quốc</li>
+      </ul>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#upload" class="grad-btn text-white text-base font-extrabold px-7 py-4 rounded-2xl shadow-xl2 flex items-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên miễn phí</a>
+        <a href="#mau-tranh" class="bg-white border-2 border-green-200 text-primaryd text-base font-bold px-6 py-4 rounded-2xl hover:border-primary transition flex items-center gap-2"><i class="ri-image-line"></i> Xem mẫu tranh</a>
+      </div>
     </div>
-    <img id="previewImg" class="preview-img hidden" alt="">
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="btn" id="genBtn" disabled><i class="ri-sparkling-2-line"></i> Tạo kết quả AI</button>
-      <span class="muted">Mỗi lần tạo dùng 1 lượt · AI mất ~20–60 giây.</span>
-    </div>
-  </div>
-
-  <div class="card hidden" id="resultCard">
-    <div style="font-weight:800;color:var(--char);margin-bottom:14px;font-size:16px"><i class="ri-checkbox-circle-line" style="color:var(--g)"></i> Tác phẩm của bạn đã sẵn sàng!</div>
-    <div class="ba">
-      <figure><img id="rOriginal" alt="Ảnh gốc"><figcaption class="tag-before">📷 Ảnh gốc của bạn</figcaption></figure>
-      <div class="arrow">→</div>
-      <figure><img id="rEnhanced" alt="Bản AI"><figcaption class="tag-after">✨ Bản DALI tăng cường AI</figcaption></figure>
-    </div>
-    <div style="margin-top:14px;text-align:center">
-      <figure style="display:inline-block;max-width:62%;margin:0">
-        <img id="rOutput" alt="Bản đồ màu" style="width:100%;border-radius:12px;border:1.5px solid var(--bd)">
-        <figcaption style="font-size:12px;font-weight:700;color:var(--tx2);margin-top:6px">🎨 Bản đồ màu tô số (kèm theo bộ tranh)</figcaption>
-      </figure>
-    </div>
-    <div class="swatches" id="rSwatches"></div>
-    <div class="hook">🌟 <b>Đẹp đúng không?</b> Đây là bức tranh <b>độc nhất vô nhị</b> — không ai có tấm thứ hai. Đặt ngay để shop in &amp; giao bộ tranh tô màu tận nhà!</div>
-    <div class="order-cta">
-      <div class="big">🎁 Sở hữu bức tranh này ngay hôm nay</div>
-      <div class="sub">Đặt hàng còn được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm những tấm ảnh khác.</div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-lg" id="orderBtn"><i class="ri-shopping-bag-line"></i> Đặt hàng ngay</button>
-        <a class="btn btn-out" id="dlOutput" href="#" download target="_blank"><i class="ri-download-line"></i> Tải về xem</a>
+    {{-- Mockup: Ảnh gốc -> Tranh số hóa -> Hoàn thiện --}}
+    <div class="reveal relative">
+      <div class="grid grid-cols-3 gap-3 items-center">
+        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 rotate-[-4deg]">
+          <img src="https://picsum.photos/seed/dali-photo/400/500" class="w-full h-40 object-cover" alt="Ảnh gốc">
+          <figcaption class="text-[11px] font-bold text-gray-500 text-center py-1.5">📷 Ảnh gốc</figcaption>
+        </figure>
+        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 z-10 scale-110">
+          <img src="https://picsum.photos/seed/dali-map/400/500?grayscale" class="w-full h-44 object-cover" alt="Tranh số hóa">
+          <figcaption class="text-[11px] font-bold text-primaryd text-center py-1.5">🎨 Bản tô số</figcaption>
+        </figure>
+        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 rotate-[4deg]">
+          <img src="https://picsum.photos/seed/dali-art/400/500" class="w-full h-40 object-cover" alt="Hoàn thiện">
+          <figcaption class="text-[11px] font-bold text-gray-500 text-center py-1.5">🖼️ Hoàn thiện</figcaption>
+        </figure>
       </div>
     </div>
   </div>
-</div>
+  {{-- TRUST BAR --}}
+  <div class="max-w-6xl mx-auto px-4 pb-8">
+    <div class="flex flex-wrap justify-center gap-3 text-sm font-bold">
+      <span class="bg-white border border-green-200 rounded-full px-4 py-2 shadow-sm">⭐ 4.9/5 đánh giá</span>
+      <span class="bg-white border border-green-200 rounded-full px-4 py-2 shadow-sm">🚚 Giao toàn quốc</span>
+      <span class="bg-white border border-green-200 rounded-full px-4 py-2 shadow-sm">🛡️ Đổi trả nếu lỗi</span>
+      <span class="bg-white border border-green-200 rounded-full px-4 py-2 shadow-sm">🎨 Thiết kế miễn phí</span>
+    </div>
+  </div>
+</section>
 
-{{-- ───────── Hướng dẫn + niềm tin + review (chốt đơn) ───────── --}}
-<div class="wrap" style="padding-top:6px">
-  <div class="section-t">Chỉ 3 bước có tranh độc bản</div>
-  <div class="section-s">Đơn giản đến mức ai cũng làm được — không cần biết vẽ</div>
-  <div class="steps">
-    <div class="step"><div class="n">1</div><div class="ic">📤</div><h4>Tải ảnh lên</h4><p>Ảnh người thân, thú cưng, phong cảnh… tấm nào bạn yêu thích nhất.</p></div>
-    <div class="step"><div class="n">2</div><div class="ic">✨</div><h4>AI tạo bản thiết kế</h4><p>DALI tăng cường ảnh &amp; chia thành bản đồ màu tô số — xem trước miễn phí.</p></div>
-    <div class="step"><div class="n">3</div><div class="ic">🚚</div><h4>Đặt &amp; nhận tranh</h4><p>Shop in lên canvas, kèm màu &amp; cọ, giao tận nhà. Bạn chỉ việc tô!</p></div>
+{{-- ════════ SECTION 2 — UPLOAD TOOL (chức năng thật) ════════ --}}
+<section id="upload" class="max-w-3xl mx-auto px-4 py-12 reveal">
+  <div class="text-center mb-6">
+    <h2 class="text-2xl sm:text-3xl font-black">Tải ảnh lên để xem bản xem trước <span class="text-primary">miễn phí</span></h2>
+    <p class="text-gray-500 mt-2 text-sm">Mỗi máy có <b>{{ \App\Models\DesignQuota::FREE }} lượt thử miễn phí</b> — ưng ý rồi mới đặt.</p>
   </div>
 
-  <div class="trust">
-    <div class="b">⭐ <b>4.9/5</b> · 2.000+ đánh giá</div>
-    <div class="b">🎨 <b>10.000+</b> bức đã giao</div>
-    <div class="b">🔁 Đổi trả <b>7 ngày</b></div>
-    <div class="b">🚚 Giao toàn quốc</div>
+  <div class="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2 text-sm font-bold text-primaryd mb-4">
+    <i class="ri-flashlight-fill text-accent"></i> Lượt tạo còn lại: <span id="remainBadge">…</span>
   </div>
 
-  <div class="section-t" style="margin-top:22px">Khách hàng nói gì về DALI?</div>
-  <div class="section-s">Hàng nghìn món quà ý nghĩa đã được trao đi</div>
-  <div class="reviews">
-    <div class="rv">
-      <div class="stars">★★★★★</div>
-      <div class="txt">“Mình làm tranh từ ảnh cưới tặng vợ, bả khóc luôn 🥹. Bản AI nét hơn ảnh gốc, tô xong treo phòng khách ai tới cũng khen.”</div>
-      <div class="who"><div class="av">M</div><div><div class="nm">Minh Tuấn</div><div class="ro">Hà Nội</div></div></div>
+  <div class="bg-white rounded-3xl shadow-xl2 border border-green-100 p-6 sm:p-8">
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" class="hidden">
+    <div id="dropZone" class="border-2 border-dashed border-green-300 rounded-2xl bg-green-50/60 px-6 py-12 text-center cursor-pointer hover:border-primary hover:bg-green-50 transition">
+      <div class="w-16 h-16 mx-auto mb-3 rounded-full grad flex items-center justify-center text-white text-3xl"><i class="ri-image-add-line"></i></div>
+      <div class="font-extrabold text-lg">Kéo thả hoặc nhấn để chọn ảnh</div>
+      <div class="text-xs text-gray-400 mt-1">PNG · JPG · WEBP — ảnh càng rõ kết quả càng đẹp</div>
+      <span class="inline-block mt-4 grad-btn text-white text-sm font-extrabold px-6 py-3 rounded-xl"><i class="ri-folder-image-line"></i> Chọn ảnh</span>
     </div>
-    <div class="rv">
-      <div class="stars">★★★★★</div>
-      <div class="txt">“Tô màu cùng con cuối tuần, vui mà ý nghĩa. Bản đồ màu rõ ràng dễ tô, màu lên chuẩn. Sẽ đặt thêm tranh thú cưng.”</div>
-      <div class="who"><div class="av">L</div><div><div class="nm">Lan Phương</div><div class="ro">TP.HCM</div></div></div>
-    </div>
-    <div class="rv">
-      <div class="stars">★★★★★</div>
-      <div class="txt">“Thử miễn phí thấy đẹp quá nên chốt luôn. Giao nhanh 3 ngày, đóng gói kỹ, có sẵn màu &amp; cọ. Quá đáng tiền!”</div>
-      <div class="who"><div class="av">H</div><div><div class="nm">Hoàng Anh</div><div class="ro">Đà Nẵng</div></div></div>
+    <img id="previewImg" class="hidden mt-5 mx-auto max-h-80 rounded-2xl border border-green-100" alt="">
+    <div class="mt-5 flex flex-wrap items-center gap-3">
+      <button id="genBtn" disabled class="grad-btn disabled:opacity-40 disabled:cursor-not-allowed text-white text-base font-extrabold px-7 py-4 rounded-2xl flex items-center gap-2"><i class="ri-sparkling-2-line"></i> Tạo bản thiết kế</button>
+      <span class="text-xs text-gray-400">⏱️ Nhận bản xem trước ngay · bản in giao trong 24–72 giờ</span>
     </div>
   </div>
 
-  <div class="order-cta" style="margin-top:20px">
-    <div class="big">Sẵn sàng tạo món quà độc bản của riêng bạn?</div>
-    <div class="sub">Thử miễn phí {{ \App\Models\DesignQuota::FREE }} lần — không ưng, không mất gì.</div>
-    <button class="btn btn-lg" onclick="document.getElementById('dropZone').scrollIntoView({behavior:'smooth'}); document.getElementById('fileInput').click();"><i class="ri-image-add-line"></i> Tải ảnh &amp; thử ngay</button>
+  {{-- KẾT QUẢ (before/after ảnh thật của khách) --}}
+  <div id="resultSection" class="hidden mt-6 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
+    <div class="font-black text-lg mb-4 flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary"></i> Tác phẩm của bạn đã sẵn sàng!</div>
+    <div class="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center">
+      <figure class="text-center"><img id="rOriginal" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">📷 Ảnh gốc của bạn</figcaption></figure>
+      <div class="text-primary text-3xl font-black text-center rotate-90 sm:rotate-0">→</div>
+      <figure class="text-center"><img id="rEnhanced" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50" alt=""><figcaption class="text-xs font-bold text-primary mt-2">✨ Bản DALI tăng cường AI</figcaption></figure>
+    </div>
+    <div class="mt-4 text-center">
+      <figure class="inline-block w-3/5"><img id="rOutput" class="w-full rounded-2xl border border-green-100" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">🎨 Bản đồ màu tô số (kèm theo bộ tranh)</figcaption></figure>
+    </div>
+    <div id="rSwatches" class="flex flex-wrap gap-1.5 justify-center mt-4"></div>
+    <div class="mt-5 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center text-sm font-semibold text-amber-700">
+      🌟 <b>Đẹp đúng không?</b> Đây là bức tranh <b>độc nhất vô nhị</b> — không ai có tấm thứ hai!
+    </div>
+    <div class="mt-4 grad rounded-2xl p-5 text-center text-white">
+      <div class="font-black text-lg">🎁 Sở hữu bức tranh này ngay hôm nay</div>
+      <div class="text-white/85 text-sm mt-1 mb-4">Đặt hàng còn được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm ảnh khác.</div>
+      <div class="flex flex-wrap gap-3 justify-center">
+        <button class="orderOpen bg-white text-primaryd font-extrabold px-7 py-3.5 rounded-xl hover:scale-105 transition flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> Đặt hàng ngay</button>
+        <a id="dlOutput" href="#" download target="_blank" class="bg-white/15 border border-white/40 text-white font-bold px-6 py-3.5 rounded-xl hover:bg-white/25 transition flex items-center gap-2"><i class="ri-download-line"></i> Tải về xem</a>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-{{-- Popup xác nhận tạo --}}
-<div class="modal" id="confirmModal">
-  <div class="modal-box">
-    <div class="mi">✨</div>
-    <h3>Tạo kết quả bằng AI?</h3>
-    <p>Bạn còn <b id="confirmRemain">0</b> lượt. Mỗi lần tạo sẽ <b>dùng 1 lượt</b> và mất khoảng 20–60 giây.<br>Tiếp tục nhé?</p>
-    <div class="modal-actions">
-      <button class="btn btn-out" onclick="closeModal('confirmModal')">Huỷ</button>
-      <button class="btn" id="confirmGo"><i class="ri-sparkling-2-line"></i> Tạo ngay</button>
+{{-- ════════ SECTION 3 — BEFORE / AFTER ════════ --}}
+<section id="mau-tranh" class="max-w-6xl mx-auto px-4 py-12 reveal">
+  <h2 class="text-2xl sm:text-3xl font-black text-center">Khách hàng đã biến ảnh thành <span class="text-primary">tác phẩm nghệ thuật</span> thế nào?</h2>
+  <p class="text-center text-gray-500 mt-2 mb-8 text-sm">Từ một tấm ảnh đời thường → một bức tranh treo tường</p>
+  <div class="grid md:grid-cols-3 gap-5">
+    @foreach(['co-gai'=>'Chân dung','gia-dinh'=>'Gia đình','thu-cung'=>'Thú cưng'] as $seed=>$label)
+    <div class="bg-white rounded-3xl border border-green-100 shadow-lg overflow-hidden hover:-translate-y-1.5 hover:shadow-xl2 transition">
+      <div class="grid grid-cols-3">
+        <img src="https://picsum.photos/seed/{{ $seed }}o/300/300" class="w-full h-28 object-cover" alt="">
+        <img src="https://picsum.photos/seed/{{ $seed }}m/300/300?grayscale" class="w-full h-28 object-cover" alt="">
+        <img src="https://picsum.photos/seed/{{ $seed }}f/300/300" class="w-full h-28 object-cover" alt="">
+      </div>
+      <div class="flex text-[10px] font-bold text-gray-400 text-center"><span class="flex-1 py-1">Ảnh gốc</span><span class="flex-1 py-1 text-primaryd">Bản tô số</span><span class="flex-1 py-1">Thành phẩm</span></div>
+      <div class="px-5 py-4 font-extrabold text-center border-t border-green-50">{{ $label }}</div>
+    </div>
+    @endforeach
+  </div>
+</section>
+
+{{-- ════════ SECTION 4 — VÌ SAO CHỌN CHÚNG TÔI ════════ --}}
+<section class="max-w-6xl mx-auto px-4 py-12 reveal">
+  <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Vì sao 10.000+ khách chọn <span class="text-primary">DALI</span>?</h2>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    @foreach([
+      ['ri-brush-4-line','Thiết kế riêng theo ảnh','Mỗi bức là độc bản, thiết kế từ chính ảnh của bạn.'],
+      ['ri-gallery-line','Canvas cao cấp','In trên canvas dày, màu lên chuẩn, treo tường sang trọng.'],
+      ['ri-palette-line','Bộ màu đầy đủ','Tặng kèm đủ màu acrylic + cọ, mở hộp là tô được ngay.'],
+      ['ri-emotion-happy-line','Dễ tô cho người mới','Bản đồ số rõ ràng, ai cũng tô đẹp dù chưa từng vẽ.'],
+      ['ri-gift-2-line','Quà tặng ý nghĩa','Món quà chạm cảm xúc cho người thương, dịp đặc biệt.'],
+      ['ri-customer-service-2-line','Hỗ trợ trọn đời','Tư vấn tô màu, đổi trả nếu lỗi, đồng hành cùng bạn.'],
+    ] as $f)
+    <div class="bg-white rounded-3xl border border-green-100 p-6 shadow-sm hover:shadow-xl2 hover:-translate-y-1 transition">
+      <div class="w-12 h-12 rounded-2xl bg-green-50 text-primary text-2xl flex items-center justify-center mb-3"><i class="{{ $f[0] }}"></i></div>
+      <h3 class="font-extrabold text-lg mb-1">{{ $f[1] }}</h3>
+      <p class="text-sm text-gray-500 leading-relaxed">{{ $f[2] }}</p>
+    </div>
+    @endforeach
+  </div>
+</section>
+
+{{-- ════════ SECTION 5 — QUY TRÌNH 3 BƯỚC ════════ --}}
+<section class="max-w-5xl mx-auto px-4 py-12 reveal">
+  <h2 class="text-2xl sm:text-3xl font-black text-center mb-10">Chỉ <span class="text-primary">3 bước</span> đơn giản</h2>
+  <div class="grid md:grid-cols-3 gap-6 relative">
+    @foreach([['1','ri-upload-cloud-2-line','Gửi ảnh','Tải lên tấm ảnh bạn yêu thích nhất.'],['2','ri-magic-line','Nhận bản thiết kế','AI tạo bản tô số + xem trước miễn phí.'],['3','ri-truck-line','Nhận tranh tận nhà','Shop in & giao bộ tranh kèm màu, cọ.']] as $st)
+    <div class="text-center">
+      <div class="w-16 h-16 mx-auto rounded-full grad text-white flex items-center justify-center text-3xl shadow-xl2"><i class="{{ $st[1] }}"></i></div>
+      <div class="mt-3 inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent text-white text-sm font-black">{{ $st[0] }}</div>
+      <h3 class="font-extrabold text-lg mt-2">{{ $st[2] }}</h3>
+      <p class="text-sm text-gray-500 mt-1">{{ $st[3] }}</p>
+    </div>
+    @endforeach
+  </div>
+</section>
+
+{{-- ════════ SECTION 6 — VIDEO REVIEW ════════ --}}
+<section id="danh-gia" class="max-w-6xl mx-auto px-4 py-12 reveal">
+  <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Khách hàng nói gì về chúng tôi</h2>
+  <div class="flex gap-5 overflow-x-auto no-scrollbar snap-x pb-3">
+    @foreach([['Minh Tuấn','Hà Nội','rv1'],['Lan Phương','TP.HCM','rv2'],['Hoàng Anh','Đà Nẵng','rv3']] as $v)
+    <div class="snap-start shrink-0 w-72 bg-white rounded-3xl border border-green-100 shadow-lg overflow-hidden">
+      <div class="relative">
+        <img src="https://picsum.photos/seed/{{ $v[2] }}/400/240" class="w-full h-40 object-cover" alt="">
+        <div class="absolute inset-0 flex items-center justify-center"><div class="w-14 h-14 rounded-full glass flex items-center justify-center text-primaryd text-2xl shadow-lg"><i class="ri-play-fill"></i></div></div>
+      </div>
+      <div class="p-4">
+        <div class="text-accent text-sm">★★★★★</div>
+        <div class="font-extrabold mt-1">{{ $v[0] }}</div>
+        <div class="text-xs text-gray-400">{{ $v[1] }}</div>
+      </div>
+    </div>
+    @endforeach
+  </div>
+</section>
+
+{{-- ════════ SECTION 7 — SOCIAL PROOF (count up) ════════ --}}
+<section class="bg-green-50 py-14 reveal">
+  <div class="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    @foreach([['10000','+','Tranh đã giao'],['4.9','/5','Đánh giá'],['95','%','Khách hài lòng'],['63','','Tỉnh thành']] as $s)
+    <div>
+      <div class="text-3xl sm:text-4xl font-black text-primaryd"><span class="count" data-to="{{ $s[0] }}">0</span>{{ $s[1] }}</div>
+      <div class="text-sm font-semibold text-gray-500 mt-1">{{ $s[2] }}</div>
+    </div>
+    @endforeach
+  </div>
+</section>
+
+{{-- ════════ SECTION 8 — SẢN PHẨM NHẬN ĐƯỢC ════════ --}}
+<section class="max-w-6xl mx-auto px-4 py-12 reveal">
+  <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Mở hộp bạn nhận được gì?</h2>
+  <div class="grid md:grid-cols-2 gap-8 items-center">
+    <img src="https://picsum.photos/seed/dali-box/700/520" class="rounded-3xl shadow-xl2 border border-green-100 w-full" alt="Bộ tranh tô màu DALI">
+    <div class="grid sm:grid-cols-2 gap-4">
+      @foreach([['ri-image-2-line','Canvas in số','Tranh in sẵn ô số trên canvas cao cấp'],['ri-palette-line','Bộ màu','Đủ màu acrylic theo bản thiết kế'],['ri-brush-line','Cọ vẽ','Bộ cọ nhiều cỡ, tô chi tiết dễ dàng'],['ri-file-list-3-line','Ảnh hướng dẫn','Bảng mã màu rõ ràng, dễ làm theo'],['ri-links-line','Móc treo','Tặng kèm móc, treo tường ngay']] as $i)
+      <div class="flex items-start gap-3 bg-white rounded-2xl border border-green-100 p-4 shadow-sm">
+        <div class="w-10 h-10 rounded-xl bg-green-50 text-primary text-xl flex items-center justify-center shrink-0"><i class="{{ $i[0] }}"></i></div>
+        <div><div class="font-extrabold text-sm">{{ $i[1] }}</div><div class="text-xs text-gray-500">{{ $i[2] }}</div></div>
+      </div>
+      @endforeach
+    </div>
+  </div>
+</section>
+
+{{-- ════════ SECTION 9 — BẢNG GIÁ ════════ --}}
+<section id="bang-gia" class="max-w-5xl mx-auto px-4 py-12 reveal">
+  <h2 class="text-2xl sm:text-3xl font-black text-center mb-2">Chọn gói phù hợp với bạn</h2>
+  <p class="text-center text-gray-500 mb-8 text-sm">Giá đã gồm thiết kế từ ảnh + bộ màu &amp; cọ + giao hàng</p>
+  <div class="grid md:grid-cols-3 gap-5 items-stretch">
+    @foreach([
+      ['Starter','199.000đ','30×40 cm',['Thiết kế từ ảnh','Canvas + khung','Bộ màu cơ bản','Giao toàn quốc'],false],
+      ['Popular','299.000đ','40×50 cm',['Tất cả gói Starter','Canvas cao cấp hơn','Bộ màu đầy đủ + cọ','Ảnh hướng dẫn chi tiết','Ưu tiên thiết kế'],true],
+      ['Premium','499.000đ','50×70 cm',['Tất cả gói Popular','Khổ lớn, sắc nét','Khung gỗ cao cấp','Hộp quà sang trọng','Hỗ trợ tô 1-1'],false],
+    ] as $p)
+    <div class="relative bg-white rounded-3xl border-2 {{ $p[4] ? 'border-primary shadow-xl2 md:-translate-y-3' : 'border-green-100 shadow-sm' }} p-6 flex flex-col">
+      @if($p[4])<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-black px-4 py-1.5 rounded-full shadow">🔥 BÁN CHẠY NHẤT</div>@endif
+      <div class="font-black text-xl {{ $p[4] ? 'text-primaryd' : '' }}">{{ $p[0] }}</div>
+      <div class="text-xs text-gray-400 mb-3">{{ $p[2] }}</div>
+      <div class="text-3xl font-black mb-4">{{ $p[1] }}</div>
+      <ul class="space-y-2 text-sm text-gray-600 flex-1 mb-5">
+        @foreach($p[3] as $feat)<li class="flex items-start gap-2"><i class="ri-check-line text-primary mt-0.5"></i> {{ $feat }}</li>@endforeach
+      </ul>
+      <button class="orderOpen {{ $p[4] ? 'grad-btn text-white' : 'bg-green-50 text-primaryd hover:bg-green-100' }} font-extrabold py-3.5 rounded-xl transition" data-package="{{ $p[0] }} ({{ $p[2] }}) - {{ $p[1] }}">Đặt mẫu này</button>
+    </div>
+    @endforeach
+  </div>
+</section>
+
+{{-- ════════ SECTION 10 — FAQ ════════ --}}
+<section id="faq" class="max-w-3xl mx-auto px-4 py-12 reveal">
+  <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Câu hỏi thường gặp</h2>
+  <div class="space-y-3">
+    @foreach([
+      ['Không biết vẽ có tô được không?','Hoàn toàn được! Tranh chia sẵn từng ô có số, bạn chỉ việc tô màu đúng số tương ứng. Người chưa từng vẽ vẫn ra thành phẩm đẹp.'],
+      ['Bao lâu nhận hàng?','Bản thiết kế xem trước có ngay. Tranh in &amp; giao trong 24–72 giờ tùy khu vực (toàn quốc).'],
+      ['Ảnh chụp điện thoại có làm được không?','Có. Chỉ cần ảnh rõ mặt/chủ thể. AI sẽ tăng cường nét trước khi thiết kế.'],
+      ['Có được xem trước không?','Có — bạn tải ảnh lên và xem bản thiết kế MIỄN PHÍ trước khi quyết định đặt.'],
+      ['Có bảo hành không?','Có. Đổi trả miễn phí nếu tranh in lỗi, sai thiết kế hoặc hư hỏng khi vận chuyển.'],
+    ] as $q)
+    <details class="bg-white rounded-2xl border border-green-100 p-5 shadow-sm">
+      <summary class="flex items-center justify-between font-extrabold"><span>{{ $q[0] }}</span><i class="ri-add-line faq-ic text-primary text-xl transition-transform"></i></summary>
+      <p class="mt-3 text-sm text-gray-600 leading-relaxed">{{ $q[1] }}</p>
+    </details>
+    @endforeach
+  </div>
+</section>
+
+{{-- ════════ SECTION 11 — CTA CUỐI ════════ --}}
+<section class="grad text-white text-center py-16 px-4 reveal">
+  <h2 class="text-3xl sm:text-4xl font-black max-w-2xl mx-auto leading-tight">Biến kỷ niệm thành tác phẩm nghệ thuật ngay hôm nay</h2>
+  <p class="text-white/85 mt-3 mb-7">Thử miễn phí — không ưng, không mất gì.</p>
+  <a href="#upload" class="inline-flex items-center gap-2 bg-white text-primaryd font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition shadow-xl2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên miễn phí</a>
+</section>
+
+<footer class="bg-ink text-white/50 text-center text-xs py-8 px-4">
+  © 2026 DALI · Tranh Tô Màu Số Hóa Theo Ảnh · 🇻🇳 Giao toàn quốc
+</footer>
+
+{{-- ════════ FLOATING (mobile sticky CTA) ════════ --}}
+<div class="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-green-200 grid grid-cols-2 gap-2 p-2">
+  <a href="#upload" class="grad-btn text-white font-extrabold py-3 rounded-xl text-center text-sm">📸 Tải ảnh</a>
+  <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="bg-white border border-green-200 text-primaryd font-extrabold py-3 rounded-xl text-center text-sm">💬 Chat Zalo</a>
+</div>
+<div class="md:hidden h-16"></div>
+
+{{-- ════════ MODALS ════════ --}}
+<div id="confirmModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center">
+    <div class="text-4xl mb-2">✨</div>
+    <h3 class="text-xl font-black mb-2">Tạo bản thiết kế?</h3>
+    <p class="text-sm text-gray-500 mb-5">Bạn còn <b id="confirmRemain">0</b> lượt. Mỗi lần tạo dùng <b>1 lượt</b> và mất ~20–60 giây.</p>
+    <div class="flex gap-3 justify-center">
+      <button onclick="closeM('confirmModal')" class="bg-gray-100 text-gray-600 font-bold px-5 py-3 rounded-xl">Huỷ</button>
+      <button id="confirmGo" class="grad-btn text-white font-extrabold px-6 py-3 rounded-xl">Tạo ngay</button>
     </div>
   </div>
 </div>
-
-{{-- Popup đang xử lý --}}
-<div class="modal" id="loadingModal">
-  <div class="modal-box">
-    <div class="spinner"></div>
-    <h3>Đang xử lý bằng AI…</h3>
-    <p>Vui lòng đợi 20–60 giây, đừng tắt trang.</p>
+<div id="loadingModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center">
+    <div class="w-12 h-12 mx-auto mb-4 border-4 border-green-100 border-t-primary rounded-full animate-spin"></div>
+    <h3 class="text-lg font-black">Đang thiết kế bằng AI…</h3>
+    <p class="text-sm text-gray-500 mt-1">Vui lòng đợi 20–60 giây, đừng tắt trang.</p>
   </div>
 </div>
-
-{{-- Popup hết lượt / đặt hàng --}}
-<div class="modal" id="orderModal">
-  <div class="modal-box">
-    <div class="mi">🛍️</div>
-    <h3 id="orderTitle">Đặt hàng tranh thiết kế</h3>
-    <p id="orderDesc">Để shop làm tranh cho bạn, điền thông tin dưới đây. Đặt hàng xong bạn còn được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b> tạo kết quả.</p>
-    <div class="field"><label>Họ tên *</label><input type="text" id="oName" placeholder="Nguyễn Văn A"></div>
-    <div class="field"><label>Số điện thoại *</label><input type="text" id="oPhone" placeholder="09xxxxxxxx"></div>
-    <div class="field"><label>Địa chỉ</label><input type="text" id="oAddr" placeholder="Số nhà, đường, phường/xã, tỉnh"></div>
-    <div class="modal-actions">
-      <button class="btn btn-out" onclick="closeModal('orderModal')">Để sau</button>
-      <button class="btn" id="orderSubmit"><i class="ri-check-line"></i> Gửi đơn</button>
+<div id="orderModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-7">
+    <div class="text-center"><div class="text-4xl mb-2">🛍️</div><h3 id="orderTitle" class="text-xl font-black mb-1">Đặt hàng tranh thiết kế</h3>
+    <p id="orderDesc" class="text-sm text-gray-500 mb-4">Điền thông tin, shop sẽ liên hệ &amp; làm tranh cho bạn. Đặt xong được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b>.</p></div>
+    <div class="space-y-3 text-left">
+      <input id="oName" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-sm" placeholder="Họ tên *">
+      <input id="oPhone" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-sm" placeholder="Số điện thoại *">
+      <input id="oAddr" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-sm" placeholder="Địa chỉ nhận hàng">
+      <div id="oPkgRow" class="hidden text-xs font-bold text-primaryd bg-green-50 rounded-lg px-3 py-2">Gói: <span id="oPkgLabel"></span></div>
+    </div>
+    <div class="flex gap-3 justify-center mt-5">
+      <button onclick="closeM('orderModal')" class="bg-gray-100 text-gray-600 font-bold px-5 py-3 rounded-xl">Để sau</button>
+      <button id="orderSubmit" class="grad-btn text-white font-extrabold px-6 py-3 rounded-xl">Gửi đơn</button>
     </div>
   </div>
 </div>
 
 <script>
 const CSRF = document.querySelector('meta[name=csrf-token]').content;
-const URLS = {
-  quota: "{{ route('thiet-ke.quota') }}",
-  gen:   "{{ route('thiet-ke.generate') }}",
-  order: "{{ route('thiet-ke.order') }}",
-};
-// 1) Mã thiết bị (device id) — lưu localStorage
-function deviceId(){
-  let d = localStorage.getItem('dali_device');
-  if(!d){ d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2,12); localStorage.setItem('dali_device', d); }
-  return d;
-}
-const DEVICE = deviceId();
-let remaining = 0, lastResultUrl = '';
+const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}" };
 
-function openModal(id){ document.getElementById(id).classList.add('show'); }
-function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+// Hiệu ứng Fade Up
+const io = new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
-async function refreshQuota(){
-  try{
-    const r = await fetch(URLS.quota + '?device_id=' + encodeURIComponent(DEVICE));
-    const d = await r.json();
-    remaining = d.remaining ?? 0;
-    document.getElementById('remainBadge').textContent = remaining + ' lượt';
-  }catch(e){ document.getElementById('remainBadge').textContent = '—'; }
-}
+// Count up
+const cio = new IntersectionObserver((es)=>es.forEach(e=>{ if(!e.isIntersecting) return; cio.unobserve(e.target);
+  const el=e.target, to=parseFloat(el.dataset.to), dec=(to%1!==0)?1:0; let cur=0; const step=to/40;
+  const t=setInterval(()=>{ cur+=step; if(cur>=to){cur=to;clearInterval(t);} el.textContent=(dec?cur.toFixed(1):Math.floor(cur)).toLocaleString('vi-VN'); },28);
+}),{threshold:.5});
+document.querySelectorAll('.count').forEach(el=>cio.observe(el));
+
+// Modal helpers
+function openM(id){ const m=document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); }
+function closeM(id){ const m=document.getElementById(id); m.classList.add('hidden'); m.classList.remove('flex'); }
+
+// ───── Công cụ thiết kế (device id + quota + tạo + đặt hàng) ─────
+function deviceId(){ let d=localStorage.getItem('dali_device'); if(!d){ d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,12); localStorage.setItem('dali_device',d);} return d; }
+const DEVICE=deviceId(); let remaining=0, lastResultUrl='', selectedPackage='';
+
+const fileInput=document.getElementById('fileInput'), dropZone=document.getElementById('dropZone'),
+      previewImg=document.getElementById('previewImg'), genBtn=document.getElementById('genBtn');
+
+async function refreshQuota(){ try{ const r=await fetch(URLS.quota+'?device_id='+encodeURIComponent(DEVICE)); const d=await r.json(); remaining=d.remaining??0; document.getElementById('remainBadge').textContent=remaining+' lượt'; }catch(e){ document.getElementById('remainBadge').textContent='—'; } }
 refreshQuota();
 
-// 2) Chọn ảnh + xem trước
-const fileInput = document.getElementById('fileInput');
-const dropZone  = document.getElementById('dropZone');
-const previewImg= document.getElementById('previewImg');
-const genBtn    = document.getElementById('genBtn');
-dropZone.addEventListener('click', ()=>fileInput.click());
-fileInput.addEventListener('change', ()=>{
-  const f = fileInput.files[0]; if(!f) return;
-  previewImg.src = URL.createObjectURL(f); previewImg.classList.remove('hidden');
-  genBtn.disabled = false;
-});
+dropZone.addEventListener('click',()=>fileInput.click());
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('border-primary');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('border-primary'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('border-primary'); if(e.dataTransfer.files[0]){ fileInput.files=e.dataTransfer.files; onFile(); }});
+fileInput.addEventListener('change',onFile);
+function onFile(){ const f=fileInput.files[0]; if(!f) return; previewImg.src=URL.createObjectURL(f); previewImg.classList.remove('hidden'); genBtn.disabled=false; }
 
-// 3) Tạo kết quả -> popup xác nhận
-genBtn.addEventListener('click', ()=>{
-  if(!fileInput.files[0]){ alert('Vui lòng chọn ảnh.'); return; }
-  if(remaining <= 0){ showOutOfQuota(); return; }
-  document.getElementById('confirmRemain').textContent = remaining;
-  openModal('confirmModal');
-});
+genBtn.addEventListener('click',()=>{ if(!fileInput.files[0]){alert('Vui lòng chọn ảnh.');return;} if(remaining<=0){ outOfQuota(); return;} document.getElementById('confirmRemain').textContent=remaining; openM('confirmModal'); });
 
 document.getElementById('confirmGo').addEventListener('click', async ()=>{
-  closeModal('confirmModal');
-  openModal('loadingModal');
-  const fd = new FormData();
-  fd.append('image', fileInput.files[0]);
-  fd.append('device_id', DEVICE);
-  fd.append('enhance', '1');
-  try{
-    const r = await fetch(URLS.gen, {method:'POST', headers:{'X-CSRF-TOKEN':CSRF}, body:fd});
-    const d = await r.json();
-    closeModal('loadingModal');
-    if(!d.ok){
-      if(d.reason === 'no_quota'){ showOutOfQuota(); }
-      else alert(d.msg || 'Có lỗi xảy ra, thử lại sau.');
-      return;
-    }
-    remaining = d.remaining ?? remaining;
-    document.getElementById('remainBadge').textContent = remaining + ' lượt';
-    showResult(d.result);
-  }catch(e){ closeModal('loadingModal'); alert('Lỗi kết nối, thử lại sau.'); }
+  closeM('confirmModal'); openM('loadingModal');
+  const fd=new FormData(); fd.append('image',fileInput.files[0]); fd.append('device_id',DEVICE); fd.append('enhance','1');
+  try{ const r=await fetch(URLS.gen,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json(); closeM('loadingModal');
+    if(!d.ok){ if(d.reason==='no_quota') outOfQuota(); else alert(d.msg||'Có lỗi, thử lại sau.'); return; }
+    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=remaining+' lượt'; showResult(d.result);
+  }catch(e){ closeM('loadingModal'); alert('Lỗi kết nối, thử lại sau.'); }
 });
 
 function showResult(res){
-  const card = document.getElementById('resultCard');
-  document.getElementById('rOriginal').src = previewImg.src || res.original || '';
-  document.getElementById('rEnhanced').src = res.enhanced || res.original || '';
-  document.getElementById('rOutput').src   = res.img_output || '';
-  lastResultUrl = res.img_output || '';
-  document.getElementById('dlOutput').href = res.img_output || '#';
-  // swatches từ colors (mảng trang [[stt,hex,dali,%],...])
-  const sw = document.getElementById('rSwatches'); sw.innerHTML='';
-  let colors = res.colors || [];
-  let flat = []; colors.forEach(p => Array.isArray(p) && p.forEach(c => flat.push(c)));
-  flat.slice(0,30).forEach(c=>{ const d=document.createElement('div'); d.className='sw'; d.style.background=(c[1]||'#fff'); d.title=(c[2]||''); sw.appendChild(d); });
-  card.classList.remove('hidden');
-  card.scrollIntoView({behavior:'smooth'});
+  const sec=document.getElementById('resultSection');
+  document.getElementById('rOriginal').src=previewImg.src||res.original||'';
+  document.getElementById('rEnhanced').src=res.enhanced||res.original||'';
+  document.getElementById('rOutput').src=res.img_output||'';
+  lastResultUrl=res.img_output||''; document.getElementById('dlOutput').href=res.img_output||'#';
+  const sw=document.getElementById('rSwatches'); sw.innerHTML=''; let flat=[]; (res.colors||[]).forEach(p=>Array.isArray(p)&&p.forEach(c=>flat.push(c)));
+  flat.slice(0,30).forEach(c=>{ const d=document.createElement('div'); d.className='w-7 h-7 rounded-md border border-green-100'; d.style.background=(c[1]||'#fff'); d.title=(c[2]||''); sw.appendChild(d); });
+  sec.classList.remove('hidden'); sec.scrollIntoView({behavior:'smooth'});
 }
 
-function showOutOfQuota(){
-  document.getElementById('orderTitle').textContent = 'Bạn đã hết lượt miễn phí';
-  document.getElementById('orderDesc').innerHTML = 'Đặt hàng tranh thiết kế để shop làm cho bạn — và nhận thêm <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b> tạo kết quả.';
-  openModal('orderModal');
-}
-document.getElementById('orderBtn').addEventListener('click', ()=>{
-  document.getElementById('orderTitle').textContent = 'Đặt hàng tranh thiết kế';
-  openModal('orderModal');
-});
+function outOfQuota(){ document.getElementById('orderTitle').textContent='Bạn đã hết lượt miễn phí';
+  document.getElementById('orderDesc').innerHTML='Đặt hàng để shop làm tranh cho bạn — và nhận thêm <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b> tạo.'; openOrder(''); }
 
-// 4) Gửi đơn -> +5 lượt
+function openOrder(pkg){ selectedPackage=pkg||''; const row=document.getElementById('oPkgRow');
+  if(selectedPackage){ row.classList.remove('hidden'); document.getElementById('oPkgLabel').textContent=selectedPackage; } else { row.classList.add('hidden'); }
+  openM('orderModal'); }
+document.querySelectorAll('.orderOpen').forEach(b=>b.addEventListener('click',()=>openOrder(b.dataset.package||'')));
+
 document.getElementById('orderSubmit').addEventListener('click', async ()=>{
-  const name = document.getElementById('oName').value.trim();
-  const phone= document.getElementById('oPhone').value.trim();
-  if(!name || !phone){ alert('Vui lòng nhập họ tên và số điện thoại.'); return; }
-  const fd = new FormData();
-  fd.append('device_id', DEVICE);
-  fd.append('customer_name', name);
-  fd.append('customer_phone', phone);
-  fd.append('customer_address', document.getElementById('oAddr').value.trim());
-  fd.append('result_url', lastResultUrl);
-  try{
-    const r = await fetch(URLS.order, {method:'POST', headers:{'X-CSRF-TOKEN':CSRF}, body:fd});
-    const d = await r.json();
-    if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; }
-    closeModal('orderModal');
-    remaining = d.remaining ?? remaining;
-    document.getElementById('remainBadge').textContent = remaining + ' lượt';
-    alert('✅ Đã nhận đơn ' + d.code + '! Shop sẽ liên hệ sớm. Bạn được +' + d.bonus + ' lượt tạo kết quả.');
+  const name=document.getElementById('oName').value.trim(), phone=document.getElementById('oPhone').value.trim();
+  if(!name||!phone){ alert('Vui lòng nhập họ tên và số điện thoại.'); return; }
+  const fd=new FormData(); fd.append('device_id',DEVICE); fd.append('customer_name',name); fd.append('customer_phone',phone);
+  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('package',selectedPackage);
+  try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
+    if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; } closeM('orderModal');
+    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=remaining+' lượt';
+    alert('✅ Đã nhận đơn '+d.code+'! Shop sẽ liên hệ sớm. Bạn được +'+d.bonus+' lượt tạo.');
   }catch(e){ alert('Lỗi kết nối, thử lại sau.'); }
 });
 </script>

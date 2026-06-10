@@ -121,7 +121,9 @@ class ThietKeController extends Controller
             'customer_phone'   => $data['customer_phone'],
             'customer_city'    => $r->input('customer_city', ''),
             'customer_address' => $r->input('customer_address', ''),
-            'note'             => 'ĐƠN THIẾT KẾ THEO YÊU CẦU. Ảnh kết quả: ' . $r->input('result_url', '(chưa có)'),
+            'note'             => 'ĐƠN THIẾT KẾ THEO YÊU CẦU'
+                                  . ($r->input('package') ? ' — Gói: ' . $r->input('package') : '')
+                                  . '. Ảnh kết quả: ' . $r->input('result_url', '(chưa có)'),
             'status'           => 'new',
             'payment_method'   => 'COD',
             'payment_status'   => 'pending',
