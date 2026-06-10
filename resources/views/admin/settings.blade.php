@@ -165,6 +165,18 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
           </div>
         </div>
 
+        {{-- THIẾT KẾ THEO YÊU CẦU (API phần mềm màu) --}}
+        <div class="card">
+          <div class="rainbow"></div>
+          <div class="card-head"><div class="card-icon">🎨</div><div><div class="card-title">Thiết kế theo yêu cầu (API màu)</div><div class="card-sub">Kết nối trang /thiet-ke với phần mềm màu (mau.tranhdali.vn) để xử lý ảnh AI</div></div></div>
+          <div class="fb">
+            <div class="g2">
+              <div><label class="flabel">URL API xử lý ảnh</label><input type="text" name="thietke_api_url" class="dinput" value="{{ $settings['thietke_api_url'] ?? 'https://mau.tranhdali.vn/api/xu-ly-anh' }}" placeholder="https://mau.tranhdali.vn/api/xu-ly-anh"><div class="fnote">Endpoint API của phần mềm màu.</div></div>
+              <div><label class="flabel">Khoá API (THIETKE_API_KEY)</label><input type="text" name="thietke_api_key" class="dinput" value="{{ $settings['thietke_api_key'] ?? '' }}" placeholder="Dán khoá bí mật ở đây"><div class="fnote"><b>Phải trùng</b> với biến <code>THIETKE_API_KEY</code> đặt bên phần mềm màu (VPS mau.tranhdali.vn).</div></div>
+            </div>
+          </div>
+        </div>
+
         {{-- SEO --}}
         <div class="card">
           <div class="rainbow"></div>

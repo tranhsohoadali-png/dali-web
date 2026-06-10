@@ -36,6 +36,12 @@ Route::get('/gio-hang/so-luong',           [WebsiteController::class, 'cartCount
 Route::post('/gio-hang/dat-hang',          [WebsiteController::class, 'checkoutFromCart'])->name('cart.checkout');
 Route::post('/phi-van-chuyen',             [WebsiteController::class, 'calcShip'])->name('calc-ship');
 
+// ── THIẾT KẾ THEO YÊU CẦU (gọi phần mềm màu) ──
+Route::get('/thiet-ke',          [\App\Http\Controllers\ThietKeController::class, 'index'])->name('thiet-ke');
+Route::get('/thiet-ke/luot',     [\App\Http\Controllers\ThietKeController::class, 'quota'])->name('thiet-ke.quota');
+Route::post('/thiet-ke/tao',     [\App\Http\Controllers\ThietKeController::class, 'generate'])->name('thiet-ke.generate');
+Route::post('/thiet-ke/dat-hang',[\App\Http\Controllers\ThietKeController::class, 'order'])->name('thiet-ke.order');
+
 // ── BLOG ──
 Route::get('/blog',                        [WebsiteController::class, 'blog'])->name('blog');
 Route::get('/blog/{post:slug}',            [WebsiteController::class, 'blogPost'])->name('blog.post');
