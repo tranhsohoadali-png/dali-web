@@ -53,6 +53,42 @@ nav a.back{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;font-
 .field input{width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:11px 13px;font-size:14px;background:var(--gll);outline:none}
 .field input:focus{border-color:var(--g);background:#fff}
 @media(max-width:600px){.result-grid{grid-template-columns:1fr}}
+/* So sánh Trước → Sau */
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.ba .arrow{font-size:26px;color:var(--g);font-weight:900}
+.ba figure{margin:0;text-align:center}
+.ba img{width:100%;border-radius:12px;border:1.5px solid var(--bd);background:var(--gll);aspect-ratio:1/1;object-fit:contain}
+.ba figcaption{font-size:12px;font-weight:700;margin-top:6px;color:var(--tx2)}
+.ba .tag-before{color:var(--tx3)} .ba .tag-after{color:var(--g)}
+@media(max-width:640px){.ba{grid-template-columns:1fr}.ba .arrow{transform:rotate(90deg)}}
+/* Hook banner */
+.hook{background:linear-gradient(135deg,#FFF7E0,#FFFBEF);border:1.5px solid #F0D98A;border-radius:14px;padding:14px 18px;margin:16px 0;font-size:14px;color:#8A6D1A;font-weight:600;text-align:center}
+.hook b{color:#B8860B}
+.order-cta{background:linear-gradient(135deg,var(--gll),#fff);border:2px solid var(--g);border-radius:16px;padding:20px;text-align:center;margin-top:8px}
+.order-cta .big{font-size:17px;font-weight:900;color:var(--char);margin-bottom:6px}
+.order-cta .sub{font-size:13px;color:var(--tx2);margin-bottom:14px}
+.btn-lg{font-size:16px;padding:15px 34px}
+/* Hướng dẫn 3 bước */
+.section-t{text-align:center;font-size:22px;font-weight:900;color:var(--char);margin:6px 0 4px}
+.section-s{text-align:center;font-size:13px;color:var(--tx3);margin-bottom:20px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.step{background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:20px 16px;text-align:center}
+.step .n{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:16px}
+.step .ic{font-size:30px;margin-bottom:6px}
+.step h4{font-size:15px;font-weight:800;color:var(--char);margin-bottom:5px}
+.step p{font-size:12.5px;color:var(--tx2);line-height:1.6}
+/* Trust + reviews */
+.trust{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0}
+.trust .b{background:#fff;border:1.5px solid var(--bd);border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--gd)}
+.trust .b b{color:var(--g);font-size:15px}
+.reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.rv{background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:18px}
+.rv .stars{color:#FFB400;font-size:14px;letter-spacing:1px;margin-bottom:8px}
+.rv .txt{font-size:13px;color:var(--tx);line-height:1.7;margin-bottom:12px}
+.rv .who{display:flex;align-items:center;gap:9px}
+.rv .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gl),#CCEF90);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--gd);font-size:14px}
+.rv .who .nm{font-size:13px;font-weight:800;color:var(--char)}.rv .who .ro{font-size:11px;color:var(--tx3)}
+@media(max-width:760px){.steps,.reviews{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -62,8 +98,8 @@ nav a.back{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;font-
 </nav>
 
 <div class="hero">
-  <h1><i class="ri-magic-line"></i> Thiết kế tranh theo yêu cầu</h1>
-  <p>Tải ảnh của bạn lên — AI DALI sẽ <b>tăng cường ảnh</b> và tạo <b>bản đồ màu tô số</b>. Mỗi máy có <b>{{ \App\Models\DesignQuota::FREE }} lượt miễn phí</b>; đặt hàng nhận thêm <b>{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b>.</p>
+  <h1><i class="ri-magic-line"></i> Biến ảnh của bạn thành tranh treo tường</h1>
+  <p>Tải 1 tấm ảnh kỷ niệm lên — AI DALI biến nó thành <b>tranh tô màu số hóa độc bản</b> chỉ trong 1 phút. <b>Thử miễn phí {{ \App\Models\DesignQuota::FREE }} lần</b>, ưng ý rồi mới đặt. Món quà không đụng hàng cho người bạn thương ❤️</p>
 </div>
 
 <div class="wrap">
@@ -86,16 +122,72 @@ nav a.back{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;font-
   </div>
 
   <div class="card hidden" id="resultCard">
-    <div style="font-weight:800;color:var(--char);margin-bottom:12px"><i class="ri-checkbox-circle-line" style="color:var(--g)"></i> Kết quả của bạn</div>
-    <div class="result-grid">
-      <figure><img id="rEnhanced" alt="Ảnh tăng cường AI"><figcaption>Ảnh tăng cường AI</figcaption></figure>
-      <figure><img id="rOutput" alt="Bản đồ màu tô số"><figcaption>Bản đồ màu tô số</figcaption></figure>
+    <div style="font-weight:800;color:var(--char);margin-bottom:14px;font-size:16px"><i class="ri-checkbox-circle-line" style="color:var(--g)"></i> Tác phẩm của bạn đã sẵn sàng!</div>
+    <div class="ba">
+      <figure><img id="rOriginal" alt="Ảnh gốc"><figcaption class="tag-before">📷 Ảnh gốc của bạn</figcaption></figure>
+      <div class="arrow">→</div>
+      <figure><img id="rEnhanced" alt="Bản AI"><figcaption class="tag-after">✨ Bản DALI tăng cường AI</figcaption></figure>
+    </div>
+    <div style="margin-top:14px;text-align:center">
+      <figure style="display:inline-block;max-width:62%;margin:0">
+        <img id="rOutput" alt="Bản đồ màu" style="width:100%;border-radius:12px;border:1.5px solid var(--bd)">
+        <figcaption style="font-size:12px;font-weight:700;color:var(--tx2);margin-top:6px">🎨 Bản đồ màu tô số (kèm theo bộ tranh)</figcaption>
+      </figure>
     </div>
     <div class="swatches" id="rSwatches"></div>
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-      <a class="btn btn-out" id="dlOutput" href="#" download target="_blank"><i class="ri-download-line"></i> Tải bản đồ màu</a>
-      <button class="btn" id="orderBtn"><i class="ri-shopping-bag-line"></i> Đặt hàng tranh này</button>
+    <div class="hook">🌟 <b>Đẹp đúng không?</b> Đây là bức tranh <b>độc nhất vô nhị</b> — không ai có tấm thứ hai. Đặt ngay để shop in &amp; giao bộ tranh tô màu tận nhà!</div>
+    <div class="order-cta">
+      <div class="big">🎁 Sở hữu bức tranh này ngay hôm nay</div>
+      <div class="sub">Đặt hàng còn được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm những tấm ảnh khác.</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-lg" id="orderBtn"><i class="ri-shopping-bag-line"></i> Đặt hàng ngay</button>
+        <a class="btn btn-out" id="dlOutput" href="#" download target="_blank"><i class="ri-download-line"></i> Tải về xem</a>
+      </div>
     </div>
+  </div>
+</div>
+
+{{-- ───────── Hướng dẫn + niềm tin + review (chốt đơn) ───────── --}}
+<div class="wrap" style="padding-top:6px">
+  <div class="section-t">Chỉ 3 bước có tranh độc bản</div>
+  <div class="section-s">Đơn giản đến mức ai cũng làm được — không cần biết vẽ</div>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div class="ic">📤</div><h4>Tải ảnh lên</h4><p>Ảnh người thân, thú cưng, phong cảnh… tấm nào bạn yêu thích nhất.</p></div>
+    <div class="step"><div class="n">2</div><div class="ic">✨</div><h4>AI tạo bản thiết kế</h4><p>DALI tăng cường ảnh &amp; chia thành bản đồ màu tô số — xem trước miễn phí.</p></div>
+    <div class="step"><div class="n">3</div><div class="ic">🚚</div><h4>Đặt &amp; nhận tranh</h4><p>Shop in lên canvas, kèm màu &amp; cọ, giao tận nhà. Bạn chỉ việc tô!</p></div>
+  </div>
+
+  <div class="trust">
+    <div class="b">⭐ <b>4.9/5</b> · 2.000+ đánh giá</div>
+    <div class="b">🎨 <b>10.000+</b> bức đã giao</div>
+    <div class="b">🔁 Đổi trả <b>7 ngày</b></div>
+    <div class="b">🚚 Giao toàn quốc</div>
+  </div>
+
+  <div class="section-t" style="margin-top:22px">Khách hàng nói gì về DALI?</div>
+  <div class="section-s">Hàng nghìn món quà ý nghĩa đã được trao đi</div>
+  <div class="reviews">
+    <div class="rv">
+      <div class="stars">★★★★★</div>
+      <div class="txt">“Mình làm tranh từ ảnh cưới tặng vợ, bả khóc luôn 🥹. Bản AI nét hơn ảnh gốc, tô xong treo phòng khách ai tới cũng khen.”</div>
+      <div class="who"><div class="av">M</div><div><div class="nm">Minh Tuấn</div><div class="ro">Hà Nội</div></div></div>
+    </div>
+    <div class="rv">
+      <div class="stars">★★★★★</div>
+      <div class="txt">“Tô màu cùng con cuối tuần, vui mà ý nghĩa. Bản đồ màu rõ ràng dễ tô, màu lên chuẩn. Sẽ đặt thêm tranh thú cưng.”</div>
+      <div class="who"><div class="av">L</div><div><div class="nm">Lan Phương</div><div class="ro">TP.HCM</div></div></div>
+    </div>
+    <div class="rv">
+      <div class="stars">★★★★★</div>
+      <div class="txt">“Thử miễn phí thấy đẹp quá nên chốt luôn. Giao nhanh 3 ngày, đóng gói kỹ, có sẵn màu &amp; cọ. Quá đáng tiền!”</div>
+      <div class="who"><div class="av">H</div><div><div class="nm">Hoàng Anh</div><div class="ro">Đà Nẵng</div></div></div>
+    </div>
+  </div>
+
+  <div class="order-cta" style="margin-top:20px">
+    <div class="big">Sẵn sàng tạo món quà độc bản của riêng bạn?</div>
+    <div class="sub">Thử miễn phí {{ \App\Models\DesignQuota::FREE }} lần — không ưng, không mất gì.</div>
+    <button class="btn btn-lg" onclick="document.getElementById('dropZone').scrollIntoView({behavior:'smooth'}); document.getElementById('fileInput').click();"><i class="ri-image-add-line"></i> Tải ảnh &amp; thử ngay</button>
   </div>
 </div>
 
@@ -210,6 +302,7 @@ document.getElementById('confirmGo').addEventListener('click', async ()=>{
 
 function showResult(res){
   const card = document.getElementById('resultCard');
+  document.getElementById('rOriginal').src = previewImg.src || res.original || '';
   document.getElementById('rEnhanced').src = res.enhanced || res.original || '';
   document.getElementById('rOutput').src   = res.img_output || '';
   lastResultUrl = res.img_output || '';
