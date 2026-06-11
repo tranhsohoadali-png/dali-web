@@ -135,27 +135,41 @@ tailwind.config = {
     </div>
   </div>
 
-  {{-- KẾT QUẢ (before/after ảnh thật của khách) --}}
-  <div id="resultSection" class="hidden mt-6 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
-    <div class="font-black text-lg mb-4 flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary"></i> Tác phẩm của bạn đã sẵn sàng!</div>
+</section>
+
+{{-- KẾT QUẢ (before/after ảnh thật của khách — khổ rộng, bấm để zoom) --}}
+<section class="max-w-5xl mx-auto px-4">
+  <div id="resultSection" class="hidden mt-2 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
+    <div class="font-black text-xl mb-1 flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary"></i> Tác phẩm của bạn đã sẵn sàng!</div>
+    <div class="text-xs text-gray-400 font-semibold mb-4">🔍 Bấm vào ảnh để phóng to, xem chi tiết từng nét</div>
     <div class="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-      <figure class="text-center"><img id="rOriginal" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">📷 Ảnh gốc của bạn</figcaption></figure>
+      <figure class="text-center"><img id="rOriginal" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50 cursor-zoom-in" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">📷 Ảnh gốc của bạn</figcaption></figure>
       <div class="text-primary text-3xl font-black text-center rotate-90 sm:rotate-0">→</div>
-      <figure class="text-center"><img id="rEnhanced" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50" alt=""><figcaption class="text-xs font-bold text-primary mt-2">✨ Bản DALI tăng cường AI</figcaption></figure>
+      <figure class="text-center"><img id="rEnhanced" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border-2 border-primary/40 bg-green-50 cursor-zoom-in shadow-lg" alt=""><figcaption class="text-sm font-extrabold text-primary mt-2">✨ Bản DALI tăng cường AI — bấm để phóng to</figcaption></figure>
     </div>
-    <div class="mt-4 text-center">
-      <figure class="inline-block w-3/5"><img id="rOutput" class="w-full rounded-2xl border border-green-100" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">🎨 Bản đồ màu tô số (kèm theo bộ tranh)</figcaption></figure>
-    </div>
-    <div id="rSwatches" class="flex flex-wrap gap-1.5 justify-center mt-4"></div>
     <div class="mt-5 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center text-sm font-semibold text-amber-700">
       🌟 <b>Đẹp đúng không?</b> Đây là bức tranh <b>độc nhất vô nhị</b> — không ai có tấm thứ hai!
     </div>
-    <div class="mt-4 grad rounded-2xl p-5 text-center text-white">
-      <div class="font-black text-lg">🎁 Sở hữu bức tranh này ngay hôm nay</div>
-      <div class="text-white/85 text-sm mt-1 mb-4">Đặt hàng còn được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm ảnh khác.</div>
-      <div class="flex flex-wrap gap-3 justify-center">
-        <button class="orderOpen bg-white text-primaryd font-extrabold px-7 py-3.5 rounded-xl hover:scale-105 transition flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> Đặt hàng ngay</button>
-        <a id="dlOutput" href="#" download target="_blank" class="bg-white/15 border border-white/40 text-white font-bold px-6 py-3.5 rounded-xl hover:bg-white/25 transition flex items-center gap-2"><i class="ri-download-line"></i> Tải về xem</a>
+
+    {{-- CHỌN KÍCH THƯỚC & SỐ MÀU --}}
+    <div class="mt-5 bg-green-50/70 border-2 border-green-200 rounded-2xl p-5 sm:p-6">
+      <div class="font-extrabold text-lg mb-1">🛒 Đặt bức tranh này về nhà</div>
+      <div class="text-xs text-gray-500 mb-4">Chọn kích thước &amp; số màu — giá đã gồm canvas in sẵn, bộ màu, cọ &amp; giao hàng.</div>
+      <div class="font-bold text-sm mb-2">🖼️ Kích thước</div>
+      <div class="flex flex-wrap gap-2" id="sizeChips">
+        <button type="button" data-size="30×40 cm" data-price="199000" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">30×40 cm<span class="block text-xs font-extrabold text-primaryd">199.000đ</span></button>
+        <button type="button" data-size="40×50 cm" data-price="299000" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">40×50 cm<span class="block text-xs font-extrabold text-primaryd">299.000đ</span><span class="block text-[10px] text-accent font-black">PHỔ BIẾN</span></button>
+        <button type="button" data-size="50×70 cm" data-price="499000" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">50×70 cm<span class="block text-xs font-extrabold text-primaryd">499.000đ</span></button>
+      </div>
+      <div class="font-bold text-sm mb-2 mt-4">🎨 Số màu <span class="text-xs text-gray-400 font-semibold">(nhiều màu hơn = chi tiết &amp; giống ảnh hơn)</span></div>
+      <div class="flex flex-wrap gap-2" id="colorChips">
+        <button type="button" data-colors="24 màu" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">24 màu<span class="block text-[10px] text-gray-400">dễ tô</span></button>
+        <button type="button" data-colors="36 màu" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">36 màu<span class="block text-[10px] text-gray-400">cân bằng</span></button>
+        <button type="button" data-colors="48 màu" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">48 màu<span class="block text-[10px] text-gray-400">siêu chi tiết</span></button>
+      </div>
+      <div class="mt-5 flex flex-wrap items-center gap-3">
+        <button id="resultOrderBtn" class="grad-btn text-white font-extrabold text-base px-8 py-4 rounded-2xl flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> <span id="resultOrderLabel">Đặt tranh này — 299.000đ</span></button>
+        <span class="text-xs text-gray-500">Đặt xong được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm ảnh khác.</span>
       </div>
     </div>
   </div>
@@ -361,6 +375,17 @@ tailwind.config = {
   </div>
 </div>
 
+{{-- Lightbox phóng to ảnh (lăn chuột / chụm 2 ngón để zoom, kéo để di) --}}
+<div id="zoomModal" class="fixed inset-0 z-[70] bg-black/90 hidden overflow-hidden" style="touch-action:none">
+  <img id="zoomImg" class="absolute select-none max-w-none" draggable="false" style="transform-origin:0 0" alt="">
+  <div class="fixed top-3 right-3 flex gap-2 z-10">
+    <button onclick="zoomBy(1.4)" class="w-11 h-11 rounded-full bg-white/90 text-xl font-black">＋</button>
+    <button onclick="zoomBy(1/1.4)" class="w-11 h-11 rounded-full bg-white/90 text-xl font-black">－</button>
+    <button onclick="closeZoom()" class="w-11 h-11 rounded-full bg-white/90 text-xl font-black">✕</button>
+  </div>
+  <div class="fixed bottom-4 inset-x-0 text-center text-white/70 text-xs font-semibold pointer-events-none">Lăn chuột / chụm 2 ngón để phóng to · kéo để di chuyển</div>
+</div>
+
 <script>
 const CSRF = document.querySelector('meta[name=csrf-token]').content;
 const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}", status:"{{ route('thiet-ke.status') }}" };
@@ -382,7 +407,7 @@ function closeM(id){ const m=document.getElementById(id); m.classList.add('hidde
 
 // ───── Công cụ thiết kế (device id + quota + tạo + đặt hàng) ─────
 function deviceId(){ let d=localStorage.getItem('dali_device'); if(!d){ d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,12); localStorage.setItem('dali_device',d);} return d; }
-const DEVICE=deviceId(); let remaining=0, lastResultUrl='', selectedPackage='';
+const DEVICE=deviceId(); let remaining=0, lastResultUrl='', lastEnhancedUrl='', selectedPackage='';
 
 const fileInput=document.getElementById('fileInput'), dropZone=document.getElementById('dropZone'),
       previewImg=document.getElementById('previewImg'), genBtn=document.getElementById('genBtn');
@@ -436,12 +461,64 @@ function showResult(res){
   const sec=document.getElementById('resultSection');
   document.getElementById('rOriginal').src=previewImg.src||res.original||'';
   document.getElementById('rEnhanced').src=res.enhanced||res.original||'';
-  document.getElementById('rOutput').src=res.img_output||'';
-  lastResultUrl=res.img_output||''; document.getElementById('dlOutput').href=res.img_output||'#';
-  const sw=document.getElementById('rSwatches'); sw.innerHTML=''; let flat=[]; (res.colors||[]).forEach(p=>Array.isArray(p)&&p.forEach(c=>flat.push(c)));
-  flat.slice(0,30).forEach(c=>{ const d=document.createElement('div'); d.className='w-7 h-7 rounded-md border border-green-100'; d.style.background=(c[1]||'#fff'); d.title=(c[2]||''); sw.appendChild(d); });
+  lastResultUrl=res.img_output||'';            // bản đồ màu: chỉ gửi cho shop, không hiển thị
+  lastEnhancedUrl=res.enhanced||'';
   sec.classList.remove('hidden'); sec.scrollIntoView({behavior:'smooth'});
 }
+
+// ───── Chọn kích thước & số màu ─────
+var selSize='40×50 cm', selPrice=299000, selColors='36 màu';
+function fmtVnd(n){ return n.toLocaleString('vi-VN')+'đ'; }
+function paintChips(){
+  document.querySelectorAll('#sizeChips .pick').forEach(b=>{
+    var on=b.dataset.size===selSize;
+    b.className='pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
+  });
+  document.querySelectorAll('#colorChips .pick').forEach(b=>{
+    var on=b.dataset.colors===selColors;
+    b.className='pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
+  });
+  document.getElementById('resultOrderLabel').textContent='Đặt tranh này — '+fmtVnd(selPrice);
+}
+document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selSize=b.dataset.size; selPrice=parseInt(b.dataset.price,10); paintChips(); }));
+document.querySelectorAll('#colorChips .pick').forEach(b=>b.addEventListener('click',()=>{ selColors=b.dataset.colors; paintChips(); }));
+paintChips();
+document.getElementById('resultOrderBtn').addEventListener('click',()=>openOrder(selSize+' — '+fmtVnd(selPrice)+' · '+selColors));
+
+// ───── Lightbox zoom (lăn chuột / chụm 2 ngón / kéo) ─────
+var zScale=1,zX=0,zY=0,zPointers=new Map(),zLastDist=0;
+function zApply(){ var im=document.getElementById('zoomImg'); im.style.transform='translate('+zX+'px,'+zY+'px) scale('+zScale+')'; }
+function openZoom(src){
+  var m=document.getElementById('zoomModal'), im=document.getElementById('zoomImg');
+  im.src=src; m.classList.remove('hidden');
+  im.onload=function(){
+    var s=Math.min(window.innerWidth/im.naturalWidth, window.innerHeight/im.naturalHeight)*0.95;
+    zScale=s; zX=(window.innerWidth-im.naturalWidth*s)/2; zY=(window.innerHeight-im.naturalHeight*s)/2; zApply();
+  };
+  if(im.complete&&im.naturalWidth) im.onload();
+}
+function closeZoom(){ document.getElementById('zoomModal').classList.add('hidden'); zPointers.clear(); }
+function zoomBy(f){ zoomAt(window.innerWidth/2, window.innerHeight/2, f); }
+function zoomAt(cx,cy,f){ var ns=Math.min(Math.max(zScale*f,0.05),12); zX=cx-(cx-zX)*(ns/zScale); zY=cy-(cy-zY)*(ns/zScale); zScale=ns; zApply(); }
+(function(){
+  var m=document.getElementById('zoomModal');
+  m.addEventListener('wheel',function(e){ e.preventDefault(); zoomAt(e.clientX,e.clientY, e.deltaY<0?1.15:1/1.15); },{passive:false});
+  m.addEventListener('pointerdown',function(e){ zPointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); m.setPointerCapture(e.pointerId); });
+  m.addEventListener('pointermove',function(e){
+    if(!zPointers.has(e.pointerId)) return;
+    var prev=zPointers.get(e.pointerId); zPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(zPointers.size===1){ zX+=e.clientX-prev.x; zY+=e.clientY-prev.y; zApply(); }
+    else if(zPointers.size===2){
+      var pts=[...zPointers.values()];
+      var d=Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+      if(zLastDist>0){ zoomAt((pts[0].x+pts[1].x)/2,(pts[0].y+pts[1].y)/2, d/zLastDist); }
+      zLastDist=d;
+    }
+  });
+  ['pointerup','pointercancel'].forEach(ev=>m.addEventListener(ev,function(e){ zPointers.delete(e.pointerId); if(zPointers.size<2) zLastDist=0; }));
+  m.addEventListener('dblclick',function(e){ zoomAt(e.clientX,e.clientY,2); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeZoom(); });
+})();
 
 function outOfQuota(){ document.getElementById('orderTitle').textContent='Bạn đã hết lượt miễn phí';
   document.getElementById('orderDesc').innerHTML='Đặt hàng để shop làm tranh cho bạn — và nhận thêm <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b> tạo.'; openOrder(''); }
@@ -455,7 +532,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   const name=document.getElementById('oName').value.trim(), phone=document.getElementById('oPhone').value.trim();
   if(!name||!phone){ alert('Vui lòng nhập họ tên và số điện thoại.'); return; }
   const fd=new FormData(); fd.append('device_id',DEVICE); fd.append('customer_name',name); fd.append('customer_phone',phone);
-  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('package',selectedPackage);
+  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('package',selectedPackage);
   try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
     if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; } closeM('orderModal');
     remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=remaining+' lượt';

@@ -194,7 +194,8 @@ class ThietKeController extends Controller
             'customer_address' => $r->input('customer_address', ''),
             'note'             => 'ĐƠN THIẾT KẾ THEO YÊU CẦU'
                                   . ($r->input('package') ? ' — Gói: ' . $r->input('package') : '')
-                                  . '. Ảnh kết quả: ' . $r->input('result_url', '(chưa có)'),
+                                  . '. Bản đồ màu: ' . $r->input('result_url', '(chưa có)')
+                                  . ($r->input('enhanced_url') ? ' | Ảnh AI: ' . $r->input('enhanced_url') : ''),
             'status'           => 'new',
             'payment_method'   => 'COD',
             'payment_status'   => 'pending',
