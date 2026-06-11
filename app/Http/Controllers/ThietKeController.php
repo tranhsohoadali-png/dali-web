@@ -146,7 +146,15 @@ class ThietKeController extends Controller
             return response()->json(['ok' => true, 'status' => 'processing']); // lỗi mạng tạm -> poll tiếp
         }
         $data = is_array($resp->json()) ? $resp->json() : [];
-        $st   = $data['status'] ?? 'error';
+
+        // 401 = khoá API 2 hệ thống không khớp -> báo rõ (không phải lỗi job, không hoàn lượt nhầm)
+        if ($resp->status() === 401) {
+            return response()->json(['ok' => true, 'status' => 'error',
+                'msg' => 'Khoá API giữa website và hệ thống màu KHÔNG khớp — vào Admin → Cài đặt kiểm tra lại khoá 2 bên.']);
+        }
+        // Không phải JSON job (vd 502 HTML khi hệ thống màu đang khởi động lại)
+        // -> coi là tạm thời, poll tiếp; KHÔNG kết luận job lỗi.
+        $st = $data['status'] ?? 'processing';
 
         if ($st === 'error') {
             // Job hỏng -> HOÀN 1 lượt cho device (chỉ 1 lần / job)
