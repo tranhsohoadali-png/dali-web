@@ -43,7 +43,8 @@ class ThietKeController extends Controller
     public function index()
     {
         $settings = $this->settings();
-        return view('website.thiet-ke', compact('settings'));
+        $pricing  = \App\Http\Controllers\Admin\ThietKePricingController::current();
+        return view('website.thiet-ke', compact('settings', 'pricing'));
     }
 
     /** Trả số lượt còn lại của device. */

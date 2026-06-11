@@ -136,6 +136,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
 
         Route::get('settings',   [SettingsController::class, 'index'])->name('settings');
     Route::post('settings',  [SettingsController::class, 'update'])->name('settings.update');
+    // Bảng giá trang Thiết kế theo yêu cầu (/thiet-ke)
+    Route::get('thiet-ke-gia',  [\App\Http\Controllers\Admin\ThietKePricingController::class, 'index'])->name('thietke.pricing');
+    Route::post('thiet-ke-gia', [\App\Http\Controllers\Admin\ThietKePricingController::class, 'save'])->name('thietke.pricing.save');
+
     Route::post('settings/sizes', [SettingsController::class, 'updateSizes'])->name('settings.sizes');
     Route::post('settings/sizes/add', [SettingsController::class, 'addSize'])->name('settings.sizes.add');
     Route::delete('settings/sizes/{size}', [SettingsController::class, 'deleteSize'])->name('settings.sizes.delete');

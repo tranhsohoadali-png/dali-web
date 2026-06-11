@@ -155,20 +155,20 @@ tailwind.config = {
     <div class="mt-5 bg-green-50/70 border-2 border-green-200 rounded-2xl p-5 sm:p-6">
       <div class="font-extrabold text-lg mb-1">🛒 Đặt bức tranh này về nhà</div>
       <div class="text-xs text-gray-500 mb-4">Chọn kích thước &amp; số màu — giá đã gồm canvas in sẵn, bộ màu, cọ &amp; giao hàng.</div>
-      <div class="font-bold text-sm mb-2">🖼️ Kích thước</div>
+      <div class="font-bold text-sm mb-2">🖼️ Kích thước <span class="text-xs text-gray-400 font-semibold">({{ $pricing['sizes'][0]['note'] ?? '' }})</span></div>
       <div class="flex flex-wrap gap-2" id="sizeChips">
-        <button type="button" data-size="30×40 cm" data-price="199000" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">30×40 cm<span class="block text-xs font-extrabold text-primaryd">199.000đ</span></button>
-        <button type="button" data-size="40×50 cm" data-price="299000" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">40×50 cm<span class="block text-xs font-extrabold text-primaryd">299.000đ</span><span class="block text-[10px] text-accent font-black">PHỔ BIẾN</span></button>
-        <button type="button" data-size="50×70 cm" data-price="499000" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">50×70 cm<span class="block text-xs font-extrabold text-primaryd">499.000đ</span></button>
+        @foreach($pricing['sizes'] as $i => $s)
+        <button type="button" data-i="{{ $i }}" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">{{ $s['label'] }}<span class="block text-xs font-extrabold text-primaryd sizePrice" data-i="{{ $i }}"></span></button>
+        @endforeach
       </div>
       <div class="font-bold text-sm mb-2 mt-4">🎨 Số màu <span class="text-xs text-gray-400 font-semibold">(nhiều màu hơn = chi tiết &amp; giống ảnh hơn)</span></div>
       <div class="flex flex-wrap gap-2" id="colorChips">
-        <button type="button" data-colors="24 màu" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">24 màu<span class="block text-[10px] text-gray-400">dễ tô</span></button>
-        <button type="button" data-colors="36 màu" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">36 màu<span class="block text-[10px] text-gray-400">cân bằng</span></button>
-        <button type="button" data-colors="48 màu" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">48 màu<span class="block text-[10px] text-gray-400">siêu chi tiết</span></button>
+        @foreach($pricing['colors'] as $j => $c)
+        <button type="button" data-j="{{ $j }}" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">{{ $c }} màu</button>
+        @endforeach
       </div>
       <div class="mt-5 flex flex-wrap items-center gap-3">
-        <button id="resultOrderBtn" class="grad-btn text-white font-extrabold text-base px-8 py-4 rounded-2xl flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> <span id="resultOrderLabel">Đặt tranh này — 299.000đ</span></button>
+        <button id="resultOrderBtn" class="grad-btn text-white font-extrabold text-base px-8 py-4 rounded-2xl flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> <span id="resultOrderLabel">Đặt tranh này</span></button>
         <span class="text-xs text-gray-500">Đặt xong được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm ảnh khác.</span>
       </div>
     </div>
@@ -278,27 +278,39 @@ tailwind.config = {
   </div>
 </section>
 
-{{-- ════════ SECTION 9 — BẢNG GIÁ ════════ --}}
+{{-- ════════ SECTION 9 — BẢNG GIÁ (ma trận Kích thước × Số màu, quản trị trong admin) ════════ --}}
 <section id="bang-gia" class="max-w-5xl mx-auto px-4 py-12 reveal">
-  <h2 class="text-2xl sm:text-3xl font-black text-center mb-2">Chọn gói phù hợp với bạn</h2>
-  <p class="text-center text-gray-500 mb-8 text-sm">Giá đã gồm thiết kế từ ảnh + bộ màu &amp; cọ + giao hàng</p>
-  <div class="grid md:grid-cols-3 gap-5 items-stretch">
-    @foreach([
-      ['Starter','199.000đ','30×40 cm',['Thiết kế từ ảnh','Canvas + khung','Bộ màu cơ bản','Giao toàn quốc'],false],
-      ['Popular','299.000đ','40×50 cm',['Tất cả gói Starter','Canvas cao cấp hơn','Bộ màu đầy đủ + cọ','Ảnh hướng dẫn chi tiết','Ưu tiên thiết kế'],true],
-      ['Premium','499.000đ','50×70 cm',['Tất cả gói Popular','Khổ lớn, sắc nét','Khung gỗ cao cấp','Hộp quà sang trọng','Hỗ trợ tô 1-1'],false],
-    ] as $p)
-    <div class="relative bg-white rounded-3xl border-2 {{ $p[4] ? 'border-primary shadow-xl2 md:-translate-y-3' : 'border-green-100 shadow-sm' }} p-6 flex flex-col">
-      @if($p[4])<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-black px-4 py-1.5 rounded-full shadow">🔥 BÁN CHẠY NHẤT</div>@endif
-      <div class="font-black text-xl {{ $p[4] ? 'text-primaryd' : '' }}">{{ $p[0] }}</div>
-      <div class="text-xs text-gray-400 mb-3">{{ $p[2] }}</div>
-      <div class="text-3xl font-black mb-4">{{ $p[1] }}</div>
-      <ul class="space-y-2 text-sm text-gray-600 flex-1 mb-5">
-        @foreach($p[3] as $feat)<li class="flex items-start gap-2"><i class="ri-check-line text-primary mt-0.5"></i> {{ $feat }}</li>@endforeach
-      </ul>
-      <button class="orderOpen {{ $p[4] ? 'grad-btn text-white' : 'bg-green-50 text-primaryd hover:bg-green-100' }} font-extrabold py-3.5 rounded-xl transition" data-package="{{ $p[0] }} ({{ $p[2] }}) - {{ $p[1] }}">Đặt mẫu này</button>
+  <h2 class="text-2xl sm:text-3xl font-black text-center mb-2">Bảng giá tranh thiết kế</h2>
+  <p class="text-center text-gray-500 mb-8 text-sm">Giá đã gồm thiết kế từ ảnh + canvas in sẵn + bộ màu &amp; cọ + giao toàn quốc</p>
+  <div class="bg-white rounded-3xl border border-green-100 shadow-xl2 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full" style="border-collapse:collapse;min-width:640px">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left px-5 py-4 font-black text-ink">Kích thước</th>
+            @foreach($pricing['colors'] as $c)
+            <th class="text-left px-5 py-4 font-black text-ink whitespace-nowrap">{{ $c }} màu</th>
+            @endforeach
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($pricing['sizes'] as $s)
+          <tr class="border-b border-gray-50 hover:bg-green-50/40 transition">
+            <td class="px-5 py-4">
+              <div class="font-black text-ink whitespace-nowrap">{{ $s['label'] }}</div>
+              @if(!empty($s['note']))<div class="text-[11px] text-gray-400 font-semibold">{{ $s['note'] }}</div>@endif
+            </td>
+            @foreach($s['prices'] as $v)
+            <td class="px-5 py-4 font-black text-ink whitespace-nowrap">{{ number_format($v, 0, ',', '.') }}đ</td>
+            @endforeach
+          </tr>
+          @endforeach
+        </tbody>
+      </table>
     </div>
-    @endforeach
+  </div>
+  <div class="text-center mt-6">
+    <a href="#upload" class="grad-btn inline-flex items-center gap-2 text-white font-extrabold px-7 py-4 rounded-2xl"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên — xem trước miễn phí</a>
   </div>
 </section>
 
@@ -466,24 +478,30 @@ function showResult(res){
   sec.classList.remove('hidden'); sec.scrollIntoView({behavior:'smooth'});
 }
 
-// ───── Chọn kích thước & số màu ─────
-var selSize='40×50 cm', selPrice=299000, selColors='36 màu';
+// ───── Chọn kích thước & số màu (ma trận giá từ admin) ─────
+const PRICING = @json($pricing);
+var selI = Math.min(1, PRICING.sizes.length-1);
+var selJ = (function(){ var k = PRICING.colors.indexOf(36); return k >= 0 ? k : 0; })();
 function fmtVnd(n){ return n.toLocaleString('vi-VN')+'đ'; }
+function curPrice(){ return PRICING.sizes[selI].prices[selJ] || 0; }
 function paintChips(){
   document.querySelectorAll('#sizeChips .pick').forEach(b=>{
-    var on=b.dataset.size===selSize;
+    var on = +b.dataset.i === selI;
     b.className='pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
+  });
+  document.querySelectorAll('.sizePrice').forEach(sp=>{
+    sp.textContent = fmtVnd(PRICING.sizes[+sp.dataset.i].prices[selJ] || 0);
   });
   document.querySelectorAll('#colorChips .pick').forEach(b=>{
-    var on=b.dataset.colors===selColors;
+    var on = +b.dataset.j === selJ;
     b.className='pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
   });
-  document.getElementById('resultOrderLabel').textContent='Đặt tranh này — '+fmtVnd(selPrice);
+  document.getElementById('resultOrderLabel').textContent='Đặt tranh này — '+fmtVnd(curPrice());
 }
-document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selSize=b.dataset.size; selPrice=parseInt(b.dataset.price,10); paintChips(); }));
-document.querySelectorAll('#colorChips .pick').forEach(b=>b.addEventListener('click',()=>{ selColors=b.dataset.colors; paintChips(); }));
+document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selI=+b.dataset.i; paintChips(); }));
+document.querySelectorAll('#colorChips .pick').forEach(b=>b.addEventListener('click',()=>{ selJ=+b.dataset.j; paintChips(); }));
 paintChips();
-document.getElementById('resultOrderBtn').addEventListener('click',()=>openOrder(selSize+' — '+fmtVnd(selPrice)+' · '+selColors));
+document.getElementById('resultOrderBtn').addEventListener('click',()=>openOrder(PRICING.sizes[selI].label+' — '+fmtVnd(curPrice())+' · '+PRICING.colors[selJ]+' màu'));
 
 // ───── Lightbox zoom (lăn chuột / chụm 2 ngón / kéo) ─────
 var zScale=1,zX=0,zY=0,zPointers=new Map(),zLastDist=0;
