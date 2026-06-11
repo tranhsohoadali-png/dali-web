@@ -80,7 +80,9 @@ class ThietKeController extends Controller
 
         $file = $r->file('image');
         try {
-            $resp = Http::timeout(190)   // > gunicorn --timeout 180 bên phần mềm màu
+            // BẤT ĐỒNG BỘ: chỉ gửi ảnh + nhận id job (1-2s) -> không dính
+            // timeout proxy/nginx 60s. Kết quả lấy qua /thiet-ke/trang-thai.
+            $resp = Http::timeout(60)
                 ->withHeaders(['X-API-Key' => $key])
                 ->attach('image', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
                 ->post($url, [
@@ -94,16 +96,56 @@ class ThietKeController extends Controller
         }
 
         $data = is_array($resp->json()) ? $resp->json() : [];
-        if (!$resp->ok() || !($data['ok'] ?? false)) {
+        if (!$resp->ok() || !($data['ok'] ?? false) || empty($data['id'])) {
             return response()->json(['ok' => false, 'msg' => $data['error'] ?? ('Lỗi xử lý ảnh (' . $resp->status() . ').')], 502);
         }
 
-        // Thành công -> trừ 1 lượt
+        // Job đã khởi động -> trừ 1 lượt; ghi nhớ job-device để hoàn lượt nếu lỗi
         $q->increment('used');
         $q->update(['last_ip' => $r->ip()]);
         $q->refresh();
+        cache()->put('tk_job_' . $data['id'], $did, now()->addHours(2));
 
-        return response()->json(['ok' => true, 'result' => $data, 'remaining' => $q->remaining]);
+        return response()->json(['ok' => true, 'job' => $data['id'], 'remaining' => $q->remaining]);
+    }
+
+    /** Poll trạng thái job (proxy sang phần mềm màu, kèm khoá phía server). */
+    public function status(Request $r)
+    {
+        $s   = $this->settings();
+        $url = trim($s['thietke_api_url'] ?? '') ?: 'https://mau.tranhdali.vn/api/xu-ly-anh';
+        $key = trim($s['thietke_api_key'] ?? '');
+        $job = (int) $r->input('job', 0);
+        if (!$key || !$job) {
+            return response()->json(['ok' => false, 'status' => 'error', 'msg' => 'Thiếu cấu hình hoặc job.'], 400);
+        }
+        try {
+            $resp = Http::timeout(20)->withHeaders(['X-API-Key' => $key])
+                ->get(preg_replace('/\/?$/', '', $url) . '-trang-thai', ['id' => $job]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => true, 'status' => 'processing']); // lỗi mạng tạm -> poll tiếp
+        }
+        $data = is_array($resp->json()) ? $resp->json() : [];
+        $st   = $data['status'] ?? 'error';
+
+        if ($st === 'error') {
+            // Job hỏng -> HOÀN 1 lượt cho device (chỉ 1 lần / job)
+            $did = cache()->pull('tk_job_' . $job);
+            $remaining = null;
+            if ($did) {
+                $q = $this->quotaFor($did);
+                if ($q->used > 0) $q->decrement('used');
+                $q->refresh();
+                $remaining = $q->remaining;
+            }
+            return response()->json(['ok' => true, 'status' => 'error',
+                'msg' => $data['error'] ?? 'Xử lý thất bại.', 'remaining' => $remaining]);
+        }
+        if ($st === 'done') {
+            cache()->forget('tk_job_' . $job);
+            return response()->json(['ok' => true, 'status' => 'done', 'result' => $data]);
+        }
+        return response()->json(['ok' => true, 'status' => 'processing']);
     }
 
     /** Đặt hàng từ trang thiết kế -> tạo đơn + cộng ORDER_BONUS lượt cho device. */

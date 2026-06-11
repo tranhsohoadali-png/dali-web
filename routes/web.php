@@ -40,6 +40,7 @@ Route::post('/phi-van-chuyen',             [WebsiteController::class, 'calcShip'
 Route::get('/thiet-ke',          [\App\Http\Controllers\ThietKeController::class, 'index'])->name('thiet-ke');
 Route::get('/thiet-ke/luot',     [\App\Http\Controllers\ThietKeController::class, 'quota'])->name('thiet-ke.quota');
 Route::post('/thiet-ke/tao',     [\App\Http\Controllers\ThietKeController::class, 'generate'])->name('thiet-ke.generate');
+Route::get('/thiet-ke/trang-thai',[\App\Http\Controllers\ThietKeController::class, 'status'])->name('thiet-ke.status');
 Route::post('/thiet-ke/dat-hang',[\App\Http\Controllers\ThietKeController::class, 'order'])->name('thiet-ke.order');
 
 // ── BLOG ──

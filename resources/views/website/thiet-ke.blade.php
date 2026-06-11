@@ -363,7 +363,7 @@ tailwind.config = {
 
 <script>
 const CSRF = document.querySelector('meta[name=csrf-token]').content;
-const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}" };
+const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}", status:"{{ route('thiet-ke.status') }}" };
 
 // Hiệu ứng Fade Up
 const io = new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }),{threshold:.12});
@@ -402,11 +402,33 @@ genBtn.addEventListener('click',()=>{ if(!fileInput.files[0]){alert('Vui lòng c
 document.getElementById('confirmGo').addEventListener('click', async ()=>{
   closeM('confirmModal'); openM('loadingModal');
   const fd=new FormData(); fd.append('image',fileInput.files[0]); fd.append('device_id',DEVICE); fd.append('enhance','1');
-  try{ const r=await fetch(URLS.gen,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json(); closeM('loadingModal');
-    if(!d.ok){ if(d.reason==='no_quota') outOfQuota(); else alert(d.msg||'Có lỗi, thử lại sau.'); return; }
-    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=remaining+' lượt'; showResult(d.result);
+  try{
+    const r=await fetch(URLS.gen,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
+    if(!d.ok){ closeM('loadingModal'); if(d.reason==='no_quota') outOfQuota(); else alert(d.msg||'Có lỗi, thử lại sau.'); return; }
+    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=remaining+' lượt';
+    pollJob(d.job);   // job chạy nền bên hệ thống màu -> hỏi trạng thái mỗi 3s
   }catch(e){ closeM('loadingModal'); alert('Lỗi kết nối, thử lại sau.'); }
 });
+
+// Poll trạng thái job (an toàn với mọi timeout proxy — mỗi request chỉ ~1s)
+function pollJob(job){
+  var t0=Date.now(), MAX_MS=4*60*1000;
+  var note=document.querySelector('#loadingModal p');
+  var timer=setInterval(async function(){
+    var giay=Math.round((Date.now()-t0)/1000);
+    if(note) note.textContent='Đã chờ '+giay+' giây… AI thường mất 20–90 giây, đừng tắt trang.';
+    if(Date.now()-t0>MAX_MS){ clearInterval(timer); closeM('loadingModal'); alert('Hệ thống đang bận, vui lòng thử lại sau ít phút.'); refreshQuota(); return; }
+    try{
+      var r=await fetch(URLS.status+'?job='+encodeURIComponent(job),{cache:'no-store'});
+      var d=await r.json();
+      if(d.status==='done'){ clearInterval(timer); closeM('loadingModal'); showResult(d.result); }
+      else if(d.status==='error'){ clearInterval(timer); closeM('loadingModal');
+        if(d.remaining!=null){ remaining=d.remaining; document.getElementById('remainBadge').textContent=remaining+' lượt'; }
+        alert((d.msg||'Xử lý thất bại.')+' (Lượt của bạn đã được hoàn lại)'); }
+      // processing -> chờ vòng sau
+    }catch(e){ /* mạng chập chờn -> thử vòng sau */ }
+  }, 3000);
+}
 
 function showResult(res){
   const sec=document.getElementById('resultSection');
