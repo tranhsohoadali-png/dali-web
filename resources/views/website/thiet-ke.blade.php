@@ -387,7 +387,8 @@ const DEVICE=deviceId(); let remaining=0, lastResultUrl='', selectedPackage='';
 const fileInput=document.getElementById('fileInput'), dropZone=document.getElementById('dropZone'),
       previewImg=document.getElementById('previewImg'), genBtn=document.getElementById('genBtn');
 
-async function refreshQuota(){ try{ const r=await fetch(URLS.quota+'?device_id='+encodeURIComponent(DEVICE)); const d=await r.json(); remaining=d.remaining??0; document.getElementById('remainBadge').textContent=remaining+' lượt'; }catch(e){ document.getElementById('remainBadge').textContent='—'; } }
+function badgeText(d){ return d&&d.unlimited ? '∞ (máy test)' : (remaining+' lượt'); }
+async function refreshQuota(){ try{ const r=await fetch(URLS.quota+'?device_id='+encodeURIComponent(DEVICE)); const d=await r.json(); remaining=d.remaining??0; document.getElementById('remainBadge').textContent=badgeText(d); }catch(e){ document.getElementById('remainBadge').textContent='—'; } }
 refreshQuota();
 
 dropZone.addEventListener('click',()=>fileInput.click());
@@ -405,7 +406,7 @@ document.getElementById('confirmGo').addEventListener('click', async ()=>{
   try{
     const r=await fetch(URLS.gen,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
     if(!d.ok){ closeM('loadingModal'); if(d.reason==='no_quota') outOfQuota(); else alert(d.msg||'Có lỗi, thử lại sau.'); return; }
-    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=remaining+' lượt';
+    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=badgeText(d);
     pollJob(d.job);   // job chạy nền bên hệ thống màu -> hỏi trạng thái mỗi 3s
   }catch(e){ closeM('loadingModal'); alert('Lỗi kết nối, thử lại sau.'); }
 });

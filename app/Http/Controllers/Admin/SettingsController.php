@@ -72,7 +72,7 @@ class SettingsController extends Controller
         $fields = ['tg_token','tg_chat_id','bank_id','bank_acc','bank_name','bank_label','shop_phone','shop_address','ga_id','fb_pixel_id','zalo_link','zalo_oa_id','meta_title','meta_description','meta_keywords','free_ship_from','ship_fee','discount_bank',
             'ghtk_token','ghtk_shop_id','ghtk_pick_address','ghtk_pick_province',
             'vtp_token','vtp_env','vtp_sender_name','vtp_sender_phone','vtp_sender_address','vtp_service','vtp_webhook_token','default_weight','agent_deposit_percent',
-            'thietke_api_url','thietke_api_key'];
+            'thietke_api_url','thietke_api_key','thietke_test_ips'];
         foreach ($fields as $key) {
             if ($request->has($key)) {
                 // updateOrInsert: key mới chưa có dòng trong DB vẫn lưu được

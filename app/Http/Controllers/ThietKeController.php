@@ -31,6 +31,15 @@ class ThietKeController extends Controller
         return DesignQuota::firstOrCreate(['device_id' => $deviceId]);
     }
 
+    /** IP nằm trong danh sách máy test (Cài đặt) -> không giới hạn lượt. */
+    private function isTestIp(Request $r): bool
+    {
+        $raw = (string) ($this->settings()['thietke_test_ips'] ?? '');
+        if ($raw === '') return false;
+        $ips = preg_split('/[\s,;]+/', $raw, -1, PREG_SPLIT_NO_EMPTY);
+        return in_array($r->ip(), $ips, true);
+    }
+
     public function index()
     {
         $settings = $this->settings();
@@ -40,6 +49,9 @@ class ThietKeController extends Controller
     /** Trả số lượt còn lại của device. */
     public function quota(Request $r)
     {
+        if ($this->isTestIp($r)) {
+            return response()->json(['remaining' => 9999, 'free' => DesignQuota::FREE, 'unlimited' => true]);
+        }
         $did = $this->deviceId($r);
         if (!$did) {
             return response()->json(['remaining' => DesignQuota::FREE, 'free' => DesignQuota::FREE]);
@@ -70,8 +82,9 @@ class ThietKeController extends Controller
             return response()->json(['ok' => false, 'msg' => 'Tính năng chưa được cấu hình. Vui lòng liên hệ shop.'], 503);
         }
 
+        $isTest = $this->isTestIp($r);   // máy test: không giới hạn, không trừ lượt
         $q = $this->quotaFor($did);
-        if ($q->remaining <= 0) {
+        if (!$isTest && $q->remaining <= 0) {
             return response()->json([
                 'ok' => false, 'reason' => 'no_quota', 'remaining' => 0,
                 'msg' => 'Bạn đã hết lượt tạo miễn phí. Đặt hàng để nhận thêm ' . DesignQuota::ORDER_BONUS . ' lượt.',
@@ -100,13 +113,20 @@ class ThietKeController extends Controller
             return response()->json(['ok' => false, 'msg' => $data['error'] ?? ('Lỗi xử lý ảnh (' . $resp->status() . ').')], 502);
         }
 
-        // Job đã khởi động -> trừ 1 lượt; ghi nhớ job-device để hoàn lượt nếu lỗi
-        $q->increment('used');
+        // Job đã khởi động -> trừ 1 lượt (máy test thì không trừ);
+        // ghi nhớ job-device để hoàn lượt nếu lỗi.
+        if (!$isTest) {
+            $q->increment('used');
+            cache()->put('tk_job_' . $data['id'], $did, now()->addHours(2));
+        }
         $q->update(['last_ip' => $r->ip()]);
         $q->refresh();
-        cache()->put('tk_job_' . $data['id'], $did, now()->addHours(2));
 
-        return response()->json(['ok' => true, 'job' => $data['id'], 'remaining' => $q->remaining]);
+        return response()->json([
+            'ok' => true, 'job' => $data['id'],
+            'remaining' => $isTest ? 9999 : $q->remaining,
+            'unlimited' => $isTest,
+        ]);
     }
 
     /** Poll trạng thái job (proxy sang phần mềm màu, kèm khoá phía server). */

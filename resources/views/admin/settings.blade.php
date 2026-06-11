@@ -191,6 +191,15 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               <div><label class="flabel">URL API xử lý ảnh</label><input type="text" name="thietke_api_url" class="dinput" value="{{ $settings['thietke_api_url'] ?? 'https://mau.tranhdali.vn/api/xu-ly-anh' }}" placeholder="https://mau.tranhdali.vn/api/xu-ly-anh"><div class="fnote">Endpoint API của phần mềm màu.</div></div>
               <div><label class="flabel">Khoá API (THIETKE_API_KEY)</label><input type="text" name="thietke_api_key" class="dinput" value="{{ $settings['thietke_api_key'] ?? '' }}" placeholder="Dán khoá bí mật ở đây"><div class="fnote"><b>Phải trùng</b> với biến <code>THIETKE_API_KEY</code> đặt bên phần mềm màu (VPS mau.tranhdali.vn).</div></div>
             </div>
+            <div class="g1" style="margin-top:4px">
+              <label class="flabel">IP máy test (không giới hạn lượt)</label>
+              <input type="text" name="thietke_test_ips" id="tkTestIps" class="dinput" value="{{ $settings['thietke_test_ips'] ?? '' }}" placeholder="vd: 1.2.3.4, 5.6.7.8">
+              <div class="fnote">
+                Các IP này tạo kết quả <b>không giới hạn, không trừ lượt</b> (cách nhau bằng dấu phẩy).
+                IP hiện tại của bạn: <code id="tkMyIp">{{ request()->ip() }}</code>
+                <a href="javascript:void(0)" onclick="var i=document.getElementById('tkTestIps'),ip=document.getElementById('tkMyIp').textContent.trim();if(i.value.indexOf(ip)===-1){i.value=(i.value.trim()?i.value.trim().replace(/[,\s]+$/,'')+', ':'')+ip;}" style="color:var(--g);font-weight:700">➕ Thêm IP này</a>
+              </div>
+            </div>
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
               <button type="submit" class="btn-save">💾 Lưu API màu</button>
               @if(session('saved_anchor')==='sec-thietke')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
