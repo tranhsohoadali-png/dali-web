@@ -110,27 +110,32 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
       }
       </script>
 
-      <form method="POST" action="{{ route('admin.settings.update') }}">
-        @csrf
-
         {{-- TELEGRAM --}}
-        <div class="card">
+        <div class="card" id="sec-telegram">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">📱</div><div><div class="card-title">Thông báo Telegram</div><div class="card-sub">Nhận đơn hàng mới qua Telegram</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-telegram"><input type="hidden" name="_section" value="Thông báo Telegram">
             <div class="info-box">1) Vào Telegram → <b>@BotFather</b> → /newbot → lấy Token &nbsp;&nbsp; 2) Tìm <b>@userinfobot</b> → /start → lấy Chat ID</div>
             <div class="g2">
               <div><label class="flabel">Bot Token</label><input type="text" name="tg_token" class="dinput" value="{{ $settings['tg_token'] ?? '' }}" placeholder="7123456789:AAHxxxxxxxx"></div>
               <div><label class="flabel">Chat ID</label><input type="text" name="tg_chat_id" class="dinput" value="{{ $settings['tg_chat_id'] ?? '' }}" placeholder="123456789"></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu Telegram</button>
+              @if(session('saved_anchor')==='sec-telegram')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- NGÂN HÀNG --}}
-        <div class="card">
+        <div class="card" id="sec-bank">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">🏦</div><div><div class="card-title">Ngân hàng QR thanh toán</div><div class="card-sub">Tạo mã QR VietQR tự động</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-bank"><input type="hidden" name="_section" value="Ngân hàng QR">
             <div class="g2">
               <div>
                 <label class="flabel">Ngân hàng</label>
@@ -146,14 +151,20 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               <div><label class="flabel">Tên chủ TK <span class="hint">(IN HOA, không dấu)</span></label><input type="text" name="bank_name" class="dinput" value="{{ $settings['bank_name'] ?? '' }}" placeholder="NGUYEN VAN A" style="text-transform:uppercase"></div>
               <div><label class="flabel">Tên hiển thị</label><input type="text" name="bank_label" class="dinput" value="{{ $settings['bank_label'] ?? '' }}" placeholder="Vietcombank"></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu ngân hàng</button>
+              @if(session('saved_anchor')==='sec-bank')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- THƯƠNG MẠI --}}
-        <div class="card">
+        <div class="card" id="sec-commerce">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">🛒</div><div><div class="card-title">Cấu hình thương mại</div><div class="card-sub">Phí ship, giảm giá, chính sách</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-commerce"><input type="hidden" name="_section" value="Cấu hình thương mại">
             <div class="g2">
               <div><label class="flabel">Miễn phí ship từ (đ)</label><input type="number" name="free_ship_from" class="dinput" value="{{ $settings['free_ship_from'] ?? 299000 }}" min="0"><div class="fnote">Đơn ≥ số này → miễn phí ship</div></div>
               <div><label class="flabel">Phí ship mặc định (đ)</label><input type="number" name="ship_fee" class="dinput" value="{{ $settings['ship_fee'] ?? 30000 }}" min="0"></div>
@@ -162,49 +173,73 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               <div><label class="flabel">Giảm giá chuyển khoản (%)</label><input type="number" name="discount_bank" class="dinput" value="{{ $settings['discount_bank'] ?? 5 }}" min="0" max="50"><div class="fnote">Khách chọn QR được giảm % này</div></div>
               <div><label class="flabel">Đại lý đặt cọc trước (%)</label><input type="number" name="agent_deposit_percent" class="dinput" value="{{ $settings['agent_deposit_percent'] ?? 20 }}" min="0" max="100"><div class="fnote">Đại lý phải cọc % này khi lên đơn (0 = không bắt cọc)</div></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu thương mại</button>
+              @if(session('saved_anchor')==='sec-commerce')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- THIẾT KẾ THEO YÊU CẦU (API phần mềm màu) --}}
-        <div class="card">
+        <div class="card" id="sec-thietke">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">🎨</div><div><div class="card-title">Thiết kế theo yêu cầu (API màu)</div><div class="card-sub">Kết nối trang /thiet-ke với phần mềm màu (mau.tranhdali.vn) để xử lý ảnh AI</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-thietke"><input type="hidden" name="_section" value="API Thiết kế theo yêu cầu">
             <div class="g2">
               <div><label class="flabel">URL API xử lý ảnh</label><input type="text" name="thietke_api_url" class="dinput" value="{{ $settings['thietke_api_url'] ?? 'https://mau.tranhdali.vn/api/xu-ly-anh' }}" placeholder="https://mau.tranhdali.vn/api/xu-ly-anh"><div class="fnote">Endpoint API của phần mềm màu.</div></div>
               <div><label class="flabel">Khoá API (THIETKE_API_KEY)</label><input type="text" name="thietke_api_key" class="dinput" value="{{ $settings['thietke_api_key'] ?? '' }}" placeholder="Dán khoá bí mật ở đây"><div class="fnote"><b>Phải trùng</b> với biến <code>THIETKE_API_KEY</code> đặt bên phần mềm màu (VPS mau.tranhdali.vn).</div></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu API màu</button>
+              @if(session('saved_anchor')==='sec-thietke')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- SEO --}}
-        <div class="card">
+        <div class="card" id="sec-seo">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">🔍</div><div><div class="card-title">SEO & Meta Tags</div><div class="card-sub">Tối ưu tìm kiếm Google</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-seo"><input type="hidden" name="_section" value="SEO & Meta Tags">
             <div class="g1"><label class="flabel">Tiêu đề trang (Meta Title)</label><input type="text" name="meta_title" class="dinput" value="{{ $settings['meta_title'] ?? 'DALI – Tranh Tô Màu Số Hóa' }}" placeholder="DALI – Tranh Tô Màu Số Hóa"></div>
             <div class="g1"><label class="flabel">Mô tả trang (Meta Description)</label><input type="text" name="meta_description" class="dinput" value="{{ $settings['meta_description'] ?? '' }}" placeholder="Bộ tranh tô màu số hóa DALI – ai cũng có thể tạo ra kiệt tác..."></div>
             <div class="g1"><label class="flabel">Từ khoá (Keywords)</label><input type="text" name="meta_keywords" class="dinput" value="{{ $settings['meta_keywords'] ?? '' }}" placeholder="tranh tô màu số hóa, paint by numbers"></div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu SEO</button>
+              @if(session('saved_anchor')==='sec-seo')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- ANALYTICS --}}
-        <div class="card">
+        <div class="card" id="sec-analytics">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">📊</div><div><div class="card-title">Google Analytics & Facebook Pixel</div><div class="card-sub">Theo dõi traffic và chuyển đổi</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-analytics"><input type="hidden" name="_section" value="Analytics & Pixel">
             <div class="g2">
               <div><label class="flabel">Google Analytics ID <span class="hint">(GA4)</span></label><input type="text" name="ga_id" class="dinput" value="{{ $settings['ga_id'] ?? '' }}" placeholder="G-XXXXXXXXXX"><div class="fnote">Lấy từ Google Analytics → Admin → Property → Data Streams</div></div>
               <div><label class="flabel">Facebook Pixel ID</label><input type="text" name="fb_pixel_id" class="dinput" value="{{ $settings['fb_pixel_id'] ?? '' }}" placeholder="123456789012345"><div class="fnote">Lấy từ Meta Business → Events Manager</div></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu Analytics</button>
+              @if(session('saved_anchor')==='sec-analytics')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- ZALO --}}
-        <div class="card">
+        <div class="card" id="sec-zalo">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">💬</div><div><div class="card-title">Zalo liên hệ</div><div class="card-sub">Nút Zalo nổi góc phải màn hình</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-zalo"><input type="hidden" name="_section" value="Zalo liên hệ">
             <div class="g2">
               <div>
                 <label class="flabel">🔗 Link Zalo cá nhân</label>
@@ -219,27 +254,39 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               </div>
               <div></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu Zalo</button>
+              @if(session('saved_anchor')==='sec-zalo')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- SHOP INFO --}}
-        <div class="card">
+        <div class="card" id="sec-shop">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">🏪</div><div><div class="card-title">Thông tin Shop</div><div class="card-sub">Hiển thị trên website và email</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-shop"><input type="hidden" name="_section" value="Thông tin Shop">
             <div class="g2">
               <div><label class="flabel">Số điện thoại</label><input type="text" name="shop_phone" class="dinput" value="{{ $settings['shop_phone'] ?? '' }}" placeholder="0123456789"></div>
               <div><label class="flabel">Địa chỉ</label><input type="text" name="shop_address" class="dinput" value="{{ $settings['shop_address'] ?? '' }}" placeholder="Số 1 Đường ABC, Hà Nội"></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu thông tin shop</button>
+              @if(session('saved_anchor')==='sec-shop')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
 
         {{-- VẬN CHUYỂN --}}
-        <div class="card">
+        <div class="card" id="sec-shipping">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">🚚</div><div><div class="card-title">Tích hợp Giao Hàng</div><div class="card-sub">Kết nối GHTK hoặc Viettel Post để tạo vận đơn tự động</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-shipping"><input type="hidden" name="_section" value="Tích hợp Giao Hàng">
             <div style="background:var(--gll);border-radius:10px;padding:12px 16px;border:1px solid var(--bd);margin-bottom:14px;font-size:13px;color:var(--gd)">
               💡 <b>Giao Hàng Tiết Kiệm (GHTK):</b> Đăng ký tại <a href="https://khachhang.giaohangtietkiem.vn" target="_blank" style="color:var(--g)">khachhang.giaohangtietkiem.vn</a> → API → Lấy Token API<br>
               💡 <b>Viettel Post:</b> Đăng ký tại <a href="https://viettelpost.com.vn" target="_blank" style="color:var(--g)">viettelpost.com.vn</a> → API Management → Token
@@ -295,24 +342,31 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
               <div><label class="flabel">Cân nặng mặc định (gram)</label><input type="number" name="default_weight" class="dinput" value="{{ $settings['default_weight'] ?? 500 }}" min="1" placeholder="500"><div class="fnote">Dùng dự phòng khi khổ tranh chưa đặt cân nặng riêng. Cân nặng theo từng kích thước cài ở mục <b>Bảng giá theo kích thước</b> bên trên.</div></div>
               <div></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu giao hàng</button>
+              @if(session('saved_anchor')==='sec-shipping')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
 
         {{-- BẢO MẬT --}}
-        <div class="card">
+        <div class="card" id="sec-password">
           <div class="rainbow"></div>
           <div class="card-head"><div class="card-icon">🔒</div><div><div class="card-title">Bảo mật Admin</div><div class="card-sub">Đổi mật khẩu đăng nhập</div></div></div>
-          <div class="fb">
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-password"><input type="hidden" name="_section" value="Bảo mật Admin">
             <div class="info-box">⚠️ Chỉ điền 2 ô dưới khi bạn THỰC SỰ muốn đổi mật khẩu. Để trống thì mật khẩu giữ nguyên.</div>
             <div class="g2">
               <div><label class="flabel">Mật khẩu mới</label><input type="password" name="new_password" class="dinput" placeholder="Để trống nếu không muốn đổi" autocomplete="new-password" autocapitalize="off" data-lpignore="true" data-form-type="other"></div>
               <div><label class="flabel">Xác nhận mật khẩu</label><input type="password" name="new_password_confirm" class="dinput" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" autocapitalize="off" data-lpignore="true" data-form-type="other"></div>
             </div>
-          </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu mật khẩu</button>
+              @if(session('saved_anchor')==='sec-password')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
         </div>
-
-        <button type="submit" class="btn-save">✅ Lưu tất cả cài đặt</button>
-      </form>
     </div>
   </div>
 </div>
