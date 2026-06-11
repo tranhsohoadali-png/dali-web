@@ -412,11 +412,12 @@ document.getElementById('confirmGo').addEventListener('click', async ()=>{
 
 // Poll trạng thái job (an toàn với mọi timeout proxy — mỗi request chỉ ~1s)
 function pollJob(job){
-  var t0=Date.now(), MAX_MS=4*60*1000;
+  var t0=Date.now(), MAX_MS=10*60*1000;   // job thuc te co the toi ~5 phut
   var note=document.querySelector('#loadingModal p');
   var timer=setInterval(async function(){
     var giay=Math.round((Date.now()-t0)/1000);
-    if(note) note.textContent='Đã chờ '+giay+' giây… AI thường mất 20–90 giây, đừng tắt trang.';
+    var phut=Math.floor(giay/60);
+    if(note) note.textContent='Đã chờ '+(phut>0?phut+' phút '+(giay%60)+' giây':giay+' giây')+'… AI thường mất 1–3 phút, đừng tắt trang.';
     if(Date.now()-t0>MAX_MS){ clearInterval(timer); closeM('loadingModal'); alert('Hệ thống đang bận, vui lòng thử lại sau ít phút.'); refreshQuota(); return; }
     try{
       var r=await fetch(URLS.status+'?job='+encodeURIComponent(job),{cache:'no-store'});
