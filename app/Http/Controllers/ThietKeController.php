@@ -63,9 +63,10 @@ class ThietKeController extends Controller
         }
 
         $s   = $this->settings();
-        $url = trim($s['thietke_api_url'] ?? '');
+        // URL tự mặc định -> admin chỉ cần nhập KHOÁ là đủ.
+        $url = trim($s['thietke_api_url'] ?? '') ?: 'https://mau.tranhdali.vn/api/xu-ly-anh';
         $key = trim($s['thietke_api_key'] ?? '');
-        if (!$url || !$key) {
+        if (!$key) {
             return response()->json(['ok' => false, 'msg' => 'Tính năng chưa được cấu hình. Vui lòng liên hệ shop.'], 503);
         }
 
@@ -79,7 +80,7 @@ class ThietKeController extends Controller
 
         $file = $r->file('image');
         try {
-            $resp = Http::timeout(180)
+            $resp = Http::timeout(190)   // > gunicorn --timeout 180 bên phần mềm màu
                 ->withHeaders(['X-API-Key' => $key])
                 ->attach('image', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
                 ->post($url, [
