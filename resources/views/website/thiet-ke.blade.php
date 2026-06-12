@@ -55,7 +55,7 @@ tailwind.config = {
       <a href="#bang-gia" class="hover:text-primary">Bảng giá</a>
       <a href="#faq" class="hover:text-primary">FAQ</a>
     </nav>
-    <a href="#upload" class="grad-btn text-white text-sm font-extrabold px-5 py-2.5 rounded-full">Tải ảnh ngay</a>
+    <a href="#upload" class="hidden md:inline-flex grad-btn text-white text-sm font-extrabold px-5 py-2.5 rounded-full">Tải ảnh ngay</a>
   </div>
 </header>
 
@@ -276,7 +276,7 @@ tailwind.config = {
 </footer>
 
 {{-- ════════ FLOATING (mobile sticky CTA) ════════ --}}
-<div class="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-green-200 grid grid-cols-2 gap-2 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+<div id="stickyBar" class="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-green-200 grid grid-cols-2 gap-2 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] translate-y-full transition-transform duration-300">
   <a id="stickyCta" href="#upload" class="grad-btn text-white font-extrabold py-3 rounded-xl text-center text-sm">📸 Tải ảnh</a>
   <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="bg-white border border-green-200 text-primaryd font-extrabold py-3 rounded-xl text-center text-sm">💬 Chat Zalo</a>
 </div>
@@ -415,6 +415,22 @@ function playChime(){ try{ if(!_ac) return; if(_ac.state==='suspended') _ac.resu
     g.gain.setValueAtTime(0.0001,t+p[1]); g.gain.exponentialRampToValueAtTime(0.25,t+p[1]+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+p[1]+0.6);
     o.connect(g); g.connect(_ac.destination); o.start(t+p[1]); o.stop(t+p[1]+0.65); });
 }catch(e){} }
+// Thanh nổi mobile: CHỈ hiện khi đã cuộn QUA khu hero + tải ảnh (tránh 1 màn hình 3 nút)
+(function(){
+  const bar=document.getElementById('stickyBar');
+  const hero=document.querySelector('section');
+  const up=document.getElementById('upload');
+  if(!bar||!up) return;
+  const seen=new Map();
+  const io2=new IntersectionObserver(function(es){
+    es.forEach(function(e){ seen.set(e.target, e.isIntersecting); });
+    const dangXem=[...seen.values()].some(Boolean);   // hero hoặc khu tải ảnh đang trên màn hình
+    bar.classList.toggle('translate-y-full', dangXem);
+  },{threshold:0.05});
+  if(hero) io2.observe(hero);
+  io2.observe(up);
+})();
+
 function showPill(){ const p=document.getElementById('jobPill'); p.classList.remove('hidden'); p.classList.add('flex'); }
 function hidePill(){ const p=document.getElementById('jobPill'); p.classList.add('hidden'); p.classList.remove('flex'); }
 function hideLoading(){ closeM('loadingModal'); showPill(); }
