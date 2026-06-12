@@ -138,6 +138,7 @@ tailwind.config = {
 <section class="max-w-5xl mx-auto px-4">
   <div id="resultSection" class="hidden mt-2 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
     <div class="font-black text-xl mb-1 flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary"></i> Tác phẩm của bạn đã sẵn sàng!</div>
+    <div id="restoreNote" class="hidden mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2 text-xs font-bold text-primaryd">💾 Kết quả lần trước của bạn vẫn được giữ trên máy này — tải ảnh mới để tạo thêm bất cứ lúc nào!</div>
     <div class="text-xs text-gray-400 font-semibold mb-4">🔍 Bấm vào ảnh để phóng to, xem chi tiết từng nét</div>
     <div class="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center">
       <figure class="text-center"><img id="rOriginal" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50 cursor-zoom-in" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">📷 Ảnh gốc của bạn</figcaption></figure>
@@ -496,14 +497,35 @@ function pollJob(job){
   }, 3000);
 }
 
-function showResult(res){
+function showResult(res, restored){
   const sec=document.getElementById('resultSection');
-  document.getElementById('rOriginal').src=previewImg.src||res.original||'';
+  // Khi khôi phục sau reload: dùng URL ảnh trên server (blob preview không còn)
+  document.getElementById('rOriginal').src=(restored ? (res.original||res.enhanced) : (previewImg.src||res.original))||'';
   document.getElementById('rEnhanced').src=res.enhanced||res.original||'';
   lastResultUrl=res.img_output||'';            // bản đồ màu: chỉ gửi cho shop, không hiển thị
   lastEnhancedUrl=res.enhanced||'';
-  sec.classList.remove('hidden'); sec.scrollIntoView({behavior:'smooth'});
+  document.getElementById('restoreNote').classList.toggle('hidden', !restored);
+  sec.classList.remove('hidden');
+  if(!restored){
+    sec.scrollIntoView({behavior:'smooth'});
+    // Lưu kết quả theo MÁY: tải lại trang vẫn còn (ảnh server giữ ~24h)
+    try{ localStorage.setItem('dali_last_result', JSON.stringify({o:res.original||'',e:res.enhanced||'',m:res.img_output||'',at:Date.now()})); }catch(err){}
+  }
 }
+
+// Khôi phục kết quả lần trước của máy này (trong vòng 24h)
+(function(){
+  try{
+    var d=JSON.parse(localStorage.getItem('dali_last_result')||'null');
+    if(!d||!d.e&&!d.m) return;
+    if(Date.now()-(d.at||0) > 24*3600*1000){ localStorage.removeItem('dali_last_result'); return; }
+    // Nếu ảnh đã bị dọn trên server -> ẩn khối + xoá bản lưu
+    var probe=new Image();
+    probe.onload=function(){ showResult({original:d.o,enhanced:d.e,img_output:d.m}, true); };
+    probe.onerror=function(){ localStorage.removeItem('dali_last_result'); };
+    probe.src=d.e||d.o;
+  }catch(err){}
+})();
 
 // ───── Chọn kích thước & số màu (ma trận giá từ admin) ─────
 const PRICING = @json($pricing);
