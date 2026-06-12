@@ -139,6 +139,11 @@ tailwind.config = {
       <div class="text-primary text-3xl font-black text-center hidden sm:block">→</div>
       <figure class="text-center"><img id="rEnhanced" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border-2 border-primary/40 bg-green-50 cursor-zoom-in shadow-lg" alt=""><figcaption class="text-sm font-extrabold text-primary mt-2">✨ Bản DALI tăng cường AI — bấm để phóng to</figcaption></figure>
     </div>
+    {{-- 3 kết quả gần nhất của máy này — bấm ảnh nhỏ để xem lại & đặt theo bản đó --}}
+    <div id="recentRow" class="hidden mt-4">
+      <div class="text-xs font-bold text-gray-500 mb-2">🕘 Kết quả gần đây của bạn — bấm để xem lại:</div>
+      <div id="recentThumbs" class="flex gap-2"></div>
+    </div>
     <div class="mt-5 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center text-sm font-semibold text-amber-700">
       🌟 <b>Đẹp đúng không?</b> Đây là bức tranh <b>độc nhất vô nhị</b> — không ai có tấm thứ hai!
     </div>
@@ -494,33 +499,83 @@ function pollJob(job, startedAt){
   }catch(e){}
 })();
 
+// ───── 3 KẾT QUẢ GẦN NHẤT theo máy (localStorage, 24h) ─────
+let RECENT=[], recentActive=0;
+function loadRecent(){
+  try{
+    let l=JSON.parse(localStorage.getItem('dali_recent_results')||'[]');
+    if(!Array.isArray(l)) l=[];
+    // chuyển bản lưu kiểu cũ (1 kết quả) sang danh sách mới
+    try{
+      const old=JSON.parse(localStorage.getItem('dali_last_result')||'null');
+      if(old&&(old.e||old.o)&&!l.some(r=>r.e===old.e)){ l.push(old); }
+      localStorage.removeItem('dali_last_result');
+    }catch(e2){}
+    l=l.filter(r=>r&&(r.e||r.o)&&Date.now()-(r.at||0)<24*3600*1000);
+    l.sort((a,b)=>(b.at||0)-(a.at||0));
+    l=l.slice(0,3);
+    localStorage.setItem('dali_recent_results', JSON.stringify(l));
+    return l;
+  }catch(e){ return []; }
+}
+function saveRecent(res){
+  try{
+    let l=loadRecent().filter(r=>r.e!==(res.enhanced||''));
+    l.unshift({o:res.original||'', e:res.enhanced||'', m:res.img_output||'', at:Date.now()});
+    localStorage.setItem('dali_recent_results', JSON.stringify(l.slice(0,3)));
+  }catch(e){}
+}
+function dropRecent(i){
+  try{ const l=loadRecent(); l.splice(i,1); localStorage.setItem('dali_recent_results', JSON.stringify(l)); }catch(e){}
+}
+function applyResult(r){
+  document.getElementById('rOriginal').src=r.o||r.e||'';
+  document.getElementById('rEnhanced').src=r.e||r.o||'';
+  lastResultUrl=r.m||'';            // bản đồ màu: chỉ gửi cho shop
+  lastEnhancedUrl=r.e||'';
+}
+function renderRecent(){
+  const row=document.getElementById('recentRow'), box=document.getElementById('recentThumbs');
+  if(!row||!box) return;
+  if(RECENT.length<2){ row.classList.add('hidden'); return; }   // 1 kết quả thì khỏi cần dải chọn
+  row.classList.remove('hidden'); box.innerHTML='';
+  RECENT.forEach(function(r,i){
+    const b=document.createElement('button'); b.type='button';
+    b.className='rounded-xl overflow-hidden border-2 transition '+(i===recentActive?'border-primary shadow-lg':'border-green-100 opacity-60 hover:opacity-100');
+    const im=document.createElement('img'); im.src=r.e||r.o; im.alt='Kết quả '+(i+1);
+    im.className='w-16 h-20 object-cover pointer-events-none';
+    b.appendChild(im);
+    b.addEventListener('click',function(){ recentActive=i; applyResult(r); renderRecent(); });
+    box.appendChild(b);
+  });
+}
+
 function showResult(res, restored){
   const sec=document.getElementById('resultSection');
   // Khi khôi phục sau reload: dùng URL ảnh trên server (blob preview không còn)
-  document.getElementById('rOriginal').src=(restored ? (res.original||res.enhanced) : (previewImg.src||res.original))||'';
-  document.getElementById('rEnhanced').src=res.enhanced||res.original||'';
-  lastResultUrl=res.img_output||'';            // bản đồ màu: chỉ gửi cho shop, không hiển thị
-  lastEnhancedUrl=res.enhanced||'';
+  applyResult({o:(restored ? (res.original||res.enhanced) : (previewImg.src||res.original))||'',
+               e:res.enhanced||res.original||'', m:res.img_output||''});
   document.getElementById('restoreNote').classList.toggle('hidden', !restored);
   sec.classList.remove('hidden');
   updateStickyCta();
   if(!restored){
     sec.scrollIntoView({behavior:'smooth'});
-    // Lưu kết quả theo MÁY: tải lại trang vẫn còn (ảnh server giữ ~24h)
-    try{ localStorage.setItem('dali_last_result', JSON.stringify({o:res.original||'',e:res.enhanced||'',m:res.img_output||'',at:Date.now()})); }catch(err){}
+    // Lưu vào danh sách 3 kết quả gần nhất của MÁY (ảnh server giữ ~24h)
+    saveRecent(res);
   }
+  RECENT=loadRecent(); recentActive=0; renderRecent();
 }
 
-// Khôi phục kết quả lần trước của máy này (trong vòng 24h)
+// Khôi phục kết quả gần nhất của máy này (trong vòng 24h)
 (function(){
   try{
-    var d=JSON.parse(localStorage.getItem('dali_last_result')||'null');
-    if(!d||!d.e&&!d.m) return;
-    if(Date.now()-(d.at||0) > 24*3600*1000){ localStorage.removeItem('dali_last_result'); return; }
-    // Nếu ảnh đã bị dọn trên server -> ẩn khối + xoá bản lưu
+    var list=loadRecent();
+    if(!list.length) return;
+    var d=list[0];
+    // Nếu ảnh đã bị dọn trên server -> bỏ bản đó, thử bản kế tiếp
     var probe=new Image();
     probe.onload=function(){ showResult({original:d.o,enhanced:d.e,img_output:d.m}, true); };
-    probe.onerror=function(){ localStorage.removeItem('dali_last_result'); };
+    probe.onerror=function(){ dropRecent(0); var l2=loadRecent(); if(l2.length){ d=l2[0]; probe.src=d.e||d.o; } };
     probe.src=d.e||d.o;
   }catch(err){}
 })();
