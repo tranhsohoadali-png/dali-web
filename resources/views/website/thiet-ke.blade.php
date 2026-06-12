@@ -80,20 +80,17 @@ tailwind.config = {
         <a href="#mau-tranh" class="bg-white border-2 border-green-200 text-primaryd text-base font-bold px-6 py-4 rounded-2xl hover:border-primary transition flex items-center gap-2"><i class="ri-image-line"></i> Xem mẫu tranh</a>
       </div>
     </div>
-    {{-- Mockup: Ảnh gốc -> Tranh số hóa -> Hoàn thiện --}}
+    {{-- Mockup: Ảnh gốc -> Thành phẩm --}}
     <div class="reveal relative">
-      <div class="grid grid-cols-3 gap-3 items-center">
-        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 rotate-[-4deg]">
-          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" class="w-full h-40 object-cover" alt="Ảnh gốc">
+      <div class="grid grid-cols-[1fr_auto_1fr] gap-3 items-center">
+        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 rotate-[-3deg]">
+          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" class="w-full h-56 object-cover" alt="Ảnh gốc">
           <figcaption class="text-[11px] font-bold text-gray-500 text-center py-1.5">📷 Ảnh gốc</figcaption>
         </figure>
-        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 z-10 scale-110">
-          <img src="{{ asset('images/thiet-ke/be-map.jpg') }}" class="w-full h-44 object-cover" alt="Tranh số hóa">
-          <figcaption class="text-[11px] font-bold text-primaryd text-center py-1.5">🎨 Bản tô số</figcaption>
-        </figure>
-        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 rotate-[4deg]">
-          <img src="{{ asset('images/thiet-ke/be-art.jpg') }}" class="w-full h-40 object-cover" alt="Hoàn thiện">
-          <figcaption class="text-[11px] font-bold text-gray-500 text-center py-1.5">🖼️ Hoàn thiện</figcaption>
+        <div class="text-primary text-3xl font-black">→</div>
+        <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border-2 border-primary/40 rotate-[3deg] scale-105">
+          <img src="{{ asset('images/thiet-ke/be-art.jpg') }}" class="w-full h-56 object-cover" alt="Thành phẩm">
+          <figcaption class="text-[11px] font-extrabold text-primaryd text-center py-1.5">🖼️ Thành phẩm</figcaption>
         </figure>
       </div>
     </div>
@@ -186,12 +183,11 @@ tailwind.config = {
       ['sen', 'Hoa sen nghệ thuật', 'TK320 — tranh treo phòng khách'],
     ] as [$k, $label, $sub])
     <div class="bg-white rounded-3xl border border-green-100 shadow-lg overflow-hidden hover:-translate-y-1.5 hover:shadow-xl2 transition">
-      <div class="grid grid-cols-3">
-        <img src="{{ asset('images/thiet-ke/'.$k.'-goc.jpg') }}" loading="lazy" class="w-full h-32 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Ảnh gốc {{ $label }}">
-        <img src="{{ asset('images/thiet-ke/'.$k.'-map.jpg') }}" loading="lazy" class="w-full h-32 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Bản tô số {{ $label }}">
-        <img src="{{ asset('images/thiet-ke/'.$k.'-art.jpg') }}" loading="lazy" class="w-full h-32 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Thành phẩm {{ $label }}">
+      <div class="grid grid-cols-2">
+        <img src="{{ asset('images/thiet-ke/'.$k.'-goc.jpg') }}" loading="lazy" class="w-full h-44 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Ảnh gốc {{ $label }}">
+        <img src="{{ asset('images/thiet-ke/'.$k.'-art.jpg') }}" loading="lazy" class="w-full h-44 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Thành phẩm {{ $label }}">
       </div>
-      <div class="flex text-[10px] font-bold text-gray-400 text-center"><span class="flex-1 py-1">Ảnh gốc</span><span class="flex-1 py-1 text-primaryd">Bản tô số</span><span class="flex-1 py-1">Thành phẩm</span></div>
+      <div class="flex text-[10px] font-bold text-gray-400 text-center"><span class="flex-1 py-1">Ảnh gốc</span><span class="flex-1 py-1 text-primaryd">Thành phẩm</span></div>
       <div class="px-5 py-3 text-center border-t border-green-50"><div class="font-extrabold">{{ $label }}</div><div class="text-[11px] text-gray-400 font-semibold">{{ $sub }}</div></div>
     </div>
     @endforeach
@@ -270,7 +266,10 @@ tailwind.config = {
 <section class="max-w-6xl mx-auto px-4 py-12 reveal">
   <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Mở hộp bạn nhận được gì?</h2>
   <div class="grid md:grid-cols-2 gap-8 items-center">
-    <img src="{{ asset('images/thiet-ke/sen-map.jpg') }}" loading="lazy" class="rounded-3xl shadow-xl2 border border-green-100 w-full" alt="Canvas in số DALI — bản tô số hoa sen">
+    <figure class="relative">
+      <img src="{{ asset('images/thiet-ke/mo-hop.jpg') }}" loading="lazy" class="rounded-3xl shadow-xl2 w-full aspect-square object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Bộ tranh tô màu số DALI hoàn chỉnh: canvas in số, bộ màu, cọ vẽ">
+      <figcaption class="absolute bottom-3 left-3 glass rounded-full px-4 py-1.5 text-xs font-extrabold text-primaryd shadow">🖼️ Thành phẩm thật từ khách DALI</figcaption>
+    </figure>
     <div class="grid sm:grid-cols-2 gap-4">
       @foreach([['ri-image-2-line','Canvas in số','Tranh in sẵn ô số trên canvas cao cấp'],['ri-palette-line','Bộ màu','Đủ màu acrylic theo bản thiết kế'],['ri-brush-line','Cọ vẽ','Bộ cọ nhiều cỡ, tô chi tiết dễ dàng'],['ri-file-list-3-line','Ảnh hướng dẫn','Bảng mã màu rõ ràng, dễ làm theo'],['ri-links-line','Móc treo','Tặng kèm móc, treo tường ngay']] as $i)
       <div class="flex items-start gap-3 bg-white rounded-2xl border border-green-100 p-4 shadow-sm">
