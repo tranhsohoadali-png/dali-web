@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Tranh Tô Màu Số Hóa Theo Ảnh — Thiết Kế Từ Ảnh Của Bạn | DALI</title>
 <meta name="description" content="Biến ảnh của bạn thành tranh tô màu số hóa độc bản. Thiết kế từ ảnh thật, tặng bộ màu & cọ, giao toàn quốc. Tải ảnh xem trước miễn phí.">
@@ -62,17 +62,17 @@ tailwind.config = {
 {{-- ════════ SECTION 1 — HERO (thiết kế Stitch V2) ════════ --}}
 <section class="relative overflow-hidden bg-[#3E2F23]">
   <img src="{{ asset('images/thiet-ke/hero-studio.jpg') }}" alt="Studio vẽ tranh DALI" class="absolute inset-0 w-full h-full object-cover object-right">
-  <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 md:via-[#3E2F23]/65 to-transparent"></div>
+  <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/65 md:to-transparent"></div>
   <div class="relative max-w-6xl mx-auto px-4 pt-14 pb-24 md:pt-20 md:pb-28">
     <div class="max-w-xl reveal">
       <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] font-black leading-tight text-white">
         Biến khoảnh khắc của bạn thành kiệt tác!
         <span class="block mt-1 text-[#B7F0A8]">Trải nghiệm niềm vui vẽ tranh số hóa.</span>
       </h1>
-      <p class="mt-4 text-white/85 text-[15px] max-w-md">Từ ảnh riêng thành bộ kit vẽ tay hoàn chỉnh. Dễ dàng, thư giãn và ý nghĩa.</p>
+      <p class="mt-4 text-white/85 text-[15px] max-w-md">Gửi 1 tấm ảnh kỷ niệm — nhận bộ kit <b class="text-white">canvas in số + màu pha sẵn + cọ</b>, tự tay tô thành tranh treo tường.</p>
       <div class="mt-7 flex flex-wrap gap-3">
-        <a href="#upload" class="grad-btn text-white text-base font-extrabold px-7 py-4 rounded-xl shadow-xl2 flex items-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên &amp; Xem trước miễn phí</a>
-        <a href="#mo-hop" class="bg-white/10 backdrop-blur border-2 border-white/60 text-white text-base font-bold px-6 py-4 rounded-xl hover:bg-white/20 transition flex items-center gap-2">Tìm hiểu bộ kit</a>
+        <a href="#upload" class="grad-btn w-full sm:w-auto justify-center text-white text-base font-extrabold px-7 py-4 rounded-xl shadow-xl2 flex items-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên &amp; Xem trước miễn phí</a>
+        <a href="#bang-gia" class="w-full sm:w-auto justify-center bg-white/10 backdrop-blur border-2 border-white/60 text-white text-base font-bold px-6 py-4 rounded-xl hover:bg-white/20 transition flex items-center gap-2">Xem bảng giá</a>
       </div>
     </div>
   </div>
@@ -81,10 +81,10 @@ tailwind.config = {
 <section id="upload" class="max-w-6xl mx-auto px-4 -mt-12 relative z-10 pb-12">
   <div class="grid lg:grid-cols-[1fr_310px] gap-5 items-start">
     <div class="bg-white rounded-3xl shadow-xl2 border-2 border-primary/40 p-6 sm:p-8 reveal">
-      <h2 class="text-xl sm:text-2xl font-black"><span class="text-primary">Trial:</span> Xem bản vẽ số hóa của bạn ngay lập tức!</h2>
-      <div class="mt-2 mb-4 inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-1.5 text-sm font-bold text-primaryd">
+      <h2 class="text-xl sm:text-2xl font-black"><span class="text-primary">Thử miễn phí:</span> Xem bản thiết kế từ ảnh của bạn trong ~1 phút!</h2>
+      <div class="mt-2 mb-4 inline-flex flex-wrap max-w-full items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-1.5 text-sm font-bold text-primaryd">
         <i class="ri-flashlight-fill text-accent"></i> Lượt tạo còn lại: <span id="remainBadge">…</span>
-        <span class="text-gray-400 font-semibold">· {{ \App\Models\DesignQuota::FREE }} lượt miễn phí/máy</span>
+        <span class="text-gray-400 font-semibold hidden md:inline">· {{ \App\Models\DesignQuota::FREE }} lượt miễn phí/máy</span>
       </div>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" class="hidden">
       <div class="grid sm:grid-cols-[1fr_auto] gap-4 items-stretch">
@@ -95,17 +95,18 @@ tailwind.config = {
           <span class="inline-block mt-4 grad-btn text-white text-sm font-extrabold px-6 py-3 rounded-xl"><i class="ri-folder-image-line"></i> Chọn ảnh</span>
         </div>
         {{-- Demo trước→sau (như mockup Stitch): ảnh thật của khách --}}
-        <div class="hidden sm:flex items-center gap-2 self-center">
-          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" onclick="openZoom(this.src)" class="w-28 h-36 object-cover rounded-xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
+        <div class="flex items-center justify-center gap-2 self-center">
+          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 object-cover rounded-xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
           <span class="text-primary text-2xl font-black">→</span>
-          <img src="{{ asset('images/thiet-ke/be-map.jpg') }}" onclick="openZoom(this.src)" class="w-28 h-36 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Bản phác thảo số hóa">
+          <img src="{{ asset('images/thiet-ke/be-map.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Bản phác thảo số hóa">
         </div>
       </div>
       <img id="previewImg" class="hidden mt-5 mx-auto max-h-72 rounded-2xl border border-green-100" alt="">
       <div class="mt-5 flex flex-wrap items-center gap-3">
-        <button id="genBtn" disabled class="grad-btn disabled:opacity-40 disabled:cursor-not-allowed text-white text-base font-extrabold px-7 py-4 rounded-2xl flex items-center gap-2"><i class="ri-sparkling-2-line"></i> Tạo bản thiết kế</button>
-        <span class="text-xs text-gray-400">⏱️ Nhận bản xem trước ngay · bộ kit giao trong 24–72 giờ</span>
+        <button id="genBtn" disabled class="grad-btn w-full sm:w-auto justify-center disabled:opacity-40 disabled:cursor-not-allowed text-white text-base font-extrabold px-7 py-4 rounded-2xl flex items-center gap-2"><i class="ri-sparkling-2-line"></i> Tạo bản thiết kế</button>
+        <span class="text-xs text-gray-400">⏱️ Bộ kit giao trong 24–72 giờ · <span class="font-extrabold text-primaryd">Trọn bộ chỉ từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ · COD toàn quốc</span></span>
       </div>
+      <div class="mt-4 pt-4 border-t border-green-100 text-center text-sm text-gray-500">Ngại tự làm? <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="font-extrabold text-primaryd underline">💬 Gửi ảnh qua Zalo</a> — shop thiết kế giúp miễn phí, hoặc <button type="button" class="orderOpen font-extrabold text-primaryd underline" data-package="Đặt trước — shop gọi tư vấn ảnh &amp; kích thước">để lại SĐT, shop gọi lại</button></div>
     </div>
     <div class="space-y-4 reveal">
       @foreach([
@@ -123,13 +124,13 @@ tailwind.config = {
 </section>
 {{-- KẾT QUẢ (before/after ảnh thật của khách — khổ rộng, bấm để zoom) --}}
 <section class="max-w-5xl mx-auto px-4">
-  <div id="resultSection" class="hidden mt-2 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
+  <div id="resultSection" class="hidden scroll-mt-20 mt-2 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
     <div class="font-black text-xl mb-1 flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary"></i> Tác phẩm của bạn đã sẵn sàng!</div>
     <div id="restoreNote" class="hidden mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2 text-xs font-bold text-primaryd">💾 Kết quả lần trước của bạn vẫn được giữ trên máy này — tải ảnh mới để tạo thêm bất cứ lúc nào!</div>
     <div class="text-xs text-gray-400 font-semibold mb-4">🔍 Bấm vào ảnh để phóng to, xem chi tiết từng nét</div>
-    <div class="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center">
+    <div class="grid grid-cols-2 sm:grid-cols-[1fr_auto_1fr] gap-3 sm:gap-4 items-center">
       <figure class="text-center"><img id="rOriginal" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50 cursor-zoom-in" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">📷 Ảnh gốc của bạn</figcaption></figure>
-      <div class="text-primary text-3xl font-black text-center rotate-90 sm:rotate-0">→</div>
+      <div class="text-primary text-3xl font-black text-center hidden sm:block">→</div>
       <figure class="text-center"><img id="rEnhanced" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border-2 border-primary/40 bg-green-50 cursor-zoom-in shadow-lg" alt=""><figcaption class="text-sm font-extrabold text-primary mt-2">✨ Bản DALI tăng cường AI — bấm để phóng to</figcaption></figure>
     </div>
     <div class="mt-5 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center text-sm font-semibold text-amber-700">
@@ -143,19 +144,20 @@ tailwind.config = {
       <div class="font-bold text-sm mb-2">🖼️ Kích thước <span class="text-xs text-gray-400 font-semibold">({{ $pricing['sizes'][0]['note'] ?? '' }})</span></div>
       <div class="flex flex-wrap gap-2" id="sizeChips">
         @foreach($pricing['sizes'] as $i => $s)
-        <button type="button" data-i="{{ $i }}" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">{{ $s['label'] }}<span class="block text-xs font-extrabold text-primaryd sizePrice" data-i="{{ $i }}"></span></button>
+        <button type="button" data-i="{{ $i }}" class="pick border-2 rounded-xl px-4 py-3 text-sm font-bold bg-white">{{ $s['label'] }}<span class="block text-xs font-extrabold text-primaryd sizePrice" data-i="{{ $i }}"></span></button>
         @endforeach
       </div>
       <div class="font-bold text-sm mb-2 mt-4">🎨 Số màu <span class="text-xs text-gray-400 font-semibold">(nhiều màu hơn = chi tiết &amp; giống ảnh hơn)</span></div>
       <div class="flex flex-wrap gap-2" id="colorChips">
         @foreach($pricing['colors'] as $j => $c)
-        <button type="button" data-j="{{ $j }}" class="pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold bg-white">{{ $c }} màu</button>
+        <button type="button" data-j="{{ $j }}" class="pick border-2 rounded-xl px-4 py-3 text-sm font-bold bg-white">{{ $c }} màu</button>
         @endforeach
       </div>
       <div class="mt-5 flex flex-wrap items-center gap-3">
-        <button id="resultOrderBtn" class="grad-btn text-white font-extrabold text-base px-8 py-4 rounded-2xl flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> <span id="resultOrderLabel">Đặt tranh này</span></button>
+        <button id="resultOrderBtn" class="grad-btn w-full sm:w-auto justify-center text-white font-extrabold text-base px-5 sm:px-8 py-4 rounded-2xl flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> <span id="resultOrderLabel">Đặt tranh này</span></button>
         <span class="text-xs text-gray-500">Đặt xong được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm ảnh khác.</span>
       </div>
+      <div class="mt-3 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 inline-block">⏳ Bản thiết kế chỉ được lưu <b>24 giờ</b> trên hệ thống — đặt ngay để giữ bức tranh độc bản của bạn.</div>
     </div>
   </div>
 </section>
@@ -201,23 +203,28 @@ tailwind.config = {
       @endforeach
     </div>
     <div id="bang-gia" class="bg-white rounded-3xl border border-green-100 shadow-xl2 overflow-hidden">
-      <div class="px-5 pt-5 pb-3"><div class="font-black text-lg">💰 Bảng giá bộ kit</div><div class="text-[11px] text-gray-400">Đã gồm thiết kế từ ảnh + canvas + bộ màu &amp; cọ + giao toàn quốc</div></div>
+      <div class="px-5 pt-5 pb-3"><div class="font-black text-lg">💰 Bảng giá bộ kit</div><div class="text-[11px] text-gray-400">Đã gồm thiết kế từ ảnh + canvas + bộ màu &amp; cọ + giao toàn quốc</div>
+        <div class="text-[11px] font-bold text-primaryd mt-1">🎁 Trọn gói: canvas in số + màu pha sẵn + cọ + móc treo + freeship — không phát sinh thêm chi phí.</div></div>
+      <div class="sm:hidden px-5 pb-1 text-[10px] font-bold text-gray-400">↔ Vuốt ngang để xem đủ mức giá</div>
+      <div class="relative">
       <div class="overflow-x-auto">
         <table class="w-full" style="border-collapse:collapse;min-width:430px">
           <thead><tr class="border-y border-gray-100 bg-bgsoft">
-            <th class="text-left px-3 py-2.5 font-black text-[11px]">Kích thước</th>
+            <th class="text-left px-3 py-2.5 font-black text-[11px] sticky left-0 z-10 bg-bgsoft">Kích thước</th>
             @foreach($pricing['colors'] as $c)<th class="text-right px-2 py-2.5 font-black text-[11px] whitespace-nowrap">{{ $c }} màu</th>@endforeach
           </tr></thead>
           <tbody>
             @foreach($pricing['sizes'] as $si => $s)
             @if($si === 1)<tr><td colspan="{{ count($pricing['colors']) + 1 }}" class="bg-primary text-white text-center text-[11px] font-black py-1.5">⭐ Lựa chọn phổ biến</td></tr>@endif
             <tr class="border-b border-gray-50 {{ $si === 1 ? 'bg-primary' : 'hover:bg-green-50/40' }} transition">
-              <td class="px-3 py-2.5"><div class="font-black text-xs whitespace-nowrap {{ $si === 1 ? 'text-white' : '' }}">{{ $s['label'] }}</div>@if(!empty($s['note']))<div class="text-[9px] font-semibold {{ $si === 1 ? 'text-white/80' : 'text-gray-400' }}">{{ $s['note'] }}</div>@endif</td>
-              @foreach($s['prices'] as $v)<td class="px-2 py-2.5 text-right text-[11px] whitespace-nowrap {{ $si === 1 ? 'text-white font-black' : 'text-ink font-bold' }}">{{ number_format($v, 0, ',', '.') }}</td>@endforeach
+              <td class="px-3 py-2.5 sticky left-0 z-10 {{ $si === 1 ? 'bg-primary' : 'bg-white' }}"><div class="font-black text-xs whitespace-nowrap {{ $si === 1 ? 'text-white' : '' }}">{{ $s['label'] }}</div>@if(!empty($s['note']))<div class="text-[9px] font-semibold {{ $si === 1 ? 'text-white/80' : 'text-gray-400' }}">{{ $s['note'] }}</div>@endif</td>
+              @foreach($s['prices'] as $v)<td class="px-2 py-2.5 text-right text-[11px] whitespace-nowrap {{ $si === 1 ? 'text-white font-black' : 'text-ink font-bold' }}">{{ number_format($v, 0, ',', '.') }}đ</td>@endforeach
             </tr>
             @endforeach
           </tbody>
         </table>
+      </div>
+      <div class="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white pointer-events-none sm:hidden"></div>
       </div>
       <div class="p-4"><a href="#upload" class="grad-btn w-full text-white text-sm font-extrabold py-3.5 rounded-xl flex items-center justify-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên — xem trước miễn phí</a></div>
     </div>
@@ -233,10 +240,11 @@ tailwind.config = {
       ['Ảnh chụp điện thoại có làm được không?','Có. Chỉ cần ảnh rõ mặt/chủ thể. AI sẽ tăng cường nét trước khi thiết kế.'],
       ['Có được xem trước không?','Có — bạn tải ảnh lên và xem bản thiết kế MIỄN PHÍ trước khi quyết định đặt.'],
       ['Có bảo hành không?','Có. Đổi trả miễn phí nếu tranh in lỗi, sai thiết kế hoặc hư hỏng khi vận chuyển.'],
+      ['Tôi không rành thao tác, nhờ shop làm giúp được không?','Được! Bạn chỉ cần gửi ảnh qua Zalo 0856.911.698, shop thiết kế và gửi bản xem trước miễn phí — ưng mới đặt.'],
     ] as $q)
-    <details class="bg-white rounded-2xl border border-green-100 p-5 shadow-sm">
-      <summary class="flex items-center justify-between font-extrabold"><span>{{ $q[0] }}</span><i class="ri-add-line faq-ic text-primary text-xl transition-transform"></i></summary>
-      <p class="mt-3 text-sm text-gray-600 leading-relaxed">{{ $q[1] }}</p>
+    <details class="bg-white rounded-2xl border border-green-100 px-5 shadow-sm">
+      <summary class="flex items-center justify-between font-extrabold py-4 min-h-[44px]"><span>{{ $q[0] }}</span><i class="ri-add-line faq-ic text-primary text-xl transition-transform"></i></summary>
+      <p class="pb-4 text-sm text-gray-600 leading-relaxed">{{ $q[1] }}</p>
     </details>
     @endforeach
   </div>
@@ -252,7 +260,7 @@ tailwind.config = {
     <img src="{{ asset('images/thiet-ke/mo-hop.jpg') }}" loading="lazy" class="w-full max-w-[280px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg]" alt="Thành phẩm DALI">
     <div class="text-center md:text-left">
       <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight">Sẵn sàng để sáng tạo?<br>Bắt đầu hành trình nghệ thuật của bạn ngay hôm nay!</h2>
-      <a href="#upload" class="mt-6 inline-flex items-center gap-2 bg-white text-primaryd font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition shadow-xl2">🛒 Đặt hàng ngay &amp; Nhận ưu đãi</a>
+      <a href="#upload" class="mt-6 inline-flex items-center gap-2 bg-white text-primaryd font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition shadow-xl2">📸 Tải ảnh — xem bản thiết kế miễn phí, ưng mới đặt</a>
     </div>
   </div>
 </section>
@@ -262,18 +270,19 @@ tailwind.config = {
 </footer>
 
 {{-- ════════ FLOATING (mobile sticky CTA) ════════ --}}
-<div class="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-green-200 grid grid-cols-2 gap-2 p-2">
-  <a href="#upload" class="grad-btn text-white font-extrabold py-3 rounded-xl text-center text-sm">📸 Tải ảnh</a>
+<div class="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-green-200 grid grid-cols-2 gap-2 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+  <a id="stickyCta" href="#upload" class="grad-btn text-white font-extrabold py-3 rounded-xl text-center text-sm">📸 Tải ảnh</a>
   <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="bg-white border border-green-200 text-primaryd font-extrabold py-3 rounded-xl text-center text-sm">💬 Chat Zalo</a>
 </div>
-<div class="md:hidden h-16"></div>
+<div class="md:hidden h-20"></div>
+<a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-[#0068FF] text-white font-extrabold px-5 py-3.5 rounded-full shadow-xl2 hover:scale-105 transition"><i class="ri-message-3-fill"></i> Chat Zalo</a>
 
 {{-- ════════ MODALS ════════ --}}
 <div id="confirmModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center max-h-[85vh] overflow-y-auto">
     <div class="text-4xl mb-2">✨</div>
     <h3 class="text-xl font-black mb-2">Tạo bản thiết kế?</h3>
-    <p class="text-sm text-gray-500 mb-5">Bạn còn <b id="confirmRemain">0</b> lượt. Mỗi lần tạo dùng <b>1 lượt</b> và mất ~20–60 giây.</p>
+    <p class="text-sm text-gray-500 mb-5">Bạn còn <b id="confirmRemain">0</b> lượt. Mỗi lần tạo dùng <b>1 lượt</b> và mất khoảng <b>1–3 phút</b>.</p>
     <div class="flex gap-3 justify-center">
       <button onclick="closeM('confirmModal')" class="bg-gray-100 text-gray-600 font-bold px-5 py-3 rounded-xl">Huỷ</button>
       <button id="confirmGo" class="grad-btn text-white font-extrabold px-6 py-3 rounded-xl">Tạo ngay</button>
@@ -281,25 +290,27 @@ tailwind.config = {
   </div>
 </div>
 <div id="loadingModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center max-h-[85vh] overflow-y-auto">
     <div class="w-12 h-12 mx-auto mb-4 border-4 border-green-100 border-t-primary rounded-full animate-spin"></div>
     <h3 class="text-lg font-black">Đang thiết kế bằng AI…</h3>
-    <p class="text-sm text-gray-500 mt-1">Vui lòng đợi 20–60 giây, đừng tắt trang.</p>
+    <p class="text-sm text-gray-500 mt-1">Thường mất 1–3 phút — bạn có thể chờ, đừng tắt trang.</p>
   </div>
 </div>
 <div id="orderModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-sm w-full p-7">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-7 max-h-[85vh] overflow-y-auto">
     <div class="text-center"><div class="text-4xl mb-2">🛍️</div><h3 id="orderTitle" class="text-xl font-black mb-1">Đặt hàng tranh thiết kế</h3>
     <p id="orderDesc" class="text-sm text-gray-500 mb-4">Điền thông tin, shop sẽ liên hệ &amp; làm tranh cho bạn. Đặt xong được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b>.</p></div>
-    <div class="space-y-3 text-left">
-      <input id="oName" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-sm" placeholder="Họ tên *">
-      <input id="oPhone" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-sm" placeholder="Số điện thoại *">
-      <input id="oAddr" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-sm" placeholder="Địa chỉ nhận hàng">
+    <form id="orderForm" class="space-y-3 text-left" novalidate>
+      <input id="oName" name="name" type="text" autocomplete="name" autocapitalize="words" enterkeyhint="next" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-base" placeholder="Họ tên *">
+      <input id="oPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="13" enterkeyhint="next" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-base" placeholder="Số điện thoại *">
+      <div id="oPhoneErr" class="hidden text-xs text-red-500 font-bold px-1">Số điện thoại chưa đúng (VD: 0912 345 678)</div>
+      <input id="oAddr" name="address" type="text" autocomplete="street-address" enterkeyhint="done" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-base" placeholder="Địa chỉ nhận hàng (có thể bổ sung khi shop gọi)">
       <div id="oPkgRow" class="hidden text-xs font-bold text-primaryd bg-green-50 rounded-lg px-3 py-2">Gói: <span id="oPkgLabel"></span></div>
-    </div>
+    </form>
+    <div class="mt-4 grid grid-cols-3 gap-1 text-center text-[10px] font-bold text-gray-500"><div>💵 Thanh toán<br>khi nhận hàng</div><div>🚚 Freeship<br>toàn quốc</div><div>🔄 Đổi trả nếu<br>in lỗi/hư hỏng</div></div>
     <div class="flex gap-3 justify-center mt-5">
       <button onclick="closeM('orderModal')" class="bg-gray-100 text-gray-600 font-bold px-5 py-3 rounded-xl">Để sau</button>
-      <button id="orderSubmit" class="grad-btn text-white font-extrabold px-6 py-3 rounded-xl">Gửi đơn</button>
+      <button id="orderSubmit" class="grad-btn disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold px-6 py-3 rounded-xl">Gửi đơn</button>
     </div>
   </div>
 </div>
@@ -331,17 +342,17 @@ const cio = new IntersectionObserver((es)=>es.forEach(e=>{ if(!e.isIntersecting)
 document.querySelectorAll('.count').forEach(el=>cio.observe(el));
 
 // Modal helpers
-function openM(id){ const m=document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); }
-function closeM(id){ const m=document.getElementById(id); m.classList.add('hidden'); m.classList.remove('flex'); }
+function openM(id){ const m=document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); document.body.style.overflow='hidden'; }
+function closeM(id){ const m=document.getElementById(id); m.classList.add('hidden'); m.classList.remove('flex'); document.body.style.overflow=''; }
 
 // ───── Công cụ thiết kế (device id + quota + tạo + đặt hàng) ─────
 function deviceId(){ let d=localStorage.getItem('dali_device'); if(!d){ d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,12); localStorage.setItem('dali_device',d);} return d; }
-const DEVICE=deviceId(); let remaining=0, lastResultUrl='', lastEnhancedUrl='', selectedPackage='';
+const DEVICE=deviceId(); let remaining=null, lastResultUrl='', lastEnhancedUrl='', selectedPackage='', orderDone=false;
 
 const fileInput=document.getElementById('fileInput'), dropZone=document.getElementById('dropZone'),
       previewImg=document.getElementById('previewImg'), genBtn=document.getElementById('genBtn');
 
-function badgeText(d){ return d&&d.unlimited ? '∞ (máy test)' : (remaining+' lượt'); }
+function badgeText(d){ return d&&d.unlimited ? '∞ (máy test)' : (remaining==null ? '—' : remaining+' lượt'); }
 async function refreshQuota(){ try{ const r=await fetch(URLS.quota+'?device_id='+encodeURIComponent(DEVICE)); const d=await r.json(); remaining=d.remaining??0; document.getElementById('remainBadge').textContent=badgeText(d); }catch(e){ document.getElementById('remainBadge').textContent='—'; } }
 refreshQuota();
 
@@ -352,7 +363,10 @@ dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remov
 fileInput.addEventListener('change',onFile);
 function onFile(){ const f=fileInput.files[0]; if(!f) return; previewImg.src=URL.createObjectURL(f); previewImg.classList.remove('hidden'); genBtn.disabled=false; }
 
-genBtn.addEventListener('click',()=>{ if(!fileInput.files[0]){alert('Vui lòng chọn ảnh.');return;} if(remaining<=0){ outOfQuota(); return;} document.getElementById('confirmRemain').textContent=remaining; openM('confirmModal'); });
+genBtn.addEventListener('click', async ()=>{ if(!fileInput.files[0]){alert('Vui lòng chọn ảnh.');return;}
+  if(remaining===null){ await refreshQuota(); }
+  if(remaining===null){ alert('Không kiểm tra được lượt tạo — vui lòng kiểm tra mạng và thử lại.'); return; }
+  if(remaining<=0){ outOfQuota(); return;} document.getElementById('confirmRemain').textContent=remaining; openM('confirmModal'); });
 
 // Nén ảnh ngay trên máy khách trước khi gửi: ảnh điện thoại 4-10MB -> ~0.3-0.6MB
 // (tránh giới hạn upload của máy chủ + gửi nhanh hơn nhiều trên 4G).
@@ -396,14 +410,14 @@ function pollJob(job){
   var timer=setInterval(async function(){
     var giay=Math.round((Date.now()-t0)/1000);
     var phut=Math.floor(giay/60);
-    if(note) note.textContent='Đã chờ '+(phut>0?phut+' phút '+(giay%60)+' giây':giay+' giây')+'… AI thường mất 1–3 phút, đừng tắt trang.';
+    if(note) note.textContent='Đã chờ '+(phut>0?phut+' phút '+(giay%60)+' giây':giay+' giây')+'… AI thường mất 1–3 phút, đừng tắt trang.'+(giay>180?' Sắp xong rồi — ảnh phức tạp cần thêm chút thời gian.':'');
     if(Date.now()-t0>MAX_MS){ clearInterval(timer); closeM('loadingModal'); alert('Hệ thống đang bận, vui lòng thử lại sau ít phút.'); refreshQuota(); return; }
     try{
       var r=await fetch(URLS.status+'?job='+encodeURIComponent(job),{cache:'no-store'});
       var d=await r.json();
       if(d.status==='done'){ clearInterval(timer); closeM('loadingModal'); showResult(d.result); }
       else if(d.status==='error'){ clearInterval(timer); closeM('loadingModal');
-        if(d.remaining!=null){ remaining=d.remaining; document.getElementById('remainBadge').textContent=remaining+' lượt'; }
+        if(d.remaining!=null){ remaining=d.remaining; document.getElementById('remainBadge').textContent=badgeText(d); }
         alert((d.msg||'Xử lý thất bại.')+' (Lượt của bạn đã được hoàn lại)'); }
       // processing -> chờ vòng sau
     }catch(e){ /* mạng chập chờn -> thử vòng sau */ }
@@ -419,6 +433,7 @@ function showResult(res, restored){
   lastEnhancedUrl=res.enhanced||'';
   document.getElementById('restoreNote').classList.toggle('hidden', !restored);
   sec.classList.remove('hidden');
+  updateStickyCta();
   if(!restored){
     sec.scrollIntoView({behavior:'smooth'});
     // Lưu kết quả theo MÁY: tải lại trang vẫn còn (ảnh server giữ ~24h)
@@ -443,22 +458,30 @@ function showResult(res, restored){
 // ───── Chọn kích thước & số màu (ma trận giá từ admin) ─────
 const PRICING = @json($pricing);
 var selI = Math.min(1, PRICING.sizes.length-1);
-var selJ = (function(){ var k = PRICING.colors.indexOf(36); return k >= 0 ? k : 0; })();
+var selJ = (function(){ var k = PRICING.colors.findIndex(function(c){ return +c === 36; }); return k >= 0 ? k : 0; })();
 function fmtVnd(n){ return n.toLocaleString('vi-VN')+'đ'; }
 function curPrice(){ return PRICING.sizes[selI].prices[selJ] || 0; }
+// Thanh nổi mobile: sau khi có kết quả -> đổi thành nút đặt hàng kèm giá hiện tại
+function updateStickyCta(){
+  var sc=document.getElementById('stickyCta');
+  if(!sc || document.getElementById('resultSection').classList.contains('hidden')) return;
+  sc.setAttribute('href','#resultSection');
+  sc.textContent='🛒 Đặt tranh này — '+fmtVnd(curPrice());
+}
 function paintChips(){
   document.querySelectorAll('#sizeChips .pick').forEach(b=>{
     var on = +b.dataset.i === selI;
-    b.className='pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
+    b.className='pick border-2 rounded-xl px-4 py-3 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
   });
   document.querySelectorAll('.sizePrice').forEach(sp=>{
     sp.textContent = fmtVnd(PRICING.sizes[+sp.dataset.i].prices[selJ] || 0);
   });
   document.querySelectorAll('#colorChips .pick').forEach(b=>{
     var on = +b.dataset.j === selJ;
-    b.className='pick border-2 rounded-xl px-4 py-2.5 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
+    b.className='pick border-2 rounded-xl px-4 py-3 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
   });
   document.getElementById('resultOrderLabel').textContent='Đặt tranh này — '+fmtVnd(curPrice());
+  updateStickyCta();
 }
 document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selI=+b.dataset.i; paintChips(); }));
 document.querySelectorAll('#colorChips .pick').forEach(b=>b.addEventListener('click',()=>{ selJ=+b.dataset.j; paintChips(); }));
@@ -470,14 +493,14 @@ var zScale=1,zX=0,zY=0,zPointers=new Map(),zLastDist=0;
 function zApply(){ var im=document.getElementById('zoomImg'); im.style.transform='translate('+zX+'px,'+zY+'px) scale('+zScale+')'; }
 function openZoom(src){
   var m=document.getElementById('zoomModal'), im=document.getElementById('zoomImg');
-  im.src=src; m.classList.remove('hidden');
+  im.src=src; m.classList.remove('hidden'); document.body.style.overflow='hidden';
   im.onload=function(){
     var s=Math.min(window.innerWidth/im.naturalWidth, window.innerHeight/im.naturalHeight)*0.95;
     zScale=s; zX=(window.innerWidth-im.naturalWidth*s)/2; zY=(window.innerHeight-im.naturalHeight*s)/2; zApply();
   };
   if(im.complete&&im.naturalWidth) im.onload();
 }
-function closeZoom(){ document.getElementById('zoomModal').classList.add('hidden'); zPointers.clear(); }
+function closeZoom(){ document.getElementById('zoomModal').classList.add('hidden'); zPointers.clear(); document.body.style.overflow=''; }
 function zoomBy(f){ zoomAt(window.innerWidth/2, window.innerHeight/2, f); }
 function zoomAt(cx,cy,f){ var ns=Math.min(Math.max(zScale*f,0.05),12); zX=cx-(cx-zX)*(ns/zScale); zY=cy-(cy-zY)*(ns/zScale); zScale=ns; zApply(); }
 (function(){
@@ -500,24 +523,50 @@ function zoomAt(cx,cy,f){ var ns=Math.min(Math.max(zScale*f,0.05),12); zX=cx-(cx
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeZoom(); });
 })();
 
-function outOfQuota(){ document.getElementById('orderTitle').textContent='Bạn đã hết lượt miễn phí';
-  document.getElementById('orderDesc').innerHTML='Đặt hàng để shop làm tranh cho bạn — và nhận thêm <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b> tạo.'; openOrder(''); }
+function outOfQuota(){ document.getElementById('orderTitle').textContent='Hết lượt miễn phí — nhận thêm +{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt ngay';
+  document.getElementById('orderDesc').innerHTML='Đặt hàng để shop làm tranh cho bạn — và nhận thêm <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b> tạo.'
+    +'<br><a href="https://zalo.me/0856911698" target="_blank" class="inline-flex items-center gap-1 mt-2 text-[#0068FF] font-extrabold underline">💬 Hoặc gửi ảnh qua Zalo, shop làm xem trước giúp bạn</a>';
+  openOrder(document.getElementById('resultSection').classList.contains('hidden') ? '' : (PRICING.sizes[selI].label+' — '+fmtVnd(curPrice())+' · '+PRICING.colors[selJ]+' màu')); }
 
-function openOrder(pkg){ selectedPackage=pkg||''; const row=document.getElementById('oPkgRow');
+function openOrder(pkg){
+  // Khôi phục form nếu modal đang ở trạng thái "đặt thành công" của đơn trước
+  if(orderDone){ orderDone=false;
+    document.getElementById('orderForm').classList.remove('hidden');
+    document.getElementById('orderSubmit').classList.remove('hidden');
+    document.getElementById('orderTitle').textContent='Đặt hàng tranh thiết kế';
+    document.getElementById('orderDesc').innerHTML='Điền thông tin, shop sẽ liên hệ &amp; làm tranh cho bạn. Đặt xong được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt</b>.';
+  }
+  selectedPackage=pkg||''; const row=document.getElementById('oPkgRow');
   if(selectedPackage){ row.classList.remove('hidden'); document.getElementById('oPkgLabel').textContent=selectedPackage; } else { row.classList.add('hidden'); }
+  document.getElementById('orderSubmit').textContent = (selectedPackage && selectedPackage.indexOf('đ')>-1) ? ('Đặt hàng COD — '+fmtVnd(curPrice())) : 'Gửi đơn — shop gọi lại ngay';
   openM('orderModal'); }
 document.querySelectorAll('.orderOpen').forEach(b=>b.addEventListener('click',()=>openOrder(b.dataset.package||'')));
 
+function validVnPhone(p){ p=p.replace(/[\s.\-]/g,''); return /^(0|\+?84)(3|5|7|8|9)\d{8}$/.test(p); }
+document.getElementById('oPhone').addEventListener('input',()=>{ document.getElementById('oPhoneErr').classList.add('hidden'); document.getElementById('oPhone').classList.remove('border-red-400'); });
+document.getElementById('orderForm').addEventListener('submit',function(e){ e.preventDefault(); document.getElementById('orderSubmit').click(); });
+
 document.getElementById('orderSubmit').addEventListener('click', async ()=>{
+  const btn=document.getElementById('orderSubmit');
+  if(btn.disabled) return;
   const name=document.getElementById('oName').value.trim(), phone=document.getElementById('oPhone').value.trim();
   if(!name||!phone){ alert('Vui lòng nhập họ tên và số điện thoại.'); return; }
+  if(!validVnPhone(phone)){ document.getElementById('oPhoneErr').classList.remove('hidden'); document.getElementById('oPhone').classList.add('border-red-400'); document.getElementById('oPhone').focus(); return; }
   const fd=new FormData(); fd.append('device_id',DEVICE); fd.append('customer_name',name); fd.append('customer_phone',phone);
   fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('package',selectedPackage);
+  btn.disabled=true; const oldLabel=btn.innerHTML; btn.innerHTML='<i class="ri-loader-4-line animate-spin"></i> Đang gửi…';
   try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
-    if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; } closeM('orderModal');
-    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=remaining+' lượt';
-    alert('✅ Đã nhận đơn '+d.code+'! Shop sẽ liên hệ sớm. Bạn được +'+d.bonus+' lượt tạo.');
+    if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; }
+    remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=badgeText(d);
+    // Trạng thái thành công NGAY TRONG modal: giữ mã đơn + bước tiếp theo qua Zalo
+    document.getElementById('orderForm').classList.add('hidden');
+    document.getElementById('orderSubmit').classList.add('hidden');
+    document.getElementById('orderTitle').textContent='✅ Đã nhận đơn '+d.code;
+    document.getElementById('orderDesc').innerHTML='Shop sẽ gọi xác nhận trong hôm nay. Bạn được <b>+'+d.bonus+' lượt tạo</b>. Thanh toán khi nhận hàng (COD).'
+      +'<br><a href="https://zalo.me/0856911698" target="_blank" class="inline-block mt-3 bg-[#0068FF] text-white font-extrabold px-5 py-2.5 rounded-xl">💬 Nhắn Zalo kèm mã đơn '+d.code+'</a>';
+    orderDone=true;
   }catch(e){ alert('Lỗi kết nối, thử lại sau.'); }
+  finally{ btn.disabled=false; btn.innerHTML=oldLabel; }
 });
 </script>
 </body>
