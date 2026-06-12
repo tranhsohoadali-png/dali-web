@@ -101,7 +101,9 @@ class ThietKeController extends Controller
                 ->attach('image', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
                 ->post($url, [
                     'enhance'     => $r->input('enhance', '1'),
-                    'preset'      => $r->input('preset', 'anime'),
+                    // Khách web gửi ảnh CHÂN DUNG/ẢNH THẬT -> mặc định 'photo'
+                    // (giữ đúng người thật 30-48 màu), không phải 'anime' hoạt hình.
+                    'preset'      => $r->input('preset', 'photo'),
                     'print_size'  => $r->input('print_size', '40x50'),
                     'color_limit' => (int) $r->input('color_limit', 0),
                 ]);
@@ -186,24 +188,57 @@ class ThietKeController extends Controller
         ]);
         $did = $this->deviceId($r);
 
-        $code  = 'TK-' . strtoupper(substr(uniqid(), -6));
-        $order = Order::create([
-            'code'             => $code,
-            'customer_name'    => $data['customer_name'],
-            'customer_phone'   => $data['customer_phone'],
-            'customer_city'    => $r->input('customer_city', ''),
-            'customer_address' => $r->input('customer_address', ''),
-            'note'             => 'ĐƠN THIẾT KẾ THEO YÊU CẦU'
-                                  . ($r->input('package') ? ' — Gói: ' . $r->input('package') : '')
-                                  . '. Bản đồ màu: ' . $r->input('result_url', '(chưa có)')
-                                  . ($r->input('enhanced_url') ? ' | Ảnh AI: ' . $r->input('enhanced_url') : ''),
-            'status'           => 'new',
-            'payment_method'   => 'COD',
-            'payment_status'   => 'pending',
-            'subtotal'         => 0,
-            'ship_fee'         => 0,
-            'total'            => 0,
-        ]);
+        // SĐT Việt Nam — client có validate nhưng POST thẳng thì không:
+        // bỏ khoảng trắng/chấm/gạch rồi kiểm tra phía server.
+        $phone = preg_replace('/[\s.\-]+/', '', $data['customer_phone']);
+        if (!preg_match('/^(0|\+?84)(3|5|7|8|9)\d{8}$/', $phone)) {
+            return response()->json(['ok' => false, 'msg' => 'Số điện thoại không hợp lệ'], 422);
+        }
+
+        // Chống đúp đơn khi retry/bypass nút gửi — phải chặn TRƯỚC khi cộng
+        // bonus, vì mỗi đơn đúp lại +ORDER_BONUS lượt. Cùng SĐT đã có đơn
+        // thiết kế trong 5 phút -> trả lại mã đơn cũ, không cộng lượt nữa.
+        $dup = Order::where('customer_phone', $phone)
+            ->where('created_at', '>=', now()->subMinutes(5))
+            ->where('note', 'like', 'ĐƠN THIẾT KẾ THEO YÊU CẦU%')
+            ->latest('id')
+            ->first();
+        if ($dup) {
+            return response()->json([
+                'ok' => true, 'code' => $dup->code, 'duplicate' => true,
+                'bonus' => 0, 'remaining' => $did ? $this->quotaFor($did)->remaining : 0,
+            ]);
+        }
+        // cache->add nguyên tử (theo device+SĐT): chặn nốt 2 POST song song
+        // cùng lọt qua truy vấn trên.
+        $lock = 'tk_order_' . md5($did . '|' . $phone);
+        if (!cache()->add($lock, 1, 300)) {
+            return response()->json(['ok' => false, 'msg' => 'Đơn của bạn đang được xử lý, vui lòng đợi giây lát.'], 429);
+        }
+
+        $code = 'TK-' . strtoupper(substr(uniqid(), -6));
+        try {
+            $order = Order::create([
+                'code'             => $code,
+                'customer_name'    => $data['customer_name'],
+                'customer_phone'   => $phone,
+                'customer_city'    => $r->input('customer_city', ''),
+                'customer_address' => $r->input('customer_address', ''),
+                'note'             => 'ĐƠN THIẾT KẾ THEO YÊU CẦU'
+                                      . ($r->input('package') ? ' — Gói: ' . $r->input('package') : '')
+                                      . '. Bản đồ màu: ' . $r->input('result_url', '(chưa có)')
+                                      . ($r->input('enhanced_url') ? ' | Ảnh AI: ' . $r->input('enhanced_url') : ''),
+                'status'           => 'new',
+                'payment_method'   => 'COD',
+                'payment_status'   => 'pending',
+                'subtotal'         => 0,
+                'ship_fee'         => 0,
+                'total'            => 0,
+            ]);
+        } catch (\Throwable $e) {
+            cache()->forget($lock); // tạo đơn lỗi -> nhả khoá để khách gửi lại ngay
+            throw $e;
+        }
 
         $remaining = 0;
         if ($did) {
