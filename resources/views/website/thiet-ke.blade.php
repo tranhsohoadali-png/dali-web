@@ -104,7 +104,7 @@ tailwind.config = {
         <div class="flex items-center justify-center gap-2 self-center">
           <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 object-cover rounded-xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
           <span class="text-primary text-2xl font-black">→</span>
-          <img src="{{ asset('images/thiet-ke/be-map.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Bản phác thảo số hóa">
+          <img src="{{ asset('images/thiet-ke/be-art.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Bản tăng cường AI">
         </div>
       </div>
       <img id="previewImg" class="hidden mt-5 mx-auto max-h-72 rounded-2xl border border-green-100" alt="">
@@ -283,6 +283,16 @@ tailwind.config = {
 <div class="md:hidden h-20"></div>
 <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-[#0068FF] text-white font-extrabold px-5 py-3.5 rounded-full shadow-xl2 hover:scale-105 transition"><i class="ri-message-3-fill"></i> Chat Zalo</a>
 
+{{-- Viên nổi tiến trình: hiện khi ẩn cửa sổ chờ / quay lại trang lúc đang xử lý --}}
+<button id="jobPill" onclick="openM('loadingModal')" class="hidden fixed bottom-24 md:bottom-6 left-4 z-40 items-center gap-2 bg-white border-2 border-primary/50 shadow-xl2 rounded-full px-4 py-2.5 text-xs font-extrabold text-primaryd">
+  <span class="w-4 h-4 border-2 border-green-100 border-t-primary rounded-full animate-spin inline-block"></span>
+  <span id="jobPillText">Đang thiết kế…</span>
+</button>
+{{-- Thông báo khi xong --}}
+<div id="doneToast" class="hidden fixed top-20 inset-x-0 z-[60] justify-center pointer-events-none px-4">
+  <div class="bg-primaryd text-white font-extrabold text-sm px-6 py-3.5 rounded-full shadow-xl2">🔔 Bản thiết kế của bạn đã xong — xem ngay bên dưới!</div>
+</div>
+
 {{-- ════════ MODALS ════════ --}}
 <div id="confirmModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
   <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center max-h-[85vh] overflow-y-auto">
@@ -300,6 +310,7 @@ tailwind.config = {
     <div class="w-12 h-12 mx-auto mb-4 border-4 border-green-100 border-t-primary rounded-full animate-spin"></div>
     <h3 class="text-lg font-black">Đang thiết kế bằng AI…</h3>
     <p class="text-sm text-gray-500 mt-1">Thường mất 1–3 phút — bạn có thể chờ, đừng tắt trang.</p>
+    <button onclick="hideLoading()" class="mt-4 inline-flex items-center gap-1.5 text-xs font-extrabold text-primaryd bg-green-50 border border-green-200 rounded-full px-4 py-2.5">🔔 Ẩn cửa sổ — cứ xem trang, xong sẽ có chuông báo</button>
   </div>
 </div>
 <div id="orderModal" class="fixed inset-0 z-50 bg-black/50 hidden items-center justify-center p-4">
@@ -395,7 +406,29 @@ function compressImage(file, maxEdge, quality){
   });
 }
 
+// ───── Chuông + thông báo khi xong (khách có thể thoát ra trong lúc chờ) ─────
+let _ac=null;
+function initAudio(){ try{ _ac=_ac||new (window.AudioContext||window.webkitAudioContext)(); if(_ac.state==='suspended') _ac.resume(); }catch(e){} }
+function playChime(){ try{ if(!_ac) return; if(_ac.state==='suspended') _ac.resume(); const t=_ac.currentTime;
+  [[880,0],[1175,0.18]].forEach(function(p){ const o=_ac.createOscillator(), g=_ac.createGain();
+    o.type='sine'; o.frequency.value=p[0];
+    g.gain.setValueAtTime(0.0001,t+p[1]); g.gain.exponentialRampToValueAtTime(0.25,t+p[1]+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+p[1]+0.6);
+    o.connect(g); g.connect(_ac.destination); o.start(t+p[1]); o.stop(t+p[1]+0.65); });
+}catch(e){} }
+function showPill(){ const p=document.getElementById('jobPill'); p.classList.remove('hidden'); p.classList.add('flex'); }
+function hidePill(){ const p=document.getElementById('jobPill'); p.classList.add('hidden'); p.classList.remove('flex'); }
+function hideLoading(){ closeM('loadingModal'); showPill(); }
+function clearPendingJob(){ try{ localStorage.removeItem('dali_pending_job'); }catch(e){} hidePill(); }
+function notifyDone(){
+  playChime();
+  const t=document.getElementById('doneToast'); t.classList.remove('hidden'); t.classList.add('flex');
+  setTimeout(function(){ t.classList.add('hidden'); t.classList.remove('flex'); }, 7000);
+  if(document.hidden){ const old=document.title; document.title='🔔 Tranh của bạn đã xong! — DALI';
+    document.addEventListener('visibilitychange', function h(){ if(!document.hidden){ document.title=old; document.removeEventListener('visibilitychange',h); } }); }
+}
+
 document.getElementById('confirmGo').addEventListener('click', async ()=>{
+  initAudio();   // tạo audio ngay lúc khách bấm -> sau này được phép kêu chuông
   closeM('confirmModal'); openM('loadingModal');
   const f0=fileInput.files[0];
   const blob=await compressImage(f0);
@@ -405,30 +438,45 @@ document.getElementById('confirmGo').addEventListener('click', async ()=>{
     const r=await fetch(URLS.gen,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
     if(!d.ok){ closeM('loadingModal'); if(d.reason==='no_quota') outOfQuota(); else alert(d.msg||'Có lỗi, thử lại sau.'); return; }
     remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=badgeText(d);
+    // Ghi nhớ job theo MÁY: khách thoát trang giữa chừng, quay lại vẫn tự nối tiếp
+    try{ localStorage.setItem('dali_pending_job', JSON.stringify({job:d.job, at:Date.now()})); }catch(e){}
     pollJob(d.job);   // job chạy nền bên hệ thống màu -> hỏi trạng thái mỗi 3s
   }catch(e){ closeM('loadingModal'); alert('Lỗi kết nối, thử lại sau.'); }
 });
 
 // Poll trạng thái job (an toàn với mọi timeout proxy — mỗi request chỉ ~1s)
-function pollJob(job){
-  var t0=Date.now(), MAX_MS=10*60*1000;   // job thuc te co the toi ~5 phut
+function pollJob(job, startedAt){
+  var t0=startedAt||Date.now(), MAX_MS=10*60*1000;   // job thuc te co the toi ~5 phut
   var note=document.querySelector('#loadingModal p');
+  var pillText=document.getElementById('jobPillText');
   var timer=setInterval(async function(){
     var giay=Math.round((Date.now()-t0)/1000);
     var phut=Math.floor(giay/60);
-    if(note) note.textContent='Đã chờ '+(phut>0?phut+' phút '+(giay%60)+' giây':giay+' giây')+'… AI thường mất 1–3 phút, đừng tắt trang.'+(giay>180?' Sắp xong rồi — ảnh phức tạp cần thêm chút thời gian.':'');
-    if(Date.now()-t0>MAX_MS){ clearInterval(timer); closeM('loadingModal'); alert('Hệ thống đang bận, vui lòng thử lại sau ít phút.'); refreshQuota(); return; }
+    var tgian=(phut>0?phut+' phút '+(giay%60)+' giây':giay+' giây');
+    if(note) note.textContent='Đã chờ '+tgian+'… AI thường mất 1–3 phút.'+(giay>180?' Sắp xong rồi — ảnh phức tạp cần thêm chút thời gian.':'');
+    if(pillText) pillText.textContent='Đang thiết kế… '+tgian;
+    if(Date.now()-t0>MAX_MS){ clearInterval(timer); clearPendingJob(); closeM('loadingModal'); alert('Hệ thống đang bận, vui lòng thử lại sau ít phút.'); refreshQuota(); return; }
     try{
       var r=await fetch(URLS.status+'?job='+encodeURIComponent(job),{cache:'no-store'});
       var d=await r.json();
-      if(d.status==='done'){ clearInterval(timer); closeM('loadingModal'); showResult(d.result); }
-      else if(d.status==='error'){ clearInterval(timer); closeM('loadingModal');
+      if(d.status==='done'){ clearInterval(timer); clearPendingJob(); closeM('loadingModal'); showResult(d.result); notifyDone(); }
+      else if(d.status==='error'){ clearInterval(timer); clearPendingJob(); closeM('loadingModal');
         if(d.remaining!=null){ remaining=d.remaining; document.getElementById('remainBadge').textContent=badgeText(d); }
         alert((d.msg||'Xử lý thất bại.')+' (Lượt của bạn đã được hoàn lại)'); }
       // processing -> chờ vòng sau
     }catch(e){ /* mạng chập chờn -> thử vòng sau */ }
   }, 3000);
 }
+
+// Quay lại trang khi job còn đang chạy -> tự nối tiếp, không mất lượt
+(function(){
+  try{
+    var p=JSON.parse(localStorage.getItem('dali_pending_job')||'null');
+    if(!p||!p.job) return;
+    if(Date.now()-(p.at||0) > 15*60*1000){ localStorage.removeItem('dali_pending_job'); return; }
+    showPill(); pollJob(p.job, p.at);
+  }catch(e){}
+})();
 
 function showResult(res, restored){
   const sec=document.getElementById('resultSection');
