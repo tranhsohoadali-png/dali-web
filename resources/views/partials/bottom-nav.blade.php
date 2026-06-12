@@ -7,8 +7,8 @@
   <a href="{{ route('products') }}" class="{{ in_array($rn,['products','product','category']) ? 'on' : '' }}">
     <i class="ri-palette-line"></i><span>Sản phẩm</span>
   </a>
-  <a href="{{ route('blog') }}" class="{{ in_array($rn,['blog','blog.post']) ? 'on' : '' }}">
-    <i class="ri-quill-pen-line"></i><span>Blog</span>
+  <a href="{{ route('thiet-ke') }}" class="{{ $rn==='thiet-ke' ? 'on' : '' }}">
+    <i class="ri-magic-line"></i><span>Thiết kế</span>
   </a>
   <a href="{{ route('track-order') }}" class="{{ $rn==='track-order' ? 'on' : '' }}">
     <i class="ri-search-line"></i><span>Tra cứu</span>

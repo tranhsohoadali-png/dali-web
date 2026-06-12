@@ -1060,6 +1060,7 @@ function filterByCategory(catId){
     </div>
     <div class="footer-col"><h4>Sản phẩm</h4><ul>
       <li><a href="{{ route('products') }}">Tất cả sản phẩm</a></li>
+      <li><a href="{{ route('thiet-ke') }}">🎨 Thiết kế theo yêu cầu</a></li>
       <li><a href="{{ route('products') }}">Tranh phong cảnh</a></li>
       <li><a href="{{ route('products') }}">Tranh hoa &amp; thực vật</a></li>
       <li><a href="{{ route('products') }}">Tranh động vật</a></li>

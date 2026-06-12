@@ -84,15 +84,15 @@ tailwind.config = {
     <div class="reveal relative">
       <div class="grid grid-cols-3 gap-3 items-center">
         <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 rotate-[-4deg]">
-          <img src="https://picsum.photos/seed/dali-photo/400/500" class="w-full h-40 object-cover" alt="Ảnh gốc">
+          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" class="w-full h-40 object-cover" alt="Ảnh gốc">
           <figcaption class="text-[11px] font-bold text-gray-500 text-center py-1.5">📷 Ảnh gốc</figcaption>
         </figure>
         <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 z-10 scale-110">
-          <img src="https://picsum.photos/seed/dali-map/400/500?grayscale" class="w-full h-44 object-cover" alt="Tranh số hóa">
+          <img src="{{ asset('images/thiet-ke/be-map.jpg') }}" class="w-full h-44 object-cover" alt="Tranh số hóa">
           <figcaption class="text-[11px] font-bold text-primaryd text-center py-1.5">🎨 Bản tô số</figcaption>
         </figure>
         <figure class="rounded-2xl overflow-hidden shadow-xl2 bg-white border border-green-100 rotate-[4deg]">
-          <img src="https://picsum.photos/seed/dali-art/400/500" class="w-full h-40 object-cover" alt="Hoàn thiện">
+          <img src="{{ asset('images/thiet-ke/be-art.jpg') }}" class="w-full h-40 object-cover" alt="Hoàn thiện">
           <figcaption class="text-[11px] font-bold text-gray-500 text-center py-1.5">🖼️ Hoàn thiện</figcaption>
         </figure>
       </div>
@@ -180,15 +180,19 @@ tailwind.config = {
   <h2 class="text-2xl sm:text-3xl font-black text-center">Khách hàng đã biến ảnh thành <span class="text-primary">tác phẩm nghệ thuật</span> thế nào?</h2>
   <p class="text-center text-gray-500 mt-2 mb-8 text-sm">Từ một tấm ảnh đời thường → một bức tranh treo tường</p>
   <div class="grid md:grid-cols-3 gap-5">
-    @foreach(['co-gai'=>'Chân dung','gia-dinh'=>'Gia đình','thu-cung'=>'Thú cưng'] as $seed=>$label)
+    @foreach([
+      ['be',  'Bé yêu nhà bạn',     'TK310 — thiết kế từ ảnh bé'],
+      ['ba',  'Tặng ông bà, cha mẹ','TK305 — món quà chạm tim'],
+      ['sen', 'Hoa sen nghệ thuật', 'TK320 — tranh treo phòng khách'],
+    ] as [$k, $label, $sub])
     <div class="bg-white rounded-3xl border border-green-100 shadow-lg overflow-hidden hover:-translate-y-1.5 hover:shadow-xl2 transition">
       <div class="grid grid-cols-3">
-        <img src="https://picsum.photos/seed/{{ $seed }}o/300/300" class="w-full h-28 object-cover" alt="">
-        <img src="https://picsum.photos/seed/{{ $seed }}m/300/300?grayscale" class="w-full h-28 object-cover" alt="">
-        <img src="https://picsum.photos/seed/{{ $seed }}f/300/300" class="w-full h-28 object-cover" alt="">
+        <img src="{{ asset('images/thiet-ke/'.$k.'-goc.jpg') }}" loading="lazy" class="w-full h-32 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Ảnh gốc {{ $label }}">
+        <img src="{{ asset('images/thiet-ke/'.$k.'-map.jpg') }}" loading="lazy" class="w-full h-32 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Bản tô số {{ $label }}">
+        <img src="{{ asset('images/thiet-ke/'.$k.'-art.jpg') }}" loading="lazy" class="w-full h-32 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Thành phẩm {{ $label }}">
       </div>
       <div class="flex text-[10px] font-bold text-gray-400 text-center"><span class="flex-1 py-1">Ảnh gốc</span><span class="flex-1 py-1 text-primaryd">Bản tô số</span><span class="flex-1 py-1">Thành phẩm</span></div>
-      <div class="px-5 py-4 font-extrabold text-center border-t border-green-50">{{ $label }}</div>
+      <div class="px-5 py-3 text-center border-t border-green-50"><div class="font-extrabold">{{ $label }}</div><div class="text-[11px] text-gray-400 font-semibold">{{ $sub }}</div></div>
     </div>
     @endforeach
   </div>
@@ -234,10 +238,10 @@ tailwind.config = {
 <section id="danh-gia" class="max-w-6xl mx-auto px-4 py-12 reveal">
   <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Khách hàng nói gì về chúng tôi</h2>
   <div class="flex gap-5 overflow-x-auto no-scrollbar snap-x pb-3">
-    @foreach([['Minh Tuấn','Hà Nội','rv1'],['Lan Phương','TP.HCM','rv2'],['Hoàng Anh','Đà Nẵng','rv3']] as $v)
+    @foreach([['Minh Tuấn','Hà Nội','phat-art'],['Lan Phương','TP.HCM','be-art'],['Hoàng Anh','Đà Nẵng','sen-art']] as $v)
     <div class="snap-start shrink-0 w-72 bg-white rounded-3xl border border-green-100 shadow-lg overflow-hidden">
       <div class="relative">
-        <img src="https://picsum.photos/seed/{{ $v[2] }}/400/240" class="w-full h-40 object-cover" alt="">
+        <img src="{{ asset('images/thiet-ke/'.$v[2].'.jpg') }}" loading="lazy" class="w-full h-40 object-cover" alt="">
         <div class="absolute inset-0 flex items-center justify-center"><div class="w-14 h-14 rounded-full glass flex items-center justify-center text-primaryd text-2xl shadow-lg"><i class="ri-play-fill"></i></div></div>
       </div>
       <div class="p-4">
@@ -266,7 +270,7 @@ tailwind.config = {
 <section class="max-w-6xl mx-auto px-4 py-12 reveal">
   <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Mở hộp bạn nhận được gì?</h2>
   <div class="grid md:grid-cols-2 gap-8 items-center">
-    <img src="https://picsum.photos/seed/dali-box/700/520" class="rounded-3xl shadow-xl2 border border-green-100 w-full" alt="Bộ tranh tô màu DALI">
+    <img src="{{ asset('images/thiet-ke/sen-map.jpg') }}" loading="lazy" class="rounded-3xl shadow-xl2 border border-green-100 w-full" alt="Canvas in số DALI — bản tô số hoa sen">
     <div class="grid sm:grid-cols-2 gap-4">
       @foreach([['ri-image-2-line','Canvas in số','Tranh in sẵn ô số trên canvas cao cấp'],['ri-palette-line','Bộ màu','Đủ màu acrylic theo bản thiết kế'],['ri-brush-line','Cọ vẽ','Bộ cọ nhiều cỡ, tô chi tiết dễ dàng'],['ri-file-list-3-line','Ảnh hướng dẫn','Bảng mã màu rõ ràng, dễ làm theo'],['ri-links-line','Móc treo','Tặng kèm móc, treo tường ngay']] as $i)
       <div class="flex items-start gap-3 bg-white rounded-2xl border border-green-100 p-4 shadow-sm">
