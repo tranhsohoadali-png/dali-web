@@ -437,9 +437,33 @@ function onFile(){ const f=fileInput.files[0]; if(!f) return; previewImg.src=URL
 
 genBtn.addEventListener('click',()=>{ if(!fileInput.files[0]){alert('Vui lòng chọn ảnh.');return;} if(remaining<=0){ outOfQuota(); return;} document.getElementById('confirmRemain').textContent=remaining; openM('confirmModal'); });
 
+// Nén ảnh ngay trên máy khách trước khi gửi: ảnh điện thoại 4-10MB -> ~0.3-0.6MB
+// (tránh giới hạn upload của máy chủ + gửi nhanh hơn nhiều trên 4G).
+function compressImage(file, maxEdge, quality){
+  maxEdge=maxEdge||1800; quality=quality||0.85;
+  return new Promise(function(resolve){
+    try{
+      var img=new Image();
+      img.onload=function(){
+        var w=img.naturalWidth,h=img.naturalHeight,m=Math.max(w,h);
+        if(m<=maxEdge && file.size<1200*1024){ URL.revokeObjectURL(img.src); resolve(file); return; }
+        var k=Math.min(1,maxEdge/m); w=Math.round(w*k); h=Math.round(h*k);
+        var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        var cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,w,h); cx.drawImage(img,0,0,w,h);
+        cv.toBlob(function(b){ URL.revokeObjectURL(img.src); resolve(b||file); },'image/jpeg',quality);
+      };
+      img.onerror=function(){ resolve(file); };
+      img.src=URL.createObjectURL(file);
+    }catch(e){ resolve(file); }
+  });
+}
+
 document.getElementById('confirmGo').addEventListener('click', async ()=>{
   closeM('confirmModal'); openM('loadingModal');
-  const fd=new FormData(); fd.append('image',fileInput.files[0]); fd.append('device_id',DEVICE); fd.append('enhance','1');
+  const f0=fileInput.files[0];
+  const blob=await compressImage(f0);
+  const fname=((f0.name||'anh').replace(/\.[^.]+$/,'')||'anh')+'.jpg';
+  const fd=new FormData(); fd.append('image',blob,fname); fd.append('device_id',DEVICE); fd.append('enhance','1');
   try{
     const r=await fetch(URLS.gen,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
     if(!d.ok){ closeM('loadingModal'); if(d.reason==='no_quota') outOfQuota(); else alert(d.msg||'Có lỗi, thử lại sau.'); return; }
