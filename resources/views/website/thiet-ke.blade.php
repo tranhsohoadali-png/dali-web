@@ -48,7 +48,7 @@ tailwind.config = {
 {{-- ════════ HEADER (sticky) ════════ --}}
 <header class="sticky top-0 z-40 glass border-b border-green-100">
   <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-    <a href="{{ route('home') }}" class="text-2xl font-black tracking-wide text-primaryd">DAL<span class="text-primary">I</span></a>
+    <a href="{{ route('home') }}" class="flex items-center"><img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="h-9 w-auto"></a>
     <nav class="hidden md:flex items-center gap-7 text-sm font-semibold text-gray-600">
       <a href="#mau-tranh" class="hover:text-primary">Mẫu tranh</a>
       <a href="#danh-gia" class="hover:text-primary">Đánh giá</a>
@@ -61,8 +61,14 @@ tailwind.config = {
 
 {{-- ════════ SECTION 1 — HERO (thiết kế Stitch V2) ════════ --}}
 <section class="relative overflow-hidden bg-[#3E2F23]">
-  <img src="{{ asset('images/thiet-ke/hero-studio.jpg') }}" alt="Studio vẽ tranh DALI" class="absolute inset-0 w-full h-full object-cover object-right">
-  <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/65 md:to-transparent"></div>
+  {{-- Mobile: ảnh phủ nền, tiêu điểm vào khuôn mặt (không cắt mất đầu) --}}
+  <img src="{{ asset('images/thiet-ke/hero-studio.jpg') }}" alt="Studio vẽ tranh DALI" class="md:hidden absolute inset-0 w-full h-full object-cover object-[62%_18%]">
+  {{-- Desktop: hiển thị TRỌN VẸN ảnh (đúng tỷ lệ, neo phải), mép trái hoà vào nền nâu --}}
+  <div class="hidden md:block absolute inset-y-0 right-0">
+    <img src="{{ asset('images/thiet-ke/hero-studio.jpg') }}" alt="Studio vẽ tranh DALI" class="h-full w-auto max-w-none">
+    <div class="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-[#3E2F23] to-transparent"></div>
+  </div>
+  <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/60 md:to-transparent"></div>
   <div class="relative max-w-6xl mx-auto px-4 pt-14 pb-24 md:pt-20 md:pb-28">
     <div class="max-w-xl reveal">
       <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] font-black leading-tight text-white">
