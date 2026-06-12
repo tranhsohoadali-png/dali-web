@@ -345,7 +345,8 @@ tailwind.config = {
     <button onclick="zoomBy(1/1.4)" class="w-11 h-11 rounded-full bg-white/90 text-xl font-black">－</button>
     <button onclick="closeZoom()" class="w-11 h-11 rounded-full bg-white/90 text-xl font-black">✕</button>
   </div>
-  <div class="fixed bottom-4 inset-x-0 text-center text-white/70 text-xs font-semibold pointer-events-none">Lăn chuột / chụm 2 ngón để phóng to · kéo để di chuyển</div>
+  <button onclick="closeZoom()" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-10 bg-white text-ink font-extrabold text-sm px-8 py-3.5 rounded-full shadow-xl2">✕ Đóng</button>
+  <div class="fixed bottom-4 inset-x-0 text-center text-white/70 text-xs font-semibold pointer-events-none">Lăn chuột / chụm 2 ngón để phóng to · kéo để di chuyển · chạm nền để đóng</div>
 </div>
 
 <script>
@@ -614,7 +615,7 @@ paintChips();
 document.getElementById('resultOrderBtn').addEventListener('click',()=>openOrder(PRICING.sizes[selI].label+' — '+fmtVnd(curPrice())+' · '+PRICING.colors[selJ]+' màu'));
 
 // ───── Lightbox zoom (lăn chuột / chụm 2 ngón / kéo) ─────
-var zScale=1,zX=0,zY=0,zPointers=new Map(),zLastDist=0;
+var zScale=1,zX=0,zY=0,zPointers=new Map(),zLastDist=0,zDownX=0,zDownY=0,zDownOnBack=false;
 function zApply(){ var im=document.getElementById('zoomImg'); im.style.transform='translate('+zX+'px,'+zY+'px) scale('+zScale+')'; }
 function openZoom(src){
   var m=document.getElementById('zoomModal'), im=document.getElementById('zoomImg');
@@ -631,7 +632,12 @@ function zoomAt(cx,cy,f){ var ns=Math.min(Math.max(zScale*f,0.05),12); zX=cx-(cx
 (function(){
   var m=document.getElementById('zoomModal');
   m.addEventListener('wheel',function(e){ e.preventDefault(); zoomAt(e.clientX,e.clientY, e.deltaY<0?1.15:1/1.15); },{passive:false});
-  m.addEventListener('pointerdown',function(e){ zPointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); m.setPointerCapture(e.pointerId); });
+  m.addEventListener('pointerdown',function(e){
+    // KHÔNG capture khi bấm nút (✕/＋/－): capture sẽ NUỐT click làm nút chết
+    if(e.target && e.target.closest && e.target.closest('button')) return;
+    zDownX=e.clientX; zDownY=e.clientY; zDownOnBack=(e.target===m);
+    zPointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); m.setPointerCapture(e.pointerId);
+  });
   m.addEventListener('pointermove',function(e){
     if(!zPointers.has(e.pointerId)) return;
     var prev=zPointers.get(e.pointerId); zPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -643,7 +649,12 @@ function zoomAt(cx,cy,f){ var ns=Math.min(Math.max(zScale*f,0.05),12); zX=cx-(cx
       zLastDist=d;
     }
   });
-  ['pointerup','pointercancel'].forEach(ev=>m.addEventListener(ev,function(e){ zPointers.delete(e.pointerId); if(zPointers.size<2) zLastDist=0; }));
+  ['pointerup','pointercancel'].forEach(ev=>m.addEventListener(ev,function(e){
+    zPointers.delete(e.pointerId); if(zPointers.size<2) zLastDist=0;
+    // Chạm NỀN ĐEN (không phải ảnh/nút) mà không kéo -> đóng
+    if(ev==='pointerup' && zDownOnBack && zPointers.size===0
+       && Math.hypot(e.clientX-zDownX, e.clientY-zDownY) < 8){ zDownOnBack=false; closeZoom(); }
+  }));
   m.addEventListener('dblclick',function(e){ zoomAt(e.clientX,e.clientY,2); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeZoom(); });
 })();
