@@ -47,7 +47,7 @@ tailwind.config = {
 
 {{-- ════════ HEADER (sticky) ════════ --}}
 <header class="sticky top-0 z-40 glass border-b border-green-100">
-  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+  <div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 h-16 flex items-center justify-between">
     <a href="{{ route('home') }}" class="flex items-center"><img src="{{ asset('images/logo_dali.png') }}" alt="DALI" class="h-9 w-auto"></a>
     <nav class="hidden md:flex items-center gap-7 text-sm font-semibold text-gray-600">
       <a href="#mau-tranh" class="hover:text-primary">Mẫu tranh</a>
@@ -66,55 +66,87 @@ tailwind.config = {
   {{-- Desktop: hiển thị TRỌN VẸN ảnh (đúng tỷ lệ, neo phải), mép trái hoà vào nền nâu --}}
   <div class="hidden md:block absolute inset-y-0 right-0">
     <img src="{{ asset('images/thiet-ke/hero-studio.jpg') }}" alt="Studio vẽ tranh DALI" class="h-full w-auto max-w-none">
-    <div class="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-[#3E2F23] to-transparent"></div>
+    <div class="absolute inset-y-0 left-0 w-56 xl:w-72 bg-gradient-to-r from-[#3E2F23] to-transparent"></div>
   </div>
   <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/60 md:to-transparent"></div>
-  <div class="relative max-w-6xl mx-auto px-4 pt-14 pb-24 md:pt-20 md:pb-28">
-    <div class="max-w-xl reveal">
-      <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] font-black leading-tight text-white">
+  <div class="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pt-14 pb-24 md:pt-0 md:pb-0 md:min-h-[560px] xl:min-h-[640px] md:flex md:items-center">
+    <div class="max-w-xl xl:max-w-2xl reveal md:pb-16">
+      <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] xl:text-5xl 2xl:text-[3.4rem] font-black leading-[1.12] tracking-tight text-white">
         Biến khoảnh khắc của bạn thành kiệt tác!
         <span class="block mt-1 text-[#B7F0A8]">Trải nghiệm niềm vui vẽ tranh số hóa.</span>
       </h1>
-      <p class="mt-4 text-white/85 text-[15px] max-w-md">Gửi 1 tấm ảnh kỷ niệm — nhận bộ kit <b class="text-white">canvas in số + màu pha sẵn + cọ</b>, tự tay tô thành tranh treo tường.</p>
-      <div class="mt-7 flex flex-wrap gap-3">
+      <p class="mt-4 text-white/85 text-[15px] lg:text-base xl:text-lg max-w-md xl:max-w-lg">Gửi 1 tấm ảnh kỷ niệm — nhận bộ kit <b class="text-white">canvas in số + màu pha sẵn + cọ</b>, tự tay tô thành tranh treo tường.</p>
+      <div class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
         <a href="#upload" class="grad-btn w-full sm:w-auto justify-center text-white text-base font-extrabold px-7 py-4 rounded-xl shadow-xl2 flex items-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên &amp; Xem trước miễn phí</a>
-        <a href="#bang-gia" class="w-full sm:w-auto justify-center bg-white/10 backdrop-blur border-2 border-white/60 text-white text-base font-bold px-6 py-4 rounded-xl hover:bg-white/20 transition flex items-center gap-2">Xem bảng giá</a>
+        <a href="#bang-gia" class="text-white/80 hover:text-white underline underline-offset-4 font-bold text-sm inline-flex items-center gap-1">Xem bảng giá <i class="ri-arrow-down-line"></i></a>
+      </div>
+      <div class="mt-5 inline-flex flex-wrap items-center gap-x-2.5 gap-y-1 bg-white/10 backdrop-blur rounded-full px-4 py-2 text-sm text-white/90">
+        <span class="font-black text-[#B7F0A8]">Trọn bộ từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ</span>
+        <span class="text-white/50">·</span><span class="font-semibold">⭐ 4.9/5 đánh giá</span>
+        <span class="text-white/50">·</span><span class="font-semibold">COD toàn quốc</span>
       </div>
     </div>
   </div>
 </section>
 {{-- ════════ SECTION 2 — TRIAL: UPLOAD TOOL (chức năng thật) ════════ --}}
-<section id="upload" class="max-w-6xl mx-auto px-4 -mt-12 relative z-10 pb-12">
-  <div class="grid lg:grid-cols-[1fr_310px] gap-5 items-start">
+<section id="upload" class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 -mt-12 relative z-10 pb-12 md:pb-16">
+  <div class="grid lg:grid-cols-[1fr_310px] xl:grid-cols-[1fr_340px] gap-5 xl:gap-7 items-start">
     <div class="bg-white rounded-3xl shadow-xl2 border-2 border-primary/40 p-6 sm:p-8 reveal">
       <h2 class="text-xl sm:text-2xl font-black"><span class="text-primary">Thử miễn phí:</span> Xem bản thiết kế từ ảnh của bạn trong ~1 phút!</h2>
       <div class="mt-2 mb-4 inline-flex flex-wrap max-w-full items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-1.5 text-sm font-bold text-primaryd">
         <i class="ri-flashlight-fill text-accent"></i> Lượt tạo còn lại: <span id="remainBadge">…</span>
-        <span class="text-gray-400 font-semibold hidden md:inline">· {{ \App\Models\DesignQuota::FREE }} lượt miễn phí/máy</span>
+        <span class="text-gray-500 font-semibold hidden md:inline">· {{ \App\Models\DesignQuota::FREE }} lượt miễn phí/máy</span>
       </div>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" class="hidden">
       <div class="grid sm:grid-cols-[1fr_auto] gap-4 items-stretch">
         <div id="dropZone" class="border-2 border-dashed border-green-300 rounded-2xl bg-green-50/60 px-6 py-10 text-center cursor-pointer hover:border-primary hover:bg-green-50 transition">
           <div class="w-14 h-14 mx-auto mb-3 rounded-full grad flex items-center justify-center text-white text-2xl"><i class="ri-image-add-line"></i></div>
           <div class="font-extrabold text-lg">Kéo thả hoặc chạm để chọn ảnh</div>
-          <div class="text-xs text-gray-400 mt-1">PNG · JPG · WEBP — ảnh càng rõ kết quả càng đẹp</div>
+          <div class="text-xs text-gray-500 mt-1">PNG · JPG · WEBP — ảnh càng rõ kết quả càng đẹp</div>
           <span class="inline-block mt-4 grad-btn text-white text-sm font-extrabold px-6 py-3 rounded-xl"><i class="ri-folder-image-line"></i> Chọn ảnh</span>
         </div>
         {{-- Demo trước→sau (như mockup Stitch): ảnh thật của khách --}}
-        <div class="flex items-center justify-center gap-2 self-center">
-          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 object-cover rounded-xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
-          <span class="text-primary text-2xl font-black">→</span>
-          <img src="{{ asset('images/thiet-ke/be-art.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Bản tăng cường AI">
+        <div class="flex items-center justify-center gap-2 lg:gap-3 self-center">
+          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 lg:w-36 lg:h-48 object-cover rounded-xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
+          <span class="text-primary text-2xl lg:text-3xl font-black">→</span>
+          <img src="{{ asset('images/thiet-ke/be-art.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 lg:w-36 lg:h-48 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Bản tăng cường AI">
+        </div>
+      </div>
+      {{-- Checklist ảnh đẹp / ảnh nên tránh (chuẩn Winnie's Picks) --}}
+      <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs mt-4 text-gray-600">
+        <div class="space-y-1.5">
+          <div><i class="ri-checkbox-circle-fill text-primary"></i> Ảnh rõ mặt, đủ sáng</div>
+          <div><i class="ri-checkbox-circle-fill text-primary"></i> Nền càng đơn giản càng đẹp</div>
+          <div><i class="ri-checkbox-circle-fill text-primary"></i> Tối đa 4–5 người trong ảnh</div>
+        </div>
+        <div class="space-y-1.5">
+          <div><i class="ri-close-circle-fill text-red-400"></i> Ảnh mờ, nhòe, rung tay</div>
+          <div><i class="ri-close-circle-fill text-red-400"></i> Ngược sáng, quá tối</div>
+          <div><i class="ri-close-circle-fill text-red-400"></i> Chụp quá xa, mặt quá nhỏ</div>
         </div>
       </div>
       <img id="previewImg" class="hidden mt-5 mx-auto max-h-72 rounded-2xl border border-green-100" alt="">
       <div class="mt-5 flex flex-wrap items-center gap-3">
         <button id="genBtn" disabled class="grad-btn w-full sm:w-auto justify-center disabled:opacity-40 disabled:cursor-not-allowed text-white text-base font-extrabold px-7 py-4 rounded-2xl flex items-center gap-2"><i class="ri-sparkling-2-line"></i> Tạo bản thiết kế</button>
-        <span class="text-xs text-gray-400">⏱️ Bộ kit giao trong 24–72 giờ · <span class="font-extrabold text-primaryd">Trọn bộ chỉ từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ · COD toàn quốc</span></span>
+        <span class="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-primaryd font-bold text-xs sm:text-sm px-4 py-2 rounded-full"><i class="ri-truck-line"></i> Giao 24–72h toàn quốc · từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ</span>
+      </div>
+      {{-- 4 cam kết (chuẩn Winnie's Picks) --}}
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 text-center">
+        @foreach([
+          ['ri-user-star-line','Designer kiểm tra từng ảnh'],
+          ['ri-eye-line','Xem trước miễn phí, ưng mới đặt'],
+          ['ri-hand-coin-line','COD — nhận hàng mới trả tiền'],
+          ['ri-refresh-line','Đổi mới nếu in lỗi'],
+        ] as $t)
+        <div>
+          <div class="w-10 h-10 mx-auto rounded-full bg-green-50 text-primary text-lg flex items-center justify-center mb-1.5"><i class="{{ $t[0] }}"></i></div>
+          <div class="text-[11px] font-bold leading-tight text-gray-600">{{ $t[1] }}</div>
+        </div>
+        @endforeach
       </div>
       <div class="mt-4 pt-4 border-t border-green-100 text-center text-sm text-gray-500">Ngại tự làm? <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="font-extrabold text-primaryd underline">💬 Gửi ảnh qua Zalo</a> — shop thiết kế giúp miễn phí, hoặc <button type="button" class="orderOpen font-extrabold text-primaryd underline" data-package="Đặt trước — shop gọi tư vấn ảnh &amp; kích thước">để lại SĐT, shop gọi lại</button></div>
     </div>
-    <div class="space-y-4 reveal">
+    <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-1 reveal">
       @foreach([
         ['ri-artboard-2-line','Vải Canvas Cao Cấp','Mịn, dày dặn, in số sắc nét — tô chính xác tới từng chi tiết nhỏ.'],
         ['ri-palette-line','Bộ Màu Acrylic Đầy Đủ','Từng màu pha sẵn theo đúng bản thiết kế, mở nắp là tô được ngay.'],
@@ -129,15 +161,15 @@ tailwind.config = {
   </div>
 </section>
 {{-- KẾT QUẢ (before/after ảnh thật của khách — khổ rộng, bấm để zoom) --}}
-<section class="max-w-5xl mx-auto px-4">
+<section class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
   <div id="resultSection" class="hidden scroll-mt-20 mt-2 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
     <div class="font-black text-xl mb-1 flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary"></i> Tác phẩm của bạn đã sẵn sàng!</div>
     <div id="restoreNote" class="hidden mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2 text-xs font-bold text-primaryd">💾 Kết quả lần trước của bạn vẫn được giữ trên máy này — tải ảnh mới để tạo thêm bất cứ lúc nào!</div>
-    <div class="text-xs text-gray-400 font-semibold mb-4">🔍 Bấm vào ảnh để phóng to, xem chi tiết từng nét</div>
+    <div class="text-xs text-gray-500 font-semibold mb-4">🔍 Bấm vào ảnh để phóng to, xem chi tiết từng nét</div>
     <div class="grid grid-cols-2 sm:grid-cols-[1fr_auto_1fr] gap-3 sm:gap-4 items-center">
-      <figure class="text-center"><img id="rOriginal" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50 cursor-zoom-in" alt=""><figcaption class="text-xs font-bold text-gray-500 mt-2">📷 Ảnh gốc của bạn</figcaption></figure>
-      <div class="text-primary text-3xl font-black text-center hidden sm:block">→</div>
-      <figure class="text-center"><img id="rEnhanced" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border-2 border-primary/40 bg-green-50 cursor-zoom-in shadow-lg" alt=""><figcaption class="text-sm font-extrabold text-primary mt-2">✨ Bản DALI tăng cường AI — bấm để phóng to</figcaption></figure>
+      <figure class="text-center"><img id="rOriginal" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border border-green-100 bg-green-50 cursor-zoom-in" alt=""><figcaption class="text-xs lg:text-sm font-bold text-gray-500 mt-2">📷 Ảnh gốc của bạn</figcaption></figure>
+      <div class="text-primary text-3xl lg:text-4xl font-black text-center hidden sm:block">→</div>
+      <figure class="text-center"><img id="rEnhanced" onclick="openZoom(this.src)" class="w-full aspect-square object-contain rounded-2xl border-2 border-primary/40 bg-green-50 cursor-zoom-in shadow-lg" alt=""><figcaption class="text-sm lg:text-base font-extrabold text-primary mt-2">✨ Bản DALI tăng cường AI — bấm để phóng to</figcaption></figure>
     </div>
     {{-- 3 kết quả gần nhất của máy này — bấm ảnh nhỏ để xem lại & đặt theo bản đó --}}
     <div id="recentRow" class="hidden mt-4">
@@ -152,13 +184,13 @@ tailwind.config = {
     <div class="mt-5 bg-green-50/70 border-2 border-green-200 rounded-2xl p-5 sm:p-6">
       <div class="font-extrabold text-lg mb-1">🛒 Đặt bức tranh này về nhà</div>
       <div class="text-xs text-gray-500 mb-4">Chọn kích thước &amp; số màu — giá đã gồm canvas in sẵn, bộ màu, cọ &amp; giao hàng.</div>
-      <div class="font-bold text-sm mb-2">🖼️ Kích thước <span class="text-xs text-gray-400 font-semibold">({{ $pricing['sizes'][0]['note'] ?? '' }})</span></div>
+      <div class="font-bold text-sm mb-2">🖼️ Kích thước <span class="text-xs text-gray-500 font-semibold">({{ $pricing['sizes'][0]['note'] ?? '' }})</span></div>
       <div class="flex flex-wrap gap-2" id="sizeChips">
         @foreach($pricing['sizes'] as $i => $s)
         <button type="button" data-i="{{ $i }}" class="pick border-2 rounded-xl px-4 py-3 text-sm font-bold bg-white">{{ $s['label'] }}<span class="block text-xs font-extrabold text-primaryd sizePrice" data-i="{{ $i }}"></span></button>
         @endforeach
       </div>
-      <div class="font-bold text-sm mb-2 mt-4">🎨 Số màu <span class="text-xs text-gray-400 font-semibold">(nhiều màu hơn = chi tiết &amp; giống ảnh hơn)</span></div>
+      <div class="font-bold text-sm mb-2 mt-4">🎨 Số màu <span class="text-xs text-gray-500 font-semibold">(nhiều màu hơn = chi tiết &amp; giống ảnh hơn)</span></div>
       <div class="flex flex-wrap gap-2" id="colorChips">
         @foreach($pricing['colors'] as $j => $c)
         <button type="button" data-j="{{ $j }}" class="pick border-2 rounded-xl px-4 py-3 text-sm font-bold bg-white">{{ $c }} màu</button>
@@ -173,30 +205,70 @@ tailwind.config = {
   </div>
 </section>
 
+{{-- ════════ CÁCH HOẠT ĐỘNG — 4 bước (chuẩn Paint Your Life) ════════ --}}
+<section class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 reveal">
+  <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-center mb-3">Cách hoạt động</h2>
+  <p class="text-center text-gray-500 text-sm md:text-base mb-10 md:mb-12 max-w-2xl mx-auto">Từ tấm ảnh trong điện thoại đến bức tranh treo tường — chỉ 4 bước.</p>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+    @foreach([
+      ['ri-image-add-line','Tải ảnh lên','Chọn ảnh kỷ niệm bạn yêu thích ngay trên điện thoại.'],
+      ['ri-magic-line','Xem bản thiết kế','AI thiết kế trong ~1 phút — miễn phí, ưng mới đặt.'],
+      ['ri-hand-coin-line','Đặt hàng COD','Chọn kích thước &amp; số màu, nhận hàng mới trả tiền.'],
+      ['ri-brush-line','Nhận kit &amp; tô','Giao 24–72h: canvas in số + màu pha sẵn + cọ.'],
+    ] as $i => $s)
+    <div class="text-center">
+      <div class="w-10 h-10 mx-auto rounded-full bg-primary text-white font-black flex items-center justify-center mb-3">{{ $i + 1 }}</div>
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-green-50 text-primary text-2xl flex items-center justify-center mb-3"><i class="{{ $s[0] }}"></i></div>
+      <div class="font-bold text-base mb-1">{!! $s[1] !!}</div>
+      <div class="text-sm text-gray-500 leading-relaxed">{!! $s[2] !!}</div>
+    </div>
+    @endforeach
+  </div>
+</section>
+
 {{-- ════════ SECTION 3 — WHAT'S IN THE BOX ════════ --}}
-<section id="mo-hop" class="max-w-5xl mx-auto px-4 py-14 reveal">
-  <h2 class="text-2xl sm:text-3xl font-black text-center mb-10">Bộ kit DALI — trong hộp có gì?</h2>
-  <div class="grid md:grid-cols-[230px_1fr_230px] gap-5 items-center">
-    <div class="space-y-3 order-2 md:order-1">
+<section id="mo-hop" class="bg-white border-y border-green-100/60">
+<div class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 lg:py-24 reveal">
+  <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-center mb-10 md:mb-12">Bộ kit DALI — trong hộp có gì?</h2>
+  <div class="grid gap-5 lg:grid-cols-[230px_1fr_230px] xl:grid-cols-[260px_1fr_260px] xl:gap-8 items-center">
+    <div class="order-2 lg:order-1 grid gap-3 md:grid-cols-2 lg:grid-cols-1">
       @foreach([['ri-image-2-line','Canvas in số','Tranh của bạn in sẵn ô số trên canvas cao cấp'],['ri-palette-line','Bộ màu acrylic','Pha sẵn đúng từng mã màu của bản thiết kế']] as $i)
       <div class="bg-white rounded-xl border border-green-100 shadow-sm p-4 flex gap-3 items-start"><div class="w-9 h-9 rounded-lg bg-green-50 text-primary flex items-center justify-center shrink-0"><i class="{{ $i[0] }}"></i></div><div><div class="font-extrabold text-sm">{{ $i[1] }}</div><div class="text-[11px] text-gray-500">{{ $i[2] }}</div></div></div>
       @endforeach
     </div>
-    <figure class="relative order-1 md:order-2">
+    <figure class="relative order-1 lg:order-2">
       <img src="{{ asset('images/thiet-ke/mo-hop.jpg') }}" loading="lazy" class="rounded-3xl shadow-xl2 w-full aspect-square object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Bộ kit tranh tô màu số DALI">
       <figcaption class="absolute bottom-3 left-1/2 -translate-x-1/2 glass rounded-full px-4 py-1.5 text-xs font-extrabold text-primaryd shadow whitespace-nowrap">🖼️ Thành phẩm thật từ khách DALI</figcaption>
     </figure>
-    <div class="space-y-3 order-3">
+    <div class="order-3 grid gap-3 md:grid-cols-2 lg:grid-cols-1">
       @foreach([['ri-brush-line','Cọ vẽ 3 cỡ','Tô nền lớn và chi tiết nhỏ đều dễ dàng'],['ri-file-list-3-line','Bảng mã màu','Hướng dẫn rõ ràng, nhìn là làm theo được'],['ri-links-line','Móc treo tặng kèm','Tô xong treo tường ngay không cần mua thêm']] as $i)
       <div class="bg-white rounded-xl border border-green-100 shadow-sm p-4 flex gap-3 items-start"><div class="w-9 h-9 rounded-lg bg-green-50 text-primary flex items-center justify-center shrink-0"><i class="{{ $i[0] }}"></i></div><div><div class="font-extrabold text-sm">{{ $i[1] }}</div><div class="text-[11px] text-gray-500">{{ $i[2] }}</div></div></div>
       @endforeach
     </div>
   </div>
+</div>
 </section>
+
+{{-- ════════ ẢNH THẬT → TRANH DALI (3 cặp minh chứng lớn) ════════ --}}
+<section class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 reveal">
+  <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-center mb-3">Ảnh thật → Tranh DALI</h2>
+  <p class="text-center text-gray-500 text-sm md:text-base mb-10 max-w-2xl mx-auto">Mỗi tấm ảnh là một bản thiết kế riêng — đây là kết quả thật từ ảnh khách gửi.</p>
+  <div class="grid sm:grid-cols-3 gap-6 md:gap-8">
+    @foreach([['be-goc','be-art'],['ba-goc','ba-art'],['sen-goc','sen-art']] as $p)
+    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <img src="{{ asset('images/thiet-ke/'.$p[0].'.jpg') }}" loading="lazy" onclick="openZoom(this.src)" class="w-full aspect-[3/4] object-cover rounded-2xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
+      <i class="ri-arrow-right-line text-primary text-2xl"></i>
+      <img src="{{ asset('images/thiet-ke/'.$p[1].'.jpg') }}" loading="lazy" onclick="openZoom(this.src)" class="w-full aspect-[3/4] object-cover rounded-2xl border-2 border-primary/40 shadow-lg cursor-zoom-in" alt="Tranh DALI">
+    </div>
+    @endforeach
+  </div>
+</section>
+
 {{-- ════════ SECTION 4 — KHÁCH KHOE TRANH + BẢNG GIÁ ════════ --}}
-<section id="mau-tranh" class="max-w-6xl mx-auto px-4 py-12 reveal">
-  <h2 class="text-2xl sm:text-3xl font-black text-center mb-2">Khách DALI khoe thành phẩm</h2>
-  <p class="text-center text-gray-500 mb-8 text-sm">Tranh thật từ ảnh thật — và bảng giá rõ ràng ngay bên cạnh</p>
+<section id="mau-tranh" class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20 reveal">
+  <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-center mb-2">Khách DALI khoe thành phẩm</h2>
+  <div class="flex items-center justify-center gap-2 mb-2"><span class="text-2xl font-black">4.9</span><span class="text-accent text-lg">★★★★★</span></div>
+  <p class="text-center text-gray-500 mb-8 md:mb-10 text-sm md:text-base">Tranh thật từ ảnh thật — và bảng giá rõ ràng ngay bên cạnh</p>
   <div class="grid lg:grid-cols-[1fr_460px] gap-8 items-start">
     <div id="danh-gia" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
       @foreach([
@@ -208,28 +280,28 @@ tailwind.config = {
         ['sen-goc','Thu_Art','Đẹp hơn cả mong đợi!'],
       ] as $g)
       <div class="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-xl2 transition">
-        <img src="{{ asset('images/thiet-ke/'.$g[0].'.jpg') }}" loading="lazy" class="w-full h-36 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="">
-        <div class="px-3 py-2"><div class="text-xs font-extrabold text-primaryd"><i class="ri-instagram-line"></i> {{ '@'.$g[1] }}</div><div class="text-[11px] text-gray-500 leading-snug">“{{ $g[2] }}”</div></div>
+        <img src="{{ asset('images/thiet-ke/'.$g[0].'.jpg') }}" loading="lazy" class="w-full h-36 lg:h-auto lg:aspect-[4/5] object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="">
+        <div class="px-3 py-2"><div class="text-accent text-[10px] leading-none">★★★★★</div><div class="text-xs lg:text-[13px] font-bold text-primaryd mt-0.5"><i class="ri-instagram-line"></i> {{ '@'.$g[1] }}</div><div class="text-[11px] lg:text-xs text-gray-600 leading-snug">“{{ $g[2] }}”</div></div>
       </div>
       @endforeach
     </div>
     <div id="bang-gia" class="bg-white rounded-3xl border border-green-100 shadow-xl2 overflow-hidden">
-      <div class="px-5 pt-5 pb-3"><div class="font-black text-lg">💰 Bảng giá bộ kit</div><div class="text-[11px] text-gray-400">Đã gồm thiết kế từ ảnh + canvas + bộ màu &amp; cọ + giao toàn quốc</div>
+      <div class="px-5 pt-5 pb-3"><div class="font-black text-lg">💰 Bảng giá bộ kit</div><div class="text-[11px] text-gray-500">Đã gồm thiết kế từ ảnh + canvas + bộ màu &amp; cọ + giao toàn quốc</div>
         <div class="text-[11px] font-bold text-primaryd mt-1">🎁 Trọn gói: canvas in số + màu pha sẵn + cọ + móc treo + freeship — không phát sinh thêm chi phí.</div></div>
-      <div class="sm:hidden px-5 pb-1 text-[10px] font-bold text-gray-400">↔ Vuốt ngang để xem đủ mức giá</div>
+      <div class="sm:hidden px-5 pb-1 text-[10px] font-bold text-gray-500">↔ Vuốt ngang để xem đủ mức giá</div>
       <div class="relative">
       <div class="overflow-x-auto">
         <table class="w-full" style="border-collapse:collapse;min-width:430px">
           <thead><tr class="border-y border-gray-100 bg-bgsoft">
-            <th class="text-left px-3 py-2.5 font-black text-[11px] sticky left-0 z-10 bg-bgsoft">Kích thước</th>
-            @foreach($pricing['colors'] as $c)<th class="text-right px-2 py-2.5 font-black text-[11px] whitespace-nowrap">{{ $c }} màu</th>@endforeach
+            <th class="text-left px-3 py-2.5 font-black text-[11px] lg:text-xs sticky left-0 z-10 bg-bgsoft">Kích thước</th>
+            @foreach($pricing['colors'] as $c)<th class="text-right px-2 py-2.5 font-black text-[11px] lg:text-xs whitespace-nowrap">{{ $c }} màu</th>@endforeach
           </tr></thead>
           <tbody>
             @foreach($pricing['sizes'] as $si => $s)
             @if($si === 1)<tr><td colspan="{{ count($pricing['colors']) + 1 }}" class="bg-primary text-white text-center text-[11px] font-black py-1.5">⭐ Lựa chọn phổ biến</td></tr>@endif
             <tr class="border-b border-gray-50 {{ $si === 1 ? 'bg-primary' : 'hover:bg-green-50/40' }} transition">
-              <td class="px-3 py-2.5 sticky left-0 z-10 {{ $si === 1 ? 'bg-primary' : 'bg-white' }}"><div class="font-black text-xs whitespace-nowrap {{ $si === 1 ? 'text-white' : '' }}">{{ $s['label'] }}</div>@if(!empty($s['note']))<div class="text-[9px] font-semibold {{ $si === 1 ? 'text-white/80' : 'text-gray-400' }}">{{ $s['note'] }}</div>@endif</td>
-              @foreach($s['prices'] as $v)<td class="px-2 py-2.5 text-right text-[11px] whitespace-nowrap {{ $si === 1 ? 'text-white font-black' : 'text-ink font-bold' }}">{{ number_format($v, 0, ',', '.') }}đ</td>@endforeach
+              <td class="px-3 py-2.5 sticky left-0 z-10 {{ $si === 1 ? 'bg-primary' : 'bg-white' }}"><div class="font-black text-xs whitespace-nowrap {{ $si === 1 ? 'text-white' : '' }}">{{ $s['label'] }}</div>@if(!empty($s['note']))<div class="text-[10px] lg:text-[11px] font-semibold {{ $si === 1 ? 'text-white/80' : 'text-gray-500' }}">{{ $s['note'] }}</div>@endif</td>
+              @foreach($s['prices'] as $v)<td class="px-2 py-2.5 text-right text-[11px] lg:text-xs whitespace-nowrap {{ $si === 1 ? 'text-white font-black' : 'text-ink font-bold' }}">{{ number_format($v, 0, ',', '.') }}đ</td>@endforeach
             </tr>
             @endforeach
           </tbody>
@@ -242,8 +314,8 @@ tailwind.config = {
   </div>
 </section>
 {{-- ════════ SECTION 10 — FAQ ════════ --}}
-<section id="faq" class="max-w-3xl mx-auto px-4 py-12 reveal">
-  <h2 class="text-2xl sm:text-3xl font-black text-center mb-8">Câu hỏi thường gặp</h2>
+<section id="faq" class="bg-white border-y border-green-100/60"><div class="max-w-3xl mx-auto px-4 md:px-6 py-12 md:py-20 lg:py-24 reveal">
+  <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-center mb-8 md:mb-10">Câu hỏi thường gặp</h2>
   <div class="space-y-3">
     @foreach([
       ['Không biết vẽ có tô được không?','Hoàn toàn được! Tranh chia sẵn từng ô có số, bạn chỉ việc tô màu đúng số tương ứng. Người chưa từng vẽ vẫn ra thành phẩm đẹp.'],
@@ -251,38 +323,45 @@ tailwind.config = {
       ['Ảnh chụp điện thoại có làm được không?','Có. Chỉ cần ảnh rõ mặt/chủ thể. AI sẽ tăng cường nét trước khi thiết kế.'],
       ['Có được xem trước không?','Có — bạn tải ảnh lên và xem bản thiết kế MIỄN PHÍ trước khi quyết định đặt.'],
       ['Có bảo hành không?','Có. Đổi trả miễn phí nếu tranh in lỗi, sai thiết kế hoặc hư hỏng khi vận chuyển.'],
+      ['Khác nhau giữa 24 / 36 / 48 màu là gì?','Nhiều màu hơn = tranh chi tiết và giống ảnh hơn (đặc biệt với chân dung). 24 màu hợp tranh đơn giản; 36 màu cân bằng đẹp – dễ tô; 48–60 màu cho chân dung cần độ giống cao.'],
       ['Tôi không rành thao tác, nhờ shop làm giúp được không?','Được! Bạn chỉ cần gửi ảnh qua Zalo 0856.911.698, shop thiết kế và gửi bản xem trước miễn phí — ưng mới đặt.'],
     ] as $q)
     <details class="bg-white rounded-2xl border border-green-100 px-5 shadow-sm">
-      <summary class="flex items-center justify-between font-extrabold py-4 min-h-[44px]"><span>{{ $q[0] }}</span><i class="ri-add-line faq-ic text-primary text-xl transition-transform"></i></summary>
-      <p class="pb-4 text-sm text-gray-600 leading-relaxed">{{ $q[1] }}</p>
+      <summary class="flex items-center justify-between font-extrabold py-4 min-h-[44px]"><span class="text-[15px] lg:text-base">{{ $q[0] }}</span><i class="ri-add-line faq-ic text-primary text-xl transition-transform"></i></summary>
+      <p class="pb-4 text-sm lg:text-[15px] text-gray-600 leading-relaxed">{{ $q[1] }}</p>
     </details>
     @endforeach
   </div>
+</div>
 </section>
 
 {{-- ════════ SECTION CTA CUỐI (Stitch V2) ════════ --}}
-<section class="relative overflow-hidden bg-gradient-to-r from-[#1E7A33] to-[#37A24A] text-white py-14 px-4">
-  <span class="absolute top-6 left-[8%] text-2xl rotate-12 opacity-70">🎉</span>
-  <span class="absolute top-10 right-[12%] text-3xl -rotate-12 opacity-70">🎊</span>
-  <span class="absolute bottom-8 left-[20%] text-xl opacity-60">✨</span>
-  <span class="absolute bottom-12 right-[28%] text-2xl rotate-6 opacity-60">🎈</span>
-  <div class="max-w-5xl mx-auto grid md:grid-cols-[280px_1fr] gap-8 items-center relative">
-    <img src="{{ asset('images/thiet-ke/cta-girl.jpg') }}" loading="lazy" class="w-full max-w-[280px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg]" alt="Khách DALI khoe tranh hoàn thiện">
+<section class="relative overflow-hidden bg-gradient-to-r from-[#1E7A33] to-[#37A24A] text-white py-14 md:py-20 px-4 md:px-6">
+  <div class="max-w-5xl mx-auto grid md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr] gap-8 lg:gap-14 items-center relative">
+    <img src="{{ asset('images/thiet-ke/cta-girl.jpg') }}" loading="lazy" class="w-full max-w-[280px] lg:max-w-[340px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg]" alt="Khách DALI khoe tranh hoàn thiện">
     <div class="text-center md:text-left">
-      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight">Sẵn sàng để sáng tạo?<br>Bắt đầu hành trình nghệ thuật của bạn ngay hôm nay!</h2>
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-black tracking-tight leading-tight">Sẵn sàng để sáng tạo?<br>Bắt đầu hành trình nghệ thuật của bạn ngay hôm nay!</h2>
       <a href="#upload" class="mt-6 inline-flex items-center gap-2 bg-white text-primaryd font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition shadow-xl2">📸 Tải ảnh — xem bản thiết kế miễn phí, ưng mới đặt</a>
     </div>
   </div>
 </section>
 
-<footer class="bg-ink text-white/50 text-center text-xs py-8 px-4">
-  © 2026 DALI · Tranh Tô Màu Số Hóa Theo Ảnh · 🇻🇳 Giao toàn quốc
+<footer class="bg-ink text-white/60 text-[13px] py-10 md:py-12 px-4">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="font-bold text-white/80">DALI — Tranh Tô Màu Số Hóa Theo Ảnh</div>
+    <nav class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+      <a href="#mau-tranh" class="hover:text-white">Mẫu tranh</a>
+      <a href="#bang-gia" class="hover:text-white">Bảng giá</a>
+      <a href="#faq" class="hover:text-white">FAQ</a>
+      <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="hover:text-white">Zalo 0856.911.698</a>
+    </nav>
+    <div>© 2026 DALI · 🇻🇳 Giao toàn quốc</div>
+  </div>
 </footer>
 
 {{-- ════════ FLOATING (mobile sticky CTA) ════════ --}}
 <div id="stickyBar" class="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-green-200 grid grid-cols-2 gap-2 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] translate-y-full transition-transform duration-300">
-  <a id="stickyCta" href="#upload" class="grad-btn text-white font-extrabold py-3 rounded-xl text-center text-sm">📸 Tải ảnh</a>
+  <a id="stickyCta" href="#upload" class="grad-btn text-white font-extrabold py-2 rounded-xl text-center text-sm leading-tight"><span class="block">📸 Tải ảnh — xem trước</span><span class="block text-[10px] font-bold text-white/85">miễn phí · ưng mới đặt</span></a>
   <a href="https://zalo.me/0856911698" target="_blank" rel="noopener" class="bg-white border border-green-200 text-primaryd font-extrabold py-3 rounded-xl text-center text-sm">💬 Chat Zalo</a>
 </div>
 <div class="md:hidden h-20"></div>
