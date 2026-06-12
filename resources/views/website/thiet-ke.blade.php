@@ -70,21 +70,20 @@ tailwind.config = {
   </div>
   <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/60 md:to-transparent"></div>
   <div class="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pt-14 pb-24 md:pt-0 md:pb-0 md:min-h-[560px] xl:min-h-[640px] md:flex md:items-center">
-    <div class="max-w-xl xl:max-w-2xl reveal md:pb-16">
-      {{-- Mobile: CHỈ 1 câu hook · Desktop: đầy đủ 2 dòng + mô tả --}}
+    <div class="max-w-xl xl:max-w-2xl reveal md:pb-16 text-center md:text-left">
+      {{-- Mobile: CHỈ 1 câu hook căn giữa · Desktop: đầy đủ 2 dòng + mô tả --}}
       <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] xl:text-5xl 2xl:text-[3.4rem] font-black leading-[1.12] tracking-tight text-white">
         Biến khoảnh khắc của bạn thành <span class="text-[#B7F0A8]">kiệt tác!</span>
         <span class="hidden md:block mt-1 text-[#B7F0A8]">Trải nghiệm niềm vui vẽ tranh số hóa.</span>
       </h1>
       <p class="hidden md:block mt-4 text-white/85 text-[15px] lg:text-base xl:text-lg max-w-md xl:max-w-lg">Gửi 1 tấm ảnh kỷ niệm — nhận bộ kit <b class="text-white">canvas in số + màu pha sẵn + cọ</b>, tự tay tô thành tranh treo tường.</p>
-      <div class="mt-6 md:mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <div class="mt-6 md:mt-7 flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3">
         <a href="#upload" class="grad-btn w-full sm:w-auto justify-center text-white text-base font-extrabold px-7 py-4 rounded-xl shadow-xl2 flex items-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên &amp; Xem trước miễn phí</a>
         <a href="#bang-gia" class="hidden md:inline-flex text-white/80 hover:text-white underline underline-offset-4 font-bold text-sm items-center gap-1">Xem bảng giá <i class="ri-arrow-down-line"></i></a>
       </div>
-      <div class="mt-4 md:mt-5 inline-flex flex-wrap items-center gap-x-2.5 gap-y-1 bg-white/10 backdrop-blur rounded-full px-4 py-2 text-sm text-white/90">
+      <div class="mt-4 md:mt-5 inline-flex flex-wrap justify-center items-center gap-x-2.5 gap-y-1 bg-white/10 backdrop-blur rounded-full px-4 py-2 text-sm text-white/90">
         <span class="font-black text-[#B7F0A8]">Từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ</span>
         <span class="text-white/50">·</span><span class="font-semibold">⭐ 4.9/5<span class="hidden md:inline"> đánh giá</span></span>
-        <span class="text-white/50">·</span><span class="font-semibold">COD<span class="hidden md:inline"> toàn quốc</span></span>
       </div>
     </div>
   </div>
@@ -136,7 +135,7 @@ tailwind.config = {
         @foreach([
           ['ri-user-star-line','Designer kiểm tra từng ảnh'],
           ['ri-eye-line','Xem trước miễn phí, ưng mới đặt'],
-          ['ri-hand-coin-line','COD — nhận hàng mới trả tiền'],
+          ['ri-hand-coin-line','Cọc 20% — còn lại khi nhận hàng'],
           ['ri-refresh-line','Đổi mới nếu in lỗi'],
         ] as $t)
         <div>
@@ -214,7 +213,7 @@ tailwind.config = {
     @foreach([
       ['ri-image-add-line','Tải ảnh lên','Chọn ảnh kỷ niệm bạn yêu thích ngay trên điện thoại.'],
       ['ri-magic-line','Xem bản thiết kế','AI thiết kế trong ~1 phút — miễn phí, ưng mới đặt.'],
-      ['ri-hand-coin-line','Đặt hàng COD','Chọn kích thước &amp; số màu, nhận hàng mới trả tiền.'],
+      ['ri-hand-coin-line','Đặt cọc 20%','Chọn kích thước &amp; số màu, cọc 20% — còn lại trả khi nhận.'],
       ['ri-brush-line','Nhận kit &amp; tô','Giao 24–72h: canvas in số + màu pha sẵn + cọ.'],
     ] as $i => $s)
     <div class="text-center">
@@ -408,12 +407,27 @@ tailwind.config = {
       <div id="oPhoneErr" class="hidden text-xs text-red-500 font-bold px-1">Số điện thoại chưa đúng (VD: 0912 345 678)</div>
       <input id="oAddr" name="address" type="text" autocomplete="street-address" enterkeyhint="done" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-base" placeholder="Địa chỉ nhận hàng (có thể bổ sung khi shop gọi)">
       <div id="oPkgRow" class="hidden text-xs font-bold text-primaryd bg-green-50 rounded-lg px-3 py-2">Gói: <span id="oPkgLabel"></span></div>
+      <div id="oDepositRow" class="hidden text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"></div>
     </form>
-    <div class="mt-4 grid grid-cols-3 gap-1 text-center text-[10px] font-bold text-gray-500"><div>💵 Thanh toán<br>khi nhận hàng</div><div>🚚 Freeship<br>toàn quốc</div><div>🔄 Đổi trả nếu<br>in lỗi/hư hỏng</div></div>
+    <div class="mt-4 grid grid-cols-3 gap-1 text-center text-[10px] font-bold text-gray-500"><div>💵 Cọc 20%<br>còn lại khi nhận</div><div>🚚 Freeship<br>toàn quốc</div><div>🔄 Đổi trả nếu<br>in lỗi/hư hỏng</div></div>
     <div class="flex gap-3 justify-center mt-5">
       <button onclick="closeM('orderModal')" class="bg-gray-100 text-gray-600 font-bold px-5 py-3 rounded-xl">Để sau</button>
       <button id="orderSubmit" class="grad-btn disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold px-6 py-3 rounded-xl">Gửi đơn</button>
     </div>
+  </div>
+</div>
+
+{{-- Modal nhập SĐT để LƯU bản thiết kế trước khi xem (dữ liệu về Admin → Khách thiết kế) --}}
+<div id="phoneModal" class="fixed inset-0 z-[60] bg-black/60 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-7 text-center max-h-[85vh] overflow-y-auto">
+    <div class="text-4xl mb-2">🎉</div>
+    <h3 class="text-xl font-black mb-1">Bản thiết kế đã xong!</h3>
+    <p class="text-sm text-gray-500 mb-4">Nhập số điện thoại để <b>lưu bản thiết kế theo SĐT</b> — khi đặt tranh hoặc cần hỗ trợ, shop tìm lại ảnh cho bạn ngay.</p>
+    <form id="phoneForm" novalidate>
+      <input id="pPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="13" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:border-primary outline-none text-base text-center" placeholder="Số điện thoại của bạn *">
+      <div id="pPhoneErr" class="hidden text-xs text-red-500 font-bold mt-1">Số điện thoại chưa đúng (VD: 0912 345 678)</div>
+      <button type="submit" class="grad-btn w-full justify-center text-white font-extrabold px-6 py-3.5 rounded-xl mt-3 flex items-center gap-2"><i class="ri-image-2-line"></i> Lưu &amp; xem bản thiết kế</button>
+    </form>
   </div>
 </div>
 
@@ -431,7 +445,7 @@ tailwind.config = {
 
 <script>
 const CSRF = document.querySelector('meta[name=csrf-token]').content;
-const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}", status:"{{ route('thiet-ke.status') }}" };
+const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}", status:"{{ route('thiet-ke.status') }}", lead:"{{ route('thiet-ke.lead') }}" };
 
 // Hiệu ứng Fade Up
 const io = new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }),{threshold:.12});
@@ -561,7 +575,7 @@ function pollJob(job, startedAt){
     try{
       var r=await fetch(URLS.status+'?job='+encodeURIComponent(job),{cache:'no-store'});
       var d=await r.json();
-      if(d.status==='done'){ clearInterval(timer); clearPendingJob(); closeM('loadingModal'); showResult(d.result); notifyDone(); }
+      if(d.status==='done'){ clearInterval(timer); clearPendingJob(); closeM('loadingModal'); deliverResult(d.result); }
       else if(d.status==='error'){ clearInterval(timer); clearPendingJob(); closeM('loadingModal');
         if(d.remaining!=null){ remaining=d.remaining; document.getElementById('remainBadge').textContent=badgeText(d); }
         alert((d.msg||'Xử lý thất bại.')+' (Lượt của bạn đã được hoàn lại)'); }
@@ -631,6 +645,34 @@ function renderRecent(){
   });
 }
 
+// ───── LƯU ẢNH THEO SĐT: bắt buộc nhập SĐT trước khi nhận bản thiết kế ─────
+let pendingResult=null;
+function getSavedPhone(){ try{ return localStorage.getItem('dali_phone')||''; }catch(e){ return ''; } }
+function sendLead(phone, res){
+  try{
+    const fd=new FormData();
+    fd.append('device_id',DEVICE); fd.append('phone',phone);
+    fd.append('original_url',res.original||''); fd.append('enhanced_url',res.enhanced||''); fd.append('result_url',res.img_output||'');
+    fetch(URLS.lead,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd});
+  }catch(e){}
+}
+function deliverResult(res){
+  const phone=getSavedPhone();
+  if(phone){ sendLead(phone,res); showResult(res); notifyDone(); return; }
+  pendingResult=res; playChime(); openM('phoneModal');
+  setTimeout(function(){ try{ document.getElementById('pPhone').focus(); }catch(e){} }, 250);
+}
+document.getElementById('pPhone').addEventListener('input',()=>{ document.getElementById('pPhoneErr').classList.add('hidden'); document.getElementById('pPhone').classList.remove('border-red-400'); });
+document.getElementById('phoneForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const phone=document.getElementById('pPhone').value.trim();
+  if(!validVnPhone(phone)){ document.getElementById('pPhoneErr').classList.remove('hidden'); document.getElementById('pPhone').classList.add('border-red-400'); document.getElementById('pPhone').focus(); return; }
+  try{ localStorage.setItem('dali_phone', phone); }catch(err){}
+  if(pendingResult){ sendLead(phone, pendingResult); }
+  closeM('phoneModal');
+  if(pendingResult){ const r=pendingResult; pendingResult=null; showResult(r); notifyDone(); }
+});
+
 function showResult(res, restored){
   const sec=document.getElementById('resultSection');
   // Khi khôi phục sau reload: dùng URL ảnh trên server (blob preview không còn)
@@ -692,7 +734,7 @@ function paintChips(){
 document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selI=+b.dataset.i; paintChips(); }));
 document.querySelectorAll('#colorChips .pick').forEach(b=>b.addEventListener('click',()=>{ selJ=+b.dataset.j; paintChips(); }));
 paintChips();
-document.getElementById('resultOrderBtn').addEventListener('click',()=>openOrder(PRICING.sizes[selI].label+' — '+fmtVnd(curPrice())+' · '+PRICING.colors[selJ]+' màu'));
+document.getElementById('resultOrderBtn').addEventListener('click',()=>openOrder(PRICING.sizes[selI].label+' — '+fmtVnd(curPrice())+' · '+PRICING.colors[selJ]+' màu · Cọc 20%: '+fmtVnd(Math.round(curPrice()*0.2/1000)*1000)));
 
 // ───── Lightbox zoom (lăn chuột / chụm 2 ngón / kéo) ─────
 var zScale=1,zX=0,zY=0,zPointers=new Map(),zLastDist=0,zDownX=0,zDownY=0,zDownOnBack=false;
@@ -754,7 +796,19 @@ function openOrder(pkg){
   }
   selectedPackage=pkg||''; const row=document.getElementById('oPkgRow');
   if(selectedPackage){ row.classList.remove('hidden'); document.getElementById('oPkgLabel').textContent=selectedPackage; } else { row.classList.add('hidden'); }
-  document.getElementById('orderSubmit').textContent = (selectedPackage && selectedPackage.indexOf('đ')>-1) ? ('Đặt hàng COD — '+fmtVnd(curPrice())) : 'Gửi đơn — shop gọi lại ngay';
+  // CỌC 20%: hiện số tiền cọc + còn lại; nút ghi rõ tiền cọc
+  const dep=document.getElementById('oDepositRow');
+  if(selectedPackage && selectedPackage.indexOf('đ')>-1){
+    const total=curPrice(), coc=Math.round(total*0.2/1000)*1000;
+    dep.innerHTML='Cọc trước 20%: <b>'+fmtVnd(coc)+'</b> — còn lại '+fmtVnd(total-coc)+' thanh toán khi nhận hàng. Shop sẽ gửi hướng dẫn chuyển khoản khi gọi xác nhận.';
+    dep.classList.remove('hidden');
+    document.getElementById('orderSubmit').textContent='Đặt cọc 20% — '+fmtVnd(coc);
+  } else {
+    dep.classList.add('hidden');
+    document.getElementById('orderSubmit').textContent='Gửi đơn — shop gọi lại ngay';
+  }
+  // Dien san SDT khach da luu khi nhan anh
+  const op=document.getElementById('oPhone'); if(op && !op.value){ op.value=getSavedPhone(); }
   openM('orderModal'); }
 document.querySelectorAll('.orderOpen').forEach(b=>b.addEventListener('click',()=>openOrder(b.dataset.package||'')));
 
@@ -778,7 +832,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
     document.getElementById('orderForm').classList.add('hidden');
     document.getElementById('orderSubmit').classList.add('hidden');
     document.getElementById('orderTitle').textContent='✅ Đã nhận đơn '+d.code;
-    document.getElementById('orderDesc').innerHTML='Shop sẽ gọi xác nhận trong hôm nay. Bạn được <b>+'+d.bonus+' lượt tạo</b>. Thanh toán khi nhận hàng (COD).'
+    document.getElementById('orderDesc').innerHTML='Shop sẽ gọi xác nhận &amp; hướng dẫn <b>đặt cọc 20%</b> trong hôm nay — còn lại thanh toán khi nhận hàng. Bạn được <b>+'+d.bonus+' lượt tạo</b>.'
       +'<br><a href="https://zalo.me/0856911698" target="_blank" class="inline-block mt-3 bg-[#0068FF] text-white font-extrabold px-5 py-2.5 rounded-xl">💬 Nhắn Zalo kèm mã đơn '+d.code+'</a>';
     orderDone=true;
   }catch(e){ alert('Lỗi kết nối, thử lại sau.'); }

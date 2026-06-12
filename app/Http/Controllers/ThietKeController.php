@@ -179,6 +179,23 @@ class ThietKeController extends Controller
         return response()->json(['ok' => true, 'status' => 'processing']);
     }
 
+    /** Lưu SĐT khách kèm bản thiết kế (hiện trong Admin -> Khách thiết kế). */
+    public function lead(Request $r)
+    {
+        $phone = preg_replace('/[\s.\-]/', '', (string) $r->input('phone', ''));
+        if (!preg_match('/^(0|\+?84)(3|5|7|8|9)\d{8}$/', $phone)) {
+            return response()->json(['ok' => false, 'msg' => 'Số điện thoại không hợp lệ.'], 422);
+        }
+        \App\Models\DesignLead::create([
+            'phone'        => $phone,
+            'device_id'    => $this->deviceId($r),
+            'original_url' => substr((string) $r->input('original_url', ''), 0, 1000),
+            'enhanced_url' => substr((string) $r->input('enhanced_url', ''), 0, 1000),
+            'result_url'   => substr((string) $r->input('result_url', ''), 0, 1000),
+        ]);
+        return response()->json(['ok' => true]);
+    }
+
     /** Đặt hàng từ trang thiết kế -> tạo đơn + cộng ORDER_BONUS lượt cho device. */
     public function order(Request $r)
     {

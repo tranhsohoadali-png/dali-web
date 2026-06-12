@@ -42,6 +42,7 @@ Route::get('/thiet-ke/luot',     [\App\Http\Controllers\ThietKeController::class
 Route::post('/thiet-ke/tao',     [\App\Http\Controllers\ThietKeController::class, 'generate'])->name('thiet-ke.generate');
 Route::get('/thiet-ke/trang-thai',[\App\Http\Controllers\ThietKeController::class, 'status'])->name('thiet-ke.status');
 Route::post('/thiet-ke/dat-hang',[\App\Http\Controllers\ThietKeController::class, 'order'])->name('thiet-ke.order');
+Route::post('/thiet-ke/luu-sdt', [\App\Http\Controllers\ThietKeController::class, 'lead'])->name('thiet-ke.lead');
 
 // ── BLOG ──
 Route::get('/blog',                        [WebsiteController::class, 'blog'])->name('blog');
@@ -139,6 +140,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Bảng giá trang Thiết kế theo yêu cầu (/thiet-ke)
     Route::get('thiet-ke-gia',  [\App\Http\Controllers\Admin\ThietKePricingController::class, 'index'])->name('thietke.pricing');
     Route::post('thiet-ke-gia', [\App\Http\Controllers\Admin\ThietKePricingController::class, 'save'])->name('thietke.pricing.save');
+    // Khách thiết kế: SĐT khách lưu bản thiết kế (kèm xuất CSV ?xuat=csv)
+    Route::get('thiet-ke-khach', [\App\Http\Controllers\Admin\ThietKeLeadController::class, 'index'])->name('thietke.leads');
 
     Route::post('settings/sizes', [SettingsController::class, 'updateSizes'])->name('settings.sizes');
     Route::post('settings/sizes/add', [SettingsController::class, 'addSize'])->name('settings.sizes.add');
