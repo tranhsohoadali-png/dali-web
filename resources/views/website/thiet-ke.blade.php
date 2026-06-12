@@ -191,7 +191,7 @@ tailwind.config = {
       ] as $g)
       <div class="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-xl2 transition">
         <img src="{{ asset('images/thiet-ke/'.$g[0].'.jpg') }}" loading="lazy" class="w-full h-36 object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="">
-        <div class="px-3 py-2"><div class="text-xs font-extrabold text-primaryd"><i class="ri-instagram-line"></i> @{{ $g[1] }}</div><div class="text-[11px] text-gray-500 leading-snug">“{{ $g[2] }}”</div></div>
+        <div class="px-3 py-2"><div class="text-xs font-extrabold text-primaryd"><i class="ri-instagram-line"></i> {{ '@'.$g[1] }}</div><div class="text-[11px] text-gray-500 leading-snug">“{{ $g[2] }}”</div></div>
       </div>
       @endforeach
     </div>
