@@ -74,9 +74,6 @@ tailwind.config = {
         <a href="#upload" class="grad-btn text-white text-base font-extrabold px-7 py-4 rounded-xl shadow-xl2 flex items-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên &amp; Xem trước miễn phí</a>
         <a href="#mo-hop" class="bg-white/10 backdrop-blur border-2 border-white/60 text-white text-base font-bold px-6 py-4 rounded-xl hover:bg-white/20 transition flex items-center gap-2">Tìm hiểu bộ kit</a>
       </div>
-      <div class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-bold text-white/75">
-        <span>⭐ 4.9/5 đánh giá</span><span>🚚 Giao toàn quốc</span><span>🛡️ Đổi trả nếu lỗi</span><span>🎨 Thiết kế miễn phí</span>
-      </div>
     </div>
   </div>
 </section>
@@ -90,11 +87,19 @@ tailwind.config = {
         <span class="text-gray-400 font-semibold">· {{ \App\Models\DesignQuota::FREE }} lượt miễn phí/máy</span>
       </div>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" class="hidden">
-      <div id="dropZone" class="border-2 border-dashed border-green-300 rounded-2xl bg-green-50/60 px-6 py-10 text-center cursor-pointer hover:border-primary hover:bg-green-50 transition">
-        <div class="w-14 h-14 mx-auto mb-3 rounded-full grad flex items-center justify-center text-white text-2xl"><i class="ri-image-add-line"></i></div>
-        <div class="font-extrabold text-lg">Kéo thả hoặc chạm để chọn ảnh</div>
-        <div class="text-xs text-gray-400 mt-1">PNG · JPG · WEBP — ảnh càng rõ kết quả càng đẹp</div>
-        <span class="inline-block mt-4 grad-btn text-white text-sm font-extrabold px-6 py-3 rounded-xl"><i class="ri-folder-image-line"></i> Chọn ảnh</span>
+      <div class="grid sm:grid-cols-[1fr_auto] gap-4 items-stretch">
+        <div id="dropZone" class="border-2 border-dashed border-green-300 rounded-2xl bg-green-50/60 px-6 py-10 text-center cursor-pointer hover:border-primary hover:bg-green-50 transition">
+          <div class="w-14 h-14 mx-auto mb-3 rounded-full grad flex items-center justify-center text-white text-2xl"><i class="ri-image-add-line"></i></div>
+          <div class="font-extrabold text-lg">Kéo thả hoặc chạm để chọn ảnh</div>
+          <div class="text-xs text-gray-400 mt-1">PNG · JPG · WEBP — ảnh càng rõ kết quả càng đẹp</div>
+          <span class="inline-block mt-4 grad-btn text-white text-sm font-extrabold px-6 py-3 rounded-xl"><i class="ri-folder-image-line"></i> Chọn ảnh</span>
+        </div>
+        {{-- Demo trước→sau (như mockup Stitch): ảnh thật của khách --}}
+        <div class="hidden sm:flex items-center gap-2 self-center">
+          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" onclick="openZoom(this.src)" class="w-28 h-36 object-cover rounded-xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
+          <span class="text-primary text-2xl font-black">→</span>
+          <img src="{{ asset('images/thiet-ke/be-map.jpg') }}" onclick="openZoom(this.src)" class="w-28 h-36 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Bản phác thảo số hóa">
+        </div>
       </div>
       <img id="previewImg" class="hidden mt-5 mx-auto max-h-72 rounded-2xl border border-green-100" alt="">
       <div class="mt-5 flex flex-wrap items-center gap-3">
@@ -206,9 +211,9 @@ tailwind.config = {
           <tbody>
             @foreach($pricing['sizes'] as $si => $s)
             @if($si === 1)<tr><td colspan="{{ count($pricing['colors']) + 1 }}" class="bg-primary text-white text-center text-[11px] font-black py-1.5">⭐ Lựa chọn phổ biến</td></tr>@endif
-            <tr class="border-b border-gray-50 {{ $si === 1 ? 'bg-green-50' : 'hover:bg-green-50/40' }} transition">
-              <td class="px-3 py-2.5"><div class="font-black text-xs whitespace-nowrap">{{ $s['label'] }}</div>@if(!empty($s['note']))<div class="text-[9px] text-gray-400 font-semibold">{{ $s['note'] }}</div>@endif</td>
-              @foreach($s['prices'] as $v)<td class="px-2 py-2.5 text-right font-bold text-[11px] whitespace-nowrap {{ $si === 1 ? 'text-primaryd font-black' : 'text-ink' }}">{{ number_format($v, 0, ',', '.') }}</td>@endforeach
+            <tr class="border-b border-gray-50 {{ $si === 1 ? 'bg-primary' : 'hover:bg-green-50/40' }} transition">
+              <td class="px-3 py-2.5"><div class="font-black text-xs whitespace-nowrap {{ $si === 1 ? 'text-white' : '' }}">{{ $s['label'] }}</div>@if(!empty($s['note']))<div class="text-[9px] font-semibold {{ $si === 1 ? 'text-white/80' : 'text-gray-400' }}">{{ $s['note'] }}</div>@endif</td>
+              @foreach($s['prices'] as $v)<td class="px-2 py-2.5 text-right text-[11px] whitespace-nowrap {{ $si === 1 ? 'text-white font-black' : 'text-ink font-bold' }}">{{ number_format($v, 0, ',', '.') }}</td>@endforeach
             </tr>
             @endforeach
           </tbody>
