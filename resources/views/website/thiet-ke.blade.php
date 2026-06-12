@@ -71,19 +71,20 @@ tailwind.config = {
   <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/60 md:to-transparent"></div>
   <div class="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pt-14 pb-24 md:pt-0 md:pb-0 md:min-h-[560px] xl:min-h-[640px] md:flex md:items-center">
     <div class="max-w-xl xl:max-w-2xl reveal md:pb-16">
+      {{-- Mobile: CHỈ 1 câu hook · Desktop: đầy đủ 2 dòng + mô tả --}}
       <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] xl:text-5xl 2xl:text-[3.4rem] font-black leading-[1.12] tracking-tight text-white">
-        Biến khoảnh khắc của bạn thành kiệt tác!
-        <span class="block mt-1 text-[#B7F0A8]">Trải nghiệm niềm vui vẽ tranh số hóa.</span>
+        Biến khoảnh khắc của bạn thành <span class="text-[#B7F0A8]">kiệt tác!</span>
+        <span class="hidden md:block mt-1 text-[#B7F0A8]">Trải nghiệm niềm vui vẽ tranh số hóa.</span>
       </h1>
-      <p class="mt-4 text-white/85 text-[15px] lg:text-base xl:text-lg max-w-md xl:max-w-lg">Gửi 1 tấm ảnh kỷ niệm — nhận bộ kit <b class="text-white">canvas in số + màu pha sẵn + cọ</b>, tự tay tô thành tranh treo tường.</p>
-      <div class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <p class="hidden md:block mt-4 text-white/85 text-[15px] lg:text-base xl:text-lg max-w-md xl:max-w-lg">Gửi 1 tấm ảnh kỷ niệm — nhận bộ kit <b class="text-white">canvas in số + màu pha sẵn + cọ</b>, tự tay tô thành tranh treo tường.</p>
+      <div class="mt-6 md:mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
         <a href="#upload" class="grad-btn w-full sm:w-auto justify-center text-white text-base font-extrabold px-7 py-4 rounded-xl shadow-xl2 flex items-center gap-2"><i class="ri-upload-cloud-2-line"></i> Tải ảnh lên &amp; Xem trước miễn phí</a>
-        <a href="#bang-gia" class="text-white/80 hover:text-white underline underline-offset-4 font-bold text-sm inline-flex items-center gap-1">Xem bảng giá <i class="ri-arrow-down-line"></i></a>
+        <a href="#bang-gia" class="hidden md:inline-flex text-white/80 hover:text-white underline underline-offset-4 font-bold text-sm items-center gap-1">Xem bảng giá <i class="ri-arrow-down-line"></i></a>
       </div>
-      <div class="mt-5 inline-flex flex-wrap items-center gap-x-2.5 gap-y-1 bg-white/10 backdrop-blur rounded-full px-4 py-2 text-sm text-white/90">
-        <span class="font-black text-[#B7F0A8]">Trọn bộ từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ</span>
-        <span class="text-white/50">·</span><span class="font-semibold">⭐ 4.9/5 đánh giá</span>
-        <span class="text-white/50">·</span><span class="font-semibold">COD toàn quốc</span>
+      <div class="mt-4 md:mt-5 inline-flex flex-wrap items-center gap-x-2.5 gap-y-1 bg-white/10 backdrop-blur rounded-full px-4 py-2 text-sm text-white/90">
+        <span class="font-black text-[#B7F0A8]">Từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ</span>
+        <span class="text-white/50">·</span><span class="font-semibold">⭐ 4.9/5<span class="hidden md:inline"> đánh giá</span></span>
+        <span class="text-white/50">·</span><span class="font-semibold">COD<span class="hidden md:inline"> toàn quốc</span></span>
       </div>
     </div>
   </div>
