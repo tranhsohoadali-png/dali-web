@@ -268,7 +268,7 @@ tailwind.config = {
   <span class="absolute bottom-8 left-[20%] text-xl opacity-60">✨</span>
   <span class="absolute bottom-12 right-[28%] text-2xl rotate-6 opacity-60">🎈</span>
   <div class="max-w-5xl mx-auto grid md:grid-cols-[280px_1fr] gap-8 items-center relative">
-    <img src="{{ asset('images/thiet-ke/mo-hop.jpg') }}" loading="lazy" class="w-full max-w-[280px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg]" alt="Thành phẩm DALI">
+    <img src="{{ asset('images/thiet-ke/cta-girl.jpg') }}" loading="lazy" class="w-full max-w-[280px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg]" alt="Khách DALI khoe tranh hoàn thiện">
     <div class="text-center md:text-left">
       <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight">Sẵn sàng để sáng tạo?<br>Bắt đầu hành trình nghệ thuật của bạn ngay hôm nay!</h2>
       <a href="#upload" class="mt-6 inline-flex items-center gap-2 bg-white text-primaryd font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition shadow-xl2">📸 Tải ảnh — xem bản thiết kế miễn phí, ưng mới đặt</a>
