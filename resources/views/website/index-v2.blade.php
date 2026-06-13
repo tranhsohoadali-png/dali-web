@@ -105,10 +105,17 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#fff;color:#1A1A1A}
   <p class="text-center text-gray-500 text-sm md:text-base mb-10">Hàng trăm mẫu tranh tô màu số hóa — chọn chủ đề bạn yêu thích.</p>
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
     @foreach($categories->where('combo_only',false)->take(8) as $cat)
-    <a href="{{ route('category', $cat->slug) }}" class="group bg-white rounded-2xl border border-green-100 shadow-sm p-5 text-center hover:-translate-y-1 hover:shadow-xl2 transition">
-      <div class="text-3xl mb-2">{{ $cat->icon ?: '🎨' }}</div>
-      <div class="font-extrabold text-sm group-hover:text-primaryd">{{ $cat->name }}</div>
-      <div class="text-[11px] text-gray-500 mt-0.5">{{ $cat->products_count }} mẫu</div>
+    <a href="{{ route('category', $cat->slug) }}" class="group relative block rounded-2xl overflow-hidden aspect-[4/3] shadow-sm hover:-translate-y-1 hover:shadow-xl2 transition">
+      @if($cat->image)
+        <img src="{{ asset('storage/'.$cat->image) }}" alt="{{ $cat->name }}" loading="lazy" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500">
+      @else
+        <div class="absolute inset-0 bg-gradient-to-br from-primary to-primaryd flex items-center justify-center text-4xl">{{ $cat->icon ?: '🎨' }}</div>
+      @endif
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent"></div>
+      <div class="absolute bottom-0 inset-x-0 p-3 text-white">
+        <div class="font-extrabold text-sm leading-tight">{{ $cat->name }}</div>
+        <div class="text-[11px] text-white/85 mt-0.5">{{ $cat->products_count }} mẫu</div>
+      </div>
     </a>
     @endforeach
   </div>
