@@ -824,6 +824,8 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   if(!validVnPhone(phone)){ document.getElementById('oPhoneErr').classList.remove('hidden'); document.getElementById('oPhone').classList.add('border-red-400'); document.getElementById('oPhone').focus(); return; }
   const fd=new FormData(); fd.append('device_id',DEVICE); fd.append('customer_name',name); fd.append('customer_phone',phone);
   fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('package',selectedPackage);
+  // Giá tranh khách chọn + cọc 20% (để lưu đơn + tính hoa hồng CTV)
+  const _price=curPrice(); fd.append('price',_price); fd.append('deposit',Math.round(_price*0.2/1000)*1000);
   btn.disabled=true; const oldLabel=btn.innerHTML; btn.innerHTML='<i class="ri-loader-4-line animate-spin"></i> Đang gửi…';
   try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
     if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; }

@@ -233,6 +233,17 @@ class ThietKeController extends Controller
             return response()->json(['ok' => false, 'msg' => 'Đơn của bạn đang được xử lý, vui lòng đợi giây lát.'], 429);
         }
 
+        // Giá tranh khách chọn + tiền cọc 20% (client gửi; chặn số âm/quá lớn).
+        $price   = max(0, min((int) $r->input('price', 0), 100000000));
+        $deposit = max(0, min((int) $r->input('deposit', 0), $price));
+
+        // Mã CTV: ưu tiên client gửi -> session -> cookie (link /ref/<mã> đã lưu 30 ngày)
+        $affCode = strtoupper(trim(
+            $r->input('affiliate_code', '')
+            ?: session('affiliate_code', '')
+            ?: $r->cookie('affiliate_code', '')
+        ));
+
         $code = 'TK-' . strtoupper(substr(uniqid(), -6));
         try {
             $order = Order::create([
@@ -248,13 +259,25 @@ class ThietKeController extends Controller
                 'status'           => 'new',
                 'payment_method'   => 'COD',
                 'payment_status'   => 'pending',
-                'subtotal'         => 0,
+                'subtotal'         => $price,
                 'ship_fee'         => 0,
-                'total'            => 0,
+                'total'            => $price,
+                'deposit'          => $deposit,
             ]);
         } catch (\Throwable $e) {
             cache()->forget($lock); // tạo đơn lỗi -> nhả khoá để khách gửi lại ngay
             throw $e;
+        }
+
+        // Ghi hoa hồng CTV trên GIÁ TRANH khách chọn (giống đơn bán thường).
+        if ($affCode && $price > 0) {
+            $aff = \App\Models\Affiliate::where('code', $affCode)->where('is_active', true)->first();
+            if ($aff) {
+                $commission = (int) round($price * $aff->commission_rate / 100);
+                $order->update(['affiliate_code' => $affCode, 'affiliate_commission' => $commission]);
+                $aff->increment('total_earned', $commission);
+                $aff->increment('total_orders');
+            }
         }
 
         $remaining = 0;
