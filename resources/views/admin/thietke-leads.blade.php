@@ -68,7 +68,11 @@ thead th{font-size:12px;font-weight:900;color:#0F172A;background:#fff;white-spac
               <td class="time">{{ $l->created_at->format('d/m/Y H:i') }}</td>
               <td>
                 @if($l->original_url)<a class="lnk" href="{{ $l->original_url }}" target="_blank">📷 Gốc</a>@endif
-                @if($l->enhanced_url)<a class="lnk" href="{{ $l->enhanced_url }}" target="_blank">✨ Ảnh AI</a>@endif
+                @if($l->enhanced_url)
+                  <a class="lnk" href="{{ $l->enhanced_url }}" target="_blank">✨ Ảnh AI</a>
+                @else
+                  <span class="lnk" style="background:#FEF3C7;border-color:#FCD34D;color:#B45309;cursor:help" title="Lúc tạo bản này, khoá Google AI hết credit nên hệ thống bỏ qua bước tăng cường AI — khách chỉ nhận bản đồ màu từ ảnh gốc.">⚠️ Không có ảnh AI</span>
+                @endif
                 @if($l->result_url)<a class="lnk" href="{{ $l->result_url }}" target="_blank">🎨 Bản đồ màu</a>@endif
               </td>
               <td class="time">{{ \Illuminate\Support\Str::limit($l->device_id, 14) }}</td>
