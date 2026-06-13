@@ -61,15 +61,16 @@ tailwind.config = {
 
 {{-- ════════ SECTION 1 — HERO (thiết kế Stitch V2) ════════ --}}
 <section class="relative overflow-hidden bg-[#3E2F23]">
-  {{-- Mobile: ảnh phủ nền, tiêu điểm vào khuôn mặt (không cắt mất đầu) --}}
-  <img src="{{ asset('images/home/girl-paint.jpg') }}" alt="Cô gái vẽ tranh DALI" class="md:hidden absolute inset-0 w-full h-full object-cover object-[58%_30%]">
-  {{-- Desktop: hiển thị TRỌN VẸN ảnh (đúng tỷ lệ, neo phải), mép trái hoà vào nền nâu --}}
+  {{-- Mobile: ảnh dọc HIỆN RÕ, chỉ tối nhẹ phía trên cho chữ trắng (không che hết ảnh) --}}
+  <img src="{{ asset('images/home/girl-night.jpg') }}" alt="Cô gái vẽ tranh DALI" class="md:hidden absolute inset-0 w-full h-full object-cover object-[center_35%]">
+  <div class="md:hidden absolute inset-0" style="background:linear-gradient(to bottom,rgba(46,34,25,.88) 0%,rgba(46,34,25,.5) 26%,rgba(46,34,25,0) 50%)"></div>
+  {{-- Desktop: ảnh studio đầy đủ, neo phải, mép trái hoà vào nền nâu --}}
   <div class="hidden md:block absolute inset-y-0 right-0">
     <img src="{{ asset('images/home/girl-paint.jpg') }}" alt="Cô gái vẽ tranh DALI" class="h-full w-auto max-w-none">
     <div class="absolute inset-y-0 left-0 w-56 xl:w-72 bg-gradient-to-r from-[#3E2F23] to-transparent"></div>
   </div>
-  <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/60 md:to-transparent"></div>
-  <div class="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pt-14 pb-24 md:pt-0 md:pb-0 md:min-h-[560px] xl:min-h-[640px] md:flex md:items-center">
+  <div class="hidden md:block absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/60 to-transparent"></div>
+  <div class="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-8 pt-14 pb-44 sm:pb-52 md:pt-0 md:pb-0 md:min-h-[560px] xl:min-h-[640px] md:flex md:items-center">
     <div class="max-w-xl xl:max-w-2xl reveal md:pb-16 text-center md:text-left">
       {{-- Mobile: CHỈ 1 câu hook căn giữa · Desktop: đầy đủ 2 dòng + mô tả --}}
       <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] xl:text-5xl 2xl:text-[3.4rem] font-black leading-[1.12] tracking-tight text-white">
