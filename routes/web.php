@@ -22,6 +22,7 @@ Route::post('/webhook/viettelpost', [WebhookController::class, 'viettelpost'])->
 
 // ─── FRONTEND ───────────────────────────────────
 Route::get('/',                  [WebsiteController::class, 'index'])->name('home');
+Route::get('/trang-chu-moi',     [WebsiteController::class, 'indexV2'])->name('home.v2');  // xem thu giao dien trang chu moi
 Route::get('/san-pham',          [WebsiteController::class, 'products'])->name('products');
 Route::get('/chu-de/{category:slug}', [WebsiteController::class, 'categoryCombo'])->name('category');
 Route::get('/san-pham/{product:slug}', [WebsiteController::class, 'product'])->name('product');

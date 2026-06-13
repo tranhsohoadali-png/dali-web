@@ -19,6 +19,18 @@ class WebsiteController extends Controller
 {
     public function index()
     {
+        return view('website.index', $this->homeData());
+    }
+
+    /** Trang chủ bản mới (xem thử trước khi chốt) — cùng dữ liệu, giao diện mới. */
+    public function indexV2()
+    {
+        return view('website.index-v2', $this->homeData());
+    }
+
+    /** Dữ liệu dùng chung cho trang chủ (cũ + bản xem thử). */
+    private function homeData(): array
+    {
         $hero       = HeroSection::first();
         $categories = Category::where('is_active',true)->withCount(['products'])->orderBy('sort_order')->get();
         // Ẩn sản phẩm lẻ của danh mục "chỉ bán dạng tổng hợp" khỏi trang chủ
@@ -49,7 +61,7 @@ class WebsiteController extends Controller
         }
         $bestSellers = $bestSellers->take(8)->values();
 
-        return view('website.index', compact('hero','categories','products','bestSellers','settings'));
+        return compact('hero','categories','products','bestSellers','settings');
     }
 
     public function products(Request $request)
