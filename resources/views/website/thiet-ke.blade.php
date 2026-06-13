@@ -465,6 +465,8 @@ function closeM(id){ const m=document.getElementById(id); m.classList.add('hidde
 // ───── Công cụ thiết kế (device id + quota + tạo + đặt hàng) ─────
 function deviceId(){ let d=localStorage.getItem('dali_device'); if(!d){ d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,12); localStorage.setItem('dali_device',d);} return d; }
 const DEVICE=deviceId(); let remaining=null, lastResultUrl='', lastEnhancedUrl='', lastOriginalUrl='', selectedPackage='', orderDone=false;
+// Thông tin ngân hàng để tạo mã QR đặt cọc (lấy từ Cài đặt admin)
+const BANK={ id:"{{ $settings['bank_id'] ?? '' }}", acc:"{{ $settings['bank_acc'] ?? '' }}", name:"{{ $settings['bank_name'] ?? '' }}", label:"{{ $settings['bank_label'] ?? '' }}" };
 
 const fileInput=document.getElementById('fileInput'), dropZone=document.getElementById('dropZone'),
       previewImg=document.getElementById('previewImg'), genBtn=document.getElementById('genBtn');
@@ -831,12 +833,23 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
     if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; }
     remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=badgeText(d);
-    // Trạng thái thành công NGAY TRONG modal: giữ mã đơn + bước tiếp theo qua Zalo
+    // Trạng thái thành công NGAY TRONG modal: giữ mã đơn + QR đặt cọc + Zalo
     document.getElementById('orderForm').classList.add('hidden');
     document.getElementById('orderSubmit').classList.add('hidden');
     document.getElementById('orderTitle').textContent='✅ Đã nhận đơn '+d.code;
-    document.getElementById('orderDesc').innerHTML='Shop sẽ gọi xác nhận &amp; hướng dẫn <b>đặt cọc 20%</b> trong hôm nay — còn lại thanh toán khi nhận hàng. Bạn được <b>+'+d.bonus+' lượt tạo</b>.'
-      +'<br><a href="https://zalo.me/0856911698" target="_blank" class="inline-block mt-3 bg-[#0068FF] text-white font-extrabold px-5 py-2.5 rounded-xl">💬 Nhắn Zalo kèm mã đơn '+d.code+'</a>';
+    var coc=Math.round(curPrice()*0.2/1000)*1000;
+    var html='Đặt cọc <b>'+fmtVnd(coc)+'</b> (20%) để shop bắt đầu làm tranh — còn lại '+fmtVnd(curPrice()-coc)+' trả khi nhận hàng. Bạn được <b>+'+d.bonus+' lượt tạo</b>.';
+    // QR chuyển khoản đặt cọc (VietQR) — nội dung CK = mã đơn để shop đối soát
+    if(BANK.acc && coc>0){
+      var qr='https://img.vietqr.io/image/'+BANK.id+'-'+BANK.acc+'-qr_only.png?amount='+coc+'&addInfo='+encodeURIComponent(d.code)+'&accountName='+encodeURIComponent(BANK.name);
+      html+='<div class="mt-3 bg-green-50 border-2 border-green-200 rounded-2xl p-3 text-center">'
+        +'<div class="text-xs font-bold text-primaryd mb-2">Quét mã để đặt cọc '+fmtVnd(coc)+'</div>'
+        +'<img src="'+qr+'" alt="QR đặt cọc" class="w-44 h-44 mx-auto rounded-xl border border-green-200 bg-white">'
+        +'<div class="text-xs text-gray-600 mt-2 leading-relaxed">'+BANK.label+' · <b>'+BANK.acc+'</b><br>'+BANK.name+'<br>Nội dung CK: <b>'+d.code+'</b></div>'
+        +'</div>';
+    }
+    html+='<a href="https://zalo.me/0856911698" target="_blank" class="inline-block mt-3 bg-[#0068FF] text-white font-extrabold px-5 py-2.5 rounded-xl">💬 Gửi ảnh CK qua Zalo (mã '+d.code+')</a>';
+    document.getElementById('orderDesc').innerHTML=html;
     orderDone=true;
   }catch(e){ alert('Lỗi kết nối, thử lại sau.'); }
   finally{ btn.disabled=false; btn.innerHTML=oldLabel; }

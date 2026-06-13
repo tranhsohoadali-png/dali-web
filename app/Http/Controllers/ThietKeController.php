@@ -188,6 +188,32 @@ class ThietKeController extends Controller
         return response()->json(['ok' => true, 'status' => 'processing']);
     }
 
+    /**
+     * Sao lưu VĨNH VIỄN 3 ảnh của đơn về server bán hàng (ảnh server màu tự xoá
+     * sau 24h). Trả về mảng URL local đã lưu; lỗi/ảnh không tải được -> giữ URL gốc.
+     */
+    private function backupOrderImages(string $code, array $urls): array
+    {
+        $out = $urls;
+        $dir = public_path('images/tk-orders/' . $code);
+        foreach ($urls as $key => $url) {
+            if (!$url || !preg_match('#^https?://#', $url)) continue;
+            try {
+                $resp = Http::timeout(15)->get($url);
+                if (!$resp->ok() || strlen($resp->body()) < 500) continue;   // ảnh đã bị xoá/hỏng
+                $ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
+                $ext = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'webp']) ? $ext : 'jpg';
+                if (!is_dir($dir)) @mkdir($dir, 0775, true);
+                $file = $dir . '/' . $key . '.' . $ext;
+                file_put_contents($file, $resp->body());
+                $out[$key] = url('images/tk-orders/' . $code . '/' . $key . '.' . $ext);
+            } catch (\Throwable $e) {
+                // giữ URL gốc nếu tải lỗi — không làm hỏng đơn
+            }
+        }
+        return $out;
+    }
+
     /** Lưu SĐT khách kèm bản thiết kế (hiện trong Admin -> Khách thiết kế). */
     public function lead(Request $r)
     {
@@ -254,6 +280,15 @@ class ThietKeController extends Controller
         ));
 
         $code = 'TK-' . strtoupper(substr(uniqid(), -6));
+
+        // Sao lưu 3 ảnh về server bán hàng NGAY (ảnh server màu xoá sau 24h) ->
+        // đơn đã đặt không bao giờ mất ảnh để in tranh.
+        $imgs = $this->backupOrderImages($code, [
+            'goc' => (string) $r->input('original_url', ''),
+            'ai'  => (string) $r->input('enhanced_url', ''),
+            'map' => (string) $r->input('result_url', ''),
+        ]);
+
         try {
             $order = Order::create([
                 'code'             => $code,
@@ -263,9 +298,9 @@ class ThietKeController extends Controller
                 'customer_address' => $r->input('customer_address', ''),
                 'note'             => 'ĐƠN THIẾT KẾ THEO YÊU CẦU'
                                       . ($r->input('package') ? ' — Gói: ' . $r->input('package') : '')
-                                      . ($r->input('original_url') ? '. Ảnh gốc: ' . $r->input('original_url') : '')
-                                      . ' | Bản đồ màu: ' . $r->input('result_url', '(chưa có)')
-                                      . ($r->input('enhanced_url') ? ' | Ảnh AI: ' . $r->input('enhanced_url') : ''),
+                                      . ($imgs['goc'] ? '. Ảnh gốc: ' . $imgs['goc'] : '')
+                                      . ' | Bản đồ màu: ' . ($imgs['map'] ?: '(chưa có)')
+                                      . ($imgs['ai'] ? ' | Ảnh AI: ' . $imgs['ai'] : ''),
                 'status'           => 'new',
                 'payment_method'   => 'COD',
                 'payment_status'   => 'pending',

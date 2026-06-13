@@ -82,6 +82,17 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('admin.dashboard', compact('stats','recent_orders','top_products','chart_data','visit_chart','province_stats','province_total','monthly_chart'));
+        // Cảnh báo AI: % bản thiết kế gần đây KHÔNG có ảnh AI (dấu hiệu hết credit Google).
+        $aiWarn = null;
+        if (\Illuminate\Support\Facades\Schema::hasTable('design_leads')) {
+            $recentLeads = \App\Models\DesignLead::where('created_at', '>=', now()->subHours(48));
+            $totalLeads  = (clone $recentLeads)->count();
+            $noAi        = (clone $recentLeads)->where(fn($q) => $q->whereNull('enhanced_url')->orWhere('enhanced_url', ''))->count();
+            if ($totalLeads >= 2 && $noAi >= ceil($totalLeads * 0.5)) {
+                $aiWarn = ['no_ai' => $noAi, 'total' => $totalLeads];
+            }
+        }
+
+        return view('admin.dashboard', compact('stats','recent_orders','top_products','chart_data','visit_chart','province_stats','province_total','monthly_chart','aiWarn'));
     }
 }

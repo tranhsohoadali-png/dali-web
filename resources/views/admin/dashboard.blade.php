@@ -58,6 +58,17 @@ tr:hover td{background:var(--gll)}
     <div class="sak"><span class="p">🌸</span><span class="p">✿</span><span class="p">🍃</span><span class="sak-t">DALI · TÔ ĐIỂM CUỘC SỐNG</span></div>
     <div class="cnt">
 
+      @if(!empty($aiWarn))
+      <div style="background:#FEF2F2;border:2px solid #FCA5A5;border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start">
+        <div style="font-size:24px">🚨</div>
+        <div style="flex:1">
+          <div style="font-weight:900;color:#B91C1C;font-size:14px">Cảnh báo: AI tăng cường có thể đã HẾT CREDIT Google</div>
+          <div style="font-size:12px;color:#7F1D1D;margin-top:3px">{{ $aiWarn['no_ai'] }}/{{ $aiWarn['total'] }} bản thiết kế trong 48h qua KHÔNG có ảnh AI — khách đang nhận bản chất lượng thấp. Hãy nạp credit tại <b>aistudio.google.com</b> ngay, rồi kiểm tra lại.</div>
+        </div>
+        <a href="{{ route('admin.thietke.leads') }}" style="flex:0 0 auto;background:#DC2626;color:#fff;text-decoration:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:800;white-space:nowrap">Xem đơn ảnh hưởng</a>
+      </div>
+      @endif
+
       <!-- STATS -->
       <div class="grid4">
         <div class="stat green">
