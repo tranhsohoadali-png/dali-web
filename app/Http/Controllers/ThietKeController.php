@@ -194,19 +194,20 @@ class ThietKeController extends Controller
      */
     private function backupOrderImages(string $code, array $urls): array
     {
-        $out = $urls;
-        $dir = public_path('images/tk-orders/' . $code);
+        $out  = $urls;
+        // Lưu vào disk 'public' (storage/app/public) — www-data luôn ghi được,
+        // truy cập qua symlink public/storage. Tránh lỗi quyền ghi public/.
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
         foreach ($urls as $key => $url) {
             if (!$url || !preg_match('#^https?://#', $url)) continue;
             try {
                 $resp = Http::timeout(15)->get($url);
                 if (!$resp->ok() || strlen($resp->body()) < 500) continue;   // ảnh đã bị xoá/hỏng
                 $ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
-                $ext = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'webp']) ? $ext : 'jpg';
-                if (!is_dir($dir)) @mkdir($dir, 0775, true);
-                $file = $dir . '/' . $key . '.' . $ext;
-                file_put_contents($file, $resp->body());
-                $out[$key] = url('images/tk-orders/' . $code . '/' . $key . '.' . $ext);
+                $ext = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'webp']) ? strtolower($ext) : 'jpg';
+                $path = 'tk-orders/' . $code . '/' . $key . '.' . $ext;
+                $disk->put($path, $resp->body());
+                $out[$key] = asset('storage/' . $path);
             } catch (\Throwable $e) {
                 // giữ URL gốc nếu tải lỗi — không làm hỏng đơn
             }
