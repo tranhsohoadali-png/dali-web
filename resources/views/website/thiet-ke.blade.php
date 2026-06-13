@@ -62,10 +62,10 @@ tailwind.config = {
 {{-- ════════ SECTION 1 — HERO (thiết kế Stitch V2) ════════ --}}
 <section class="relative overflow-hidden bg-[#3E2F23]">
   {{-- Mobile: ảnh phủ nền, tiêu điểm vào khuôn mặt (không cắt mất đầu) --}}
-  <img src="{{ asset('images/thiet-ke/hero-studio.jpg') }}" alt="Studio vẽ tranh DALI" class="md:hidden absolute inset-0 w-full h-full object-cover object-[62%_18%]">
+  <img src="{{ asset('images/home/girl-paint.jpg') }}" alt="Cô gái vẽ tranh DALI" class="md:hidden absolute inset-0 w-full h-full object-cover object-[58%_30%]">
   {{-- Desktop: hiển thị TRỌN VẸN ảnh (đúng tỷ lệ, neo phải), mép trái hoà vào nền nâu --}}
   <div class="hidden md:block absolute inset-y-0 right-0">
-    <img src="{{ asset('images/thiet-ke/hero-studio.jpg') }}" alt="Studio vẽ tranh DALI" class="h-full w-auto max-w-none">
+    <img src="{{ asset('images/home/girl-paint.jpg') }}" alt="Cô gái vẽ tranh DALI" class="h-full w-auto max-w-none">
     <div class="absolute inset-y-0 left-0 w-56 xl:w-72 bg-gradient-to-r from-[#3E2F23] to-transparent"></div>
   </div>
   <div class="absolute inset-0 bg-gradient-to-r from-[#3E2F23] via-[#3E2F23]/85 to-[#3E2F23]/55 md:via-[#3E2F23]/60 md:to-transparent"></div>
@@ -338,7 +338,7 @@ tailwind.config = {
 {{-- ════════ SECTION CTA CUỐI (Stitch V2) ════════ --}}
 <section class="relative overflow-hidden bg-gradient-to-r from-[#1E7A33] to-[#37A24A] text-white py-14 md:py-20 px-4 md:px-6">
   <div class="max-w-5xl mx-auto grid md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr] gap-8 lg:gap-14 items-center relative">
-    <img src="{{ asset('images/thiet-ke/cta-girl.jpg') }}" loading="lazy" class="w-full max-w-[280px] lg:max-w-[340px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg]" alt="Khách DALI khoe tranh hoàn thiện">
+    <img src="{{ asset('images/home/girl-finished.jpg') }}" loading="lazy" class="w-full max-w-[280px] lg:max-w-[340px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg] aspect-[3/4] object-cover" alt="Khách DALI khoe tranh hoàn thiện">
     <div class="text-center md:text-left">
       <h2 class="text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-black tracking-tight leading-tight">Sẵn sàng để sáng tạo?<br>Bắt đầu hành trình nghệ thuật của bạn ngay hôm nay!</h2>
       <a href="#upload" class="mt-6 inline-flex items-center gap-2 bg-white text-primaryd font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition shadow-xl2">📸 Tải ảnh — xem bản thiết kế miễn phí, ưng mới đặt</a>
