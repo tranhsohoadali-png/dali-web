@@ -281,13 +281,20 @@ class ThietKeController extends Controller
 
         $code = 'TK-' . strtoupper(substr(uniqid(), -6));
 
-        // Sao lưu 3 ảnh về server bán hàng NGAY (ảnh server màu xoá sau 24h) ->
-        // đơn đã đặt không bao giờ mất ảnh để in tranh.
-        $imgs = $this->backupOrderImages($code, [
+        // Hàm dựng ghi chú từ bộ URL ảnh (gốc/AI/bản đồ màu).
+        $pkg = $r->input('package');
+        $buildNote = fn(array $u) => 'ĐƠN THIẾT KẾ THEO YÊU CẦU'
+            . ($pkg ? ' — Gói: ' . $pkg : '')
+            . ($u['goc'] ? '. Ảnh gốc: ' . $u['goc'] : '')
+            . ' | Bản đồ màu: ' . ($u['map'] ?: '(chưa có)')
+            . ($u['ai'] ? ' | Ảnh AI: ' . $u['ai'] : '');
+
+        // Lúc tạo đơn dùng URL gốc (trên server màu) -> đơn tạo NHANH, khách không chờ.
+        $src = [
             'goc' => (string) $r->input('original_url', ''),
             'ai'  => (string) $r->input('enhanced_url', ''),
             'map' => (string) $r->input('result_url', ''),
-        ]);
+        ];
 
         try {
             $order = Order::create([
@@ -296,11 +303,7 @@ class ThietKeController extends Controller
                 'customer_phone'   => $phone,
                 'customer_city'    => $r->input('customer_city', ''),
                 'customer_address' => $r->input('customer_address', ''),
-                'note'             => 'ĐƠN THIẾT KẾ THEO YÊU CẦU'
-                                      . ($r->input('package') ? ' — Gói: ' . $r->input('package') : '')
-                                      . ($imgs['goc'] ? '. Ảnh gốc: ' . $imgs['goc'] : '')
-                                      . ' | Bản đồ màu: ' . ($imgs['map'] ?: '(chưa có)')
-                                      . ($imgs['ai'] ? ' | Ảnh AI: ' . $imgs['ai'] : ''),
+                'note'             => $buildNote($src),
                 'status'           => 'new',
                 'payment_method'   => 'COD',
                 'payment_status'   => 'pending',
@@ -332,6 +335,16 @@ class ThietKeController extends Controller
             $q->refresh();
             $remaining = $q->remaining;
         }
+
+        // Sao lưu 3 ảnh về server bán hàng SAU KHI đã trả kết quả cho khách
+        // (defer chạy sau response) -> khách không phải chờ tải ảnh; ảnh server
+        // màu xoá sau 24h nhưng đơn đã đặt vẫn giữ ảnh vĩnh viễn để in tranh.
+        defer(function () use ($order, $code, $src, $buildNote) {
+            $imgs = $this->backupOrderImages($code, $src);
+            if ($imgs !== $src) {
+                $order->update(['note' => $buildNote($imgs)]);
+            }
+        });
 
         return response()->json([
             'ok' => true, 'code' => $code,
