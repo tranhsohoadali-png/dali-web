@@ -464,7 +464,7 @@ function closeM(id){ const m=document.getElementById(id); m.classList.add('hidde
 
 // ───── Công cụ thiết kế (device id + quota + tạo + đặt hàng) ─────
 function deviceId(){ let d=localStorage.getItem('dali_device'); if(!d){ d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,12); localStorage.setItem('dali_device',d);} return d; }
-const DEVICE=deviceId(); let remaining=null, lastResultUrl='', lastEnhancedUrl='', selectedPackage='', orderDone=false;
+const DEVICE=deviceId(); let remaining=null, lastResultUrl='', lastEnhancedUrl='', lastOriginalUrl='', selectedPackage='', orderDone=false;
 
 const fileInput=document.getElementById('fileInput'), dropZone=document.getElementById('dropZone'),
       previewImg=document.getElementById('previewImg'), genBtn=document.getElementById('genBtn');
@@ -628,6 +628,7 @@ function applyResult(r){
   document.getElementById('rEnhanced').src=r.e||r.o||'';
   lastResultUrl=r.m||'';            // bản đồ màu: chỉ gửi cho shop
   lastEnhancedUrl=r.e||'';
+  lastOriginalUrl=r.o||'';          // ảnh thật của khách (URL trên server màu)
 }
 function renderRecent(){
   const row=document.getElementById('recentRow'), box=document.getElementById('recentThumbs');
@@ -823,7 +824,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   if(!name||!phone){ alert('Vui lòng nhập họ tên và số điện thoại.'); return; }
   if(!validVnPhone(phone)){ document.getElementById('oPhoneErr').classList.remove('hidden'); document.getElementById('oPhone').classList.add('border-red-400'); document.getElementById('oPhone').focus(); return; }
   const fd=new FormData(); fd.append('device_id',DEVICE); fd.append('customer_name',name); fd.append('customer_phone',phone);
-  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('package',selectedPackage);
+  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('original_url',lastOriginalUrl); fd.append('package',selectedPackage);
   // Giá tranh khách chọn + cọc 20% (để lưu đơn + tính hoa hồng CTV)
   const _price=curPrice(); fd.append('price',_price); fd.append('deposit',Math.round(_price*0.2/1000)*1000);
   btn.disabled=true; const oldLabel=btn.innerHTML; btn.innerHTML='<i class="ri-loader-4-line animate-spin"></i> Đang gửi…';

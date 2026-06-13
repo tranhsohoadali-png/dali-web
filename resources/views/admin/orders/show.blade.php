@@ -73,10 +73,47 @@ body{background:var(--bg);color:var(--tx)}
               <div class="info-row"><span class="info-label">Họ tên</span><span class="info-val">{{ $order->customer_name }}</span></div>
               <div class="info-row"><span class="info-label">Số điện thoại</span><span class="info-val"><a href="tel:{{ $order->customer_phone }}" style="color:var(--g);text-decoration:none">{{ $order->customer_phone }}</a></span></div>
               <div class="info-row"><span class="info-label">Địa chỉ</span><span class="info-val">{{ $order->customer_address }}, {{ $order->customer_city }}</span></div>
-              @if($order->note)<div class="info-row"><span class="info-label">Ghi chú</span><span class="info-val">{{ $order->note }}</span></div>@endif
+              @php
+                // Đơn THIẾT KẾ: tách 3 link ảnh ra khỏi ghi chú để hiện thành ảnh.
+                $tkImgs = [];
+                $noteClean = $order->note;
+                if (\Illuminate\Support\Str::startsWith((string) $order->note, 'ĐƠN THIẾT KẾ')) {
+                    foreach (['Ảnh gốc' => 'goc', 'Ảnh AI' => 'ai', 'Bản đồ màu' => 'map'] as $lbl => $k) {
+                        if (preg_match('/' . preg_quote($lbl, '/') . ':\s*(https?:\/\/\S+)/u', $order->note, $m)) {
+                            $tkImgs[$k] = rtrim($m[1], " |.");
+                        }
+                    }
+                    // Ghi chú gọn: bỏ các đoạn link dài, chỉ giữ phần gói.
+                    $noteClean = trim(preg_replace('/\s*\|?\s*(Ảnh gốc|Ảnh AI|Bản đồ màu):\s*\S+/u', '', $order->note));
+                    $noteClean = rtrim($noteClean, " |.");
+                }
+              @endphp
+              @if($noteClean)<div class="info-row"><span class="info-label">Ghi chú</span><span class="info-val">{{ $noteClean }}</span></div>@endif
               <div class="info-row"><span class="info-label">Ngày đặt</span><span class="info-val">{{ $order->created_at->format('d/m/Y H:i') }}</span></div>
             </div>
           </div>
+
+          @if(!empty($tkImgs))
+          <!-- Ảnh thiết kế của khách (đơn /thiet-ke) -->
+          <div class="card">
+            <div class="rainbow"></div>
+            <div class="card-h"><div class="card-t">🖼️ Ảnh thiết kế của khách</div><span style="font-size:11px;color:#94A3B8">Bấm ảnh để mở · tải về trong 24h</span></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:6px 20px 16px">
+              @foreach(['goc' => ['📷 Ảnh thật khách gửi','#E2E8F0'], 'ai' => ['✨ Bản tăng cường AI','#4CAF50'], 'map' => ['🎨 Bản đồ màu (để in)','#F59E0B']] as $k => $meta)
+                <div style="text-align:center">
+                  @if(!empty($tkImgs[$k]))
+                    <a href="{{ $tkImgs[$k] }}" target="_blank" style="display:block">
+                      <img src="{{ $tkImgs[$k] }}" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid {{ $meta[1] }};background:#F8FAF5">
+                    </a>
+                  @else
+                    <div style="width:100%;aspect-ratio:1;border-radius:10px;border:2px dashed #FCD34D;background:#FEF9E7;display:flex;align-items:center;justify-content:center;font-size:11px;color:#B45309;font-weight:700;padding:6px;text-align:center">⚠️ Không có{{ $k==='ai' ? ' (hết credit AI)' : '' }}</div>
+                  @endif
+                  <div style="font-size:11px;font-weight:700;color:var(--char);margin-top:5px">{{ $meta[0] }}</div>
+                </div>
+              @endforeach
+            </div>
+          </div>
+          @endif
 
           <!-- Sản phẩm đặt -->
           <div class="card">
