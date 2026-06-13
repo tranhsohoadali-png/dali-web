@@ -40,8 +40,17 @@ class ThietKeController extends Controller
         return in_array($r->ip(), $ips, true);
     }
 
-    public function index()
+    public function index(Request $r)
     {
+        // Khách vào qua link CTV (?ref=CODE) -> lưu mã 30 ngày để gắn hoa hồng khi đặt.
+        $refCode = strtoupper(trim($r->input('ref', '')));
+        if ($refCode) {
+            $aff = \App\Models\Affiliate::where('code', $refCode)->where('is_active', true)->first();
+            if ($aff) {
+                session(['affiliate_code' => $refCode]);
+                cookie()->queue('affiliate_code', $refCode, 60 * 24 * 30);
+            }
+        }
         $settings = $this->settings();
         $pricing  = \App\Http\Controllers\Admin\ThietKePricingController::current();
         return view('website.thiet-ke', compact('settings', 'pricing'));

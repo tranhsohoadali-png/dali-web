@@ -16,6 +16,26 @@
   <div style="font-size:11px;color:var(--tx3);margin-top:6px"><i class="ri-information-line"></i> Khách click link này → cookie lưu 30 ngày → bất kỳ đơn nào trong 30 ngày = bạn nhận hoa hồng</div>
 </div>
 
+{{-- Link TRANH THIẾT KẾ THEO YÊU CẦU (nổi bật) --}}
+<div class="card" style="margin-bottom:16px;border:2px solid var(--g);background:linear-gradient(135deg,#F4FDE8,#fff)">
+  <div style="font-size:13px;font-weight:900;color:var(--gd);margin-bottom:3px">✨ Link Tranh Thiết Kế Theo Ảnh (HOT)</div>
+  <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Khách gửi ảnh kỷ niệm → AI thiết kế thành tranh tô màu. Bạn vẫn hưởng hoa hồng % trên giá tranh khách đặt.</div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <input id="refDesign" type="text" value="{{ url('/thiet-ke') }}?ref={{ $ctv->code }}" readonly
+      style="flex:1;background:var(--gll);border:1.5px solid var(--bd);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--gd);font-weight:600;outline:none;min-width:0">
+    <button onclick="copyRef('refDesign',this)" style="flex:0 0 auto;background:var(--g);color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">📋 Copy</button>
+  </div>
+  @php $designLink = url('/thiet-ke').'?ref='.$ctv->code; @endphp
+  <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+    <a href="https://zalo.me/share?link={{ urlencode($designLink) }}" target="_blank"
+      style="flex:1;min-width:120px;text-align:center;background:#0068FF;color:#fff;text-decoration:none;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800">Chia sẻ Zalo</a>
+    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($designLink) }}" target="_blank"
+      style="flex:1;min-width:120px;text-align:center;background:#1877F2;color:#fff;text-decoration:none;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800">Chia sẻ Facebook</a>
+    <a href="{{ $designLink }}" target="_blank"
+      style="flex:1;min-width:100px;text-align:center;background:var(--gll);color:var(--gd);text-decoration:none;border:1.5px solid var(--bd);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800">👁️ Xem thử</a>
+  </div>
+</div>
+
 {{-- Tìm kiếm & lọc --}}
 <form method="GET" action="{{ route('ctv.products') }}" style="margin-bottom:16px">
   <div style="display:flex;gap:8px;flex-wrap:wrap">
