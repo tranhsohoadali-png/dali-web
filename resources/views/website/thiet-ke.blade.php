@@ -495,7 +495,7 @@ dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.a
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('border-primary'));
 dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('border-primary'); if(e.dataTransfer.files[0]){ fileInput.files=e.dataTransfer.files; onFile(); }});
 fileInput.addEventListener('change',onFile);
-function onFile(){ const f=fileInput.files[0]; if(!f) return; previewImg.src=URL.createObjectURL(f); previewImg.classList.remove('hidden'); genBtn.disabled=false; }
+function onFile(){ const f=fileInput.files[0]; if(!f) return; if(previewImg.src && previewImg.src.indexOf('blob:')===0){ try{URL.revokeObjectURL(previewImg.src);}catch(e){} } previewImg.src=URL.createObjectURL(f); previewImg.classList.remove('hidden'); genBtn.disabled=false; }
 
 genBtn.addEventListener('click', async ()=>{ if(!fileInput.files[0]){alert('Vui lòng chọn ảnh.');return;}
   if(remaining===null){ await refreshQuota(); }
@@ -504,20 +504,33 @@ genBtn.addEventListener('click', async ()=>{ if(!fileInput.files[0]){alert('Vui 
 
 // Nén ảnh ngay trên máy khách trước khi gửi: ảnh điện thoại 4-10MB -> ~0.3-0.6MB
 // (tránh giới hạn upload của máy chủ + gửi nhanh hơn nhiều trên 4G).
-function compressImage(file, maxEdge, quality){
-  maxEdge=maxEdge||1800; quality=quality||0.85;
+function compressImage(file, maxEdge, quality, loadedImg){
+  maxEdge=maxEdge||1600; quality=quality||0.82;
+  function toBlobFrom(srcW,srcH,drawer){
+    var m=Math.max(srcW,srcH), k=Math.min(1,maxEdge/m);
+    var w=Math.round(srcW*k), h=Math.round(srcH*k);
+    var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    var cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,w,h); drawer(cx,w,h);
+    return new Promise(function(res){ cv.toBlob(function(b){ res(b||file); },'image/jpeg',quality); });
+  }
   return new Promise(function(resolve){
+    // Tái dùng ảnh ĐÃ giải mã cho phần xem trước (trình duyệt đã tự xoay đúng EXIF):
+    // không giải mã lần 2 -> bớt ~1 nửa RAM, tránh treo/tràn RAM trên điện thoại yếu.
+    if(loadedImg && loadedImg.complete && loadedImg.naturalWidth){
+      var w=loadedImg.naturalWidth,h=loadedImg.naturalHeight;
+      if(Math.max(w,h)<=maxEdge && file.size<1200*1024){ resolve(file); return; }
+      toBlobFrom(w,h,function(cx,tw,th){ cx.drawImage(loadedImg,0,0,tw,th); }).then(resolve);
+      return;
+    }
+    // Dự phòng: tự giải mã (vẫn dùng <img> để giữ đúng hướng EXIF)
     try{
       var img=new Image();
       img.onload=function(){
-        var w=img.naturalWidth,h=img.naturalHeight,m=Math.max(w,h);
-        if(m<=maxEdge && file.size<1200*1024){ URL.revokeObjectURL(img.src); resolve(file); return; }
-        var k=Math.min(1,maxEdge/m); w=Math.round(w*k); h=Math.round(h*k);
-        var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-        var cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,w,h); cx.drawImage(img,0,0,w,h);
-        cv.toBlob(function(b){ URL.revokeObjectURL(img.src); resolve(b||file); },'image/jpeg',quality);
+        var w=img.naturalWidth,h=img.naturalHeight;
+        if(Math.max(w,h)<=maxEdge && file.size<1200*1024){ URL.revokeObjectURL(img.src); resolve(file); return; }
+        toBlobFrom(w,h,function(cx,tw,th){ cx.drawImage(img,0,0,tw,th); }).then(function(b){ URL.revokeObjectURL(img.src); resolve(b); });
       };
-      img.onerror=function(){ resolve(file); };
+      img.onerror=function(){ try{URL.revokeObjectURL(img.src);}catch(_){} resolve(file); };
       img.src=URL.createObjectURL(file);
     }catch(e){ resolve(file); }
   });
@@ -564,7 +577,7 @@ document.getElementById('confirmGo').addEventListener('click', async ()=>{
   initAudio();   // tạo audio ngay lúc khách bấm -> sau này được phép kêu chuông
   closeM('confirmModal'); openM('loadingModal');
   const f0=fileInput.files[0];
-  const blob=await compressImage(f0);
+  const blob=await compressImage(f0, 1600, 0.82, previewImg);
   const fname=((f0.name||'anh').replace(/\.[^.]+$/,'')||'anh')+'.jpg';
   const fd=new FormData(); fd.append('image',blob,fname); fd.append('device_id',DEVICE); fd.append('enhance','1');
   try{

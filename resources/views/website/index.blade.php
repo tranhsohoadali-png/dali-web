@@ -5,10 +5,20 @@
 <meta name="description" content="{{ $settings['meta_description'] ?? 'Bộ tranh tô màu số hóa DALI – ai cũng có thể tạo ra kiệt tác hội họa của riêng mình.' }}">
 <meta property="og:title" content="{{ $settings['meta_title'] ?? 'DALI – Tô Điểm Cuộc Sống' }}">
 <meta property="og:description" content="{{ $settings['meta_description'] ?? '' }}">
-<meta property="og:image" content="{{ asset('images/logo_dali.png') }}">
+<meta property="og:image" content="{{ asset('images/og-home.jpg') }}?v=1">
+<meta property="og:image:secure_url" content="{{ asset('images/og-home.jpg') }}?v=1">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DALI — Tranh tô màu số hóa, tô điểm cuộc sống">
 <meta property="og:url" content="{{ url('/') }}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="DALI — Tô Điểm Cuộc Sống">
 <meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $settings['meta_title'] ?? 'DALI – Tô Điểm Cuộc Sống' }}">
+<meta name="twitter:description" content="{{ $settings['meta_description'] ?? 'Tranh tô màu số hóa DALI – ai cũng tạo ra kiệt tác của riêng mình.' }}">
+<meta name="twitter:image" content="{{ asset('images/og-home.jpg') }}?v=1">
 {{-- Google Analytics --}}
 @if(!empty($settings['ga_id']))
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings['ga_id'] }}"></script>
