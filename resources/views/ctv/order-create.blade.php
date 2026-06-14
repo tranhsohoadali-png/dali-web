@@ -53,7 +53,7 @@
   .page-body{max-width:1100px}
   .cat-tabs{flex-wrap:wrap;overflow-x:visible;padding-bottom:0}
   .cat-tab{font-size:13px;padding:6px 15px}
-  .prod-grid{grid-template-columns:repeat(5,1fr);gap:12px;max-height:740px}
+  .prod-grid{grid-template-columns:repeat(6,1fr);gap:10px;max-height:720px}
   .prod-info{padding:8px 9px}
   .prod-name{font-size:12px}
   .prod-price{font-size:13px}
