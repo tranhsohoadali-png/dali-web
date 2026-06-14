@@ -21,6 +21,7 @@
   </a>
   <a href="tel:{{ $fwPhone }}" class="fab-btn fab-phone" title="Gọi điện" aria-label="Gọi điện"><i class="ri-phone-line"></i></a>
 </div>
+@include('partials.ai-chat')
 <style>
 .dali-fab{position:fixed;right:16px;bottom:18px;z-index:900;display:flex;flex-direction:column;gap:11px}
 .fab-btn{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:21px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.22);transition:transform .2s;position:relative;animation:fabIn .4s ease-out backwards}
