@@ -274,7 +274,7 @@ nav.nav-visible{box-shadow:0 4px 20px rgba(58,122,10,.3)}
   border:2px solid var(--bd);
   box-shadow:0 18px 50px rgba(58,122,10,.16);
 }
-.hero-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease}
+.hero-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 25%;opacity:0;transition:opacity 1.1s ease}
 .hero-slide.active{opacity:1}
 .hero-dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:7px;z-index:3}
 .hd-dot{width:8px;height:8px;border-radius:50%;border:none;background:rgba(255,255,255,.6);cursor:pointer;padding:0;transition:all .25s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
@@ -824,7 +824,7 @@ footer{
 .tk-promo{max-width:1180px;margin:48px auto;padding:0 20px}
 .tk-promo-in{display:grid;grid-template-columns:1fr 1fr;border-radius:28px;overflow:hidden;box-shadow:0 24px 60px -16px rgba(58,122,10,.22);background:linear-gradient(135deg,#F4FDE8,#fff);border:1px solid #DCF0BE}
 .tk-promo-img{position:relative;min-height:340px}
-.tk-promo-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tk-promo-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%}
 .tk-promo-txt{padding:42px 46px;display:flex;flex-direction:column;justify-content:center}
 .tk-promo-badge{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:#3E7A0A;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;margin-bottom:16px}
 .tk-promo-txt h2{font-size:31px;font-weight:900;color:#1A4D00;line-height:1.18;margin:0 0 12px}
@@ -842,12 +842,10 @@ footer{
   .tk-promo-txt h2{font-size:24px}
 }
 </style>
-{{-- Chỉ hiện khi ?xem_thu (để bạn duyệt trước); bỏ điều kiện này khi chốt --}}
-@if(request()->has('xem_thu'))
 <section class="tk-promo">
   <div class="tk-promo-in">
     <div class="tk-promo-img">
-      <img src="{{ asset('images/home/girl-finished.jpg') }}" alt="Tranh thiết kế từ ảnh khách DALI" loading="lazy">
+      <img src="{{ asset('images/home/girl-night.jpg') }}" alt="Tranh thiết kế từ ảnh khách DALI - cô gái tô tranh DALI" loading="lazy">
     </div>
     <div class="tk-promo-txt">
       <span class="tk-promo-badge">✨ MỚI · AI thiết kế trong 1 phút</span>
@@ -860,7 +858,6 @@ footer{
     </div>
   </div>
 </section>
-@endif
 
 <!-- CATEGORIES -->
 {{-- ────────────────────────────────────────
