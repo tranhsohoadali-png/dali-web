@@ -24,6 +24,7 @@
 .dali-ai-launcher:hover{transform:scale(1.08)}
 .dali-ai-pulse{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 0 rgba(181,101,29,.55);animation:daliAiRing 1.8s infinite}
 .dali-ai-panel{position:fixed;left:16px;bottom:18px;z-index:902;width:340px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 36px);background:#fff;border-radius:16px;box-shadow:0 14px 44px rgba(0,0,0,.26);display:flex;flex-direction:column;overflow:hidden;font-family:inherit;animation:daliAiIn .25s ease-out}
+.dali-ai-panel[hidden]{display:none!important}
 .dali-ai-head{background:linear-gradient(135deg,#b5651d,#8a3f12);color:#fff;padding:13px 15px;display:flex;align-items:center;justify-content:space-between}
 .dali-ai-title{font-weight:700;font-size:15px}
 .dali-ai-sub{font-size:11.5px;opacity:.85;margin-top:2px}
