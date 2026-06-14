@@ -5,9 +5,23 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Tranh Tô Màu Số Hóa Theo Ảnh — Thiết Kế Từ Ảnh Của Bạn | DALI</title>
 <meta name="description" content="Biến ảnh của bạn thành tranh tô màu số hóa độc bản. Thiết kế từ ảnh thật, tặng bộ màu & cọ, giao toàn quốc. Tải ảnh xem trước miễn phí.">
-<meta property="og:title" content="Tranh Tô Màu Số Hóa Theo Ảnh Cá Nhân | DALI">
-<meta property="og:description" content="Tải ảnh — AI thiết kế thành tranh tô màu độc bản. Tặng màu & cọ, giao toàn quốc.">
-<meta property="og:image" content="{{ asset('images/logo_dali.png') }}">
+<link rel="canonical" href="{{ url('/thiet-ke') }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DALI — Tranh Tô Màu Số Hóa">
+<meta property="og:url" content="{{ url('/thiet-ke') }}">
+<meta property="og:title" content="Biến ảnh của bạn thành tranh tô màu độc bản | DALI">
+<meta property="og:description" content="Tải 1 tấm ảnh — AI thiết kế thành bản tranh tô màu số hóa giữ đúng người thật. Tặng bộ màu & cọ, giao toàn quốc, xem trước miễn phí.">
+<meta property="og:image" content="{{ asset('images/og-thiet-ke.jpg') }}?v=1">
+<meta property="og:image:secure_url" content="{{ asset('images/og-thiet-ke.jpg') }}?v=1">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DALI — Biến ảnh thành tranh tô màu độc bản">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Biến ảnh của bạn thành tranh tô màu độc bản | DALI">
+<meta name="twitter:description" content="Tải 1 tấm ảnh — AI thiết kế thành tranh tô màu số hóa. Tặng màu & cọ, giao toàn quốc, xem trước miễn phí.">
+<meta name="twitter:image" content="{{ asset('images/og-thiet-ke.jpg') }}?v=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
