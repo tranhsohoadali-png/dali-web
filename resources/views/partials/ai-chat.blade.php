@@ -20,10 +20,10 @@
 </div>
 
 <style>
-.dali-ai-launcher{position:fixed;left:16px;bottom:18px;z-index:901;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#b5651d,#8a3f12);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(138,63,18,.4);animation:daliAiIn .4s ease-out}
+.dali-ai-launcher{position:fixed;left:16px;bottom:18px;z-index:951;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#b5651d,#8a3f12);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(138,63,18,.4);animation:daliAiIn .4s ease-out}
 .dali-ai-launcher:hover{transform:scale(1.08)}
 .dali-ai-pulse{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 0 rgba(181,101,29,.55);animation:daliAiRing 1.8s infinite}
-.dali-ai-panel{position:fixed;left:16px;bottom:18px;z-index:902;width:340px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 36px);background:#fff;border-radius:16px;box-shadow:0 14px 44px rgba(0,0,0,.26);display:flex;flex-direction:column;overflow:hidden;font-family:inherit;animation:daliAiIn .25s ease-out}
+.dali-ai-panel{position:fixed;left:16px;bottom:18px;z-index:952;width:340px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 36px);background:#fff;border-radius:16px;box-shadow:0 14px 44px rgba(0,0,0,.26);display:flex;flex-direction:column;overflow:hidden;font-family:inherit;animation:daliAiIn .25s ease-out}
 .dali-ai-panel[hidden]{display:none!important}
 .dali-ai-head{background:linear-gradient(135deg,#b5651d,#8a3f12);color:#fff;padding:13px 15px;display:flex;align-items:center;justify-content:space-between}
 .dali-ai-title{font-weight:700;font-size:15px}
@@ -43,7 +43,11 @@
 .dali-ai-form button:disabled{opacity:.5;cursor:default}
 @keyframes daliAiIn{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes daliAiRing{0%{box-shadow:0 0 0 0 rgba(181,101,29,.5)}70%{box-shadow:0 0 0 14px rgba(181,101,29,0)}100%{box-shadow:0 0 0 0 rgba(181,101,29,0)}}
-@media(max-width:600px){.dali-ai-launcher{left:12px;bottom:14px;width:50px;height:50px}.dali-ai-panel{left:12px;bottom:14px}}
+@media(max-width:768px){
+  /* Nâng lên trên thanh điều hướng dưới (.dali-bottombar cao 60px, z-index 950) */
+  .dali-ai-launcher{left:12px;bottom:calc(70px + env(safe-area-inset-bottom));width:50px;height:50px}
+  .dali-ai-panel{left:12px;right:12px;width:auto;max-width:none;bottom:calc(70px + env(safe-area-inset-bottom));max-height:calc(100vh - 94px - env(safe-area-inset-bottom))}
+}
 </style>
 
 <script>
