@@ -339,7 +339,7 @@ tailwind.config = {
 {{-- ════════ SECTION CTA CUỐI (Stitch V2) ════════ --}}
 <section class="relative overflow-hidden bg-gradient-to-r from-[#1E7A33] to-[#37A24A] text-white py-14 md:py-20 px-4 md:px-6">
   <div class="max-w-5xl mx-auto grid md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr] gap-8 lg:gap-14 items-center relative">
-    <img src="{{ asset('images/home/girl-finished.jpg') }}" loading="lazy" class="w-full max-w-[280px] lg:max-w-[340px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg] aspect-[3/4] object-cover" alt="Khách DALI khoe tranh hoàn thiện">
+    <img src="{{ asset('images/home/portrait-finished.jpg') }}" loading="lazy" class="w-full max-w-[280px] lg:max-w-[340px] mx-auto rounded-2xl border-4 border-white/80 shadow-xl2 rotate-[-4deg] aspect-square object-cover" alt="Khách DALI ngắm tranh chân dung tự tô hoàn thiện">
     <div class="text-center md:text-left">
       <h2 class="text-2xl sm:text-3xl lg:text-4xl xl:text-[2.6rem] font-black tracking-tight leading-tight">Sẵn sàng để sáng tạo?<br>Bắt đầu hành trình nghệ thuật của bạn ngay hôm nay!</h2>
       <a href="#upload" class="mt-6 inline-flex items-center gap-2 bg-white text-primaryd font-extrabold text-lg px-8 py-4 rounded-2xl hover:scale-105 transition shadow-xl2">📸 Tải ảnh — xem bản thiết kế miễn phí, ưng mới đặt</a>
