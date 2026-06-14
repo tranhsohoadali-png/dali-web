@@ -819,6 +819,49 @@ footer{
   <div class="trust-item"><i class="ri-bank-card-line"></i> Giảm {{ (int)($settings['discount_bank'] ?? 5) }}% khi chuyển khoản</div>
 </div>
 
+<!-- BANNER GIỚI THIỆU THIẾT KẾ TỪ ẢNH -->
+<style>
+.tk-promo{max-width:1180px;margin:48px auto;padding:0 20px}
+.tk-promo-in{display:grid;grid-template-columns:1fr 1fr;border-radius:28px;overflow:hidden;box-shadow:0 24px 60px -16px rgba(58,122,10,.22);background:linear-gradient(135deg,#F4FDE8,#fff);border:1px solid #DCF0BE}
+.tk-promo-img{position:relative;min-height:340px}
+.tk-promo-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tk-promo-txt{padding:42px 46px;display:flex;flex-direction:column;justify-content:center}
+.tk-promo-badge{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:#3E7A0A;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;margin-bottom:16px}
+.tk-promo-txt h2{font-size:31px;font-weight:900;color:#1A4D00;line-height:1.18;margin:0 0 12px}
+.tk-promo-txt h2 em{font-style:normal;color:#6BBF1F}
+.tk-promo-txt p{font-size:15px;color:#4A8A1A;line-height:1.7;margin:0 0 22px;max-width:450px}
+.tk-promo-steps{display:flex;gap:8px 18px;margin-bottom:26px;flex-wrap:wrap}
+.tk-promo-steps span{font-size:13px;font-weight:700;color:#3E7A0A}
+.tk-promo-cta{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;background:linear-gradient(135deg,#3E7A0A,#6BBF1F);color:#fff;font-size:15px;font-weight:800;padding:15px 30px;border-radius:14px;text-decoration:none;box-shadow:0 14px 30px rgba(107,191,31,.32);transition:transform .2s}
+.tk-promo-cta:hover{transform:translateY(-2px)}
+@media(max-width:768px){
+  .tk-promo{margin:28px auto}
+  .tk-promo-in{grid-template-columns:1fr}
+  .tk-promo-img{min-height:240px;order:-1}
+  .tk-promo-txt{padding:28px 24px}
+  .tk-promo-txt h2{font-size:24px}
+}
+</style>
+{{-- Chỉ hiện khi ?xem_thu (để bạn duyệt trước); bỏ điều kiện này khi chốt --}}
+@if(request()->has('xem_thu'))
+<section class="tk-promo">
+  <div class="tk-promo-in">
+    <div class="tk-promo-img">
+      <img src="{{ asset('images/home/girl-finished.jpg') }}" alt="Tranh thiết kế từ ảnh khách DALI" loading="lazy">
+    </div>
+    <div class="tk-promo-txt">
+      <span class="tk-promo-badge">✨ MỚI · AI thiết kế trong 1 phút</span>
+      <h2>Biến ảnh kỷ niệm thành <em>tranh tô màu độc bản</em></h2>
+      <p>Gửi 1 tấm ảnh — gia đình, em bé, thú cưng hay chân dung. AI của DALI thiết kế thành bản tranh tô màu số hóa giữ đúng người thật, bạn tự tay tô thành tranh treo tường. Xem trước miễn phí, ưng mới đặt.</p>
+      <div class="tk-promo-steps">
+        <span>① Tải ảnh lên</span><span>② Xem bản thiết kế</span><span>③ Nhận kit &amp; tự tô</span>
+      </div>
+      <a href="{{ route('thiet-ke') }}" class="tk-promo-cta"><i class="ri-image-add-line"></i> Thiết kế từ ảnh của bạn →</a>
+    </div>
+  </div>
+</section>
+@endif
+
 <!-- CATEGORIES -->
 {{-- ────────────────────────────────────────
    SECTION: CATEGORIES – lấy từ DB
