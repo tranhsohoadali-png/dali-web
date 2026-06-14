@@ -827,7 +827,7 @@ footer{
 .tk-promo-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 60%}
 .tk-promo-txt{padding:42px 46px;display:flex;flex-direction:column;justify-content:center}
 .tk-promo-badge{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:#3E7A0A;color:#fff;font-size:12px;font-weight:800;padding:6px 14px;border-radius:999px;margin-bottom:16px}
-.tk-promo-txt h2{font-size:31px;font-weight:900;color:#1A4D00;line-height:1.18;margin:0 0 12px}
+.tk-promo-txt h2{font-size:31px;font-weight:900;color:#1A4D00;line-height:1.18;margin:0 0 22px}
 .tk-promo-txt h2 em{font-style:normal;color:#6BBF1F}
 .tk-promo-txt p{font-size:15px;color:#4A8A1A;line-height:1.7;margin:0 0 22px;max-width:450px}
 .tk-promo-steps{display:flex;gap:8px 18px;margin-bottom:26px;flex-wrap:wrap}
@@ -850,7 +850,6 @@ footer{
     <div class="tk-promo-txt">
       <span class="tk-promo-badge">✨ MỚI · AI thiết kế trong 1 phút</span>
       <h2>Biến ảnh kỷ niệm thành <em>tranh tô màu độc bản</em></h2>
-      <p>Gửi 1 tấm ảnh — gia đình, em bé, thú cưng hay chân dung. AI của DALI thiết kế thành bản tranh tô màu số hóa giữ đúng người thật, bạn tự tay tô thành tranh treo tường. Xem trước miễn phí, ưng mới đặt.</p>
       <div class="tk-promo-steps">
         <span>① Tải ảnh lên</span><span>② Xem bản thiết kế</span><span>③ Nhận kit &amp; tự tô</span>
       </div>
