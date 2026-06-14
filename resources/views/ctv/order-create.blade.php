@@ -48,6 +48,16 @@
 .total-bar .row.big .k{font-size:12px;font-weight:700;opacity:.85}
 .total-bar .row.big .v{font-size:19px;font-weight:900}
 .total-bar .row.green-row .v{color:#C6F135}
+/* ── DESKTOP: rộng hơn, nhiều tranh hơn, danh mục tự xuống hàng (hết kẹt trượt) ── */
+@media(min-width:800px){
+  .page-body{max-width:1100px}
+  .cat-tabs{flex-wrap:wrap;overflow-x:visible;padding-bottom:0}
+  .cat-tab{font-size:13px;padding:6px 15px}
+  .prod-grid{grid-template-columns:repeat(5,1fr);gap:12px;max-height:740px}
+  .prod-info{padding:8px 9px}
+  .prod-name{font-size:12px}
+  .prod-price{font-size:13px}
+}
 </style>
 
 <div style="font-size:17px;font-weight:900;color:var(--gd);margin-bottom:14px">➕ Lên đơn mới</div>
