@@ -893,7 +893,9 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   if(!name||!phone){ alert('Vui lòng nhập họ tên và số điện thoại.'); return; }
   if(!validVnPhone(phone)){ document.getElementById('oPhoneErr').classList.remove('hidden'); document.getElementById('oPhone').classList.add('border-red-400'); document.getElementById('oPhone').focus(); return; }
   const fd=new FormData(); fd.append('device_id',DEVICE); fd.append('customer_name',name); fd.append('customer_phone',phone);
-  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('original_url', awaitDesign ? (lastUploadUrl||lastOriginalUrl) : lastOriginalUrl); fd.append('package',selectedPackage); fd.append('await_design', awaitDesign ? '1' : '');
+  // Đơn đặt-cọc (chưa xem trước AI): CHỈ gửi ảnh gốc, KHÔNG kèm ảnh AI/bản đồ màu
+  // (tránh "mượn" nhầm kết quả cũ đã khôi phục trên máy khách). Shop tự làm & gửi sau.
+  fd.append('result_url', awaitDesign ? '' : lastResultUrl); fd.append('enhanced_url', awaitDesign ? '' : lastEnhancedUrl); fd.append('original_url', awaitDesign ? (lastUploadUrl||lastOriginalUrl) : lastOriginalUrl); fd.append('package',selectedPackage); fd.append('await_design', awaitDesign ? '1' : '');
   // Giá tranh khách chọn + cọc 20% (để lưu đơn + tính hoa hồng CTV)
   const _price=curPrice(); fd.append('price',_price); fd.append('deposit',Math.round(_price*0.2/1000)*1000);
   btn.disabled=true; const oldLabel=btn.innerHTML; btn.innerHTML='<i class="ri-loader-4-line animate-spin"></i> Đang gửi…';
