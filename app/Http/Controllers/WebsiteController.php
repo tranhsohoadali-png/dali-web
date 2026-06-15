@@ -178,6 +178,13 @@ class WebsiteController extends Controller
         return view('website.order-tracking', compact('order','orders','settings'));
     }
 
+    /** Trang hướng dẫn tô tranh (video YouTube + 6 bước). */
+    public function guide()
+    {
+        $settings = \DB::table('admin_settings')->pluck('value','key');
+        return view('website.guide', compact('settings'));
+    }
+
     /**
      * Tính phí giao hàng: miễn phí theo ngưỡng, nếu không thì lấy cước thật
      * từ Viettel Post (getPrice); thất bại/tắt → phí cố định trong cài đặt.
