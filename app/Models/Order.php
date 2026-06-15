@@ -8,7 +8,7 @@ class Order extends Model
         'code','customer_name','customer_phone','customer_city',
         'customer_address','note','coupon_code','coupon_discount',
         'affiliate_code','affiliate_commission',
-        'payment_method','payment_status','status',
+        'payment_method','payment_status','status','design_status',
         'subtotal','discount','ship_fee','total','deposit','deposit_paid',
         'vtp_order_number','vtp_status','vtp_status_name','vtp_status_at','vtp_service','weight',
     ];
@@ -64,6 +64,13 @@ class Order extends Model
             'paid'   => 'Đã thanh toán',
             'failed' => 'Thất bại',
             default  => 'Chờ thanh toán',
+        };
+    }
+    public function getDesignStatusLabelAttribute(): ?string {
+        return match($this->design_status) {
+            'pending'   => 'Chờ thiết kế',
+            'delivered' => 'Đã gửi khách',
+            default     => null,
         };
     }
 }

@@ -45,6 +45,7 @@ Route::post('/thiet-ke/tao',     [\App\Http\Controllers\ThietKeController::class
 Route::get('/thiet-ke/trang-thai',[\App\Http\Controllers\ThietKeController::class, 'status'])->name('thiet-ke.status');
 Route::post('/thiet-ke/dat-hang',[\App\Http\Controllers\ThietKeController::class, 'order'])->name('thiet-ke.order');
 Route::post('/thiet-ke/luu-sdt', [\App\Http\Controllers\ThietKeController::class, 'lead'])->name('thiet-ke.lead');
+Route::post('/thiet-ke/luu-anh', [\App\Http\Controllers\ThietKeController::class, 'saveImage'])->name('thiet-ke.save-image');
 
 // ── BLOG ──
 Route::get('/blog',                        [WebsiteController::class, 'blog'])->name('blog');
@@ -102,6 +103,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
 
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
+    Route::get('thiet-ke-cho-xu-ly',           [OrderController::class, 'designQueue'])->name('thietke.queue');
     Route::get('orders/export',                [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/new-count',             [OrderController::class, 'newCount'])->name('orders.new-count');
     Route::get('orders/{order}',               [OrderController::class, 'show'])->name('orders.show');
@@ -109,6 +111,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::get('orders/{order}/print',         [OrderController::class, 'printOrder'])->name('orders.print');
     Route::post('orders/{order}/status',       [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('orders/{order}/deposit-paid', [OrderController::class, 'markDepositPaid'])->name('orders.deposit-paid');
+    Route::post('orders/{order}/design-delivered', [OrderController::class, 'markDesignDelivered'])->name('orders.design-delivered');
     Route::post('orders/{order}/vtp-create',   [OrderController::class, 'vtpCreate'])->name('orders.vtp.create');
     Route::post('orders/{order}/vtp-cancel',   [OrderController::class, 'vtpCancel'])->name('orders.vtp.cancel');
     Route::get('orders/{order}/vtp-print',     [OrderController::class, 'vtpPrint'])->name('orders.vtp.print');

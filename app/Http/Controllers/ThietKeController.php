@@ -200,6 +200,7 @@ class ThietKeController extends Controller
         $disk = \Illuminate\Support\Facades\Storage::disk('public');
         foreach ($urls as $key => $url) {
             if (!$url || !preg_match('#^https?://#', $url)) continue;
+            if (str_contains($url, '/storage/tk-')) continue; // ảnh đã lưu local vĩnh viễn -> khỏi tải lại
             try {
                 $resp = Http::timeout(15)->get($url);
                 if (!$resp->ok() || strlen($resp->body()) < 500) continue;   // ảnh đã bị xoá/hỏng
@@ -230,6 +231,31 @@ class ThietKeController extends Controller
             'result_url'   => substr((string) $r->input('result_url', ''), 0, 1000),
         ]);
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Lưu VĨNH VIỄN ảnh gốc khách tải lên (cho luồng "đặt cọc — chưa xem trước AI").
+     * Trả về URL local để client mang vào đơn; nhờ vậy shop luôn có ảnh dù AI quá tải.
+     */
+    public function saveImage(Request $r)
+    {
+        if (!$r->hasFile('image')) {
+            return response()->json(['ok' => false, 'msg' => 'Thiếu ảnh.'], 400);
+        }
+        $file = $r->file('image');
+        if (!$file->isValid() || !str_starts_with((string) $file->getMimeType(), 'image/')) {
+            return response()->json(['ok' => false, 'msg' => 'Ảnh không hợp lệ.'], 422);
+        }
+        $did = $this->deviceId($r) ?: 'guest';
+        try {
+            $ext  = strtolower($file->getClientOriginalExtension());
+            $ext  = in_array($ext, ['jpg', 'jpeg', 'png', 'webp']) ? $ext : 'jpg';
+            $path = 'tk-uploads/' . $did . '/' . uniqid() . '.' . $ext;
+            \Illuminate\Support\Facades\Storage::disk('public')->put($path, file_get_contents($file->getRealPath()));
+            return response()->json(['ok' => true, 'url' => asset('storage/' . $path)]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'msg' => 'Không lưu được ảnh.'], 500);
+        }
     }
 
     /** Đặt hàng từ trang thiết kế -> tạo đơn + cộng ORDER_BONUS lượt cho device. */
@@ -272,6 +298,8 @@ class ThietKeController extends Controller
         // Giá tranh khách chọn + tiền cọc 20% (client gửi; chặn số âm/quá lớn).
         $price   = max(0, min((int) $r->input('price', 0), 100000000));
         $deposit = max(0, min((int) $r->input('deposit', 0), $price));
+        // Đơn "đặt cọc — chưa xem trước AI" (AI quá tải): shop sẽ tự thiết kế & gửi Zalo.
+        $awaitDesign = $r->boolean('await_design');
 
         // Mã CTV: ưu tiên client gửi -> session -> cookie (link /ref/<mã> đã lưu 30 ngày)
         $affCode = strtoupper(trim(
@@ -306,6 +334,7 @@ class ThietKeController extends Controller
                 'customer_address' => (string) $r->input('customer_address', ''),
                 'note'             => $buildNote($src),
                 'status'           => 'new',
+                'design_status'    => $awaitDesign ? 'pending' : null,
                 'payment_method'   => 'COD',
                 'payment_status'   => 'pending',
                 'subtotal'         => $price,

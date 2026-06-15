@@ -145,6 +145,7 @@ tailwind.config = {
         <button id="genBtn" disabled class="grad-btn w-full sm:w-auto justify-center disabled:opacity-40 disabled:cursor-not-allowed text-white text-base font-extrabold px-7 py-4 rounded-2xl flex items-center gap-2"><i class="ri-sparkling-2-line"></i> Tạo bản thiết kế</button>
         <span class="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-primaryd font-bold text-xs sm:text-sm px-4 py-2 rounded-full"><i class="ri-truck-line"></i> Giao 24–72h toàn quốc · từ {{ number_format(min(array_map(fn($s) => min($s['prices']), $pricing['sizes'])), 0, ',', '.') }}đ</span>
       </div>
+      <button type="button" id="depositLink" onclick="startDepositFlow()" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-amber-700 bg-amber-50 border border-amber-300 rounded-xl px-4 py-2.5 hover:bg-amber-100"><i class="ri-time-line"></i> AI đang đông? Đặt cọc — shop thiết kế &amp; gửi Zalo cho bạn →</button>
       {{-- 4 cam kết (chuẩn Winnie's Picks) --}}
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 text-center">
         @foreach([
@@ -178,6 +179,7 @@ tailwind.config = {
 {{-- KẾT QUẢ (before/after ảnh thật của khách — khổ rộng, bấm để zoom) --}}
 <section class="max-w-6xl mx-auto px-4 md:px-6 lg:px-8">
   <div id="resultSection" class="hidden scroll-mt-20 mt-2 bg-white rounded-3xl shadow-xl2 border-2 border-primary/60 p-6 sm:p-8">
+    <div id="previewBlock">
     <div class="font-black text-xl mb-1 flex items-center gap-2"><i class="ri-checkbox-circle-fill text-primary"></i> Tác phẩm của bạn đã sẵn sàng!</div>
     <div id="restoreNote" class="hidden mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2 text-xs font-bold text-primaryd">💾 Kết quả lần trước của bạn vẫn được giữ trên máy này — tải ảnh mới để tạo thêm bất cứ lúc nào!</div>
     <div class="text-xs text-gray-500 font-semibold mb-4">🔍 Bấm vào ảnh để phóng to, xem chi tiết từng nét</div>
@@ -195,6 +197,12 @@ tailwind.config = {
       🌟 <b>Đẹp đúng không?</b> Đây là bức tranh <b>độc nhất vô nhị</b> — không ai có tấm thứ hai!
     </div>
 
+    </div>{{-- /previewBlock --}}
+    <div id="depositBlock" class="hidden mt-1 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center">
+      <div class="text-4xl mb-1">🎨⏳</div>
+      <div class="font-black text-lg text-amber-800 mb-1">AI đang quá tải — nhưng đừng lo!</div>
+      <div class="text-sm text-amber-700 leading-relaxed max-w-md mx-auto">Bạn chọn kích thước bên dưới &amp; <b>đặt cọc 20%</b>. Shop sẽ <b>tự tay thiết kế bức tranh từ ảnh của bạn</b> rồi <b>gửi bản xem trước qua Zalo</b> sớm nhất. Ưng mới làm tiếp — không ưng hoàn cọc.</div>
+    </div>
     {{-- CHỌN KÍCH THƯỚC & SỐ MÀU --}}
     <div class="mt-5 bg-green-50/70 border-2 border-green-200 rounded-2xl p-5 sm:p-6">
       <div class="font-extrabold text-lg mb-1">🛒 Đặt bức tranh này về nhà</div>
@@ -215,7 +223,7 @@ tailwind.config = {
         <button id="resultOrderBtn" class="grad-btn w-full sm:w-auto justify-center text-white font-extrabold text-base px-5 sm:px-8 py-4 rounded-2xl flex items-center gap-2"><i class="ri-shopping-bag-3-fill"></i> <span id="resultOrderLabel">Đặt tranh này</span></button>
         <span class="text-xs text-gray-500">Đặt xong được <b>+{{ \App\Models\DesignQuota::ORDER_BONUS }} lượt tạo</b> để thử thêm ảnh khác.</span>
       </div>
-      <div class="mt-3 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 inline-block">⏳ Bản thiết kế chỉ được lưu <b>24 giờ</b> trên hệ thống — đặt ngay để giữ bức tranh độc bản của bạn.</div>
+      <div id="result24hNote" class="mt-3 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 inline-block">⏳ Bản thiết kế chỉ được lưu <b>24 giờ</b> trên hệ thống — đặt ngay để giữ bức tranh độc bản của bạn.</div>
     </div>
   </div>
 </section>
@@ -460,7 +468,7 @@ tailwind.config = {
 
 <script>
 const CSRF = document.querySelector('meta[name=csrf-token]').content;
-const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}", status:"{{ route('thiet-ke.status') }}", lead:"{{ route('thiet-ke.lead') }}" };
+const URLS = { quota:"{{ route('thiet-ke.quota') }}", gen:"{{ route('thiet-ke.generate') }}", order:"{{ route('thiet-ke.order') }}", status:"{{ route('thiet-ke.status') }}", lead:"{{ route('thiet-ke.lead') }}", saveImg:"{{ route('thiet-ke.save-image') }}" };
 
 // Hiệu ứng Fade Up
 const io = new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }),{threshold:.12});
@@ -479,7 +487,7 @@ function closeM(id){ const m=document.getElementById(id); m.classList.add('hidde
 
 // ───── Công cụ thiết kế (device id + quota + tạo + đặt hàng) ─────
 function deviceId(){ let d=localStorage.getItem('dali_device'); if(!d){ d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,12); localStorage.setItem('dali_device',d);} return d; }
-const DEVICE=deviceId(); let remaining=null, lastResultUrl='', lastEnhancedUrl='', lastOriginalUrl='', selectedPackage='', orderDone=false;
+const DEVICE=deviceId(); let remaining=null, lastResultUrl='', lastEnhancedUrl='', lastOriginalUrl='', lastUploadUrl='', awaitDesign=false, selectedPackage='', orderDone=false;
 // Thông tin ngân hàng để tạo mã QR đặt cọc (lấy từ Cài đặt admin)
 const BANK={ id:"{{ $settings['bank_id'] ?? '' }}", acc:"{{ $settings['bank_acc'] ?? '' }}", name:"{{ $settings['bank_name'] ?? '' }}", label:"{{ $settings['bank_label'] ?? '' }}" };
 
@@ -495,7 +503,37 @@ dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.a
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('border-primary'));
 dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('border-primary'); if(e.dataTransfer.files[0]){ fileInput.files=e.dataTransfer.files; onFile(); }});
 fileInput.addEventListener('change',onFile);
-function onFile(){ const f=fileInput.files[0]; if(!f) return; if(previewImg.src && previewImg.src.indexOf('blob:')===0){ try{URL.revokeObjectURL(previewImg.src);}catch(e){} } previewImg.src=URL.createObjectURL(f); previewImg.classList.remove('hidden'); genBtn.disabled=false; }
+function onFile(){ const f=fileInput.files[0]; if(!f) return; if(previewImg.src && previewImg.src.indexOf('blob:')===0){ try{URL.revokeObjectURL(previewImg.src);}catch(e){} } previewImg.src=URL.createObjectURL(f); previewImg.classList.remove('hidden'); genBtn.disabled=false; lastUploadUrl=''; resetDepositMode(); var dl=document.getElementById('depositLink'); if(dl) dl.classList.remove('hidden'); }
+
+// ───── Luồng "ĐẶT CỌC — shop thiết kế & gửi Zalo" (khi AI quá tải, hoặc khách chủ động chọn) ─────
+function setLoadingText(h3,p){ var H=document.querySelector('#loadingModal h3'), P=document.querySelector('#loadingModal p'); if(H)H.textContent=h3; if(P)P.textContent=p; }
+function resetDepositMode(){
+  awaitDesign=false;
+  var pb=document.getElementById('previewBlock'); if(pb) pb.classList.remove('hidden');
+  var db=document.getElementById('depositBlock'); if(db) db.classList.add('hidden');
+  var n24=document.getElementById('result24hNote'); if(n24) n24.classList.remove('hidden');
+}
+async function startDepositFlow(){
+  if(!fileInput.files[0]){ alert('Bạn chọn ảnh muốn thiết kế trước nhé 🙂'); try{document.getElementById('upload').scrollIntoView({behavior:'smooth'});}catch(e){} return; }
+  // Lưu ảnh gốc lên server (1 lần) -> shop luôn có ảnh để làm dù AI quá tải
+  if(!lastUploadUrl){
+    setLoadingText('Đang lưu ảnh của bạn…','Chỉ một chút thôi…'); openM('loadingModal');
+    try{
+      var blob=await compressImage(fileInput.files[0],1600,0.82,previewImg);
+      var fd=new FormData(); fd.append('image',blob,'anh.jpg'); fd.append('device_id',DEVICE);
+      var r=await fetch(URLS.saveImg,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); var d=await r.json();
+      if(d&&d.ok&&d.url) lastUploadUrl=d.url;
+    }catch(e){}
+    closeM('loadingModal'); setLoadingText('Đang thiết kế bằng AI…','Thường mất 1–3 phút — bạn có thể chờ, đừng tắt trang.');
+  }
+  awaitDesign=true;
+  var pb=document.getElementById('previewBlock'); if(pb) pb.classList.add('hidden');
+  var db=document.getElementById('depositBlock'); if(db) db.classList.remove('hidden');
+  var n24=document.getElementById('result24hNote'); if(n24) n24.classList.add('hidden');
+  var sec=document.getElementById('resultSection'); sec.classList.remove('hidden');
+  paintChips();
+  try{ sec.scrollIntoView({behavior:'smooth'}); }catch(e){}
+}
 
 genBtn.addEventListener('click', async ()=>{ if(!fileInput.files[0]){alert('Vui lòng chọn ảnh.');return;}
   if(remaining===null){ await refreshQuota(); }
@@ -582,7 +620,7 @@ document.getElementById('confirmGo').addEventListener('click', async ()=>{
   const fd=new FormData(); fd.append('image',blob,fname); fd.append('device_id',DEVICE); fd.append('enhance','1');
   try{
     const r=await fetch(URLS.gen,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
-    if(!d.ok){ closeM('loadingModal'); if(d.reason==='no_quota') outOfQuota(); else alert(d.msg||'Có lỗi, thử lại sau.'); return; }
+    if(!d.ok){ closeM('loadingModal'); if(d.reason==='no_quota') outOfQuota(); else startDepositFlow(); return; }
     remaining=d.remaining??remaining; document.getElementById('remainBadge').textContent=badgeText(d);
     // Ghi nhớ job theo MÁY: khách thoát trang giữa chừng, quay lại vẫn tự nối tiếp
     try{ localStorage.setItem('dali_pending_job', JSON.stringify({job:d.job, at:Date.now()})); }catch(e){}
@@ -601,14 +639,14 @@ function pollJob(job, startedAt){
     var tgian=(phut>0?phut+' phút '+(giay%60)+' giây':giay+' giây');
     if(note) note.textContent='Đã chờ '+tgian+'… AI thường mất 1–3 phút.'+(giay>180?' Sắp xong rồi — ảnh phức tạp cần thêm chút thời gian.':'');
     if(pillText) pillText.textContent='Đang thiết kế… '+tgian;
-    if(Date.now()-t0>MAX_MS){ clearInterval(timer); clearPendingJob(); closeM('loadingModal'); alert('Hệ thống đang bận, vui lòng thử lại sau ít phút.'); refreshQuota(); return; }
+    if(Date.now()-t0>MAX_MS){ clearInterval(timer); clearPendingJob(); closeM('loadingModal'); refreshQuota(); startDepositFlow(); return; }
     try{
       var r=await fetch(URLS.status+'?job='+encodeURIComponent(job),{cache:'no-store'});
       var d=await r.json();
       if(d.status==='done'){ clearInterval(timer); clearPendingJob(); closeM('loadingModal'); deliverResult(d.result); }
       else if(d.status==='error'){ clearInterval(timer); clearPendingJob(); closeM('loadingModal');
         if(d.remaining!=null){ remaining=d.remaining; document.getElementById('remainBadge').textContent=badgeText(d); }
-        alert((d.msg||'Xử lý thất bại.')+' (Lượt của bạn đã được hoàn lại)'); }
+        startDepositFlow(); }
       // processing -> chờ vòng sau
     }catch(e){ /* mạng chập chờn -> thử vòng sau */ }
   }, 3000);
@@ -705,6 +743,7 @@ document.getElementById('phoneForm').addEventListener('submit',function(e){
 });
 
 function showResult(res, restored){
+  resetDepositMode();
   const sec=document.getElementById('resultSection');
   // Khi khôi phục sau reload: dùng URL ảnh trên server (blob preview không còn)
   applyResult({o:(restored ? (res.original||res.enhanced) : (previewImg.src||res.original))||'',
@@ -745,7 +784,7 @@ function updateStickyCta(){
   var sc=document.getElementById('stickyCta');
   if(!sc || document.getElementById('resultSection').classList.contains('hidden')) return;
   sc.setAttribute('href','#resultSection');
-  sc.textContent='🛒 Đặt tranh này — '+fmtVnd(curPrice());
+  sc.textContent = awaitDesign ? '🛒 Đặt cọc — shop gửi Zalo' : ('🛒 Đặt tranh này — '+fmtVnd(curPrice()));
 }
 function paintChips(){
   document.querySelectorAll('#sizeChips .pick').forEach(b=>{
@@ -759,7 +798,7 @@ function paintChips(){
     var on = +b.dataset.j === selJ;
     b.className='pick border-2 rounded-xl px-4 py-3 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
   });
-  document.getElementById('resultOrderLabel').textContent='Đặt tranh này — '+fmtVnd(curPrice());
+  document.getElementById('resultOrderLabel').textContent = awaitDesign ? 'Đặt cọc 20% — shop thiết kế & gửi Zalo' : ('Đặt tranh này — '+fmtVnd(curPrice()));
   updateStickyCta();
 }
 document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selI=+b.dataset.i; paintChips(); }));
@@ -854,7 +893,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   if(!name||!phone){ alert('Vui lòng nhập họ tên và số điện thoại.'); return; }
   if(!validVnPhone(phone)){ document.getElementById('oPhoneErr').classList.remove('hidden'); document.getElementById('oPhone').classList.add('border-red-400'); document.getElementById('oPhone').focus(); return; }
   const fd=new FormData(); fd.append('device_id',DEVICE); fd.append('customer_name',name); fd.append('customer_phone',phone);
-  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('original_url',lastOriginalUrl); fd.append('package',selectedPackage);
+  fd.append('customer_address',document.getElementById('oAddr').value.trim()); fd.append('result_url',lastResultUrl); fd.append('enhanced_url',lastEnhancedUrl); fd.append('original_url', awaitDesign ? (lastUploadUrl||lastOriginalUrl) : lastOriginalUrl); fd.append('package',selectedPackage); fd.append('await_design', awaitDesign ? '1' : '');
   // Giá tranh khách chọn + cọc 20% (để lưu đơn + tính hoa hồng CTV)
   const _price=curPrice(); fd.append('price',_price); fd.append('deposit',Math.round(_price*0.2/1000)*1000);
   btn.disabled=true; const oldLabel=btn.innerHTML; btn.innerHTML='<i class="ri-loader-4-line animate-spin"></i> Đang gửi…';

@@ -119,6 +119,29 @@ class OrderController extends Controller
         return back()->with('success', 'Đã xác nhận nhận cọc ' . number_format($order->deposit, 0, ',', '.') . 'đ cho đơn ' . $order->code);
     }
 
+    /** Hàng chờ "Đơn thiết kế chưa xem trước" — khách đã đặt cọc, shop tự thiết kế & gửi Zalo. */
+    public function designQueue(Request $request)
+    {
+        $query = Order::where('design_status', 'pending')->latest();
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->search . '%')
+                  ->orWhere('customer_phone', 'like', '%' . $request->search . '%')
+                  ->orWhere('customer_name', 'like', '%' . $request->search . '%');
+            });
+        }
+        $orders    = $query->paginate(20)->withQueryString();
+        $doneCount = Order::where('design_status', 'delivered')->count();
+        return view('admin.thietke-queue', compact('orders', 'doneCount'));
+    }
+
+    /** Đánh dấu ĐÃ GỬI bản thiết kế cho khách (qua Zalo). */
+    public function markDesignDelivered(Order $order)
+    {
+        $order->update(['design_status' => 'delivered']);
+        return back()->with('success', 'Đã đánh dấu GỬI KHÁCH bản thiết kế cho đơn ' . $order->code);
+    }
+
     // ── VIETTEL POST ──────────────────────────────
     /** Tạo vận đơn Viettel Post cho đơn hàng. */
     public function vtpCreate(Request $request, Order $order, ViettelPostService $vtp)
