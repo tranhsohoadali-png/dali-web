@@ -747,7 +747,6 @@ footer{
     <li><a href="{{ route('products') }}">Sản phẩm</a></li>
     <li><a href="{{ route('thiet-ke') }}">🎨 Thiết kế</a></li>
     <li><a href="{{ route('guide') }}">Hướng dẫn tô</a></li>
-    <li><a href="{{ route('blog') }}">Blog</a></li>
     <li><a href="{{ route('track-order') }}">Tra cứu đơn</a></li>
     <li><a href="#ve-chung-toi">Về chúng tôi</a></li>
     <li><a href="#lien-he">Liên hệ</a></li>
@@ -772,8 +771,7 @@ footer{
   <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
   <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
   <a href="{{ route('thiet-ke') }}"><i class="ri-magic-line"></i> Thiết kế theo yêu cầu</a>
-  <a href="{{ route('guide') }}"><i class="ri-play-circle-line"></i> Hướng dẫn tô tranh</a>
-  <a href="{{ route('blog') }}"><i class="ri-quill-pen-line"></i> Blog</a>
+  <a href="{{ route('guide') }}"><i class="ri-play-circle-line"></i> Hướng dẫn tô &amp; Blog</a>
   <a href="{{ route('cart') }}"><i class="ri-shopping-cart-2-line"></i> Giỏ hàng</a>
   <a href="{{ route('track-order') }}"><i class="ri-search-line"></i> Tra cứu đơn hàng</a>
   <a href="#lien-he"><i class="ri-phone-line"></i> Liên hệ</a>

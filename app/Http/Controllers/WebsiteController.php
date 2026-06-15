@@ -178,11 +178,12 @@ class WebsiteController extends Controller
         return view('website.order-tracking', compact('order','orders','settings'));
     }
 
-    /** Trang hướng dẫn tô tranh (video YouTube + 6 bước). */
+    /** Trang hướng dẫn tô tranh: 6 bước + video YouTube + bài viết blog (đã gộp). */
     public function guide()
     {
         $settings = \DB::table('admin_settings')->pluck('value','key');
-        return view('website.guide', compact('settings'));
+        $posts    = Post::where('is_published', true)->latest('published_at')->take(6)->get();
+        return view('website.guide', compact('settings','posts'));
     }
 
     /**

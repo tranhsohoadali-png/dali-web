@@ -53,6 +53,21 @@ nav{background:linear-gradient(175deg,#1C5200,#2D7A08,#3A9A12);height:68px;paddi
 .vid-info{padding:12px 14px}
 .vid-info .t{font-size:14px;font-weight:800;color:var(--char);line-height:1.35}
 .vid-info .d{font-size:12px;color:var(--tx3);margin-top:3px}
+/* Blog posts */
+.post-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.post-card{background:#fff;border:1.5px solid var(--bd);border-radius:16px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;box-shadow:0 4px 18px rgba(58,122,10,.06);transition:transform .25s,box-shadow .25s}
+.post-card:hover{transform:translateY(-5px);box-shadow:0 14px 34px rgba(58,122,10,.14)}
+.post-cover{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--gl)}
+.post-cover img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.post-card:hover .post-cover img{transform:scale(1.06)}
+.post-cover-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--bd2)}
+.post-cat{position:absolute;top:10px;left:10px;background:rgba(28,58,10,.82);color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:50px}
+.post-body{padding:14px 16px;display:flex;flex-direction:column;flex:1}
+.post-title{font-size:15px;font-weight:800;color:var(--char);line-height:1.4;margin-bottom:7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.post-excerpt{font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:12px;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.post-meta{display:flex;gap:14px;font-size:11.5px;color:var(--tx3);border-top:1px solid var(--gl);padding-top:10px}
+.btn-allposts{display:inline-block;background:#fff;border:1.5px solid var(--g);color:var(--gd);border-radius:50px;padding:11px 26px;font-size:14px;font-weight:800;text-decoration:none;transition:all .2s}
+.btn-allposts:hover{background:var(--g);color:#fff}
 /* Channel CTA */
 .yt-cta{background:linear-gradient(135deg,#1C5200,#2D7A08);border-radius:20px;padding:30px 26px;color:#fff;text-align:center;margin:40px 0 0}
 .yt-cta h3{font-size:22px;font-weight:900;margin-bottom:8px}
@@ -67,8 +82,8 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 .footer-links{display:flex;gap:20px}
 .footer-links a{color:rgba(255,255,255,.5);text-decoration:none;font-size:13px}
 .footer-links a:hover{color:var(--gn)}
-@media(max-width:860px){.steps,.vid-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.steps,.vid-grid{grid-template-columns:1fr}.nav-links{display:none}.nav-phone{display:none}.footer-bottom{flex-direction:column;text-align:center}}
+@media(max-width:860px){.steps,.vid-grid,.post-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.steps,.vid-grid,.post-grid{grid-template-columns:1fr}.nav-links{display:none}.nav-phone{display:none}.footer-bottom{flex-direction:column;text-align:center}}
 </style>
 </head>
 <body>
@@ -139,6 +154,31 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     </div>
     @endforeach
   </div>
+
+  {{-- BÀI VIẾT BLOG (đã gộp vào đây) --}}
+  @if(isset($posts) && $posts->count())
+  <div class="sec-head">
+    <div class="lbl">Cẩm nang</div>
+    <h2>Bài viết &amp; kinh nghiệm tô tranh</h2>
+    <p>Mẹo hay, cảm hứng và câu chuyện từ DALI</p>
+  </div>
+  <div class="post-grid">
+    @foreach($posts as $post)
+    <a href="{{ route('blog.post', $post->slug) }}" class="post-card">
+      <div class="post-cover">
+        @if($post->cover_image)<img src="{{ asset('storage/'.$post->cover_image) }}" alt="{{ $post->title }}" loading="lazy">@else<div class="post-cover-ph"><i class="ri-quill-pen-line"></i></div>@endif
+        @if($post->category)<span class="post-cat">{{ $post->category }}</span>@endif
+      </div>
+      <div class="post-body">
+        <h3 class="post-title">{{ $post->title }}</h3>
+        @if($post->excerpt)<p class="post-excerpt">{{ Str::limit($post->excerpt,90) }}</p>@endif
+        <div class="post-meta"><span><i class="ri-calendar-line"></i> {{ $post->published_at?->format('d/m/Y') }}</span><span><i class="ri-timer-line"></i> {{ $post->read_time }} phút đọc</span></div>
+      </div>
+    </a>
+    @endforeach
+  </div>
+  <div style="text-align:center;margin-top:24px"><a href="{{ route('blog') }}" class="btn-allposts">Xem tất cả bài viết →</a></div>
+  @endif
 
   {{-- CHANNEL CTA --}}
   <div class="yt-cta">
