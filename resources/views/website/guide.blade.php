@@ -85,6 +85,42 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
 @media(max-width:860px){.steps,.vid-grid,.post-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.steps,.vid-grid,.post-grid{grid-template-columns:1fr}.nav-links{display:none}.nav-phone{display:none}.footer-bottom{flex-direction:column;text-align:center}}
 </style>
+{{-- Structured data: HowTo (6 bước) + VideoObject (9 video) cho rich snippet Google --}}
+@php
+  $ldSteps = [
+    ['Chuẩn bị','Trải phẳng canvas, mở nắp bộ màu theo số, chuẩn bị cọ, ly nước sạch và khăn giấy.'],
+    ['Tô từ trên xuống','Bắt đầu từ góc trên rồi tô dần xuống dưới để tay không quệt vào màu vừa tô.'],
+    ['Đúng số – đúng màu','Mỗi ô có một con số, lấy đúng hũ màu cùng số; tô mảng lớn và màu đậm trước.'],
+    ['Tô gọn, không lem','Lấy lượng màu vừa phải, tô gọn trong ô; để màu se khô rồi mới tô ô sát bên.'],
+    ['Lỡ tô sai','Để khô rồi tô đè lại bằng màu đúng — màu acrylic che phủ hoàn toàn, không hỏng tranh.'],
+    ['Hoàn thiện & treo','Để khô 1–2 giờ, có thể phủ lớp bóng bảo vệ, rồi treo bằng bộ móc kèm theo.'],
+  ];
+  $ldVideos = [
+    ['p-xDVCygKD8','Video 1 · Phật Bà Quan Âm'],['r5Z38NJTXYg','Video 2 · Tranh công chúa'],
+    ['28FM8fLsyW0','Video 3 · Tranh Hoa Súng'],['3W81CYmnjrs','Video 4 · Quái Vật Stick'],
+    ['yQE3AtklVes','Video 5 · Tình yêu tuổi học trò'],['6Js-jFO4o40','Video 6 · Chim Xanh Phương Đông'],
+    ['xnK_YKJspI8','Video 7 · Cảnh Bình Yên'],['ZartuAT41YI','Tranh số hóa theo yêu cầu'],
+    ['Il6DAN9pXYA','Tình Yêu Thương Của Mẹ'],
+  ];
+  $graph = [[
+    '@type' => 'HowTo',
+    'name'  => 'Cách tô tranh số hóa cho người mới',
+    'description' => 'Hướng dẫn tô tranh số hóa DALI từ A–Z: chuẩn bị, tô đúng số, mẹo không lem, sửa lỗi và hoàn thiện.',
+    'step'  => collect($ldSteps)->map(fn($s, $i) => ['@type'=>'HowToStep','position'=>$i+1,'name'=>$s[0],'text'=>$s[1]])->all(),
+  ]];
+  foreach ($ldVideos as $v) {
+    $graph[] = [
+      '@type' => 'VideoObject',
+      'name'  => $v[1],
+      'description' => 'Video hướng dẫn tô tranh số hóa của DALI: ' . $v[1],
+      'thumbnailUrl' => 'https://i.ytimg.com/vi/' . $v[0] . '/hqdefault.jpg',
+      'uploadDate'   => '2021-06-01',
+      'contentUrl'   => 'https://www.youtube.com/watch?v=' . $v[0],
+      'embedUrl'     => 'https://www.youtube.com/embed/' . $v[0],
+    ];
+  }
+@endphp
+<script type="application/ld+json">{!! json_encode(['@context'=>'https://schema.org','@graph'=>$graph], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
 </head>
 <body>
 <nav>

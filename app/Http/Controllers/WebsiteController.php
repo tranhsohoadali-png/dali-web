@@ -269,24 +269,33 @@ class WebsiteController extends Controller
             'payment'        => 'required|in:COD,BANK',
         ]);
 
-        // Handle coupon
+        // Giá LẤY TỪ DB theo sản phẩm + kích thước (chống giả mạo giá phía client).
+        // Đơn catalog luôn có product_id; chỉ fallback giá client khi không xác định được SP.
+        $qty   = $data['quantity'];
+        $price = max(0, (int) $data['price']);
+        if (!empty($data['product_id'])) {
+            $prod = Product::find($data['product_id']);
+            if ($prod) {
+                $sizeId = (int) $request->input('size_id', 0);
+                $size   = $sizeId ? \App\Models\Size::find($sizeId) : null;
+                $price  = $size ? (int) $size->price : (int) $prod->price;
+            }
+        }
+        $sub = $price * $qty;
+
+        // Handle coupon (dựa trên tiền hàng đã tính từ DB)
         $couponCode     = strtoupper(trim($request->input('coupon_code', '')));
         $couponDiscount = 0;
         if ($couponCode) {
             $coupon = Coupon::where('code', $couponCode)->first();
             if ($coupon) {
-                $tempSub = (int)$request->input('price') * (int)$request->input('quantity');
-                [$ok] = $coupon->isValid($tempSub);
+                [$ok] = $coupon->isValid($sub);
                 if ($ok) {
-                    $couponDiscount = $coupon->calcDiscount($tempSub);
+                    $couponDiscount = $coupon->calcDiscount($sub);
                     $coupon->increment('used_count');
                 }
             }
         }
-
-        $qty      = $data['quantity'];
-        $price    = $data['price'];
-        $sub      = $price * $qty;
         $settings   = \DB::table('admin_settings')->pluck('value','key');
         $discPct    = (int)($settings['discount_bank'] ?? 5);
         $discount   = $data['payment'] === 'BANK' ? (int)round($sub * $discPct / 100) : 0;
@@ -610,8 +619,8 @@ class WebsiteController extends Controller
             ]);
         }
 
-        // Ghi hoa hồng CTV (dùng helper chung)
-        $this->recordAffiliateCommission($order, $affCode, $total);
+        // Ghi hoa hồng CTV (dùng helper chung) — lấy số tiền hoa hồng để hiện trong thông báo
+        $affCommission = $this->recordAffiliateCommission($order, $affCode, $total);
 
         // Clear cart
         session()->forget('cart');
@@ -687,11 +696,16 @@ class WebsiteController extends Controller
     }
 
     // ── HÀM HELPER: ghi hoa hồng cho affiliate ──
-    private function recordAffiliateCommission(Order $order, string $affCode, int $total): void
+    private function recordAffiliateCommission(Order $order, string $affCode, int $total): int
     {
-        if (!$affCode) return;
+        if (!$affCode) return 0;
         $affiliate = Affiliate::where('code', $affCode)->where('is_active', true)->first();
-        if (!$affiliate) return;
+        if (!$affiliate) return 0;
+        // Đại lý (agent) ăn chênh lệch giá sỉ -> KHÔNG hưởng hoa hồng %; chỉ gắn mã để theo dõi.
+        if ($affiliate->isAgent()) {
+            $order->update(['affiliate_code' => $affCode]);
+            return 0;
+        }
         $commission = (int) round($total * $affiliate->commission_rate / 100);
         $order->update([
             'affiliate_code'       => $affCode,
@@ -699,6 +713,7 @@ class WebsiteController extends Controller
         ]);
         $affiliate->increment('total_earned', $commission);
         $affiliate->increment('total_orders');
+        return $commission;
     }
 
 }

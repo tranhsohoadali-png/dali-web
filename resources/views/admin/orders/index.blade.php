@@ -84,7 +84,7 @@ tr:hover td{background:var(--gll)}
           <tbody>
           @forelse($orders as $o)
           <tr>
-            <td><span class="order-code">{{ $o->code }}</span></td>
+            <td><span class="order-code">{{ $o->code }}</span>@if($o->design_status_label)<br><span style="font-size:9px;font-weight:800;background:{{ $o->design_status==='pending' ? '#FEF3C7' : '#DCFCE7' }};color:{{ $o->design_status==='pending' ? '#B45309' : '#15803D' }};padding:1px 6px;border-radius:20px;white-space:nowrap">{{ $o->design_status==='pending' ? '⏳ Chờ thiết kế' : '✓ Đã gửi' }}</span>@endif</td>
             <td style="font-weight:600">{{ $o->customer_name }}</td>
             <td>{{ $o->customer_phone }}</td>
             <td style="font-weight:800;color:var(--g)">{{ number_format($o->total,0,',','.') }}đ</td>

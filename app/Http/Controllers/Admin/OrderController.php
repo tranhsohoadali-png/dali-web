@@ -103,13 +103,36 @@ class OrderController extends Controller
         if ($request->status === 'confirmed' && $order->payment_method === 'BANK') {
             $order->update(['payment_status' => 'paid']);
         }
+        if ($request->status === 'cancelled') {
+            $this->reverseCommissionIfAny($order);
+        }
         return back()->with('success', 'Đã cập nhật trạng thái đơn hàng!');
     }
 
     public function destroy(Order $order)
     {
+        $this->reverseCommissionIfAny($order);
         $order->delete();
         return back()->with('success', 'Đã xoá đơn hàng!');
+    }
+
+    /** Hoàn lại hoa hồng đã cộng cho CTV khi đơn bị huỷ/xoá (idempotent qua cờ commission_reversed). */
+    private function reverseCommissionIfAny(Order $order): void
+    {
+        if ($order->commission_reversed) return;
+        $commission = (int) $order->affiliate_commission;
+        if (!$order->affiliate_code || $commission <= 0) {
+            $order->update(['commission_reversed' => true]);
+            return;
+        }
+        \DB::transaction(function () use ($order, $commission) {
+            $aff = \App\Models\Affiliate::where('code', $order->affiliate_code)->lockForUpdate()->first();
+            if ($aff) {
+                $aff->decrement('total_earned', min($commission, (int) $aff->total_earned));
+                if ((int) $aff->total_orders > 0) $aff->decrement('total_orders');
+            }
+            $order->update(['commission_reversed' => true]);
+        });
     }
 
     /** Xác nhận đã nhận tiền cọc của đại lý. */
@@ -173,6 +196,7 @@ class OrderController extends Controller
         try {
             $vtp->cancelOrder($order->vtp_order_number, 'Shop hủy đơn');
             $order->update(['vtp_status' => 107, 'vtp_status_name' => 'Đã hủy vận đơn', 'vtp_status_at' => now(), 'status' => 'cancelled']);
+            $this->reverseCommissionIfAny($order);
             return back()->with('success', 'Đã hủy vận đơn VTP.');
         } catch (\Throwable $e) {
             return back()->with('error', 'Hủy vận đơn thất bại: ' . $e->getMessage());

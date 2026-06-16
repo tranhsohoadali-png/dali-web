@@ -898,6 +898,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   fd.append('result_url', awaitDesign ? '' : lastResultUrl); fd.append('enhanced_url', awaitDesign ? '' : lastEnhancedUrl); fd.append('original_url', awaitDesign ? (lastUploadUrl||lastOriginalUrl) : lastOriginalUrl); fd.append('package',selectedPackage); fd.append('await_design', awaitDesign ? '1' : '');
   // Giá tranh khách chọn + cọc 20% (để lưu đơn + tính hoa hồng CTV)
   const _price=curPrice(); fd.append('price',_price); fd.append('deposit',Math.round(_price*0.2/1000)*1000);
+  fd.append('size_index',selI); fd.append('color_index',selJ);   // server tra lại giá theo cỡ+màu (chống giả mạo)
   btn.disabled=true; const oldLabel=btn.innerHTML; btn.innerHTML='<i class="ri-loader-4-line animate-spin"></i> Đang gửi…';
   try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
     if(!d.ok){ alert('Gửi đơn thất bại, thử lại.'); return; }

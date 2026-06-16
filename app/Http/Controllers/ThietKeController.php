@@ -223,12 +223,14 @@ class ThietKeController extends Controller
         if (!preg_match('/^(0|\+?84)(3|5|7|8|9)\d{8}$/', $phone)) {
             return response()->json(['ok' => false, 'msg' => 'Số điện thoại không hợp lệ.'], 422);
         }
+        // Chỉ nhận URL http(s) (chống XSS qua scheme javascript: khi admin bấm link ảnh).
+        $cleanUrl = fn($u) => preg_match('#^https?://#i', (string) $u) ? substr((string) $u, 0, 1000) : '';
         \App\Models\DesignLead::create([
             'phone'        => $phone,
             'device_id'    => $this->deviceId($r),
-            'original_url' => substr((string) $r->input('original_url', ''), 0, 1000),
-            'enhanced_url' => substr((string) $r->input('enhanced_url', ''), 0, 1000),
-            'result_url'   => substr((string) $r->input('result_url', ''), 0, 1000),
+            'original_url' => $cleanUrl($r->input('original_url', '')),
+            'enhanced_url' => $cleanUrl($r->input('enhanced_url', '')),
+            'result_url'   => $cleanUrl($r->input('result_url', '')),
         ]);
         return response()->json(['ok' => true]);
     }
@@ -295,9 +297,14 @@ class ThietKeController extends Controller
             return response()->json(['ok' => false, 'msg' => 'Đơn của bạn đang được xử lý, vui lòng đợi giây lát.'], 429);
         }
 
-        // Giá tranh khách chọn + tiền cọc 20% (client gửi; chặn số âm/quá lớn).
-        $price   = max(0, min((int) $r->input('price', 0), 100000000));
-        $deposit = max(0, min((int) $r->input('deposit', 0), $price));
+        // Giá tranh tính từ BẢNG GIÁ phía server theo cỡ + số màu khách chọn (chống giả
+        // mạo giá/hoa hồng). Fallback giá client (đã chặn biên) nếu thiếu chỉ số. Cọc 20% server.
+        $pricing = \App\Http\Controllers\Admin\ThietKePricingController::current();
+        $si = (int) $r->input('size_index', -1);
+        $ci = (int) $r->input('color_index', -1);
+        $serverPrice = $pricing['sizes'][$si]['prices'][$ci] ?? null;
+        $price   = $serverPrice !== null ? max(0, (int) $serverPrice) : max(0, min((int) $r->input('price', 0), 100000000));
+        $deposit = (int) round($price * 0.2 / 1000) * 1000;
         // Đơn "đặt cọc — chưa xem trước AI" (AI quá tải): shop sẽ tự thiết kế & gửi Zalo.
         $awaitDesign = $r->boolean('await_design');
 
@@ -319,10 +326,12 @@ class ThietKeController extends Controller
             . ($u['ai'] ? ' | Ảnh AI: ' . $u['ai'] : '');
 
         // Lúc tạo đơn dùng URL gốc (trên server màu) -> đơn tạo NHANH, khách không chờ.
+        // Chỉ nhận URL http(s) (chống XSS qua scheme javascript: hiển thị ở admin).
+        $cleanUrl = fn($u) => preg_match('#^https?://#i', (string) $u) ? (string) $u : '';
         $src = [
-            'goc' => (string) $r->input('original_url', ''),
-            'ai'  => (string) $r->input('enhanced_url', ''),
-            'map' => (string) $r->input('result_url', ''),
+            'goc' => $cleanUrl($r->input('original_url', '')),
+            'ai'  => $cleanUrl($r->input('enhanced_url', '')),
+            'map' => $cleanUrl($r->input('result_url', '')),
         ];
 
         try {
@@ -350,11 +359,13 @@ class ThietKeController extends Controller
         // Ghi hoa hồng CTV trên GIÁ TRANH khách chọn (giống đơn bán thường).
         if ($affCode && $price > 0) {
             $aff = \App\Models\Affiliate::where('code', $affCode)->where('is_active', true)->first();
-            if ($aff) {
+            if ($aff && !$aff->isAgent()) {
                 $commission = (int) round($price * $aff->commission_rate / 100);
                 $order->update(['affiliate_code' => $affCode, 'affiliate_commission' => $commission]);
                 $aff->increment('total_earned', $commission);
                 $aff->increment('total_orders');
+            } elseif ($aff) {
+                $order->update(['affiliate_code' => $affCode]); // đại lý: chỉ gắn mã, không hoa hồng %
             }
         }
 

@@ -199,6 +199,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
           ];
           $statusOrder = ['new','confirmed','packing','shipping','delivered'];
           $currentIdx  = array_search($order->status, $statusOrder);
+          if ($currentIdx === false) $currentIdx = -1;   // đơn huỷ -> không bước nào active
         @endphp
         @foreach($steps as $key => [$label, $sub])
           @php $idx = array_search($key, $statusOrder); @endphp
@@ -250,6 +251,22 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <div class="info-item">
           <div class="info-label">Hành trình ViettelPost</div>
           <div class="info-value">{{ $order->vtp_status_name ?? 'Đã tạo vận đơn' }}</div>
+        </div>
+        @endif
+        @if($order->deposit > 0)
+        <div class="info-item">
+          <div class="info-label">Tiền cọc</div>
+          <div class="info-value">{{ number_format($order->deposit,0,',','.') }}đ @if($order->deposit_paid)<span style="color:var(--g);font-size:11px">✓ đã nhận</span>@else<span style="color:#D97706;font-size:11px">⏳ chờ cọc</span>@endif</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Còn phải trả khi nhận</div>
+          <div class="info-value">{{ number_format(max(0,$order->total - $order->deposit),0,',','.') }}đ</div>
+        </div>
+        @endif
+        @if($order->design_status_label)
+        <div class="info-item" style="grid-column:1/-1">
+          <div class="info-label">Trạng thái thiết kế</div>
+          <div class="info-value">{{ $order->design_status_label }}@if($order->design_status==='pending') — shop đang thiết kế, sẽ gửi bản xem trước qua Zalo@endif</div>
         </div>
         @endif
       </div>

@@ -7,14 +7,15 @@ class Order extends Model
     protected $fillable = [
         'code','customer_name','customer_phone','customer_city',
         'customer_address','note','coupon_code','coupon_discount',
-        'affiliate_code','affiliate_commission',
+        'affiliate_code','affiliate_commission','commission_reversed',
         'payment_method','payment_status','status','design_status',
         'subtotal','discount','ship_fee','total','deposit','deposit_paid',
         'vtp_order_number','vtp_status','vtp_status_name','vtp_status_at','vtp_service','weight',
     ];
 
     protected $casts = [
-        'vtp_status_at' => 'datetime',
+        'vtp_status_at'       => 'datetime',
+        'commission_reversed' => 'boolean',
     ];
 
     public function items()   { return $this->hasMany(OrderItem::class); }
