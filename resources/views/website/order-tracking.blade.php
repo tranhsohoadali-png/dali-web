@@ -243,16 +243,6 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
           <div class="info-label">Trạng thái TT</div>
           <div class="info-value">{{ $order->payment_status_label }}</div>
         </div>
-        @if($order->vtp_order_number)
-        <div class="info-item">
-          <div class="info-label">Mã vận đơn (VTP)</div>
-          <div class="info-value" style="color:var(--g);user-select:all">{{ $order->vtp_order_number }}</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">Hành trình ViettelPost</div>
-          <div class="info-value">{{ $order->vtp_status_name ?? 'Đã tạo vận đơn' }}</div>
-        </div>
-        @endif
         @if($order->deposit > 0)
         <div class="info-item">
           <div class="info-label">Tiền cọc</div>
@@ -266,10 +256,24 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         @if($order->design_status_label)
         <div class="info-item" style="grid-column:1/-1">
           <div class="info-label">Trạng thái thiết kế</div>
-          <div class="info-value">{{ $order->design_status_label }}@if($order->design_status==='pending') — shop đang thiết kế, sẽ gửi bản xem trước qua Zalo@endif</div>
+          <div class="info-value">{{ $order->design_status_label }}{{ $order->design_status==='pending' ? ' — shop đang thiết kế, sẽ gửi bản xem trước qua Zalo' : '' }}</div>
         </div>
         @endif
       </div>
+
+      @if($order->vtp_order_number)
+      {{-- Vận chuyển: dẫn khách sang Viettel Post tra cứu (mã shop tự nhập) --}}
+      <div style="background:var(--gll);border:1.5px solid var(--bd);border-radius:14px;padding:16px 18px;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;margin-bottom:10px"><i class="ri-truck-line"></i> Vận chuyển — Viettel Post</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <span style="font-size:13px;color:var(--tx2)">Mã vận đơn:</span>
+          <b style="font-size:17px;color:var(--g);user-select:all;letter-spacing:.5px">{{ $order->vtp_order_number }}</b>
+          <button type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText('{{ $order->vtp_order_number }}');this.textContent='✓ Đã copy mã'" style="background:#fff;border:1.5px solid var(--bd);border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;color:var(--gd);cursor:pointer"><i class="ri-file-copy-line"></i> Copy mã</button>
+        </div>
+        <a href="https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/" target="_blank" rel="noopener" class="btn-primary" style="margin-top:0"><i class="ri-search-line"></i> Theo dõi trên Viettel Post →</a>
+        <div style="font-size:12.5px;color:var(--tx3);margin-top:10px;line-height:1.6">Bấm nút trên, <b>dán mã {{ $order->vtp_order_number }}</b> vào ô tra cứu của Viettel Post (nhập kèm mã captcha) để xem hành trình giao hàng mới nhất.</div>
+      </div>
+      @endif
 
       {{-- Order items --}}
       <div class="items-title"><i class="ri-palette-line"></i> Sản phẩm đã đặt</div>

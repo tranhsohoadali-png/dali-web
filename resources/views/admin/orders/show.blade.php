@@ -173,6 +173,11 @@ body{background:var(--bg);color:var(--tx)}
                     <option value="cancelled" {{ $order->status=='cancelled' ?'selected':'' }}>❌ Đã huỷ</option>
                   </select>
                 </div>
+                <div style="margin-bottom:10px">
+                  <label style="font-size:12px;font-weight:700;color:var(--tx);display:block;margin-bottom:7px">Mã vận đơn Viettel Post <span style="color:var(--tx3);font-weight:500">(tự nhập sau khi gửi)</span></label>
+                  <input type="text" name="vtp_code" value="{{ $order->vtp_order_number }}" placeholder="VD: 0123456789" class="status-select" style="margin-bottom:0">
+                  <div style="font-size:11px;color:var(--tx3);margin-top:5px">Khách sẽ thấy mã này + nút “Theo dõi trên Viettel Post” ở trang tra cứu đơn.</div>
+                </div>
                 <button type="submit" class="btn-status">Cập nhật trạng thái</button>
               </form>
             </div>
@@ -183,22 +188,11 @@ body{background:var(--bg);color:var(--tx)}
             <div class="card-h"><div class="card-t">🚚 Vận chuyển Viettel Post</div></div>
             <div style="padding:14px 18px">
               @if($order->vtp_order_number)
-                <div class="info-row"><span class="info-label">Mã vận đơn</span><span style="font-weight:800;font-size:13px;color:var(--g);user-select:all">{{ $order->vtp_order_number }}</span></div>
-                <div class="info-row"><span class="info-label">Trạng thái VTP</span><span style="font-weight:700;font-size:12px">{{ $order->vtp_status_name ?? '—' }}{{ $order->vtp_status ? ' ('.$order->vtp_status.')' : '' }}</span></div>
-                @if($order->vtp_status_at)<div class="info-row" style="border:none"><span class="info-label">Cập nhật</span><span style="font-size:12px;color:var(--tx3)">{{ $order->vtp_status_at->format('H:i d/m/Y') }}</span></div>@endif
-                <div style="display:flex;gap:8px;margin-top:12px">
-                  <a href="{{ route('admin.orders.vtp.print',$order) }}" target="_blank" class="btn-status" style="flex:1;text-align:center;text-decoration:none;background:#3A9A12;line-height:1.2">🖨️ In nhãn</a>
-                  <form method="POST" action="{{ route('admin.orders.vtp.cancel',$order) }}" style="flex:1" onsubmit="return confirm('Hủy vận đơn VTP này?')">
-                    @csrf
-                    <button type="submit" class="btn-status" style="width:100%;background:#EF4444">Hủy vận đơn</button>
-                  </form>
-                </div>
+                <div class="info-row"><span class="info-label">Mã vận đơn</span><span style="font-weight:800;font-size:14px;color:var(--g);user-select:all">{{ $order->vtp_order_number }}</span></div>
+                <a href="https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/" target="_blank" class="btn-status" style="display:block;text-align:center;text-decoration:none;background:#3A9A12;margin-top:12px">🔎 Mở trang tra cứu Viettel Post</a>
+                <p style="font-size:11px;color:var(--tx3);margin-top:8px">Khách cũng thấy mã này + nút “Theo dõi trên Viettel Post” ở trang tra cứu đơn của họ.</p>
               @else
-                <p style="font-size:12px;color:var(--tx3);margin-bottom:10px">Tạo vận đơn để VTP đến lấy hàng và tự cập nhật hành trình về hệ thống.</p>
-                <form method="POST" action="{{ route('admin.orders.vtp.create',$order) }}" onsubmit="return confirm('Tạo vận đơn Viettel Post cho đơn này?')">
-                  @csrf
-                  <button type="submit" class="btn-status" style="width:100%">🚚 Tạo vận đơn VTP</button>
-                </form>
+                <p style="font-size:12px;color:var(--tx3)">Chưa có mã vận đơn. Sau khi gửi Viettel Post, <b>nhập mã ở ô “Cập nhật trạng thái”</b> phía trên — khách sẽ tự tra cứu được.</p>
               @endif
             </div>
           </div>

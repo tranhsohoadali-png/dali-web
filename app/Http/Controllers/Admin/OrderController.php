@@ -98,8 +98,16 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate(['status' => 'required|in:new,confirmed,packing,shipping,delivered,cancelled']);
-        $order->update(['status' => $request->status]);
+        $request->validate([
+            'status'   => 'required|in:new,confirmed,packing,shipping,delivered,cancelled',
+            'vtp_code' => 'nullable|string|max:50',
+        ]);
+        $update = ['status' => $request->status];
+        if ($request->has('vtp_code')) {   // mã vận đơn Viettel Post tự nhập (API VTP không còn)
+            $code = preg_replace('/[^A-Za-z0-9._\-]/', '', (string) $request->input('vtp_code'));
+            $update['vtp_order_number'] = $code ?: null;
+        }
+        $order->update($update);
         if ($request->status === 'confirmed' && $order->payment_method === 'BANK') {
             $order->update(['payment_status' => 'paid']);
         }
