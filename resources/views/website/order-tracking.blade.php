@@ -267,11 +267,11 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;margin-bottom:10px"><i class="ri-truck-line"></i> Vận chuyển — Viettel Post</div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
           <span style="font-size:13px;color:var(--tx2)">Mã vận đơn:</span>
-          <b style="font-size:17px;color:var(--g);user-select:all;letter-spacing:.5px">{{ $order->vtp_order_number }}</b>
-          <button type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText('{{ $order->vtp_order_number }}');this.textContent='✓ Đã copy mã'" style="background:#fff;border:1.5px solid var(--bd);border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;color:var(--gd);cursor:pointer"><i class="ri-file-copy-line"></i> Copy mã</button>
+          <b style="font-size:18px;color:var(--g);user-select:all;letter-spacing:.5px">{{ $order->vtp_order_number }}</b>
         </div>
-        <a href="https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/" target="_blank" rel="noopener" class="btn-primary" style="margin-top:0"><i class="ri-search-line"></i> Theo dõi trên Viettel Post →</a>
-        <div style="font-size:12.5px;color:var(--tx3);margin-top:10px;line-height:1.6">Bấm nút trên, <b>dán mã {{ $order->vtp_order_number }}</b> vào ô tra cứu của Viettel Post (nhập kèm mã captcha) để xem hành trình giao hàng mới nhất.</div>
+        <a href="https://viettelpost.com.vn/tra-cuu-hanh-trinh-don/" target="_blank" rel="noopener" class="btn-primary" style="margin-top:0" onclick="try{navigator.clipboard&&navigator.clipboard.writeText('{{ $order->vtp_order_number }}');var n=document.getElementById('vtpCopied');if(n)n.style.display='block';}catch(e){}"><i class="ri-clipboard-line"></i> Copy mã + Mở Viettel Post →</a>
+        <div id="vtpCopied" style="display:none;font-size:12.5px;color:var(--gd);font-weight:700;margin-top:9px"><i class="ri-checkbox-circle-fill"></i> Đã copy mã {{ $order->vtp_order_number }} — sang trang Viettel chỉ cần <b>dán</b> vào ô tra cứu rồi nhập captcha.</div>
+        <div style="font-size:12px;color:var(--tx3);margin-top:8px;line-height:1.6">Viettel Post bắt nhập captcha nên không điền sẵn mã hộ được. Bấm nút trên là mã <b>tự được copy</b>, khách chỉ cần dán 1 lần.</div>
       </div>
       @endif
 
