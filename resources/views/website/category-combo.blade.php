@@ -248,7 +248,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   <ul class="nav-links">
     <li><a href="{{ route('home') }}">Trang chủ</a></li>
     <li><a href="{{ route('products') }}">Sản phẩm</a></li>
-    <li><a href="{{ route('blog') }}">Blog</a></li>
+    <li><a href="{{ route('guide') }}">Hướng dẫn &amp; Blog</a></li>
   </ul>
   <div class="nav-right">
     <a href="tel:{{ $settings['shop_phone'] ?? '0856911698' }}" class="nav-phone"><i class="ri-phone-line" style="margin-right:5px"></i>{{ $settings['shop_phone'] ?? '0856.911.698' }}</a>
@@ -259,7 +259,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
 <div class="mobile-nav" id="mnav">
   <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
   <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
-  <a href="{{ route('blog') }}"><i class="ri-quill-pen-line"></i> Blog</a>
+  <a href="{{ route('guide') }}"><i class="ri-quill-pen-line"></i> Hướng dẫn &amp; Blog</a>
   <a href="{{ route('cart') }}"><i class="ri-shopping-cart-2-line"></i> Giỏ hàng</a>
   <a href="{{ route('track-order') }}"><i class="ri-search-line"></i> Tra cứu đơn</a>
 </div>

@@ -104,7 +104,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   <ul class="nav-links">
     <li><a href="{{ route('home') }}">Trang chủ</a></li>
     <li><a href="{{ route('products') }}">Sản phẩm</a></li>
-    <li><a href="{{ route('blog') }}">Blog</a></li>
+    <li><a href="{{ route('guide') }}">Hướng dẫn &amp; Blog</a></li>
     <li><a href="{{ route('track-order') }}">Tra cứu đơn</a></li>
   </ul>
   <a href="{{ route('products') }}" class="btn-nav">Tiếp tục mua sắm</a>
