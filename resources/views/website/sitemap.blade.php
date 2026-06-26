@@ -4,6 +4,7 @@
   <url><loc>{{ route('products') }}</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>{{ route('thiet-ke') }}</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>{{ route('guide') }}</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>{{ route('blog') }}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>{{ route('track-order') }}</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   @foreach($products as $p)
   <url>
@@ -19,6 +20,14 @@
     <lastmod>{{ $cat->updated_at->format('Y-m-d') }}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  @endforeach
+  @foreach($posts as $post)
+  <url>
+    <loc>{{ route('blog.post', $post->slug) }}</loc>
+    <lastmod>{{ $post->updated_at->format('Y-m-d') }}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   @endforeach
 </urlset>

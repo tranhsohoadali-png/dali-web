@@ -7,6 +7,44 @@
 <meta property="og:title" content="{{ $post->title }}">
 <meta property="og:description" content="{{ $post->excerpt }}">
 <meta property="og:image" content="{{ $post->cover_image ? asset('storage/'.$post->cover_image) : asset('images/logo_dali.png') }}">
+<link rel="canonical" href="{{ route('blog.post', $post->slug) }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ route('blog.post', $post->slug) }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $post->title }}">
+<meta name="twitter:description" content="{{ $post->meta_description ?? $post->excerpt }}">
+<meta name="twitter:image" content="{{ $post->cover_image ? asset('storage/'.$post->cover_image) : asset('images/logo_dali.png') }}">
+@php
+  $postImg = $post->cover_image ? asset('storage/'.$post->cover_image) : asset('images/og-home.jpg');
+  $postUrl = route('blog.post', $post->slug);
+@endphp
+<script type="application/ld+json">
+{!! json_encode([
+  '@context' => 'https://schema.org',
+  '@graph' => [
+    [
+      '@type'            => 'BlogPosting',
+      'headline'         => $post->title,
+      'description'      => $post->meta_description ?? $post->excerpt,
+      'image'            => $postImg,
+      'datePublished'    => optional($post->published_at)->toIso8601String(),
+      'dateModified'     => optional($post->updated_at)->toIso8601String(),
+      'author'           => ['@type' => 'Organization', 'name' => 'DALI'],
+      'publisher'        => ['@type' => 'Organization', 'name' => 'DALI', 'logo' => ['@type' => 'ImageObject', 'url' => asset('images/logo_dali.png')]],
+      'mainEntityOfPage' => $postUrl,
+      'url'              => $postUrl,
+    ],
+    [
+      '@type' => 'BreadcrumbList',
+      'itemListElement' => [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Trang chủ', 'item' => url('/')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => route('blog')],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => $post->title, 'item' => $postUrl],
+      ],
+    ],
+  ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
 @if(!empty($settings['ga_id']))<script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings['ga_id'] }}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $settings["ga_id"] }}');</script>@endif
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">

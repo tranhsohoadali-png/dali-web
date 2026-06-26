@@ -61,7 +61,10 @@ class WebsiteController extends Controller
         }
         $bestSellers = $bestSellers->take(8)->values();
 
-        return compact('hero','categories','products','bestSellers','settings');
+        // Bài viết mới nhất cho khu "Cảm hứng & Hướng dẫn" ở trang chủ
+        $latestPosts = \App\Models\Post::where('is_published', true)->latest('published_at')->take(3)->get();
+
+        return compact('hero','categories','products','bestSellers','settings','latestPosts');
     }
 
     public function products(Request $request)
@@ -460,7 +463,8 @@ class WebsiteController extends Controller
     {
         $products   = Product::where('is_active', true)->get(['slug','updated_at']);
         $categories = Category::where('is_active', true)->get(['slug','updated_at']);
-        return response()->view('website.sitemap', compact('products','categories'))
+        $posts      = \App\Models\Post::where('is_published', true)->get(['slug','updated_at']);
+        return response()->view('website.sitemap', compact('products','categories','posts'))
                ->header('Content-Type', 'text/xml');
     }
 

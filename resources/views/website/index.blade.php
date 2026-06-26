@@ -784,6 +784,7 @@ footer{
     <li><a href="{{ route('products') }}">Sản phẩm</a></li>
     <li><a href="{{ route('thiet-ke') }}">🎨 Thiết kế</a></li>
     <li><a href="{{ route('guide') }}">Hướng dẫn tô</a></li>
+    <li><a href="{{ route('blog') }}">Blog</a></li>
     <li><a href="{{ route('track-order') }}">Tra cứu đơn</a></li>
     <li><a href="#ve-chung-toi">Về chúng tôi</a></li>
     <li><a href="#lien-he">Liên hệ</a></li>
@@ -808,7 +809,8 @@ footer{
   <a href="{{ route('home') }}"><i class="ri-home-5-line"></i> Trang chủ</a>
   <a href="{{ route('products') }}"><i class="ri-palette-line"></i> Sản phẩm</a>
   <a href="{{ route('thiet-ke') }}"><i class="ri-magic-line"></i> Thiết kế theo yêu cầu</a>
-  <a href="{{ route('guide') }}"><i class="ri-play-circle-line"></i> Hướng dẫn tô &amp; Blog</a>
+  <a href="{{ route('guide') }}"><i class="ri-play-circle-line"></i> Hướng dẫn tô</a>
+  <a href="{{ route('blog') }}"><i class="ri-article-line"></i> Blog &amp; Cảm hứng</a>
   <a href="{{ route('cart') }}"><i class="ri-shopping-cart-2-line"></i> Giỏ hàng</a>
   <a href="{{ route('track-order') }}"><i class="ri-search-line"></i> Tra cứu đơn hàng</a>
   <a href="#lien-he"><i class="ri-phone-line"></i> Liên hệ</a>
@@ -1136,6 +1138,50 @@ function filterByCategory(catId){
   <a href="{{ route('products') }}" class="btn-white">Xem tất cả sản phẩm →</a>
 </div>
 
+<!-- BLOG / CẢM HỨNG & HƯỚNG DẪN -->
+@if(!empty($latestPosts) && $latestPosts->count())
+<section class="blog-home" id="blog-home">
+  <style>
+    .blog-home{max-width:1200px;margin:0 auto;padding:56px 5%}
+    .blog-home .bh-head{text-align:center;margin-bottom:34px}
+    .blog-home .bh-head h2{font-size:clamp(24px,3vw,34px);font-weight:900;color:#1C3A0A;margin-bottom:8px}
+    .blog-home .bh-head p{color:#4A8A1A;font-size:15px}
+    .blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+    .blog-card{background:#fff;border:1.5px solid #C8E89A;border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
+    .blog-card:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(58,122,10,.14)}
+    .blog-card .bc-cover{height:178px;background:linear-gradient(135deg,#E8F9D0,#CCEF90);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden}
+    .blog-card .bc-cover img{width:100%;height:100%;object-fit:cover}
+    .blog-card .bc-body{padding:16px 18px;display:flex;flex-direction:column;flex:1}
+    .blog-card .bc-cat{align-self:flex-start;background:#E8F9D0;color:#3E7A0A;font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;margin-bottom:10px;border:1px solid #C8E89A}
+    .blog-card .bc-title{font-size:16px;font-weight:800;color:#1C3A0A;line-height:1.35;margin-bottom:8px}
+    .blog-card .bc-excerpt{font-size:13px;color:#4A8A1A;line-height:1.6;flex:1}
+    .blog-card .bc-more{margin-top:12px;font-size:13px;font-weight:800;color:#3A9A12}
+    @media(max-width:860px){.blog-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.blog-grid{grid-template-columns:1fr}}
+  </style>
+  <div class="bh-head">
+    <h2>📖 Cảm hứng &amp; Hướng dẫn tô tranh</h2>
+    <p>Mẹo tô đẹp, cách chọn tranh, ý tưởng quà tặng — từ đội ngũ DALI</p>
+  </div>
+  <div class="blog-grid">
+    @foreach($latestPosts as $bp)
+    <a href="{{ route('blog.post', $bp->slug) }}" class="blog-card">
+      <div class="bc-cover">
+        @if($bp->cover_image)<img src="{{ asset('storage/'.$bp->cover_image) }}" alt="{{ $bp->title }}" loading="lazy">@else<span>🎨</span>@endif
+      </div>
+      <div class="bc-body">
+        @if($bp->category)<span class="bc-cat">{{ $bp->category }}</span>@endif
+        <div class="bc-title">{{ $bp->title }}</div>
+        <div class="bc-excerpt">{{ \Illuminate\Support\Str::limit($bp->excerpt, 100) }}</div>
+        <div class="bc-more">Đọc bài →</div>
+      </div>
+    </a>
+    @endforeach
+  </div>
+  <div style="text-align:center;margin-top:30px"><a href="{{ route('blog') }}" class="btn-primary">Xem tất cả bài viết →</a></div>
+</section>
+@endif
+
 <!-- FOOTER -->
 <footer id="lien-he">
   <div class="footer-grid">
@@ -1150,6 +1196,7 @@ function filterByCategory(catId){
     <div class="footer-col"><h4>Sản phẩm</h4><ul>
       <li><a href="{{ route('products') }}">Tất cả sản phẩm</a></li>
       <li><a href="{{ route('thiet-ke') }}">🎨 Thiết kế theo yêu cầu</a></li>
+      <li><a href="{{ route('blog') }}">📖 Blog &amp; Cảm hứng</a></li>
       <li><a href="{{ route('products') }}">Tranh phong cảnh</a></li>
       <li><a href="{{ route('products') }}">Tranh hoa &amp; thực vật</a></li>
       <li><a href="{{ route('products') }}">Tranh động vật</a></li>
