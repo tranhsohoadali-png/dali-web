@@ -2,6 +2,8 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>{{ url('/') }}</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>{{ route('products') }}</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>{{ route('thiet-ke') }}</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>{{ route('guide') }}</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>{{ route('track-order') }}</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   @foreach($products as $p)
   <url>
@@ -13,7 +15,8 @@
   @endforeach
   @foreach($categories as $cat)
   <url>
-    <loc>{{ route('products') }}?category={{ $cat->slug }}</loc>
+    <loc>{{ route('category', $cat->slug) }}</loc>
+    <lastmod>{{ $cat->updated_at->format('Y-m-d') }}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

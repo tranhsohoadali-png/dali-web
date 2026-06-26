@@ -322,19 +322,22 @@ tailwind.config = {
   </div>
 </section>
 {{-- ════════ SECTION 10 — FAQ ════════ --}}
+@php
+$faqs = [
+  ['Không biết vẽ có tô được không?','Hoàn toàn được! Tranh chia sẵn từng ô có số, bạn chỉ việc tô màu đúng số tương ứng. Người chưa từng vẽ vẫn ra thành phẩm đẹp.'],
+  ['Bao lâu nhận hàng?','Sau khi đặt cọc, shop thiết kế & gửi bản xem trước qua Zalo (thường trong ngày). Ưng rồi tranh in & giao trong 24–72 giờ tùy khu vực (toàn quốc).'],
+  ['Ảnh chụp điện thoại có làm được không?','Có. Chỉ cần ảnh rõ mặt/chủ thể. Shop sẽ chỉnh nét & thiết kế thủ công cho đẹp.'],
+  ['Có được xem trước không?','Có — sau khi đặt cọc, shop tự thiết kế và gửi bản xem trước qua Zalo. Ưng mới in; không ưng, shop hoàn cọc.'],
+  ['Vì sao phải đặt cọc trước?','Cọc 20% để shop bắt đầu thiết kế thủ công cho riêng bạn. Phần còn lại trả khi nhận hàng. Nếu bạn không ưng bản thiết kế, shop hoàn lại cọc.'],
+  ['Có bảo hành không?','Có. Đổi trả miễn phí nếu tranh in lỗi, sai thiết kế hoặc hư hỏng khi vận chuyển.'],
+  ['Khác nhau giữa 24 / 36 / 48 màu là gì?','Nhiều màu hơn = tranh chi tiết và giống ảnh hơn (đặc biệt với chân dung). 24 màu hợp tranh đơn giản; 36 màu cân bằng đẹp – dễ tô; 48–60 màu cho chân dung cần độ giống cao.'],
+  ['Tôi không rành thao tác, nhờ shop làm giúp được không?','Được! Bạn chỉ cần gửi ảnh qua Zalo 0856.911.698, shop tư vấn cỡ & số màu và thiết kế giúp bạn.'],
+];
+@endphp
 <section id="faq" class="bg-white border-y border-green-100/60"><div class="max-w-3xl mx-auto px-4 md:px-6 py-12 md:py-20 lg:py-24 reveal">
   <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-center mb-8 md:mb-10">Câu hỏi thường gặp</h2>
   <div class="space-y-3">
-    @foreach([
-      ['Không biết vẽ có tô được không?','Hoàn toàn được! Tranh chia sẵn từng ô có số, bạn chỉ việc tô màu đúng số tương ứng. Người chưa từng vẽ vẫn ra thành phẩm đẹp.'],
-      ['Bao lâu nhận hàng?','Sau khi đặt cọc, shop thiết kế &amp; gửi bản xem trước qua Zalo (thường trong ngày). Ưng rồi tranh in &amp; giao trong 24–72 giờ tùy khu vực (toàn quốc).'],
-      ['Ảnh chụp điện thoại có làm được không?','Có. Chỉ cần ảnh rõ mặt/chủ thể. Shop sẽ chỉnh nét &amp; thiết kế thủ công cho đẹp.'],
-      ['Có được xem trước không?','Có — sau khi đặt cọc, shop tự thiết kế và gửi bản xem trước qua Zalo. Ưng mới in; không ưng, shop hoàn cọc.'],
-      ['Vì sao phải đặt cọc trước?','Cọc 20% để shop bắt đầu thiết kế thủ công cho riêng bạn. Phần còn lại trả khi nhận hàng. Nếu bạn không ưng bản thiết kế, shop hoàn lại cọc.'],
-      ['Có bảo hành không?','Có. Đổi trả miễn phí nếu tranh in lỗi, sai thiết kế hoặc hư hỏng khi vận chuyển.'],
-      ['Khác nhau giữa 24 / 36 / 48 màu là gì?','Nhiều màu hơn = tranh chi tiết và giống ảnh hơn (đặc biệt với chân dung). 24 màu hợp tranh đơn giản; 36 màu cân bằng đẹp – dễ tô; 48–60 màu cho chân dung cần độ giống cao.'],
-      ['Tôi không rành thao tác, nhờ shop làm giúp được không?','Được! Bạn chỉ cần gửi ảnh qua Zalo 0856.911.698, shop tư vấn cỡ &amp; số màu và thiết kế giúp bạn.'],
-    ] as $q)
+    @foreach($faqs as $q)
     <details class="bg-white rounded-2xl border border-green-100 px-5 shadow-sm">
       <summary class="flex items-center justify-between font-extrabold py-4 min-h-[44px]"><span class="text-[15px] lg:text-base">{{ $q[0] }}</span><i class="ri-add-line faq-ic text-primary text-xl transition-transform"></i></summary>
       <p class="pb-4 text-sm lg:text-[15px] text-gray-600 leading-relaxed">{{ $q[1] }}</p>
@@ -343,6 +346,17 @@ tailwind.config = {
   </div>
 </div>
 </section>
+<script type="application/ld+json">
+{!! json_encode([
+  '@context' => 'https://schema.org',
+  '@type'    => 'FAQPage',
+  'mainEntity' => array_map(fn($q) => [
+    '@type' => 'Question',
+    'name'  => $q[0],
+    'acceptedAnswer' => ['@type' => 'Answer', 'text' => $q[1]],
+  ], $faqs),
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
 
 {{-- ════════ SECTION CTA CUỐI (Stitch V2) ════════ --}}
 <section class="relative overflow-hidden bg-gradient-to-r from-[#1E7A33] to-[#37A24A] text-white py-14 md:py-20 px-4 md:px-6">

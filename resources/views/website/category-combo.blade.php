@@ -2,8 +2,25 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ $category->name }} | DALI – Chọn mã tranh</title>
-<meta name="description" content="Bộ sưu tập tranh tô màu số hóa chủ đề {{ $category->name }} – chọn mã tranh yêu thích, nhiều kích thước.">
+<title>{{ $category->name }} – Tranh Tô Màu Số Hóa | DALI</title>
+<meta name="description" content="Bộ sưu tập tranh tô màu số hóa chủ đề {{ $category->name }} – chọn mã tranh yêu thích, nhiều kích thước, giao toàn quốc.">
+<link rel="canonical" href="{{ route('category', $category->slug) }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ $category->name }} – Tranh Tô Màu Số Hóa | DALI">
+<meta property="og:description" content="Bộ sưu tập tranh tô màu số hóa chủ đề {{ $category->name }} – chọn mã tranh yêu thích, nhiều kích thước.">
+<meta property="og:url" content="{{ route('category', $category->slug) }}">
+<meta property="og:image" content="{{ asset('images/og-home.jpg') }}">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{!! json_encode([
+  '@context' => 'https://schema.org',
+  '@type' => 'BreadcrumbList',
+  'itemListElement' => [
+    ['@type' => 'ListItem', 'position' => 1, 'name' => 'Trang chủ', 'item' => url('/')],
+    ['@type' => 'ListItem', 'position' => 2, 'name' => $category->name, 'item' => route('category', $category->slug)],
+  ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 <style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>

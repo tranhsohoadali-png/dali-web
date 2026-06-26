@@ -2,7 +2,57 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ $product->name }} | DALI</title>
+@php
+  $pDesc = trim(strip_tags($product->description ?? ''));
+  $pDesc = $pDesc !== '' ? \Illuminate\Support\Str::limit($pDesc, 155) : ('Mua ' . $product->name . ' — tranh tô màu số hóa DALI: canvas in sẵn số + bộ màu pha sẵn + cọ, giao toàn quốc.');
+  $pImg  = $product->main_image ? asset('storage/'.$product->main_image) : asset('images/og-home.jpg');
+  $pUrl  = route('product', $product->slug);
+  $pCat  = $product->category;
+  $crumbs = [['name' => 'Trang chủ', 'item' => url('/')]];
+  if ($pCat) $crumbs[] = ['name' => $pCat->name, 'item' => route('category', $pCat->slug)];
+  $crumbs[] = ['name' => $product->name, 'item' => $pUrl];
+@endphp
+<title>{{ $product->name }} — Tranh Tô Màu Số Hóa | DALI</title>
+<meta name="description" content="{{ $pDesc }}">
+<link rel="canonical" href="{{ $pUrl }}">
+<meta property="og:type" content="product">
+<meta property="og:title" content="{{ $product->name }} | DALI">
+<meta property="og:description" content="{{ $pDesc }}">
+<meta property="og:image" content="{{ $pImg }}">
+<meta property="og:url" content="{{ $pUrl }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $product->name }} | DALI">
+<meta name="twitter:description" content="{{ $pDesc }}">
+<meta name="twitter:image" content="{{ $pImg }}">
+<script type="application/ld+json">
+{!! json_encode([
+  '@context' => 'https://schema.org',
+  '@graph' => [
+    [
+      '@type'       => 'Product',
+      'name'        => $product->name,
+      'image'       => $pImg,
+      'description' => $pDesc,
+      'sku'         => (string) $product->id,
+      'brand'       => ['@type' => 'Brand', 'name' => 'DALI'],
+      'category'    => optional($pCat)->name,
+      'offers'      => [
+        '@type'         => 'Offer',
+        'url'           => $pUrl,
+        'price'         => (int) $product->price_from,
+        'priceCurrency' => 'VND',
+        'availability'  => 'https://schema.org/InStock',
+      ],
+    ],
+    [
+      '@type' => 'BreadcrumbList',
+      'itemListElement' => array_map(fn($c, $i) => [
+        '@type' => 'ListItem', 'position' => $i + 1, 'name' => $c['name'], 'item' => $c['item'],
+      ], $crumbs, array_keys($crumbs)),
+    ],
+  ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 <style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
