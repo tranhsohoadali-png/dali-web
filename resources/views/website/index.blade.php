@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="description" content="{{ $settings['meta_description'] ?? 'Bộ tranh tô màu số hóa DALI – ai cũng có thể tạo ra kiệt tác hội họa của riêng mình.' }}">
-<meta property="og:title" content="{{ $settings['meta_title'] ?? 'DALI – Tô Điểm Cuộc Sống' }}">
+<meta name="description" content="{{ $settings['meta_description'] ?? 'DALI — tranh tô màu số hóa (tranh số hóa) theo ảnh: canvas in sẵn số + bộ màu pha sẵn + cọ. Tự tay tô thành tranh treo tường, giao toàn quốc, xem trước trước khi đặt.' }}">
+<meta property="og:title" content="{{ $settings['meta_title'] ?? 'Tranh Số Hóa Theo Ảnh — Tranh Tô Màu Theo Số | DALI' }}">
 <meta property="og:description" content="{{ $settings['meta_description'] ?? '' }}">
 <meta property="og:image" content="{{ asset('images/og-home.jpg') }}?v=1">
 <meta property="og:image:secure_url" content="{{ asset('images/og-home.jpg') }}?v=1">
@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="DALI — Tô Điểm Cuộc Sống">
 <meta property="og:locale" content="vi_VN">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ $settings['meta_title'] ?? 'DALI – Tô Điểm Cuộc Sống' }}">
+<meta name="twitter:title" content="{{ $settings['meta_title'] ?? 'Tranh Số Hóa Theo Ảnh — Tranh Tô Màu Theo Số | DALI' }}">
 <meta name="twitter:description" content="{{ $settings['meta_description'] ?? 'Tranh tô màu số hóa DALI – ai cũng tạo ra kiệt tác của riêng mình.' }}">
 <meta name="twitter:image" content="{{ asset('images/og-home.jpg') }}?v=1">
 {{-- Google Analytics --}}
@@ -29,7 +29,44 @@
 <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{{ $settings["fb_pixel_id"] }}');fbq('track','PageView');</script>
 @endif
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DALI – Tô Điểm Cuộc Sống</title>
+<title>{{ $settings['meta_title'] ?? 'Tranh Số Hóa Theo Ảnh — Tranh Tô Màu Theo Số | DALI' }}</title>
+<link rel="canonical" href="{{ $settings['canonical_home'] ?? url('/') }}">
+<script type="application/ld+json">
+{!! json_encode([
+  '@context' => 'https://schema.org',
+  '@graph' => array_values(array_filter([
+    [
+      '@type'  => 'Organization',
+      '@id'    => url('/').'#org',
+      'name'   => 'DALI — Tranh Tô Màu Số Hóa',
+      'url'    => url('/'),
+      'logo'   => asset('images/logo_dali.png'),
+      'sameAs' => [
+        'https://www.facebook.com/tranhtomau.dali',
+        'https://www.youtube.com/@tranhsohoadali6023',
+      ],
+    ],
+    [
+      '@type'      => 'WebSite',
+      '@id'        => url('/').'#website',
+      'url'        => url('/'),
+      'name'       => 'DALI — Tranh Tô Màu Số Hóa',
+      'inLanguage' => 'vi-VN',
+      'publisher'  => ['@id' => url('/').'#org'],
+    ],
+    (!empty($settings['shop_address']) && !empty($settings['shop_phone'])) ? [
+      '@type'      => 'Store',
+      '@id'        => url('/').'#store',
+      'name'       => 'DALI — Tranh Tô Màu Số Hóa',
+      'url'        => url('/'),
+      'image'      => asset('images/og-home.jpg'),
+      'telephone'  => $settings['shop_phone'],
+      'address'    => ['@type'=>'PostalAddress','streetAddress'=>$settings['shop_address'],'addressCountry'=>'VN'],
+      'priceRange' => '₫₫',
+    ] : null,
+  ])),
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 <style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
