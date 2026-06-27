@@ -930,7 +930,7 @@ footer{
           <img src="{{ asset('storage/'.$cat->image) }}" alt="{{ $cat->name }}" loading="lazy">
           <div class="cat-hover"><span><i class="ri-arrow-right-line"></i> Xem chủ đề {{ $cat->name }}</span></div>
         @else
-          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" alt="" loading="lazy">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" alt="Tranh tô màu số hóa DALI" loading="lazy">
           <div class="cat-overlay"></div>
           <div class="cat-info">
             <h3>{{ $cat->icon }} {{ $cat->name }}</h3>

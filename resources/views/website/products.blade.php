@@ -3,11 +3,17 @@
 <head>
 <meta charset="UTF-8"><meta name="description" content="Xem tất cả {{ $products->total() }} mẫu tranh tô màu số hóa DALI – chất lượng cao, giao hàng toàn quốc.">
 <meta property="og:title" content="Tất cả sản phẩm | DALI Tranh Tô Màu Số Hóa">
-<meta property="og:image" content="{{ asset('images/logo_dali.png') }}">
+<meta property="og:image" content="{{ asset('images/og-home.jpg') }}">
+<meta property="og:description" content="Xem tất cả {{ $products->total() }} mẫu tranh tô màu số hóa DALI – nhiều chủ đề, nhiều kích thước, giao toàn quốc.">
+<meta property="og:url" content="{{ route('products') }}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tất cả tranh tô màu số hóa | DALI">
 @if(!empty($settings['ga_id']))<script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings['ga_id'] }}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $settings["ga_id"] }}');</script> @endif
 @if(!empty($settings['fb_pixel_id']))<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{{ $settings["fb_pixel_id"] }}');fbq('track','PageView');</script> @endif
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sản phẩm | DALI – Tô Điểm Cuộc Sống</title>
+<title>Tranh Tô Màu Số Hóa — Tất Cả Mẫu Tranh Đẹp | DALI</title>
+<link rel="canonical" href="{{ route('products') }}">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 <style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>

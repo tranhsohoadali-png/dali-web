@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ $category->name }} – Tranh Tô Màu Số Hóa | DALI</title>
-<meta name="description" content="Bộ sưu tập tranh tô màu số hóa chủ đề {{ $category->name }} – chọn mã tranh yêu thích, nhiều kích thước, giao toàn quốc.">
+<meta name="description" content="{{ $category->description ? \Illuminate\Support\Str::limit(strip_tags($category->description), 155) : 'Bộ sưu tập tranh tô màu số hóa chủ đề '.$category->name.' – chọn mã tranh yêu thích, nhiều kích thước, giao toàn quốc.' }}">
 <link rel="canonical" href="{{ route('category', $category->slug) }}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ $category->name }} – Tranh Tô Màu Số Hóa | DALI">
-<meta property="og:description" content="Bộ sưu tập tranh tô màu số hóa chủ đề {{ $category->name }} – chọn mã tranh yêu thích, nhiều kích thước.">
+<meta property="og:description" content="{{ $category->description ? \Illuminate\Support\Str::limit(strip_tags($category->description), 200) : 'Bộ sưu tập tranh tô màu số hóa chủ đề '.$category->name.' – chọn mã tranh yêu thích, nhiều kích thước.' }}">
 <meta property="og:url" content="{{ route('category', $category->slug) }}">
 <meta property="og:image" content="{{ asset('images/og-home.jpg') }}">
 <meta name="twitter:card" content="summary_large_image">
@@ -309,6 +309,9 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(175deg,#1C5200,
   <!-- RIGHT: chọn -->
   <div class="combo-content">
     <h1 class="c-title">{{ $category->icon }} Tổng hợp tranh tô màu số hóa chủ đề {{ $category->name }}</h1>
+    @if(trim($category->description))
+    <p style="color:var(--tx2);font-size:14px;line-height:1.7;margin:8px 0 4px;max-width:780px">{{ $category->description }}</p>
+    @endif
     <div class="c-meta">
       @php
         $stars = '';

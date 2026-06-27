@@ -288,7 +288,7 @@ tailwind.config = {
         ['sen-goc','Thu_Art','Đẹp hơn cả mong đợi!'],
       ] as $g)
       <div class="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-xl2 transition">
-        <img src="{{ asset('images/thiet-ke/'.$g[0].'.jpg') }}" loading="lazy" class="w-full h-36 lg:h-auto lg:aspect-[4/5] object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="">
+        <img src="{{ asset('images/thiet-ke/'.$g[0].'.jpg') }}" loading="lazy" class="w-full h-36 lg:h-auto lg:aspect-[4/5] object-cover cursor-zoom-in" onclick="openZoom(this.src)" alt="Tranh tô màu số hóa DALI của khách {{ $g[1] }}">
         <div class="px-3 py-2"><div class="text-accent text-[10px] leading-none">★★★★★</div><div class="text-xs lg:text-[13px] font-bold text-primaryd mt-0.5"><i class="ri-instagram-line"></i> {{ '@'.$g[1] }}</div><div class="text-[11px] lg:text-xs text-gray-600 leading-snug">“{{ $g[2] }}”</div></div>
       </div>
       @endforeach
