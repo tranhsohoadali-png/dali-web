@@ -514,6 +514,9 @@ var selJ = (function(){ var k = PRICING.colors.findIndex(function(c){ return +c 
 function fmtVnd(n){ return n.toLocaleString('vi-VN')+'đ'; }
 function curPrice(){ return PRICING.sizes[selI].prices[selJ] || 0; }
 function curDeposit(){ return Math.round(curPrice()*0.2/1000)*1000; }
+// Số màu hợp lệ theo cỡ: giá 0 = cỡ đó KHÔNG bán mức màu này (vd 120 màu chỉ có ở 1.2×2m).
+function colorOK(i,j){ return (PRICING.sizes[i].prices[j]||0) > 0; }
+function maxColorIdx(i){ var p=PRICING.sizes[i].prices, m=0; for(var j=0;j<p.length;j++){ if((p[j]||0)>0) m=j; } return m; }
 // Thanh nổi mobile: sau khi hiện khu đặt hàng -> nút đặt cọc kèm số tiền cọc
 function updateStickyCta(){
   var sc=document.getElementById('stickyCta');
@@ -527,16 +530,19 @@ function paintChips(){
     b.className='pick border-2 rounded-xl px-4 py-3 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
   });
   document.querySelectorAll('.sizePrice').forEach(sp=>{
-    sp.textContent = fmtVnd(PRICING.sizes[+sp.dataset.i].prices[selJ] || 0);
+    var i=+sp.dataset.i, pj=colorOK(i,selJ)?selJ:maxColorIdx(i);   // cỡ không có mức màu đang chọn -> hiện giá ở mức màu cao nhất của cỡ đó
+    sp.textContent = fmtVnd(PRICING.sizes[i].prices[pj] || 0);
   });
   document.querySelectorAll('#colorChips .pick').forEach(b=>{
-    var on = +b.dataset.j === selJ;
+    var j=+b.dataset.j, ok=colorOK(selI,j);
+    b.style.display = ok ? '' : 'none';   // ẩn mức màu cỡ này không bán (vd 120 màu ở cỡ nhỏ)
+    var on = j === selJ;
     b.className='pick border-2 rounded-xl px-4 py-3 text-sm font-bold '+(on?'border-primary bg-green-50 text-primaryd':'border-green-200 bg-white');
   });
   document.getElementById('resultOrderLabel').textContent = 'Đặt cọc 20% — '+fmtVnd(curDeposit());
   updateStickyCta();
 }
-document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selI=+b.dataset.i; paintChips(); }));
+document.querySelectorAll('#sizeChips .pick').forEach(b=>b.addEventListener('click',()=>{ selI=+b.dataset.i; if(!colorOK(selI,selJ)) selJ=maxColorIdx(selI); paintChips(); }));
 document.querySelectorAll('#colorChips .pick').forEach(b=>b.addEventListener('click',()=>{ selJ=+b.dataset.j; paintChips(); }));
 paintChips();
 document.getElementById('resultOrderBtn').addEventListener('click',()=>openOrder(PRICING.sizes[selI].label+' — '+fmtVnd(curPrice())+' · '+PRICING.colors[selJ]+' màu · Cọc 20%: '+fmtVnd(curDeposit())));
