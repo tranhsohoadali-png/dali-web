@@ -89,6 +89,7 @@ body{background:var(--bg);color:var(--tx)}
                 }
               @endphp
               @if($noteClean)<div class="info-row"><span class="info-label">Ghi chú</span><span class="info-val">{{ $noteClean }}</span></div>@endif
+              @if($order->tomau_ref)<div class="info-row"><span class="info-label">CTV tomau</span><span class="info-val"><span style="font-size:12px;padding:2px 8px;border-radius:20px;font-weight:700;background:#F3E8FF;color:#7C3AED">{{ $order->tomau_ref }}</span> <span style="font-size:11px;color:#6B7280">· hoa hồng chéo báo về tomau khi đơn thanh toán</span></span></div>@endif
               <div class="info-row"><span class="info-label">Ngày đặt</span><span class="info-val">{{ $order->created_at->format('d/m/Y H:i') }}</span></div>
             </div>
           </div>

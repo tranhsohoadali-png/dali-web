@@ -346,6 +346,7 @@ class ThietKeController extends Controller
                 'design_status'    => $awaitDesign ? 'pending' : null,
                 'payment_method'   => 'COD',
                 'payment_status'   => 'pending',
+                'tomau_ref'        => \App\Support\TomauRef::current($r),
                 'subtotal'         => $price,
                 'ship_fee'         => 0,
                 'total'            => $price,

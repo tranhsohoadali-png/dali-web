@@ -7,7 +7,7 @@ class Order extends Model
     protected $fillable = [
         'code','customer_name','customer_phone','customer_city',
         'customer_address','note','coupon_code','coupon_discount',
-        'affiliate_code','affiliate_commission','commission_reversed',
+        'affiliate_code','affiliate_commission','commission_reversed','tomau_ref',
         'payment_method','payment_status','status','design_status',
         'subtotal','discount','ship_fee','total','deposit','deposit_paid',
         'vtp_order_number','vtp_status','vtp_status_name','vtp_status_at','vtp_service','weight',
