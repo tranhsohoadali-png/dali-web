@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Route;
  * Tiền tố /api tự thêm bởi Laravel. Tất cả bảo vệ bằng token (integration.auth).
  */
 Route::prefix('integration')->middleware(['integration.auth', 'throttle:60,1'])->group(function () {
-    Route::get('ping',     [IntegrationController::class, 'ping']);
-    Route::get('products', [IntegrationController::class, 'products']);
-    Route::get('leads',    [IntegrationController::class, 'leads']);
-    Route::post('posts',   [IntegrationController::class, 'createPost']);
+    Route::get('ping',         [IntegrationController::class, 'ping']);
+    Route::get('products',     [IntegrationController::class, 'products']);
+    Route::get('catalog-meta', [IntegrationController::class, 'catalogMeta']);
+    Route::post('products',    [IntegrationController::class, 'createProduct']);
+    Route::get('leads',        [IntegrationController::class, 'leads']);
+    Route::post('posts',       [IntegrationController::class, 'createPost']);
 });
