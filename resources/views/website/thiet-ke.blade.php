@@ -117,20 +117,27 @@ tailwind.config = {
         <i class="ri-arrow-right-line text-gray-300"></i>
         <span class="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-[#0068FF] rounded-full px-3 py-1.5"><i class="ri-message-3-fill"></i> Shop nhắn Zalo tư vấn</span>
       </div>
+      {{-- ✨ Slider ảnh gốc → tranh tô số (kéo qua lại để hiểu dịch vụ ngay) --}}
+      <div class="mb-6">
+        <div class="text-center mb-3"><span class="inline-block text-xs font-black tracking-wide uppercase text-primary bg-green-50 border border-green-200 rounded-full px-3 py-1">✨ Ảnh của bạn → tranh tô số</span></div>
+        <div id="baSlider" class="relative mx-auto max-w-[330px] aspect-[3/4] rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl2 select-none cursor-ew-resize" style="touch-action:none">
+          <img src="{{ asset('images/thiet-ke/ba-map.jpg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none" draggable="false" alt="Tranh tô số DALI từ ảnh">
+          <img id="baBefore" src="{{ asset('images/thiet-ke/ba-goc.jpg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none" style="clip-path:inset(0 50% 0 0)" draggable="false" alt="Ảnh gốc của khách">
+          <span class="absolute top-3 left-3 bg-black/55 text-white text-[11px] font-bold px-2.5 py-1 rounded-full pointer-events-none">Ảnh gốc</span>
+          <span class="absolute top-3 right-3 bg-white/85 text-primaryd text-[11px] font-black px-2.5 py-1 rounded-full pointer-events-none">Tranh tô số</span>
+          <div id="baDivider" class="absolute top-0 bottom-0 w-1 bg-white/90 pointer-events-none" style="left:50%"><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full grad flex items-center justify-center text-white shadow-lg ring-4 ring-white/60"><i class="ri-arrow-left-right-line text-lg"></i></div></div>
+        </div>
+        <div class="text-center text-xs text-gray-500 mt-2.5 font-semibold">👈 Kéo qua lại để xem ảnh biến thành tranh tô số 👉</div>
+      </div>
+      <script>
+      (function(){var s=document.getElementById('baSlider');if(!s)return;var b=document.getElementById('baBefore'),d=document.getElementById('baDivider');function set(p){p=Math.max(2,Math.min(98,p));b.style.clipPath='inset(0 '+(100-p)+'% 0 0)';d.style.left=p+'%';}function mv(e){var r=s.getBoundingClientRect();var x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;set(x/r.width*100);}var on=false;s.addEventListener('pointerdown',function(e){on=true;try{s.setPointerCapture(e.pointerId);}catch(_){}mv(e);});s.addEventListener('pointermove',function(e){if(on)mv(e);});window.addEventListener('pointerup',function(){on=false;});})();
+      </script>
       <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" class="hidden">
-      <div class="grid sm:grid-cols-[1fr_auto] gap-4 items-stretch">
-        <div id="dropZone" class="border-2 border-dashed border-green-300 rounded-2xl bg-green-50/60 px-6 py-10 text-center cursor-pointer hover:border-primary hover:bg-green-50 transition">
-          <div class="w-14 h-14 mx-auto mb-3 rounded-full grad flex items-center justify-center text-white text-2xl"><i class="ri-image-add-line"></i></div>
-          <div class="font-extrabold text-lg">Kéo thả hoặc chạm để chọn ảnh</div>
-          <div class="text-xs text-gray-500 mt-1">PNG · JPG · WEBP — ảnh càng rõ kết quả càng đẹp</div>
-          <span class="inline-block mt-4 grad-btn text-white text-sm font-extrabold px-6 py-3 rounded-xl"><i class="ri-folder-image-line"></i> Chọn ảnh</span>
-        </div>
-        {{-- Demo trước→sau: ảnh thật của khách --}}
-        <div class="flex items-center justify-center gap-2 lg:gap-3 self-center">
-          <img src="{{ asset('images/thiet-ke/be-goc.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 lg:w-36 lg:h-48 object-cover rounded-xl border border-green-100 cursor-zoom-in" alt="Ảnh gốc">
-          <span class="text-primary text-2xl lg:text-3xl font-black">→</span>
-          <img src="{{ asset('images/thiet-ke/be-art.jpg') }}" onclick="openZoom(this.src)" class="w-24 h-32 sm:w-28 sm:h-36 lg:w-36 lg:h-48 object-cover rounded-xl border-2 border-primary/40 cursor-zoom-in" alt="Tranh DALI từ ảnh">
-        </div>
+      <div id="dropZone" class="border-2 border-dashed border-green-300 rounded-2xl bg-green-50/60 px-6 py-10 text-center cursor-pointer hover:border-primary hover:bg-green-50 transition">
+        <div class="w-14 h-14 mx-auto mb-3 rounded-full grad flex items-center justify-center text-white text-2xl"><i class="ri-image-add-line"></i></div>
+        <div class="font-extrabold text-lg">Kéo thả hoặc chạm để chọn ảnh</div>
+        <div class="text-xs text-gray-500 mt-1">PNG · JPG · WEBP — ảnh càng rõ kết quả càng đẹp</div>
+        <span class="inline-block mt-4 grad-btn text-white text-sm font-extrabold px-6 py-3 rounded-xl"><i class="ri-folder-image-line"></i> Chọn ảnh</span>
       </div>
       {{-- Checklist ảnh đẹp / ảnh nên tránh --}}
       <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs mt-4 text-gray-600">
@@ -671,7 +678,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
         +'</div>';
     }
     html+='<a href="https://zalo.me/0856911698" target="_blank" class="inline-block mt-3 bg-[#0068FF] text-white font-extrabold px-5 py-2.5 rounded-xl">💬 Gửi ảnh CK qua Zalo (mã '+d.code+')</a>';
-    html+='<a href="{{ rtrim(config('tomau.url','https://tomau.tranhdali.vn'),'/') }}?utm_source=tranhdali.vn&utm_medium=order_success&utm_campaign=cross_promo" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,#FFF7ED,#FEF1F0);border:1px solid #FBD6BF;border-radius:16px;text-decoration:none;text-align:left"><span style="flex-shrink:0;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#fff;border-radius:12px">🖍️</span><span style="flex:1"><b style="display:block;color:#B5451F;font-size:13px;margin-bottom:1px">Cho bé nhà bạn tô tranh nhé! 🎨</b><span style="display:block;color:#6B4A3A;font-size:12px;line-height:1.5">Tô Tranh Dali — kho tranh tô màu <b>miễn phí</b> cho bé, tải về in tại nhà</span></span><span style="flex-shrink:0;color:#E15B2D;font-weight:800;font-size:18px">→</span></a>';
+    html+='<a href="{{ rtrim(config('tomau.url','https://tomau.tranhdali.vn'),'/') }}?utm_source=tranhdali.vn&utm_medium=order_success&utm_campaign=cross_promo" target="_blank" rel="noopener" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px;padding:13px 15px;background:linear-gradient(135deg,#FFF7ED,#FEF1F0);border:1px solid #FBD6BF;border-radius:18px;text-decoration:none;text-align:left"><span style="flex-shrink:0;width:70px;height:70px;border-radius:13px;overflow:hidden;background:#fff;border:1px solid #FBD6BF"><img src="{{ asset('images/tomau-promo-be.jpg') }}" alt="Tranh tô màu cho bé" style="width:100%;height:100%;object-fit:cover;display:block"></span><span style="flex:1;min-width:150px"><b style="display:block;color:#E15B2D;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">🎁 Quà miễn phí cho bé</b><b style="display:block;color:#B5451F;font-size:14px;margin-bottom:2px">Cho bé nhà bạn tô tranh nhé! 🎨</b><span style="display:block;color:#6B4A3A;font-size:12px;line-height:1.5">Kho tranh tô màu <b style="color:#E15B2D">MIỄN PHÍ</b> cho bé, tải về in tại nhà</span></span><span style="flex-shrink:0;font-weight:800;font-size:12.5px;color:#fff;white-space:nowrap;background:linear-gradient(135deg,#F5943F,#E15B2D);padding:10px 16px;border-radius:999px">Khám phá →</span></a>';
     document.getElementById('orderDesc').innerHTML=html;
     orderDone=true;
   }catch(e){ alert('Lỗi kết nối, thử lại sau.'); }
