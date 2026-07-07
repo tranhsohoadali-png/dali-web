@@ -225,6 +225,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       <a href="{{ route('thiet-ke') }}" class="btn-ghost"><i class="ri-magic-line"></i> Thiết kế tranh của bạn</a>
     </div>
   </div>
+  @include('partials.tomau-promo', ['place' => 'guide'])
 </div>
 
 <footer>

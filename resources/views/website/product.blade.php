@@ -413,6 +413,8 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
   @endif
 </div>
 
+@include('partials.tomau-promo', ['place' => 'product_footer', 'variant' => 'mini'])
+
 {{-- Related Products --}}
 @if($related->count())
 <div class="related-section">

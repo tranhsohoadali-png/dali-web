@@ -322,6 +322,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       <div style="text-align:center;margin-top:20px">
         <a href="{{ route('products') }}" class="btn-primary">Tiếp tục mua sắm →</a>
       </div>
+      @include('partials.tomau-promo', ['place' => 'tracking'])
     </div>
   </div>
 </div>

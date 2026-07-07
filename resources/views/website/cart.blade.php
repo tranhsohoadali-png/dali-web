@@ -161,6 +161,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       <div class="empty-title">Giỏ hàng trống</div>
       <div class="empty-sub">Hãy thêm sản phẩm vào giỏ hàng để tiến hành đặt mua</div>
       <a href="{{ route('products') }}" class="btn-primary"><i class="ri-palette-line"></i> Xem tất cả sản phẩm</a>
+      @include('partials.tomau-promo', ['place' => 'cart_empty'])
     </div>
     @endif
   </div>

@@ -184,6 +184,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     </div>
   @endif
 
+  @include('partials.tomau-promo', ['place' => 'blog_list'])
   @if($posts->hasPages())
   <div class="pagination">
     @if($posts->onFirstPage())

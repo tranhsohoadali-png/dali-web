@@ -214,6 +214,8 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
     <a href="{{ route('products') }}" class="btn-cta">Xem tất cả tranh DALI →</a>
   </div>
 
+  @include('partials.tomau-promo', ['place' => 'blog'])
+
   {{-- Related posts --}}
   @if($related->count())
   <div class="related-section">
