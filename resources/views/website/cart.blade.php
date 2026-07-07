@@ -252,6 +252,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
         <p>Cảm ơn bạn đã tin tưởng DALI.<br>Chúng tôi sẽ liên hệ xác nhận trong <strong>30 phút</strong>.</p>
         <div class="order-code" id="successCode">DALI-000000</div>
         <p style="font-size:12px;color:var(--tx3)">Dùng mã này để <a href="{{ route('track-order') }}" style="color:var(--g);font-weight:700">tra cứu đơn hàng</a></p>
+        @include('partials.tomau-promo', ['place' => 'order'])
         <a href="{{ route('products') }}" class="btn-primary" style="margin-top:14px">Tiếp tục mua sắm →</a>
       </div>
     </div>

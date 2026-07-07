@@ -664,6 +664,7 @@ async function submitReview(){
         <p>Cảm ơn bạn đã tin tưởng DALI.<br>Chúng tôi sẽ liên hệ xác nhận trong vòng <strong>30 phút</strong>.</p>
         <div class="order-code-success" id="successCode">DALI-000000</div>
         <p style="font-size:12px;color:var(--tx3)">Lưu mã để <a href="{{ route('track-order') }}" style="color:var(--g)">tra cứu đơn hàng</a></p>
+        @include('partials.tomau-promo', ['place' => 'order'])
         <button class="btn-close-modal" onclick="closeOrder()">Tiếp tục mua sắm</button>
       </div>
     </div>

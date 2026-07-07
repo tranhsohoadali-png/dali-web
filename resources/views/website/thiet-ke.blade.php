@@ -671,6 +671,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
         +'</div>';
     }
     html+='<a href="https://zalo.me/0856911698" target="_blank" class="inline-block mt-3 bg-[#0068FF] text-white font-extrabold px-5 py-2.5 rounded-xl">💬 Gửi ảnh CK qua Zalo (mã '+d.code+')</a>';
+    html+='<a href="{{ rtrim(config('tomau.url','https://tomau.tranhdali.vn'),'/') }}?utm_source=tranhdali.vn&utm_medium=order_success&utm_campaign=cross_promo" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,#FFF7ED,#FEF1F0);border:1px solid #FBD6BF;border-radius:16px;text-decoration:none;text-align:left"><span style="flex-shrink:0;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#fff;border-radius:12px">🖍️</span><span style="flex:1"><b style="display:block;color:#B5451F;font-size:13px;margin-bottom:1px">Cho bé nhà bạn tô tranh nhé! 🎨</b><span style="display:block;color:#6B4A3A;font-size:12px;line-height:1.5">Tô Tranh Dali — kho tranh tô màu <b>miễn phí</b> cho bé, tải về in tại nhà</span></span><span style="flex-shrink:0;color:#E15B2D;font-weight:800;font-size:18px">→</span></a>';
     document.getElementById('orderDesc').innerHTML=html;
     orderDone=true;
   }catch(e){ alert('Lỗi kết nối, thử lại sau.'); }

@@ -1181,6 +1181,15 @@ function filterByCategory(catId){
 @endif
 
 <!-- FOOTER -->
+{{-- ════════ Giới thiệu website anh em: Tô Tranh Dali (tomau.tranhdali.vn) ════════ --}}
+<section style="padding:38px 16px 10px;text-align:center">
+  <div style="max-width:560px;margin:0 auto">
+    <div style="font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#E15B2D;margin-bottom:5px">🎁 Quà miễn phí cho bé</div>
+    <h2 style="font-size:20px;font-weight:800;color:#1f2937;margin:0 0 5px">Nhà có bé thích tô màu? 🖍️</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 auto 2px;max-width:440px;line-height:1.55">Ghé <b>Tô Tranh Dali</b> — kho <b>tranh tô màu miễn phí</b> cho bé, tải về in tại nhà.</p>
+    @include('partials.tomau-promo', ['place' => 'home'])
+  </div>
+</section>
 <footer id="lien-he">
   <div class="footer-grid">
     <div class="footer-brand">
@@ -1314,6 +1323,7 @@ function filterByCategory(catId){
         <p>Cảm ơn bạn đã tin tưởng DALI.<br>Chúng tôi sẽ liên hệ xác nhận trong vòng <strong>30 phút</strong>.</p>
         <div class="order-code-success" id="successCode">DALI-000000</div>
         <p style="font-size:12px;color:var(--tx3)">Lưu mã này để tra cứu đơn hàng</p>
+        @include('partials.tomau-promo', ['place' => 'order'])
         <button class="btn-close-modal" onclick="closeOrder()">Tiếp tục mua sắm</button>
       </div>
     </div>
