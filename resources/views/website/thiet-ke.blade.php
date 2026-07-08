@@ -121,9 +121,9 @@ tailwind.config = {
       <div class="mb-6">
         <div class="text-center mb-3"><span class="inline-block text-xs font-black tracking-wide uppercase text-primary bg-green-50 border border-green-200 rounded-full px-3 py-1">✨ Ảnh của bạn → tranh tô số</span></div>
         <div id="baSlider" class="relative mx-auto max-w-[330px] aspect-[3/4] rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl2 select-none cursor-ew-resize" style="touch-action:none">
-          <img src="{{ asset('images/thiet-ke/ba-map.jpg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none" draggable="false" alt="Tranh tô số DALI từ ảnh">
-          <img id="baBefore" src="{{ asset('images/thiet-ke/ba-goc.jpg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none" style="clip-path:inset(0 50% 0 0)" draggable="false" alt="Ảnh gốc của khách">
-          <span class="absolute top-3 left-3 bg-black/55 text-white text-[11px] font-bold px-2.5 py-1 rounded-full pointer-events-none">Ảnh gốc</span>
+          <img src="{{ asset('images/thiet-ke/girl-map.jpg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none" draggable="false" alt="Tranh tô số DALI từ ảnh">
+          <img id="baBefore" src="{{ asset('images/thiet-ke/girl-goc.jpg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none" style="clip-path:inset(0 50% 0 0)" draggable="false" alt="Ảnh gốc của khách">
+          <span class="absolute top-3 left-3 bg-black/55 text-white text-[11px] font-bold px-2.5 py-1 rounded-full pointer-events-none">Tranh màu</span>
           <span class="absolute top-3 right-3 bg-white/85 text-primaryd text-[11px] font-black px-2.5 py-1 rounded-full pointer-events-none">Tranh tô số</span>
           <div id="baDivider" class="absolute top-0 bottom-0 w-1 bg-white/90 pointer-events-none" style="left:50%"><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full grad flex items-center justify-center text-white shadow-lg ring-4 ring-white/60"><i class="ri-arrow-left-right-line text-lg"></i></div></div>
         </div>
