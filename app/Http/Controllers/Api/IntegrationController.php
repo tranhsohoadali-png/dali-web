@@ -121,15 +121,17 @@ class IntegrationController extends Controller
         $data = $r->validate([
             'name'         => 'required|string|max:150',
             'description'  => 'required|string|max:5000',
+            // LƯU Ý: Rule::exists()->where(..., false) serialize PHP false thành CHUỖI RỖNG
+            // ("combo_only,\"\"") → so với 0 trong DB luôn fail. Phải dùng số 1/0 tường minh.
             'category_id'  => [
                 'required', 'integer',
                 \Illuminate\Validation\Rule::exists('categories', 'id')
-                    ->where('is_active', true)->where('combo_only', false),
+                    ->where('is_active', 1)->where('combo_only', 0),
             ],
             'size_ids'     => 'required|array|min:1',
             'size_ids.*'   => [
                 'integer',
-                \Illuminate\Validation\Rule::exists('sizes', 'id')->where('is_active', true),
+                \Illuminate\Validation\Rule::exists('sizes', 'id')->where('is_active', 1),
             ],
             'price'        => 'nullable|integer|min:1000',
             'sale_price'   => 'nullable|integer|min:1000',
