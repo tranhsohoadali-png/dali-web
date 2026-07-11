@@ -112,6 +112,11 @@ nav.nav-hidden{transform:translateY(-100%)}
 .spec-item{background:#fff;border-radius:10px;padding:11px 14px;border:1px solid var(--bd)}
 .spec-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;margin-bottom:4px}
 .spec-value{font-size:15px;font-weight:800;color:var(--char)}
+.included-box{background:var(--gll);border:1px solid #C0DD97;border-radius:12px;padding:12px 14px;margin-bottom:18px}
+.included-head{font-size:12.5px;font-weight:800;color:var(--gd);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.included-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px}
+.included-grid>span{font-size:12.5px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:6px}
+.included-grid i{color:var(--g);font-size:14px;flex-shrink:0}
 /* Qty + Buttons */
 .qty-label{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:8px}
 .qty-control{display:flex;align-items:center;border:1.5px solid var(--bd);border-radius:10px;overflow:hidden;width:fit-content;margin-bottom:16px}
@@ -375,15 +380,16 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       </div>
       @endif
 
-      {{-- Specs --}}
-      @if($product->colors_count)
-      <div class="specs-grid">
-        <div class="spec-item">
-          <div class="spec-label">Số màu</div>
-          <div class="spec-value">{{ $product->colors_count }} màu</div>
+      {{-- Trọn bộ đã gồm — THAY ô "Số màu" cũ (khách hay nhầm là nút chọn & tưởng bộ màu mua riêng) --}}
+      <div class="included-box">
+        <div class="included-head"><i class="ri-checkbox-circle-fill"></i> Giá đã gồm trọn bộ — không mua thêm gì</div>
+        <div class="included-grid">
+          <span><i class="ri-image-line"></i> Canvas in sẵn số</span>
+          @if($product->colors_count)<span><i class="ri-palette-line"></i> Bộ {{ $product->colors_count }} màu pha sẵn</span>@endif
+          <span><i class="ri-brush-line"></i> Cọ vẽ các cỡ</span>
+          <span><i class="ri-truck-line"></i> Giao toàn quốc</span>
         </div>
       </div>
-      @endif
 
       {{-- Qty --}}
       <div class="qty-label">Số lượng</div>
