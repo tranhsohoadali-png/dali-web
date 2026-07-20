@@ -4,7 +4,21 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 @php
   $pDesc = trim(strip_tags($product->description ?? ''));
-  $pDesc = $pDesc !== '' ? \Illuminate\Support\Str::limit($pDesc, 155) : ('Mua ' . $product->name . ' — tranh tô màu số hóa DALI: canvas in sẵn số + bộ màu pha sẵn + cọ, giao toàn quốc.');
+  if ($pDesc !== '') {
+      // Meta description: gom TRỌN CÂU cho tới ~160 ký tự, KHÔNG cắt cụt giữa chừng
+      // như Str::limit (mô tả sản phẩm nay dài 300–500 ký tự nên rất dễ bị cắt ngang từ).
+      // Mô tả đầy đủ vẫn hiển thị nguyên vẹn trong phần nội dung của trang.
+      $snippet = '';
+      foreach (preg_split('/(?<=[.!?])\s+/u', $pDesc) as $sentence) {
+          $next = $snippet === '' ? $sentence : $snippet . ' ' . $sentence;
+          if (mb_strlen($next) > 160) break;
+          $snippet = $next;
+      }
+      // Câu đầu tiên đã dài quá 160 → đành cắt theo ký tự
+      $pDesc = $snippet !== '' ? $snippet : \Illuminate\Support\Str::limit($pDesc, 160);
+  } else {
+      $pDesc = 'Mua ' . $product->name . ' — tranh tô màu số hóa DALI: canvas in sẵn số + bộ màu pha sẵn + cọ, giao toàn quốc.';
+  }
   $pImg  = $product->main_image ? asset('storage/'.$product->main_image) : asset('images/og-home.jpg');
   $pUrl  = route('product', $product->slug);
   $pCat  = $product->category;
