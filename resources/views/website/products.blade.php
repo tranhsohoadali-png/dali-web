@@ -1,19 +1,48 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8"><meta name="description" content="Xem tất cả {{ $products->total() }} mẫu tranh tô màu số hóa DALI – chất lượng cao, giao hàng toàn quốc.">
+@php
+  // SEO — canonical PHẢI tự trỏ về CHÍNH NÓ cho từng trang phân trang / từng danh mục.
+  // Trước đây mọi biến thể đều canonical về /san-pham, nên Google coi trang 2..25 là bản
+  // sao của trang 1 và không crawl tiếp. Mà phân trang lại là đường link nội bộ DUY NHẤT
+  // dẫn tới ~498 trang sản phẩm (trang danh mục /chu-de dùng template combo, không có link
+  // sang trang lẻ) => hàng trăm tranh chỉ "được phát hiện" rồi nằm đó, không bao giờ được
+  // lập chỉ mục. Chỉ bỏ qua tham số KHÔNG đổi tập sản phẩm (sort, per_page, search) vì
+  // chúng mới thực sự sinh bản trùng.
+  $canonUrl = route('products', array_filter([
+      'category' => request('category'),
+      'page'     => $products->currentPage() > 1 ? $products->currentPage() : null,
+  ]));
+
+  $curPage = $products->currentPage();
+  $catName = request('category')
+      ? optional($categories->firstWhere('slug', request('category')))->name
+      : null;
+
+  // Mỗi trang phân trang cần title/description RIÊNG, nếu không vẫn bị xem là trùng lặp.
+  $pageTitle = 'Tranh Tô Màu Số Hóa'
+      . ($catName ? ' — ' . $catName : ' — Tất Cả Mẫu Tranh Đẹp')
+      . ($curPage > 1 ? ' (Trang ' . $curPage . ')' : '') . ' | DALI';
+  $pageDesc  = 'Xem ' . $products->total() . ' mẫu tranh tô màu số hóa DALI'
+      . ($catName ? ' chủ đề ' . $catName : '')
+      . ($curPage > 1 ? ' — trang ' . $curPage . '/' . $products->lastPage() : '')
+      . ' – chất lượng cao, giao hàng toàn quốc.';
+@endphp
+<meta charset="UTF-8"><meta name="description" content="{{ $pageDesc }}">
 <meta property="og:title" content="Tất cả sản phẩm | DALI Tranh Tô Màu Số Hóa">
 <meta property="og:image" content="{{ asset('images/og-home.jpg') }}">
 <meta property="og:description" content="Xem tất cả {{ $products->total() }} mẫu tranh tô màu số hóa DALI – nhiều chủ đề, nhiều kích thước, giao toàn quốc.">
-<meta property="og:url" content="{{ route('products') }}">
+<meta property="og:url" content="{{ $canonUrl }}">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Tất cả tranh tô màu số hóa | DALI">
 @if(!empty($settings['ga_id']))<script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings['ga_id'] }}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $settings["ga_id"] }}');</script> @endif
 @if(!empty($settings['fb_pixel_id']))<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{{ $settings["fb_pixel_id"] }}');fbq('track','PageView');</script> @endif
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tranh Tô Màu Số Hóa — Tất Cả Mẫu Tranh Đẹp | DALI</title>
-<link rel="canonical" href="{{ route('products') }}">
+<title>{{ $pageTitle }}</title>
+<link rel="canonical" href="{{ $canonUrl }}">
+@if($products->currentPage() > 1)<link rel="prev" href="{{ $products->previousPageUrl() }}">@endif
+@if($products->hasMorePages())<link rel="next" href="{{ $products->nextPageUrl() }}">@endif
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
 <style>[class^="ri-"],[class*=" ri-"]{vertical-align:-.125em;font-style:normal;line-height:1}</style>
