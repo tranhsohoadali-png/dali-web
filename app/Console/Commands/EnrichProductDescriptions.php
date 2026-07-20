@@ -37,7 +37,10 @@ class EnrichProductDescriptions extends Command
             return self::FAILURE;
         }
 
-        $rows = json_decode((string) file_get_contents($file), true);
+        // Bỏ BOM nếu có: PowerShell (Out-File -Encoding utf8) và Notepad hay ghi UTF-8
+        // KÈM BOM, mà json_decode sẽ nghẹn ngay ở 3 byte đầu và báo "sai định dạng".
+        $raw  = preg_replace('/^\xEF\xBB\xBF/', '', (string) file_get_contents($file));
+        $rows = json_decode($raw, true);
         if (!is_array($rows) || $rows === []) {
             $this->error('File JSON rỗng hoặc sai định dạng.');
             return self::FAILURE;
