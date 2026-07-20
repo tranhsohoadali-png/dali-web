@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1A4D00">
+{{-- Cổng nội bộ CTV: không phải nội dung công khai -> chặn index. --}}
+<meta name="robots" content="noindex,nofollow">
 <title>@yield('title','CTV') | DALI</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>

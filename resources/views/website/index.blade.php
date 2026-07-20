@@ -524,7 +524,7 @@ footer{
   background:linear-gradient(175deg,#0F2E00,#1C5200);
   color:rgba(255,255,255,.7);padding:60px 5% 26px;
 }
-.footer-grid{display:grid;grid-template-columns:1.9fr 1fr 1.3fr;gap:48px;max-width:1180px;margin:0 auto 40px;align-items:start}
+.footer-grid{display:grid;grid-template-columns:1.7fr .9fr .9fr 1.2fr;gap:36px;max-width:1180px;margin:0 auto 40px;align-items:start}
 .footer-logo{height:38px;width:auto;object-fit:contain;filter:brightness(0) invert(1);display:block;margin-bottom:16px}
 .footer-brand p{font-size:13.5px;line-height:1.85;margin-bottom:20px;max-width:360px;color:rgba(255,255,255,.6)}
 .social-links{display:flex;gap:10px}
@@ -1206,13 +1206,31 @@ function filterByCategory(catId){
       <li><a href="{{ route('products') }}">Tranh động vật</a></li>
       <li><a href="{{ route('track-order') }}">Tra cứu đơn hàng</a></li>
     </ul></div>
+    <div class="footer-col"><h4>Thông tin</h4><ul>
+      <li><a href="{{ route('about') }}">Giới thiệu</a></li>
+      <li><a href="{{ route('contact') }}">Liên hệ</a></li>
+      <li><a href="{{ route('privacy') }}">Chính sách bảo mật</a></li>
+      <li><a href="{{ route('terms') }}">Điều khoản sử dụng</a></li>
+      <li><a href="{{ route('return-policy') }}">Đổi trả &amp; vận chuyển</a></li>
+    </ul></div>
+    @php
+      // Chỉ hiện SĐT khi admin đã điền số THẬT (tránh hiện số mẫu 0123456789).
+      $fPhone = trim((string)($settings['shop_phone'] ?? ''));
+      if ($fPhone === '0123456789' || $fPhone === '0123 456 789') $fPhone = '';
+    @endphp
     <div class="footer-col footer-contact"><h4>Liên hệ</h4>
-      <p><i class="ri-map-pin-line"></i> {{ $settings['shop_address'] ?? 'Số 1 Đường ABC, Hà Nội' }}</p>
+      <p><i class="ri-map-pin-line"></i> {{ $settings['shop_address'] ?? 'Thôn Bắc Cường, Xã Minh Thái, Tỉnh Ninh Bình' }}</p>
       <p><i class="ri-time-line"></i> T2–T7: 8:00 – 20:00</p>
-      <a href="tel:{{ $settings['shop_phone'] ?? '0123456789' }}" class="footer-phone"><i class="ri-phone-fill"></i> {{ $settings['shop_phone'] ?? '0123 456 789' }}</a>
+      <p><i class="ri-mail-line"></i> <a href="mailto:tranhsohoadali@gmail.com" style="color:inherit">tranhsohoadali@gmail.com</a></p>
+      @if($fPhone)
+      <a href="tel:{{ $fPhone }}" class="footer-phone"><i class="ri-phone-fill"></i> {{ $fPhone }}</a>
+      @endif
     </div>
   </div>
-  <div class="footer-bottom"><span>© 2024 DALI Tranh Tô Màu Số Hóa</span><span>Thiết kế tại Việt Nam 🇻🇳</span></div>
+  <div class="footer-bottom">
+    <span>© {{ date('Y') }} Công ty TNHH Sản xuất và Thương mại Dali · MST 0601177989</span>
+    <span>Thiết kế tại Việt Nam 🇻🇳</span>
+  </div>
 </footer>
 
 <!-- ORDER MODAL -->

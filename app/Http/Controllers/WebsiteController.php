@@ -189,6 +189,21 @@ class WebsiteController extends Controller
         return view('website.guide', compact('settings','posts'));
     }
 
+    // ── TRANG PHÁP LÝ / TIN CẬY (Giới thiệu, Liên hệ, Chính sách…) ──
+    // Bắt buộc cho AdSense + tạo lòng tin cho khách. Nội dung nằm trong view
+    // legal.blade.php (tra theo $slug). Đều là trang CHO index (không noindex).
+    private function legalPage(string $slug)
+    {
+        $settings = \DB::table('admin_settings')->pluck('value','key');
+        return view('website.legal', compact('settings', 'slug'));
+    }
+
+    public function about()        { return $this->legalPage('about'); }
+    public function contact()      { return $this->legalPage('contact'); }
+    public function privacy()      { return $this->legalPage('privacy'); }
+    public function terms()        { return $this->legalPage('terms'); }
+    public function returnPolicy() { return $this->legalPage('return'); }
+
     /**
      * Tính phí giao hàng: miễn phí theo ngưỡng, nếu không thì lấy cước thật
      * từ Viettel Post (getPrice); thất bại/tắt → phí cố định trong cài đặt.

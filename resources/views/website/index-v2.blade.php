@@ -2,6 +2,9 @@
 <html lang="vi" class="scroll-smooth">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+{{-- Bản XEM THỬ trang chủ: nội dung trùng trang chủ thật -> CHẶN INDEX để
+     Google không đánh giá "nội dung trùng lặp" (khắc phục AdSense 2026-07). --}}
+<meta name="robots" content="noindex,follow">
 <title>DALI — Tranh Tô Màu Số Hóa Theo Ảnh | Biến ảnh kỷ niệm thành kiệt tác</title>
 <meta name="description" content="DALI Việt Nam — biến ảnh kỷ niệm thành tranh tô màu số hóa độc bản. AI thiết kế trong 1 phút, tặng bộ màu &amp; cọ, giao toàn quốc. Giá từ 370.000đ.">
 <meta property="og:image" content="{{ asset('images/home/hero-banner.jpg') }}">

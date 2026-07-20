@@ -2,6 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+{{-- Trang tra cứu theo mã đơn: nội dung riêng từng khách, không để index. --}}
+<meta name="robots" content="noindex,follow">
 <title>Tra cứu đơn hàng | DALI</title>
 <meta name="description" content="Tra cứu trạng thái đơn hàng DALI. Nhập mã đơn để xem chi tiết.">
 <meta property="og:title" content="Tra cứu đơn hàng | DALI">

@@ -28,6 +28,14 @@ Route::get('/chu-de/{category:slug}', [WebsiteController::class, 'categoryCombo'
 Route::get('/san-pham/{product:slug}', [WebsiteController::class, 'product'])->name('product');
 Route::get('/tra-cuu-don-hang',  [WebsiteController::class, 'trackOrder'])->name('track-order');
 Route::get('/huong-dan-to-tranh',[WebsiteController::class, 'guide'])->name('guide');
+
+// ── TRANG PHÁP LÝ / TIN CẬY (bắt buộc cho AdSense) ──
+Route::get('/gioi-thieu',         [WebsiteController::class, 'about'])->name('about');
+Route::get('/lien-he',            [WebsiteController::class, 'contact'])->name('contact');
+Route::get('/chinh-sach-bao-mat', [WebsiteController::class, 'privacy'])->name('privacy');
+Route::get('/dieu-khoan',         [WebsiteController::class, 'terms'])->name('terms');
+Route::get('/chinh-sach-doi-tra', [WebsiteController::class, 'returnPolicy'])->name('return-policy');
+
 Route::post('/dat-hang',         [WebsiteController::class, 'placeOrder'])->name('place-order');
 // ── CART ──
 Route::get('/gio-hang',                    [WebsiteController::class, 'cart'])->name('cart');
