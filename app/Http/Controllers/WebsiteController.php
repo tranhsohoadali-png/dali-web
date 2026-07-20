@@ -135,7 +135,7 @@ class WebsiteController extends Controller
         if (!$product->is_active) abort(404);
         // Danh mục "chỉ bán dạng tổng hợp" -> không có trang tranh lẻ, chuyển sang combo
         if ($product->category && $product->category->combo_only) {
-            return redirect()->route('category', $product->category->slug);
+            return redirect()->route('category', $product->category->slug, 301);
         }
         // Nếu URL có ?ref=CODE → lưu affiliate code vào session/cookie ngay
         $refCode = strtoupper(trim($request->input('ref', '')));
@@ -477,7 +477,13 @@ class WebsiteController extends Controller
 
     public function sitemap()
     {
-        $products   = Product::where('is_active', true)->get(['slug','updated_at']);
+        // SEO: CHỈ đưa vào sitemap tranh có trang lẻ THẬT. Sản phẩm thuộc danh mục
+        // combo_only bị product() redirect sang trang danh mục -> nếu để trong sitemap
+        // sẽ thành hàng trăm URL "có lệnh chuyển hướng", đốt crawl budget của Google.
+        $products   = Product::where('is_active', true)
+            ->where(fn ($q) => $q->whereDoesntHave('category')
+                                 ->orWhereHas('category', fn ($c) => $c->where('combo_only', false)))
+            ->get(['slug','updated_at']);
         $categories = Category::where('is_active', true)->get(['slug','updated_at']);
         $posts      = \App\Models\Post::where('is_published', true)->get(['slug','updated_at']);
         return response()->view('website.sitemap', compact('products','categories','posts'))
