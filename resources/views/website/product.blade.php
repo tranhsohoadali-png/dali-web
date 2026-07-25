@@ -736,7 +736,8 @@ async function addDetailToCart(){
   }catch(e){showToast('❌ Lỗi kết nối');}
 }
 function openOrder(name,size,price,img,productId,qty){
-  gOrder={name:name,size:size,price:parseVnd(price),priceStr:price,img:img||'',productId:productId||null};
+  gOrder={name:name,size:size,price:parseVnd(price),priceStr:price,img:img||'',productId:productId||null,
+          sizeId:(typeof SELECTED_SIZE!=='undefined'&&SELECTED_SIZE?SELECTED_SIZE.id:null)};
   document.getElementById('oImg').src=img||'';
   document.getElementById('oName').textContent=name;
   document.getElementById('oSize').textContent=size;
@@ -791,7 +792,7 @@ async function handleSubmit(){
   gOrder.custName=name;gOrder.phone=phone;gOrder.city=city;gOrder.addr=addr;gOrder.note=document.getElementById('custNote').value.trim();gOrder.payMode=payMode;
   var btn=document.getElementById('submitBtn');btn.disabled=true;document.getElementById('submitText').textContent='⏳ Đang xử lý...';
   try{
-    var res=await fetch('{{ route("place-order") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({product_id:gOrder.productId,product_name:gOrder.name,product_size:gOrder.size,price:gOrder.price,quantity:gOrder.qty,customer_name:gOrder.custName,customer_phone:gOrder.phone,customer_city:gOrder.city,customer_addr:gOrder.addr,note:gOrder.note,payment:gOrder.payMode,coupon_code:'',customer_email:(document.getElementById('custEmail')?document.getElementById('custEmail').value.trim():'')})});
+    var res=await fetch('{{ route("place-order") }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({product_id:gOrder.productId,size_id:gOrder.sizeId,product_name:gOrder.name,product_size:gOrder.size,price:gOrder.price,quantity:gOrder.qty,customer_name:gOrder.custName,customer_phone:gOrder.phone,customer_city:gOrder.city,customer_addr:gOrder.addr,note:gOrder.note,payment:gOrder.payMode,coupon_code:'',customer_email:(document.getElementById('custEmail')?document.getElementById('custEmail').value.trim():'')})});
     var d=await res.json();
     if(d.success){gOrder.code=d.code;gOrder.total=d.total;if(gOrder.payMode==='BANK'){goToQR();}else{document.getElementById('successCode').textContent=d.code;showState('success');document.getElementById('modalTitle').textContent='✅ Đặt hàng thành công';document.getElementById('modalSub').textContent='';}}
     else showToast('❌ '+(d.message||'Có lỗi xảy ra'));
