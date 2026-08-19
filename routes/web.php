@@ -109,6 +109,16 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Sản phẩm
     Route::resource('products', ProductController::class)->except(['show']);
 
+    // ─── Xưởng in 3D (khu riêng, bảng sp_3d) ───
+    Route::prefix('3d')->group(function () {
+        Route::get('san-pham',                [\App\Http\Controllers\Admin\Sp3dController::class, 'index'])->name('sp3d.index');
+        Route::get('san-pham/them',           [\App\Http\Controllers\Admin\Sp3dController::class, 'create'])->name('sp3d.create');
+        Route::post('san-pham',               [\App\Http\Controllers\Admin\Sp3dController::class, 'store'])->name('sp3d.store');
+        Route::get('san-pham/{san_pham}/sua', [\App\Http\Controllers\Admin\Sp3dController::class, 'edit'])->name('sp3d.edit');
+        Route::put('san-pham/{san_pham}',     [\App\Http\Controllers\Admin\Sp3dController::class, 'update'])->name('sp3d.update');
+        Route::delete('san-pham/{san_pham}',  [\App\Http\Controllers\Admin\Sp3dController::class, 'destroy'])->name('sp3d.destroy');
+    });
+
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
     Route::get('thiet-ke-cho-xu-ly',           [OrderController::class, 'designQueue'])->name('thietke.queue');
