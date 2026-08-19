@@ -37,7 +37,10 @@ class Api3dController extends Controller
                     'variants'       => collect($p->variants ?: [])->map(function ($v) {
                         $out = ['ten' => (string) ($v['ten'] ?? ''), 'gia' => (int) ($v['gia'] ?? 0)];
                         if (array_key_exists('gia_them', $v)) $out['gia_them'] = (int) $v['gia_them'];
-                        if (!empty($v['anh'])) $out['anh'] = asset('storage/' . $v['anh']);
+                        if (!empty($v['anh'])) {
+                            $out['anh']    = asset('storage/' . $v['anh']); // bản lớn (đổi ảnh chính)
+                            $out['anhNho'] = $this->thumbUrl($v['anh']);    // bản nhỏ (ô chọn 40px)
+                        }
                         return $out;
                     })->all(),
                     'khac_ten'       => (bool) $p->khac_ten,
@@ -47,12 +50,25 @@ class Api3dController extends Controller
                     'da_ban'         => (int) $p->da_ban,
                     // Ảnh trả về URL đầy đủ — front-end dùng thẳng, không dựng URL PocketBase nữa
                     'anh'            => collect($p->anh ?: [])->map(fn ($a) => asset('storage/' . $a))->all(),
+                    // Bản thu nhỏ ~400px cho thẻ/gallery (fallback ảnh lớn nếu chưa có thumbnail)
+                    'anhNho'         => collect($p->anh ?: [])->map(fn ($a) => $this->thumbUrl($a))->all(),
                     'payment_policy' => $p->payment_policy ?: ($p->dat_lam ? 'deposit_50' : 'cod_or_prepaid_10'),
                     'shipping_class' => $p->shipping_class ?: 'standard',
                 ];
             });
         return response()->json(['items' => $items])
             ->header('Access-Control-Allow-Origin', self::ALLOWED_ORIGIN);
+    }
+
+    /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */
+    private function thumbUrl(string $rel): string
+    {
+        $dir  = trim(dirname($rel), '.');
+        $base = pathinfo($rel, PATHINFO_FILENAME);
+        $tn   = ($dir ? $dir . '/' : '') . 'tn/' . $base . '.jpg';
+        return \Storage::disk('public')->exists($tn)
+            ? asset('storage/' . $tn)
+            : asset('storage/' . $rel);
     }
 
     /* ============ POST /api/3d/quote ============ */

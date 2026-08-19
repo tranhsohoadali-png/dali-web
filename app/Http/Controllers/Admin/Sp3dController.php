@@ -124,7 +124,11 @@ class Sp3dController extends Controller
         // 1) Lưu ảnh mới tải lên (variant_img_new[]) -> map chỉ số -> đường dẫn.
         $newPaths = [];
         foreach ((array) $request->file('variant_img_new', []) as $k => $f) {
-            if ($f && $f->isValid()) $newPaths[(int) $k] = $f->store('sp3d', 'public');
+            if ($f && $f->isValid()) {
+                $p = $f->store('sp3d', 'public');
+                $this->makeThumb($p);
+                $newPaths[(int) $k] = $p;
+            }
         }
 
         // 2) Làm sạch nhóm; nhóm 0 giữ ảnh song song với lựa chọn.
@@ -221,7 +225,7 @@ class Sp3dController extends Controller
         $gallery = $sp ? ($sp->anh ?: []) : [];
         foreach ($old as $p) {
             if (!in_array($p, $keep, true) && !in_array($p, $gallery, true)) {
-                Storage::disk('public')->delete($p);
+                $this->deleteImg($p);
             }
         }
     }
@@ -236,7 +240,11 @@ class Sp3dController extends Controller
         // Lưu ảnh mới -> map chỉ số theo đúng thứ tự client gửi (khớp {new:k} trong anh_order)
         $newPaths = [];
         foreach ((array) $request->file('anh_moi', []) as $k => $f) {
-            if ($f && $f->isValid()) $newPaths[(int) $k] = $f->store('sp3d', 'public');
+            if ($f && $f->isValid()) {
+                $p = $f->store('sp3d', 'public');
+                $this->makeThumb($p);
+                $newPaths[(int) $k] = $p;
+            }
         }
 
         $order = json_decode($request->input('anh_order', '[]'), true);
@@ -262,9 +270,60 @@ class Sp3dController extends Controller
 
         // Xoá file ảnh cũ không còn giữ.
         foreach (array_diff($cu, $final) as $bo) {
-            Storage::disk('public')->delete($bo);
+            $this->deleteImg($bo);
         }
         return array_values(array_unique($final));
+    }
+
+    /** Đường dẫn ảnh thu nhỏ suy ra từ ảnh lớn: sp3d/abc.png -> sp3d/tn/abc.jpg */
+    private function thumbPath(string $big): string
+    {
+        $dir  = trim(dirname($big), '.');
+        $base = pathinfo($big, PATHINFO_FILENAME);
+        return ($dir ? $dir . '/' : '') . 'tn/' . $base . '.jpg';
+    }
+
+    /** Sinh ảnh thu nhỏ ~400px (JPEG) cạnh ảnh lớn; lỗi thì bỏ qua (front-end fallback ảnh lớn). */
+    private function makeThumb(string $big, int $max = 400): void
+    {
+        try {
+            $disk = Storage::disk('public');
+            if (!$disk->exists($big)) return;
+            $abs  = $disk->path($big);
+            $info = @getimagesize($abs);
+            if (!$info) return;
+            [$w, $h] = $info;
+            if ($w < 1 || $h < 1) return;
+            $src = match ($info[2]) {
+                IMAGETYPE_JPEG => @imagecreatefromjpeg($abs),
+                IMAGETYPE_PNG  => @imagecreatefrompng($abs),
+                IMAGETYPE_GIF  => @imagecreatefromgif($abs),
+                IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($abs) : null,
+                default        => null,
+            };
+            if (!$src) return;
+            $scale = min(1, $max / max($w, $h));
+            $nw = max(1, (int) round($w * $scale));
+            $nh = max(1, (int) round($h * $scale));
+            $dst = imagecreatetruecolor($nw, $nh);
+            $white = imagecolorallocate($dst, 255, 255, 255); // nền trắng cho ảnh có alpha
+            imagefilledrectangle($dst, 0, 0, $nw, $nh, $white);
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+            $tp = $this->thumbPath($big);
+            if (!$disk->exists(dirname($tp))) $disk->makeDirectory(dirname($tp));
+            imagejpeg($dst, $disk->path($tp), 82);
+            imagedestroy($src);
+            imagedestroy($dst);
+        } catch (\Throwable $e) {
+            // im lặng — không chặn việc lưu
+        }
+    }
+
+    /** Xoá cả ảnh lớn lẫn ảnh thu nhỏ. */
+    private function deleteImg(string $big): void
+    {
+        Storage::disk('public')->delete($big);
+        Storage::disk('public')->delete($this->thumbPath($big));
     }
 
     private function uniqueSlug(string $raw, ?int $ignoreId = null): string
