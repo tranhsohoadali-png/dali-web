@@ -233,23 +233,38 @@ class Sp3dController extends Controller
      */
     private function buildImages(Request $request, array $cu): array
     {
-        $keep = collect(json_decode($request->input('anh_keep', '[]'), true) ?: [])
-            ->filter(fn ($p) => in_array($p, $cu))->values();
-
-        // ảnh cũ không còn trong keep -> xoá file
-        foreach (array_diff($cu, $keep->all()) as $bo) {
-            Storage::disk('public')->delete($bo);
+        // Lưu ảnh mới -> map chỉ số theo đúng thứ tự client gửi (khớp {new:k} trong anh_order)
+        $newPaths = [];
+        foreach ((array) $request->file('anh_moi', []) as $k => $f) {
+            if ($f && $f->isValid()) $newPaths[(int) $k] = $f->store('sp3d', 'public');
         }
 
-        // ảnh mới tải lên
-        if ($request->hasFile('anh_moi')) {
-            foreach ($request->file('anh_moi') as $file) {
-                if ($file && $file->isValid()) {
-                    $keep->push($file->store('sp3d', 'public'));
-                }
+        $order = json_decode($request->input('anh_order', '[]'), true);
+
+        // Dự phòng (JS hỏng / không có order): giữ nguyên ảnh cũ + nối ảnh mới, KHÔNG xoá gì.
+        if (!is_array($order) || !$order) {
+            return array_values(array_unique(array_merge($cu, array_values($newPaths))));
+        }
+
+        // Dựng thứ tự cuối — ảnh mới chèn được vào bất kỳ vị trí (kể cả làm bìa).
+        $final = [];
+        foreach ($order as $it) {
+            if (isset($it['old']) && in_array($it['old'], $cu, true)) {
+                $final[] = $it['old'];
+            } elseif (isset($it['new']) && isset($newPaths[(int) $it['new']])) {
+                $final[] = $newPaths[(int) $it['new']];
             }
         }
-        return $keep->values()->all();
+        // Ảnh mới lỡ không nằm trong order -> nối cuối, tránh mất ảnh vừa tải.
+        foreach ($newPaths as $p) {
+            if (!in_array($p, $final, true)) $final[] = $p;
+        }
+
+        // Xoá file ảnh cũ không còn giữ.
+        foreach (array_diff($cu, $final) as $bo) {
+            Storage::disk('public')->delete($bo);
+        }
+        return array_values(array_unique($final));
     }
 
     private function uniqueSlug(string $raw, ?int $ignoreId = null): string

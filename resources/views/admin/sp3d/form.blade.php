@@ -121,10 +121,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     @csrf
     @if($sp)@method('PUT')@endif
     <input type="hidden" name="anh_keep" id="anhKeep" value='@json($anh)'>
+    <input type="hidden" name="anh_order" id="anhOrder">
 
     <div class="sec">
       <h2>📷 Ảnh sản phẩm</h2>
-      <div class="hint">Ảnh <b>đầu tiên là ảnh bìa</b> — hiện ngoài trang chủ và trong danh sách. Dùng ◀ ▶ để đổi thứ tự, ✕ để xoá. Nên chụp nền sáng, vuông.</div>
+      <div class="hint">Ảnh <b>đầu tiên là ảnh bìa</b> — hiện ngoài trang chủ và trong danh sách. Dùng ◀ ▶ để đổi thứ tự (áp dụng cho cả ảnh mới), <b>★ để đặt làm bìa</b>, ✕ để xoá. Nên chụp nền sáng, vuông.</div>
       <div class="imgs" id="imgGrid"></div>
       <input type="file" name="anh_moi[]" id="anhMoi" accept="image/*" multiple hidden>
     </div>
@@ -208,70 +209,74 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 </div>
 
 <script>
+/* Bộ ảnh chính: danh sách HỢP NHẤT ảnh cũ + ảnh mới, đổi thứ tự tự do + đặt bìa.
+   items[i] = {old:"sp3d/.."} (ảnh đã lưu) | {_nf:<idx>} (file mới, trỏ vào newFiles).
+   Ảnh đầu tiên là bìa. Gửi lên: anh_order (thứ tự cuối) + anh_moi[] (file mới theo k). */
 (function(){
-  var STORE = @json(asset('storage')) + '/';
-  var keepEl = document.getElementById('anhKeep');
+  var STORE  = @json(asset('storage')) + '/';
+  var keepEl = document.getElementById('anhKeep');   // seed ảnh cũ
+  var orderEl= document.getElementById('anhOrder');  // thứ tự cuối gửi lên
   var grid   = document.getElementById('imgGrid');
-  var fileEl = document.getElementById('anhMoi');
-  var moiFiles = [];            // ảnh mới chọn nhưng chưa lưu (đối tượng File)
+  var fileEl = document.getElementById('anhMoi');     // ô chọn + mang file mới
 
-  function keep(){ try{ return JSON.parse(keepEl.value)||[]; }catch(e){ return []; } }
-  function setKeep(a){ keepEl.value = JSON.stringify(a); }
+  var newFiles = [];   // File mới (KHÔNG nén chỉ số)
+  var newUrl   = {};   // _nf -> objectURL
+  var items = (function(){
+    try{ return (JSON.parse(keepEl.value)||[]).map(function(p){ return {old:p}; }); }catch(e){ return []; }
+  })();
 
-  function ve(){
-    var a = keep();
-    grid.innerHTML = '';
-    a.forEach(function(path, i){
-      grid.appendChild(oCu(path, i, a.length));
-    });
-    moiFiles.forEach(function(f, i){ grid.appendChild(oMoi(f, i)); });
-    grid.appendChild(nutThem());
-    dongBoInput();
+  function urlOf(it){
+    if(it.old!=null) return STORE+it.old;
+    if(newUrl[it._nf]==null) newUrl[it._nf]=URL.createObjectURL(newFiles[it._nf]);
+    return newUrl[it._nf];
   }
 
-  function oCu(path, i, n){
-    var d = document.createElement('div'); d.className='imgo';
-    d.innerHTML = '<img src="'+STORE+path+'">'
-      + (i===0 ? '<i class="bia">Ảnh bìa</i>' : '')
-      + '<div class="ops">'
-      +   '<span>'+(i>0?'<button type="button" data-mv="'+i+'" data-dir="-1">◀</button>':'')
-      +          (i<n-1?'<button type="button" data-mv="'+i+'" data-dir="1">▶</button>':'')+'</span>'
-      +   '<button type="button" class="del" data-del="'+i+'">✕</button>'
-      + '</div>';
-    return d;
-  }
-  function oMoi(file, idx){
-    var d = document.createElement('div'); d.className='imgo';
-    var url = URL.createObjectURL(file);
-    d.innerHTML = '<img src="'+url+'"><i class="bia" style="background:#F59E0B">Mới</i>'
-      + '<div class="ops"><span></span><button type="button" class="del" data-delmoi="'+idx+'">✕</button></div>';
+  function cell(it,i,n){
+    var isNew = it.old==null;
+    var d=document.createElement('div'); d.className='imgo';
+    d.innerHTML = '<img src="'+urlOf(it)+'">'
+      + (i===0 ? '<i class="bia">Ảnh bìa</i>' : (isNew?'<i class="bia" style="background:#F59E0B">Mới</i>':''))
+      + '<div class="ops"><span>'
+      +   (i>0   ? '<button type="button" data-mv="'+i+'" data-dir="-1" title="Sang trái">◀</button>' : '')
+      +   (i<n-1 ? '<button type="button" data-mv="'+i+'" data-dir="1" title="Sang phải">▶</button>' : '')
+      +   (i>0   ? '<button type="button" data-bia="'+i+'" title="Đặt làm ảnh bìa">★</button>' : '')
+      + '</span><button type="button" class="del" data-del="'+i+'" title="Xoá">✕</button></div>';
     return d;
   }
   function nutThem(){
-    var d = document.createElement('div'); d.className='them';
-    d.innerHTML = '＋<span>Thêm ảnh</span>';
-    d.onclick = function(){ fileEl.click(); };
+    var d=document.createElement('div'); d.className='them';
+    d.innerHTML='＋<span>Thêm ảnh</span>';
+    d.onclick=function(){ fileEl.click(); };
     return d;
   }
 
-  // Đồng bF các file mới vào input để form gửi lên
-  function dongBoInput(){
-    var dt = new DataTransfer();
-    moiFiles.forEach(function(f){ dt.items.add(f); });
-    fileEl.files = dt.files;
+  // Nạp file mới đang dùng vào input theo đúng thứ tự k khớp anh_order.
+  function sync(){
+    var dt=new DataTransfer();
+    var order=items.map(function(it){
+      if(it.old!=null) return {old:it.old};
+      var k=dt.items.length; dt.items.add(newFiles[it._nf]); return {"new":k};
+    });
+    fileEl.files=dt.files;
+    orderEl.value=JSON.stringify(order);
+  }
+
+  function ve(){
+    grid.innerHTML='';
+    items.forEach(function(it,i){ grid.appendChild(cell(it,i,items.length)); });
+    grid.appendChild(nutThem());
+    sync();
   }
 
   grid.addEventListener('click', function(e){
-    var t = e.target;
-    if(t.dataset.del !== undefined){ var a=keep(); a.splice(+t.dataset.del,1); setKeep(a); ve(); }
-    else if(t.dataset.delmoi !== undefined){ moiFiles.splice(+t.dataset.delmoi,1); ve(); }
-    else if(t.dataset.mv !== undefined){
-      var a=keep(), i=+t.dataset.mv, j=i+(+t.dataset.dir);
-      if(j>=0 && j<a.length){ var tmp=a[i]; a[i]=a[j]; a[j]=tmp; setKeep(a); ve(); }
-    }
+    var t=e.target.closest('[data-del],[data-mv],[data-bia]'); if(!t) return;
+    var d;
+    if((d=t.getAttribute('data-del'))!=null){ items.splice(+d,1); ve(); }
+    else if((d=t.getAttribute('data-bia'))!=null){ var it=items.splice(+d,1)[0]; items.unshift(it); ve(); }
+    else if((d=t.getAttribute('data-mv'))!=null){ var i=+d,j=i+(+t.getAttribute('data-dir')); if(j>=0&&j<items.length){ var x=items[i];items[i]=items[j];items[j]=x; ve(); } }
   });
   fileEl.addEventListener('change', function(){
-    Array.prototype.forEach.call(fileEl.files, function(f){ moiFiles.push(f); });
+    Array.prototype.forEach.call(fileEl.files, function(f){ newFiles.push(f); items.push({_nf:newFiles.length-1}); });
     ve();
   });
 
