@@ -52,7 +52,7 @@ class Api3dController extends Controller
                     'anh'            => collect($p->anh ?: [])->map(fn ($a) => asset('storage/' . $a))->all(),
                     // Bản thu nhỏ ~400px cho thẻ/gallery (fallback ảnh lớn nếu chưa có thumbnail)
                     'anhNho'         => collect($p->anh ?: [])->map(fn ($a) => $this->thumbUrl($a))->all(),
-                    'payment_policy' => $p->payment_policy ?: ($p->dat_lam ? 'deposit_50' : 'cod_or_prepaid_10'),
+                    'payment_policy' => $p->payment_policy ?: 'deposit_50', // mặc định cọc 50% trước
                     'shipping_class' => $p->shipping_class ?: 'standard',
                 ];
             });
@@ -276,7 +276,7 @@ class Api3dController extends Controller
                     'sku' => $sku, 'ten' => $product->ten, 'qty' => $qty, 'don_gia' => $unit,
                     'bien_the' => $variant ? (string) ($variant['ten'] ?? '') : null,
                     'khac_ten' => $pers,
-                    'payment_policy' => $product->payment_policy ?: ($product->dat_lam ? 'deposit_50' : 'cod_or_prepaid_10'),
+                    'payment_policy' => $product->payment_policy ?: 'deposit_50', // mặc định cọc 50% trước
                     'shipping_class' => $product->shipping_class ?: 'standard',
                 ];
             } elseif (in_array($sku, ['tkb:full', 'tkb:board', 'subject:predefined', 'subject:custom', 'subject:leg', 'subject:set'], true)) {

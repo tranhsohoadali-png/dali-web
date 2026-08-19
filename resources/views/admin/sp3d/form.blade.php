@@ -182,9 +182,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         <label class="f"><span>Số lượt đã bán</span><input name="da_ban" inputmode="numeric" value="{{ old('da_ban', $sp->da_ban ?? 0) }}"></label>
         <label class="f"><span>Chính sách thanh toán</span>
           <select name="payment_policy">
-            @php $pp = old('payment_policy', $sp->payment_policy ?? 'cod_or_prepaid_10'); @endphp
+            @php $pp = old('payment_policy', $sp->payment_policy ?? 'deposit_50'); @endphp
+            <option value="deposit_50" {{ $pp=='deposit_50'?'selected':'' }}>Cọc 50% khi đặt, 50% khi nhận (mặc định)</option>
             <option value="cod_or_prepaid_10" {{ $pp=='cod_or_prepaid_10'?'selected':'' }}>Nhận hàng trả tiền (CK trước giảm 10%)</option>
-            <option value="deposit_50" {{ $pp=='deposit_50'?'selected':'' }}>Đặt cọc 50% (hàng in riêng)</option>
           </select></label>
         <label class="f"><span>Cách gửi hàng</span>
           <select name="shipping_class">
