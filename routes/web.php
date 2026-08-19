@@ -119,6 +119,15 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::delete('san-pham/{san_pham}',  [\App\Http\Controllers\Admin\Sp3dController::class, 'destroy'])->name('sp3d.destroy');
     });
 
+    // ─── Đơn hàng khu Xưởng in 3D ───
+    Route::prefix('3d')->group(function () {
+        Route::get('don-hang',                  [\App\Http\Controllers\Admin\Don3dController::class, 'index'])->name('don3d.index');
+        Route::get('don-hang/{don}',            [\App\Http\Controllers\Admin\Don3dController::class, 'show'])->name('don3d.show');
+        Route::put('don-hang/{don}/trang-thai', [\App\Http\Controllers\Admin\Don3dController::class, 'updateStatus'])->name('don3d.status');
+        Route::post('don-hang/{don}/da-coc',    [\App\Http\Controllers\Admin\Don3dController::class, 'markPaid'])->name('don3d.paid');
+        Route::delete('don-hang/{don}',         [\App\Http\Controllers\Admin\Don3dController::class, 'destroy'])->name('don3d.destroy');
+    });
+
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
     Route::get('thiet-ke-cho-xu-ly',           [OrderController::class, 'designQueue'])->name('thietke.queue');
