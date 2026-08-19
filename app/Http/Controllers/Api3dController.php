@@ -56,8 +56,8 @@ class Api3dController extends Controller
         $this->guardOrigin($request);
         if (trim((string) $request->input('honeypot', '')) !== '') abort(400, 'Yêu cầu không hợp lệ.');
         // Giới hạn 30 lần/phút theo IP (giống PocketBase)
-        if (RateLimiter::tooManyAttempts('quote3d:' . $request->ip(), 30)) abort(429, 'Vui lòng thử lại sau một phút.');
-        RateLimiter::hit('quote3d:' . $request->ip(), 60);
+        if (RateLimiter::tooManyAttempts('quote3d:' . $this->clientIp($request), 30)) abort(429, 'Vui lòng thử lại sau một phút.');
+        RateLimiter::hit('quote3d:' . $this->clientIp($request), 60);
 
         $priced = $this->priceCart($request);
         $bank   = $this->config('BANK', ['bin' => 'MSB', 'stk' => '03001011945010', 'ten' => 'DOAN ANH TUAN']);
@@ -103,7 +103,7 @@ class Api3dController extends Controller
         }
 
         // Giới hạn 8 lần / 10 phút theo IP + số điện thoại
-        $ckKey = 'checkout3d:' . $request->ip() . ':' . $phone;
+        $ckKey = 'checkout3d:' . $this->clientIp($request) . ':' . $phone;
         if (RateLimiter::tooManyAttempts($ckKey, 8)) abort(429, 'Bạn đã thử quá nhiều lần. Vui lòng chờ ít phút.');
         RateLimiter::hit($ckKey, 600);
 
@@ -348,6 +348,20 @@ class Api3dController extends Controller
         if ($row === null) return $fallback;
         $v = json_decode($row, true);
         return $v === null ? $fallback : $v;
+    }
+
+    /**
+     * IP khach that (web khach goi qua proxy noi bo cua 3d.tranhdali.vn, nen
+     * $request->ip() la IP may chu; IP khach o X-Forwarded-For hop dau).
+     */
+    private function clientIp(Request $request): string
+    {
+        $xff = $request->header('X-Forwarded-For');
+        if ($xff) {
+            $first = trim(explode(',', $xff)[0]);
+            if ($first !== '') return $first;
+        }
+        return $request->header('X-Real-IP') ?: $request->ip();
     }
 
     private function guardOrigin(Request $request): void

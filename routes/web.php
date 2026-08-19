@@ -128,6 +128,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::delete('don-hang/{don}',         [\App\Http\Controllers\Admin\Don3dController::class, 'destroy'])->name('don3d.destroy');
     });
 
+    // ─── Cài đặt Xưởng in 3D (giá / môn / tài khoản) ───
+    Route::get('3d/cai-dat', [\App\Http\Controllers\Admin\CauHinh3dController::class, 'index'])->name('cauhinh3d.index');
+    Route::put('3d/cai-dat', [\App\Http\Controllers\Admin\CauHinh3dController::class, 'update'])->name('cauhinh3d.update');
+
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
     Route::get('thiet-ke-cho-xu-ly',           [OrderController::class, 'designQueue'])->name('thietke.queue');
