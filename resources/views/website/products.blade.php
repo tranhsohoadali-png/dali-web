@@ -320,6 +320,7 @@ footer{background:linear-gradient(175deg,#0F2E00,#1C5200);color:rgba(255,255,255
       <div class="product-info">
         <a href="{{ route('product', $p->slug) }}" class="product-name" style="text-decoration:none;color:inherit">{{ $p->name }}</a>
         <div class="product-size">{{ $p->colors_count ? $p->colors_count.' màu' : '' }}{{ $p->sizes()->count() ? ($p->colors_count ? ' · ' : '').$p->sizes()->count().' kích thước' : '' }}</div>
+        @if($p->sold_count > 0)<div class="product-size" style="color:var(--g);font-weight:700;margin-top:-3px">🔥 Đã bán {{ $p->sold_count }}</div>@endif
         <div class="product-price">
           @if($p->has_multiple_sizes)<span style="font-size:12px;color:var(--tx3);font-weight:600">Từ</span>@endif
           <span class="price-current">{{ $p->display_price }}</span>
