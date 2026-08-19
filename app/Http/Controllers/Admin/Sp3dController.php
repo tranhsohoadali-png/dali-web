@@ -38,6 +38,7 @@ class Sp3dController extends Controller
     {
         $data = $this->validated($request);
         $data['slug'] = $this->uniqueSlug($request->input('slug') ?: $request->input('ten'));
+        [$data['variant_groups'], $data['variants']] = $this->buildVariants($request, null, (int) $data['gia']);
         $data['anh']  = $this->buildImages($request, []);
         Sp3d::create($data);
         return redirect()->route('admin.sp3d.index')->with('ok', 'Đã thêm sản phẩm 3D!');
@@ -47,6 +48,7 @@ class Sp3dController extends Controller
     {
         $data = $this->validated($request);
         $data['slug'] = $this->uniqueSlug($request->input('slug') ?: $request->input('ten'), $san_pham->id);
+        [$data['variant_groups'], $data['variants']] = $this->buildVariants($request, $san_pham, (int) $data['gia']);
         $data['anh']  = $this->buildImages($request, $san_pham->anh ?: []);
         $san_pham->update($data);
         return redirect()->route('admin.sp3d.index')->with('ok', 'Đã cập nhật sản phẩm!');
@@ -97,50 +99,81 @@ class Sp3dController extends Controller
         $v['kho']      = $v['kho'] ?? 0;
         $v['thu_tu']   = $v['thu_tu'] ?? 0;
 
-        // Phân loại hàng (kiểu Shopee): biên dịch cấu trúc nhóm+tùy chọn từ form
-        // thành mảng phẳng `variants` mà checkout đọc. Thứ tự tổ hợp cố định nên
-        // row index == variantIndex — web khách & priceCart không phải sửa gì.
-        [$v['variant_groups'], $v['variants']] = $this->compileVariantGroups(
-            $request->input('variant_groups_json'),
-            (int) $v['gia']
-        );
-
         unset($v['mota_text']);
         return $v;
     }
 
     /**
-     * Biên dịch trạng thái trình sửa (JSON từ form) -> [cấu trúc lưu, mảng variants phẳng].
-     * Tổ hợp sinh lại Ở SERVER (không tin thứ tự client), row-major, nhóm 0 vòng ngoài
-     * => chỉ số hàng == variantIndex. $base = giá sản phẩm, dùng khi ô giá để trống.
+     * Biên dịch trình sửa phân loại (JSON + ảnh tải lên) -> [cấu trúc lưu, mảng variants phẳng].
+     * - Tổ hợp sinh lại Ở SERVER (không tin thứ tự client), row-major, nhóm 0 vòng ngoài
+     *   => chỉ số hàng == variantIndex (web khách & priceCart không phải sửa).
+     * - Ảnh: mỗi lựa chọn của NHÓM 1 có 1 ảnh; ghi vào groups[0].imgs và vào từng
+     *   variant phẳng dưới khoá 'anh' (priceCart bỏ qua khoá thừa này).
      * @return array{0: array, 1: array}
      */
-    private function compileVariantGroups(?string $json, int $base): array
+    private function buildVariants(Request $request, ?Sp3d $sp, int $base): array
     {
-        $raw = json_decode((string) $json, true);
+        $raw = json_decode((string) $request->input('variant_groups_json'), true);
+        $oldImgs = $this->oldVariantImgs($sp);
+
         if (!is_array($raw) || empty($raw['groups'])) {
-            return [['groups' => [], 'rows' => []], []]; // không phân loại
+            $this->deleteVariantImgs($oldImgs, [], $sp);
+            return [['groups' => [], 'rows' => []], []];
         }
 
-        // 1) Làm sạch nhóm + tùy chọn (bỏ dòng trống), tối đa 2 nhóm.
+        // 1) Lưu ảnh mới tải lên (variant_img_new[]) -> map chỉ số -> đường dẫn.
+        $newPaths = [];
+        foreach ((array) $request->file('variant_img_new', []) as $k => $f) {
+            if ($f && $f->isValid()) $newPaths[(int) $k] = $f->store('sp3d', 'public');
+        }
+
+        // 2) Làm sạch nhóm; nhóm 0 giữ ảnh song song với lựa chọn.
         $groups = [];
-        foreach ($raw['groups'] as $g) {
+        foreach ($raw['groups'] as $gi => $g) {
             $opts = [];
-            foreach (($g['options'] ?? []) as $o) {
+            $imgsRaw = [];
+            $srcImgs = $g['imgs'] ?? [];
+            foreach (($g['options'] ?? []) as $oi => $o) {
                 $o = trim((string) $o);
-                if ($o !== '') $opts[] = $o;
+                if ($o === '') continue;
+                $opts[] = $o;
+                if ((int) $gi === 0) $imgsRaw[] = $srcImgs[$oi] ?? null;
             }
             if ($opts) {
-                $groups[] = [
-                    'ten'     => (trim((string) ($g['ten'] ?? '')) ?: 'Phân loại'),
-                    'options' => array_values($opts),
-                ];
+                $grp = ['ten' => (trim((string) ($g['ten'] ?? '')) ?: 'Phân loại'), 'options' => array_values($opts)];
+                if ((int) $gi === 0) $grp['_imgsRaw'] = $imgsRaw;
+                $groups[] = $grp;
             }
         }
         $groups = array_slice($groups, 0, 2);
-        if (!$groups) return [['groups' => [], 'rows' => []], []];
+        if (!$groups) {
+            $this->deleteVariantImgs($oldImgs, [], $sp);
+            return [['groups' => [], 'rows' => []], []];
+        }
 
-        // 2) Chỉ mục giá/kho theo khoá tổ hợp (client gửi trong rows).
+        // 3) Giải ảnh nhóm 0: ưu tiên ảnh mới, rồi ảnh cũ hợp lệ, còn lại null.
+        $g0imgs = [];
+        foreach (($groups[0]['_imgsRaw'] ?? []) as $im) {
+            if (is_array($im) && isset($im['new']) && isset($newPaths[(int) $im['new']])) {
+                $g0imgs[] = $newPaths[(int) $im['new']];
+            } elseif (is_array($im) && !empty($im['path']) && in_array($im['path'], $oldImgs, true)) {
+                $g0imgs[] = $im['path'];
+            } elseif (is_string($im) && $im !== '' && in_array($im, $oldImgs, true)) {
+                $g0imgs[] = $im;
+            } else {
+                $g0imgs[] = null;
+            }
+        }
+        unset($groups[0]['_imgsRaw']);
+        $n0 = count($groups[0]['options']);
+        $g0imgs = array_slice(array_pad($g0imgs, $n0, null), 0, $n0);
+        $groups[0]['imgs'] = $g0imgs;
+
+        // 4) Xoá ảnh biến thể cũ không còn dùng.
+        $keep = array_values(array_filter($g0imgs, fn ($p) => is_string($p) && $p !== ''));
+        $this->deleteVariantImgs($oldImgs, $keep, $sp);
+
+        // 5) Giá/kho theo khoá tổ hợp.
         $byKey = [];
         foreach (($raw['rows'] ?? []) as $r) {
             $key = implode('-', array_map('intval', $r['combo'] ?? []));
@@ -148,7 +181,7 @@ class Sp3dController extends Controller
             $byKey[$key] = ['gia' => (int) ($r['gia'] ?? $base), 'kho' => $kho];
         }
 
-        // 3) Sinh lại danh sách tổ hợp DETERMINISTIC.
+        // 6) Sinh tổ hợp DETERMINISTIC + variants phẳng (kèm 'anh' theo nhóm 0).
         $combos = [[]];
         foreach ($groups as $g) {
             $next = [];
@@ -157,8 +190,6 @@ class Sp3dController extends Controller
             }
             $combos = $next;
         }
-
-        // 4) Xuất rows (cấu trúc) + variants (mảng phẳng checkout đọc).
         $rows = [];
         $variants = [];
         foreach ($combos as $combo) {
@@ -168,10 +199,31 @@ class Sp3dController extends Controller
             $key = implode('-', $combo);
             $gia = $byKey[$key]['gia'] ?? $base;
             $kho = $byKey[$key]['kho'] ?? null;
-            $rows[]     = ['combo' => $combo, 'ten' => $ten, 'gia' => $gia, 'kho' => $kho];
-            $variants[] = ['ten' => $ten, 'gia' => $gia]; // giá tuyệt đối cho priceCart
+            $anh = $g0imgs[$combo[0]] ?? null;
+            $rows[] = ['combo' => $combo, 'ten' => $ten, 'gia' => $gia, 'kho' => $kho];
+            $v = ['ten' => $ten, 'gia' => $gia];
+            if ($anh) $v['anh'] = $anh;
+            $variants[] = $v;
         }
         return [['groups' => $groups, 'rows' => $rows], $variants];
+    }
+
+    /** Danh sách đường dẫn ảnh biến thể đã lưu của sản phẩm (để giữ/xoá). */
+    private function oldVariantImgs(?Sp3d $sp): array
+    {
+        $imgs = ($sp && is_array($sp->variant_groups)) ? ($sp->variant_groups['groups'][0]['imgs'] ?? []) : [];
+        return array_values(array_filter((array) $imgs, fn ($p) => is_string($p) && $p !== ''));
+    }
+
+    /** Xoá file ảnh biến thể cũ không còn dùng (không đụng ảnh trong bộ ảnh chính). */
+    private function deleteVariantImgs(array $old, array $keep, ?Sp3d $sp): void
+    {
+        $gallery = $sp ? ($sp->anh ?: []) : [];
+        foreach ($old as $p) {
+            if (!in_array($p, $keep, true) && !in_array($p, $gallery, true)) {
+                Storage::disk('public')->delete($p);
+            }
+        }
     }
 
     /**

@@ -34,7 +34,12 @@ class Api3dController extends Controller
                     'gia_goc'        => (int) $p->gia_goc,
                     'mota'           => $p->mota ?: [],
                     'mo_ta_ngan'     => $p->mo_ta_ngan,
-                    'variants'       => $p->variants ?: [],
+                    'variants'       => collect($p->variants ?: [])->map(function ($v) {
+                        $out = ['ten' => (string) ($v['ten'] ?? ''), 'gia' => (int) ($v['gia'] ?? 0)];
+                        if (array_key_exists('gia_them', $v)) $out['gia_them'] = (int) $v['gia_them'];
+                        if (!empty($v['anh'])) $out['anh'] = asset('storage/' . $v['anh']);
+                        return $out;
+                    })->all(),
                     'khac_ten'       => (bool) $p->khac_ten,
                     'dat_lam'        => (bool) $p->dat_lam,
                     'nhan'           => $p->nhan,

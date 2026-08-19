@@ -67,6 +67,15 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 .vg-table th{background:var(--gll);color:var(--gd);font-weight:800;white-space:nowrap}
 .vg-table td .vg-in{width:120px;padding:7px 9px}
 .vg-note{font-size:11.5px;color:var(--tx3);margin-top:7px}
+/* Ảnh cho từng lựa chọn (chỉ nhóm 1) */
+.vg-img{flex:none;width:44px;height:44px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:0}
+.vg-img.add{border:1.5px dashed var(--bd2);background:#fff;color:var(--tx3);font-size:16px;flex-direction:column;line-height:1;cursor:pointer;gap:1px}
+.vg-img.add i{font-style:normal;font-size:8px;font-weight:800;letter-spacing:.2px}
+.vg-img.add:hover{border-color:var(--g);color:var(--g);background:var(--gll)}
+.vg-img.has{border:1.5px solid var(--bd);cursor:pointer}
+.vg-img.has img{width:100%;height:100%;object-fit:cover;display:block}
+.vg-imgdel{position:absolute;top:1px;right:1px;width:16px;height:16px;border:none;border-radius:50%;background:rgba(28,58,10,.72);color:#fff;font-size:11px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.vg-imgdel:hover{background:#EF4444}
 </style>
 </head>
 <body>
@@ -142,7 +151,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 
     <div class="sec">
       <h2>🏷️ Phân loại hàng <i style="font-weight:500;color:var(--tx3);font-size:12px">— để trống nếu bán một mức giá</i></h2>
-      <div class="hint">Mỗi tùy chọn một ô. Ví dụ Bookmark: nhóm <b>Chọn phiên bản</b> gồm 4 màu lẻ + Set 4. Thêm nhóm thứ 2 (vd Kích thước) sẽ tự sinh bảng tổ hợp. Giá của mỗi lựa chọn nhập ở bảng bên dưới.</div>
+      <div class="hint">Mỗi tùy chọn một ô. Ví dụ Bookmark: nhóm <b>Chọn phiên bản</b> gồm 4 màu lẻ + Set 4. Thêm nhóm thứ 2 (vd Kích thước) sẽ tự sinh bảng tổ hợp. Giá nhập ở bảng bên dưới. <b>Nhóm thứ nhất</b> thêm được <b>ảnh riêng cho từng lựa chọn</b> (hiện cho khách khi chọn màu trên trang sản phẩm).</div>
       <div id="vgGroups"></div>
       <button type="button" class="vg-btn" id="vgAddGroup">＋ Thêm nhóm phân loại</button>
 
@@ -155,6 +164,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
       </div>
 
       <input type="hidden" name="variant_groups_json" id="vgJson">
+      <input type="file" id="vgOptFile" accept="image/*" hidden>
+      <input type="file" name="variant_img_new[]" id="vgFileInput" multiple hidden>
     </div>
 
     <div class="sec">
@@ -269,10 +280,13 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 </script>
 
 <script>
-/* ===== Phân loại hàng kiểu Shopee =====
-   Sinh tổ hợp deterministic (nhóm 0 vòng ngoài) — KHỚP hệt compileVariantGroups() ở PHP,
-   nên bảng xem trước và mảng variants lưu ra luôn cùng thứ tự. */
+/* ===== Phân loại hàng kiểu Shopee (kèm ảnh cho từng lựa chọn của nhóm 1) =====
+   Sinh tổ hợp deterministic (nhóm 0 vòng ngoài) — KHỚP hệt buildVariants() ở PHP.
+   Ảnh: mỗi lựa chọn của NHÓM 1 có 1 ảnh. Trạng thái ảnh = {path:"sp3d/.."} (đã lưu)
+   | {tmp:<id>} (file mới chọn, chưa gửi) | null. Khi gửi, prepareUpload() đổi {tmp}
+   thành {new:k} và nạp file vào input variant_img_new[] đúng thứ tự k. */
 (function(){
+  var STORE = @json(asset('storage')) + '/';
   var seed = @json($vgSeed);
   var st = (seed && Array.isArray(seed.groups)) ? seed : {groups:[],rows:[]};
   st.groups = st.groups || []; st.rows = st.rows || [];
@@ -283,11 +297,32 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
   var elThead  = document.getElementById('vgThead');
   var elTbody  = document.getElementById('vgTbody');
   var elJson   = document.getElementById('vgJson');
+  var optFile  = document.getElementById('vgOptFile');   // ô chọn ảnh (không gửi)
+  var fileIn   = document.getElementById('vgFileInput');  // ô gửi file mới
   var giaEl    = document.querySelector('[name="gia"]');
+
+  var tmpFiles = {};   // id -> File
+  var tmpUrl   = {};   // id -> objectURL
+  var tmpSeq   = 0;
+  var pendingOi = -1;  // lựa chọn nhóm 1 đang chờ gán ảnh
 
   function base(){ return giaEl ? (parseInt(giaEl.value||'0',10)||0) : 0; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function opts(g){ return (g.options||[]).map(function(o){return String(o||'').trim();}); }
+
+  // Chuẩn hoá mảng ảnh nhóm 0: dài đúng bằng số lựa chọn, seed dạng chuỗi -> {path}.
+  function normImgs(){
+    var g0=st.groups[0]; if(!g0) return;
+    var src=g0.imgs||[];
+    g0.imgs=(g0.options||[]).map(function(_,i){
+      var v=src[i];
+      if(v==null) return null;
+      if(typeof v==='string') return v?{path:v}:null;
+      if(v.path) return {path:v.path};
+      if(v.tmp!=null) return {tmp:v.tmp};
+      return null;
+    });
+  }
 
   function combos(){
     if(!st.groups.length) return [];
@@ -312,12 +347,45 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     });
   }
 
-  function serialize(){ elJson.value = JSON.stringify(st); }
+  function imgSrc(im){
+    if(!im) return '';
+    if(im.path) return STORE+im.path;
+    if(im.tmp!=null) return tmpUrl[im.tmp]||'';
+    return '';
+  }
+  function imgSlot(oi){
+    var im=(st.groups[0].imgs||[])[oi];
+    var src=imgSrc(im);
+    if(src) return '<span class="vg-img has" data-imgpick="'+oi+'" title="Đổi ảnh"><img src="'+src+'">'
+      +'<button type="button" class="vg-imgdel" data-imgdel="'+oi+'" title="Xoá ảnh">×</button></span>';
+    return '<button type="button" class="vg-img add" data-imgpick="'+oi+'" title="Thêm ảnh">＋<i>ảnh</i></button>';
+  }
+
+  // Chuẩn bị gửi: đổi {tmp}->{new:k}, nạp file vào variant_img_new[], viết #vgJson.
+  function serialize(){
+    var dt=new DataTransfer();
+    var out={groups:st.groups.map(function(g,gi){
+      var ng={ten:g.ten||'', options:(g.options||[]).slice()};
+      if(gi===0){
+        ng.imgs=(g.imgs||[]).map(function(im){
+          if(!im) return null;
+          if(im.path) return {path:im.path};
+          if(im.tmp!=null && tmpFiles[im.tmp]){ var k=dt.items.length; dt.items.add(tmpFiles[im.tmp]); return {"new":k}; }
+          return null;
+        });
+      }
+      return ng;
+    }), rows:st.rows};
+    fileIn.files=dt.files;
+    elJson.value=JSON.stringify(out);
+  }
 
   function renderGroups(){
+    normImgs();
     elGroups.innerHTML = st.groups.map(function(g,gi){
       var rows=(g.options||[]).map(function(o,oi){
         return '<div class="vg-opt">'
+          + (gi===0 ? imgSlot(oi) : '')
           + '<input class="vg-in" data-g="'+gi+'" data-o="'+oi+'" placeholder="Tên lựa chọn (vd: Đỏ)" value="'+esc(o)+'">'
           + '<button type="button" class="vg-mini" data-up="'+gi+','+oi+'" title="Lên">▲</button>'
           + '<button type="button" class="vg-mini" data-dn="'+gi+','+oi+'" title="Xuống">▼</button>'
@@ -330,6 +398,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         + '<button type="button" class="vg-mini del" data-delg="'+gi+'" title="Xoá nhóm">🗑</button></div>'
         + rows
         + '<button type="button" class="vg-btn vg-addopt" data-addo="'+gi+'">＋ Thêm lựa chọn</button>'
+        + (gi===0 ? '<span class="vg-note" style="margin-left:8px">Ô ảnh bên trái mỗi lựa chọn — tải ảnh riêng cho màu đó.</span>' : '')
         + '</div>';
     }).join('');
     elAddG.style.display = st.groups.length>=2 ? 'none' : '';
@@ -353,6 +422,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 
   function renderAll(){ renderGroups(); rebuildRows(); renderTable(); serialize(); }
 
+  // Bảo đảm imgs nhóm 0 đồng bộ khi thêm/xoá/đổi thứ tự lựa chọn.
+  function g0imgs(){ var g0=st.groups[0]; if(!g0.imgs) g0.imgs=[]; return g0.imgs; }
+
   elAddG.addEventListener('click', function(){
     if(st.groups.length>=2) return;
     st.groups.push({ten:'', options:['']});
@@ -360,12 +432,26 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
   });
 
   elGroups.addEventListener('click', function(e){
-    var t=e.target, d, a;
-    if((d=t.getAttribute('data-addo'))!=null){ st.groups[+d].options.push(''); renderAll(); }
+    var t=e.target.closest('[data-imgpick],[data-imgdel],[data-addo],[data-delg],[data-delo],[data-up],[data-dn]');
+    if(!t) return; var d, a;
+    if((d=t.getAttribute('data-imgpick'))!=null){ pendingOi=+d; optFile.value=''; optFile.click(); }
+    else if((d=t.getAttribute('data-imgdel'))!=null){ g0imgs()[+d]=null; renderAll(); }
+    else if((d=t.getAttribute('data-addo'))!=null){ st.groups[+d].options.push(''); if(+d===0) g0imgs().push(null); renderAll(); }
     else if((d=t.getAttribute('data-delg'))!=null){ st.groups.splice(+d,1); renderAll(); }
-    else if((d=t.getAttribute('data-delo'))!=null){ a=d.split(','); st.groups[+a[0]].options.splice(+a[1],1); renderAll(); }
-    else if((d=t.getAttribute('data-up'))!=null){ a=d.split(','); var ar=st.groups[+a[0]].options,o=+a[1]; if(o>0){ var x=ar[o];ar[o]=ar[o-1];ar[o-1]=x; renderAll(); } }
-    else if((d=t.getAttribute('data-dn'))!=null){ a=d.split(','); var ar2=st.groups[+a[0]].options,o2=+a[1]; if(o2<ar2.length-1){ var y=ar2[o2];ar2[o2]=ar2[o2+1];ar2[o2+1]=y; renderAll(); } }
+    else if((d=t.getAttribute('data-delo'))!=null){ a=d.split(','); st.groups[+a[0]].options.splice(+a[1],1); if(+a[0]===0) g0imgs().splice(+a[1],1); renderAll(); }
+    else if((d=t.getAttribute('data-up'))!=null){ a=d.split(','); var g=+a[0],o=+a[1],ar=st.groups[g].options; if(o>0){ var x=ar[o];ar[o]=ar[o-1];ar[o-1]=x; if(g===0){var im=g0imgs();var y=im[o];im[o]=im[o-1];im[o-1]=y;} renderAll(); } }
+    else if((d=t.getAttribute('data-dn'))!=null){ a=d.split(','); var g2=+a[0],o2=+a[1],ar2=st.groups[g2].options; if(o2<ar2.length-1){ var z=ar2[o2];ar2[o2]=ar2[o2+1];ar2[o2+1]=z; if(g2===0){var im2=g0imgs();var w=im2[o2];im2[o2]=im2[o2+1];im2[o2+1]=w;} renderAll(); } }
+  });
+
+  optFile.addEventListener('change', function(){
+    var f=optFile.files&&optFile.files[0];
+    if(!f||pendingOi<0) return;
+    if(!/^image\//.test(f.type)){ alert('Vui lòng chọn tệp ảnh.'); return; }
+    if(f.size>6*1024*1024){ alert('Ảnh nên dưới 6MB.'); return; }
+    var id=tmpSeq++; tmpFiles[id]=f; tmpUrl[id]=URL.createObjectURL(f);
+    g0imgs()[pendingOi]={tmp:id};
+    pendingOi=-1;
+    renderAll();
   });
 
   elGroups.addEventListener('input', function(e){
