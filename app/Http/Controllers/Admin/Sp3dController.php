@@ -85,8 +85,8 @@ class Sp3dController extends Controller
         $v['mota'] = collect(preg_split('/\r?\n/', (string) $request->input('mota_text')))
             ->map(fn ($s) => trim($s))->filter()->values()->all();
 
-        // Biểu tượng dự phòng và phân loại đã bỏ khỏi form — KHÔNG ghi đè để giữ
-        // nguyên dữ liệu cũ (vd bookmark bán theo phân loại). Giá gốc bỏ hẳn -> 0.
+        // Biểu tượng dự phòng đã bỏ khỏi form — KHÔNG ghi đè để giữ dữ liệu cũ.
+        // Giá gốc bỏ hẳn -> 0.
         $v['khac_ten'] = $request->boolean('khac_ten');
         $v['dat_lam']  = $request->boolean('dat_lam');
         $v['hien']     = $request->boolean('hien', true);
@@ -97,8 +97,81 @@ class Sp3dController extends Controller
         $v['kho']      = $v['kho'] ?? 0;
         $v['thu_tu']   = $v['thu_tu'] ?? 0;
 
+        // Phân loại hàng (kiểu Shopee): biên dịch cấu trúc nhóm+tùy chọn từ form
+        // thành mảng phẳng `variants` mà checkout đọc. Thứ tự tổ hợp cố định nên
+        // row index == variantIndex — web khách & priceCart không phải sửa gì.
+        [$v['variant_groups'], $v['variants']] = $this->compileVariantGroups(
+            $request->input('variant_groups_json'),
+            (int) $v['gia']
+        );
+
         unset($v['mota_text']);
         return $v;
+    }
+
+    /**
+     * Biên dịch trạng thái trình sửa (JSON từ form) -> [cấu trúc lưu, mảng variants phẳng].
+     * Tổ hợp sinh lại Ở SERVER (không tin thứ tự client), row-major, nhóm 0 vòng ngoài
+     * => chỉ số hàng == variantIndex. $base = giá sản phẩm, dùng khi ô giá để trống.
+     * @return array{0: array, 1: array}
+     */
+    private function compileVariantGroups(?string $json, int $base): array
+    {
+        $raw = json_decode((string) $json, true);
+        if (!is_array($raw) || empty($raw['groups'])) {
+            return [['groups' => [], 'rows' => []], []]; // không phân loại
+        }
+
+        // 1) Làm sạch nhóm + tùy chọn (bỏ dòng trống), tối đa 2 nhóm.
+        $groups = [];
+        foreach ($raw['groups'] as $g) {
+            $opts = [];
+            foreach (($g['options'] ?? []) as $o) {
+                $o = trim((string) $o);
+                if ($o !== '') $opts[] = $o;
+            }
+            if ($opts) {
+                $groups[] = [
+                    'ten'     => (trim((string) ($g['ten'] ?? '')) ?: 'Phân loại'),
+                    'options' => array_values($opts),
+                ];
+            }
+        }
+        $groups = array_slice($groups, 0, 2);
+        if (!$groups) return [['groups' => [], 'rows' => []], []];
+
+        // 2) Chỉ mục giá/kho theo khoá tổ hợp (client gửi trong rows).
+        $byKey = [];
+        foreach (($raw['rows'] ?? []) as $r) {
+            $key = implode('-', array_map('intval', $r['combo'] ?? []));
+            $kho = (isset($r['kho']) && $r['kho'] !== '' && $r['kho'] !== null) ? (int) $r['kho'] : null;
+            $byKey[$key] = ['gia' => (int) ($r['gia'] ?? $base), 'kho' => $kho];
+        }
+
+        // 3) Sinh lại danh sách tổ hợp DETERMINISTIC.
+        $combos = [[]];
+        foreach ($groups as $g) {
+            $next = [];
+            foreach ($combos as $c) {
+                foreach (array_keys($g['options']) as $i) $next[] = array_merge($c, [$i]);
+            }
+            $combos = $next;
+        }
+
+        // 4) Xuất rows (cấu trúc) + variants (mảng phẳng checkout đọc).
+        $rows = [];
+        $variants = [];
+        foreach ($combos as $combo) {
+            $label = [];
+            foreach ($combo as $gi => $oi) $label[] = $groups[$gi]['options'][$oi];
+            $ten = implode(' · ', $label);
+            $key = implode('-', $combo);
+            $gia = $byKey[$key]['gia'] ?? $base;
+            $kho = $byKey[$key]['kho'] ?? null;
+            $rows[]     = ['combo' => $combo, 'ten' => $ten, 'gia' => $gia, 'kho' => $kho];
+            $variants[] = ['ten' => $ten, 'gia' => $gia]; // giá tuyệt đối cho priceCart
+        }
+        return [['groups' => $groups, 'rows' => $rows], $variants];
     }
 
     /**

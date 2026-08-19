@@ -47,6 +47,26 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 .btn-save:hover{transform:translateY(-1px)}
 .btn-ghost{padding:12px 22px;background:#fff;color:var(--tx2);border:1.5px solid var(--bd);border-radius:10px;font-size:13px;font-weight:700;text-decoration:none}
 .btn-xem{padding:8px 16px;background:var(--gl);color:var(--gd);border:1px solid var(--bd2);border-radius:9px;font-size:12px;font-weight:700;text-decoration:none}
+/* Phân loại hàng kiểu Shopee */
+.vg-group{border:1.5px solid var(--bd);border-radius:12px;padding:13px;margin-bottom:11px;background:var(--gll)}
+.vg-ghd{display:flex;gap:8px;align-items:center;margin-bottom:9px}
+.vg-ghd>label{font-size:11px;font-weight:700;color:var(--tx2);flex:none}
+.vg-in{width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:9px 12px;font-size:13px;background:#fff;color:var(--tx);font-family:'Be Vietnam Pro',sans-serif;outline:none;transition:border .2s}
+.vg-in:focus{border-color:var(--g)}
+.vg-opt{display:flex;gap:6px;align-items:center;margin:6px 0}
+.vg-opt .vg-in{flex:1}
+.vg-mini{border:1.5px solid var(--bd);background:#fff;color:var(--tx2);border-radius:8px;min-width:32px;height:36px;font-size:14px;cursor:pointer;flex:none;line-height:1;transition:all .15s}
+.vg-mini:hover{border-color:var(--g);color:var(--gd)}
+.vg-mini.del:hover{border-color:#EF4444;color:#EF4444}
+.vg-btn{border:1.5px dashed var(--bd2);background:#fff;color:var(--gd);border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.vg-btn:hover{background:var(--gll);border-color:var(--g)}
+.vg-addopt{margin-top:3px;padding:7px 12px;font-size:12.5px}
+.vg-subhd{font-size:13px;font-weight:800;color:var(--char);margin:16px 0 8px}
+.vg-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:420px}
+.vg-table th,.vg-table td{border:1px solid var(--bd);padding:7px 10px;text-align:left;color:var(--tx)}
+.vg-table th{background:var(--gll);color:var(--gd);font-weight:800;white-space:nowrap}
+.vg-table td .vg-in{width:120px;padding:7px 9px}
+.vg-note{font-size:11.5px;color:var(--tx3);margin-top:7px}
 </style>
 </head>
 <body>
@@ -69,8 +89,23 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 
   @php
     $anh = $sp ? ($sp->anh ?: []) : [];
-    $variText = $sp ? collect($sp->variants ?: [])->map(fn($v)=>($v['ten']??'').' | '.($v['gia']??0))->implode("\n") : '';
     $motaText = $sp ? collect($sp->mota ?: [])->implode("\n") : '';
+    // Seed trình sửa phân loại: ưu tiên old() khi lưu lỗi, rồi tới dữ liệu đã lưu.
+    // Fallback: nếu sản phẩm có variants cũ mà chưa có variant_groups thì dựng 1 nhóm.
+    if (old('variant_groups_json')) {
+        $vgSeed = json_decode(old('variant_groups_json'), true) ?: ['groups'=>[],'rows'=>[]];
+    } elseif ($sp && is_array($sp->variant_groups) && !empty($sp->variant_groups['groups'])) {
+        $vgSeed = $sp->variant_groups;
+    } elseif ($sp && ($vs = $sp->variants ?: []) && count($vs)) {
+        $opts = []; $rows = [];
+        foreach (array_values($vs) as $i => $v) {
+            $opts[] = $v['ten'] ?? '';
+            $rows[] = ['combo'=>[$i],'ten'=>$v['ten']??'','gia'=>(int)($v['gia']??0),'kho'=>null];
+        }
+        $vgSeed = ['groups'=>[['ten'=>'Chọn phiên bản','options'=>$opts]],'rows'=>$rows];
+    } else {
+        $vgSeed = ['groups'=>[],'rows'=>[]];
+    }
   @endphp
 
   <form method="POST" action="{{ $sp ? route('admin.sp3d.update',$sp) : route('admin.sp3d.store') }}" enctype="multipart/form-data" id="spForm">
@@ -103,6 +138,23 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         <label class="f"><span>Tồn kho <i>— 0 là không theo dõi</i></span><input name="kho" inputmode="numeric" value="{{ old('kho', $sp->kho ?? 0) }}"></label>
         <label class="f"><span>Thứ tự hiện trên web <i>— nhỏ đứng trước</i></span><input name="thu_tu" inputmode="numeric" value="{{ old('thu_tu', $sp->thu_tu ?? 0) }}"></label>
       </div>
+    </div>
+
+    <div class="sec">
+      <h2>🏷️ Phân loại hàng <i style="font-weight:500;color:var(--tx3);font-size:12px">— để trống nếu bán một mức giá</i></h2>
+      <div class="hint">Mỗi tùy chọn một ô. Ví dụ Bookmark: nhóm <b>Chọn phiên bản</b> gồm 4 màu lẻ + Set 4. Thêm nhóm thứ 2 (vd Kích thước) sẽ tự sinh bảng tổ hợp. Giá của mỗi lựa chọn nhập ở bảng bên dưới.</div>
+      <div id="vgGroups"></div>
+      <button type="button" class="vg-btn" id="vgAddGroup">＋ Thêm nhóm phân loại</button>
+
+      <div id="vgTableWrap" hidden>
+        <div class="vg-subhd">Danh sách phân loại hàng</div>
+        <div style="overflow-x:auto"><table class="vg-table">
+          <thead id="vgThead"></thead><tbody id="vgTbody"></tbody>
+        </table></div>
+        <div class="vg-note">Kho để trống = không theo dõi tồn (in theo đơn). Phí ship tính theo bậc, không theo cân nặng.</div>
+      </div>
+
+      <input type="hidden" name="variant_groups_json" id="vgJson">
     </div>
 
     <div class="sec">
@@ -213,6 +265,127 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
   });
 
   ve();
+})();
+</script>
+
+<script>
+/* ===== Phân loại hàng kiểu Shopee =====
+   Sinh tổ hợp deterministic (nhóm 0 vòng ngoài) — KHỚP hệt compileVariantGroups() ở PHP,
+   nên bảng xem trước và mảng variants lưu ra luôn cùng thứ tự. */
+(function(){
+  var seed = @json($vgSeed);
+  var st = (seed && Array.isArray(seed.groups)) ? seed : {groups:[],rows:[]};
+  st.groups = st.groups || []; st.rows = st.rows || [];
+
+  var elGroups = document.getElementById('vgGroups');
+  var elAddG   = document.getElementById('vgAddGroup');
+  var elTblW   = document.getElementById('vgTableWrap');
+  var elThead  = document.getElementById('vgThead');
+  var elTbody  = document.getElementById('vgTbody');
+  var elJson   = document.getElementById('vgJson');
+  var giaEl    = document.querySelector('[name="gia"]');
+
+  function base(){ return giaEl ? (parseInt(giaEl.value||'0',10)||0) : 0; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function opts(g){ return (g.options||[]).map(function(o){return String(o||'').trim();}); }
+
+  function combos(){
+    if(!st.groups.length) return [];
+    if(st.groups.some(function(g){ return !opts(g).filter(Boolean).length; })) return [];
+    var out=[[]];
+    st.groups.forEach(function(g){
+      var os=g.options||[], nx=[];
+      out.forEach(function(c){ os.forEach(function(_,i){ nx.push(c.concat(i)); }); });
+      out=nx;
+    });
+    return out;
+  }
+
+  function rebuildRows(){
+    var old={}; (st.rows||[]).forEach(function(r){ old[(r.combo||[]).join('-')]=r; });
+    st.rows = combos().map(function(combo){
+      var label=combo.map(function(oi,gi){ return String(st.groups[gi].options[oi]||'').trim(); });
+      var key=combo.join('-'), prev=old[key]||{};
+      return {combo:combo, ten:label.join(' · '),
+              gia:(prev.gia!=null?prev.gia:base()),
+              kho:(prev.kho!=null?prev.kho:null)};
+    });
+  }
+
+  function serialize(){ elJson.value = JSON.stringify(st); }
+
+  function renderGroups(){
+    elGroups.innerHTML = st.groups.map(function(g,gi){
+      var rows=(g.options||[]).map(function(o,oi){
+        return '<div class="vg-opt">'
+          + '<input class="vg-in" data-g="'+gi+'" data-o="'+oi+'" placeholder="Tên lựa chọn (vd: Đỏ)" value="'+esc(o)+'">'
+          + '<button type="button" class="vg-mini" data-up="'+gi+','+oi+'" title="Lên">▲</button>'
+          + '<button type="button" class="vg-mini" data-dn="'+gi+','+oi+'" title="Xuống">▼</button>'
+          + '<button type="button" class="vg-mini del" data-delo="'+gi+','+oi+'" title="Xoá lựa chọn">✕</button>'
+          + '</div>';
+      }).join('');
+      return '<div class="vg-group">'
+        + '<div class="vg-ghd"><label>Tên nhóm</label>'
+        + '<input class="vg-in" data-gname="'+gi+'" placeholder="vd: Chọn phiên bản / Màu / Kích thước" value="'+esc(g.ten||'')+'">'
+        + '<button type="button" class="vg-mini del" data-delg="'+gi+'" title="Xoá nhóm">🗑</button></div>'
+        + rows
+        + '<button type="button" class="vg-btn vg-addopt" data-addo="'+gi+'">＋ Thêm lựa chọn</button>'
+        + '</div>';
+    }).join('');
+    elAddG.style.display = st.groups.length>=2 ? 'none' : '';
+  }
+
+  function renderTable(){
+    var rows=st.rows||[];
+    if(!rows.length){ elTblW.hidden=true; return; }
+    elTblW.hidden=false;
+    elThead.innerHTML='<tr>'
+      + st.groups.map(function(g){ return '<th>'+esc(g.ten||'Phân loại')+'</th>'; }).join('')
+      + '<th>Giá (₫)</th><th>Kho</th></tr>';
+    elTbody.innerHTML=rows.map(function(r,ri){
+      var cells=(r.combo||[]).map(function(oi,gi){ return '<td>'+esc(st.groups[gi].options[oi])+'</td>'; }).join('');
+      return '<tr>'+cells
+        + '<td><input class="vg-in" type="number" min="0" step="1000" data-price="'+ri+'" value="'+(r.gia!=null?r.gia:'')+'"></td>'
+        + '<td><input class="vg-in" type="number" min="0" step="1" data-stock="'+ri+'" placeholder="—" value="'+(r.kho!=null?r.kho:'')+'"></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function renderAll(){ renderGroups(); rebuildRows(); renderTable(); serialize(); }
+
+  elAddG.addEventListener('click', function(){
+    if(st.groups.length>=2) return;
+    st.groups.push({ten:'', options:['']});
+    renderAll();
+  });
+
+  elGroups.addEventListener('click', function(e){
+    var t=e.target, d, a;
+    if((d=t.getAttribute('data-addo'))!=null){ st.groups[+d].options.push(''); renderAll(); }
+    else if((d=t.getAttribute('data-delg'))!=null){ st.groups.splice(+d,1); renderAll(); }
+    else if((d=t.getAttribute('data-delo'))!=null){ a=d.split(','); st.groups[+a[0]].options.splice(+a[1],1); renderAll(); }
+    else if((d=t.getAttribute('data-up'))!=null){ a=d.split(','); var ar=st.groups[+a[0]].options,o=+a[1]; if(o>0){ var x=ar[o];ar[o]=ar[o-1];ar[o-1]=x; renderAll(); } }
+    else if((d=t.getAttribute('data-dn'))!=null){ a=d.split(','); var ar2=st.groups[+a[0]].options,o2=+a[1]; if(o2<ar2.length-1){ var y=ar2[o2];ar2[o2]=ar2[o2+1];ar2[o2+1]=y; renderAll(); } }
+  });
+
+  elGroups.addEventListener('input', function(e){
+    var t=e.target, d;
+    if((d=t.getAttribute('data-gname'))!=null){ st.groups[+d].ten=t.value; serialize(); renderTable(); }
+    else if(t.hasAttribute('data-g')){ st.groups[+t.getAttribute('data-g')].options[+t.getAttribute('data-o')]=t.value; rebuildRows(); renderTable(); serialize(); }
+  });
+
+  elTbody.addEventListener('input', function(e){
+    var t=e.target, d;
+    if((d=t.getAttribute('data-price'))!=null){ st.rows[+d].gia = t.value===''?null:(parseInt(t.value,10)||0); serialize(); }
+    else if((d=t.getAttribute('data-stock'))!=null){ st.rows[+d].kho = t.value===''?null:(parseInt(t.value,10)||0); serialize(); }
+  });
+
+  if(giaEl) giaEl.addEventListener('input', function(){ (st.rows||[]).forEach(function(r){ if(r.gia==null) r.gia=base(); }); renderTable(); serialize(); });
+
+  var form=document.getElementById('spForm');
+  if(form) form.addEventListener('submit', serialize); // chốt lần cuối trước khi gửi
+
+  renderAll();
 })();
 </script>
 </body>

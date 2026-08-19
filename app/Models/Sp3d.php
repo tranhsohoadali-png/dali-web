@@ -12,15 +12,16 @@ class Sp3d extends Model
 
     protected $fillable = [
         'slug', 'ten', 'art', 'cat', 'gia', 'gia_goc', 'nhan',
-        'mo_ta_ngan', 'mo_ta_dai', 'mota', 'variants', 'anh',
+        'mo_ta_ngan', 'mo_ta_dai', 'mota', 'variants', 'variant_groups', 'anh',
         'khac_ten', 'dat_lam', 'sao', 'da_ban', 'kho', 'thu_tu', 'hien',
         'payment_policy', 'shipping_class',
     ];
 
     protected $casts = [
-        'mota'     => 'array',
-        'variants' => 'array',
-        'anh'      => 'array',
+        'mota'           => 'array',
+        'variants'       => 'array',
+        'variant_groups' => 'array',
+        'anh'            => 'array',
         'khac_ten' => 'boolean',
         'dat_lam'  => 'boolean',
         'hien'     => 'boolean',
