@@ -81,7 +81,7 @@ class Api3dController extends Controller
         RateLimiter::hit('quote3d:' . $this->clientIp($request), 60);
 
         $priced = $this->priceCart($request);
-        $bank   = $this->config('BANK', ['bin' => 'MSB', 'stk' => '03001011945010', 'ten' => 'DOAN ANH TUAN']);
+        $bank   = $this->bankConfig();
 
         return response()->json([
             'lines'            => $priced['lines'],
@@ -171,7 +171,7 @@ class Api3dController extends Controller
             throw $ex;
         }
 
-        $bank = $this->config('BANK', ['bin' => 'MSB', 'stk' => '03001011945010', 'ten' => 'DOAN ANH TUAN']);
+        $bank = $this->bankConfig();
         return response()->json([
             'order_code'     => $code,
             'total'          => $priced['total'],
@@ -369,6 +369,17 @@ class Api3dController extends Controller
         if ($row === null) return $fallback;
         $v = json_decode($row, true);
         return $v === null ? $fallback : $v;
+    }
+
+    /** Ngân hàng nhận tiền — DÙNG CHUNG với cài đặt tranhdali.vn (admin_settings). */
+    private function bankConfig(): array
+    {
+        $s = DB::table('admin_settings')->whereIn('key', ['bank_id', 'bank_acc', 'bank_name'])->pluck('value', 'key');
+        return [
+            'bin' => trim((string) ($s['bank_id'] ?? '')) ?: 'MSB',
+            'stk' => trim((string) ($s['bank_acc'] ?? '')) ?: '13001011945010',
+            'ten' => trim((string) ($s['bank_name'] ?? '')) ?: 'DOAN ANH TUAN',
+        ];
     }
 
     /**

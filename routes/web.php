@@ -128,9 +128,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::delete('don-hang/{don}',         [\App\Http\Controllers\Admin\Don3dController::class, 'destroy'])->name('don3d.destroy');
     });
 
-    // ─── Cài đặt Xưởng in 3D (giá / môn / tài khoản) ───
-    Route::get('3d/cai-dat', [\App\Http\Controllers\Admin\CauHinh3dController::class, 'index'])->name('cauhinh3d.index');
-    Route::put('3d/cai-dat', [\App\Http\Controllers\Admin\CauHinh3dController::class, 'update'])->name('cauhinh3d.update');
+    // Cài đặt Xưởng in 3D đã bỏ (19/08/2026): ngân hàng dùng chung admin_settings,
+    // đã ngưng bán phiếu môn nên không cần trang GIA/MON riêng.
 
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
