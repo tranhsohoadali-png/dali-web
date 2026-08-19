@@ -47,7 +47,8 @@ class Api3dController extends Controller
                     'dat_lam'        => (bool) $p->dat_lam,
                     'nhan'           => $p->nhan,
                     // Giống tranhdali.vn: chưa có đánh giá thì mặc định 5.0 sao.
-                    'sao'            => (float) ($p->sao ?: 5.0),
+                    // (sao cast decimal:1 trả chuỗi "0.0" — phải ép số rồi so >0, không dùng ?:)
+                    'sao'            => (float) $p->sao > 0 ? (float) $p->sao : 5.0,
                     'da_ban'         => (int) $p->da_ban, // tự cộng khi đơn hoàn tất
                     // Ảnh trả về URL đầy đủ — front-end dùng thẳng, không dựng URL PocketBase nữa
                     'anh'            => collect($p->anh ?: [])->map(fn ($a) => asset('storage/' . $a))->all(),
