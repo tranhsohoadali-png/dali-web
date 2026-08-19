@@ -76,8 +76,6 @@ class Sp3dController extends Controller
             'gia'            => 'nullable|integer|min:0',
             'kho'            => 'nullable|integer|min:0',
             'thu_tu'         => 'nullable|integer',
-            'sao'            => 'nullable|numeric|min:0|max:5',
-            'da_ban'         => 'nullable|integer|min:0',
             'mota_text'      => 'nullable|string',
             'payment_policy' => 'nullable|string|max:40',
             'shipping_class' => 'nullable|string|max:40',
@@ -88,14 +86,14 @@ class Sp3dController extends Controller
             ->map(fn ($s) => trim($s))->filter()->values()->all();
 
         // Biểu tượng dự phòng đã bỏ khỏi form — KHÔNG ghi đè để giữ dữ liệu cũ.
-        // Giá gốc bỏ hẳn -> 0.
+        // Giá gốc bỏ hẳn -> 0. sao/da_ban KHÔNG còn nhập tay: sao mặc định 5.0 ở
+        // catalog (giống tranhdali.vn khi chưa có đánh giá), da_ban tự cộng khi
+        // Đơn 3D "hoàn tất" — nên KHÔNG set ở đây để không ghi đè.
         $v['khac_ten'] = $request->boolean('khac_ten');
         $v['dat_lam']  = $request->boolean('dat_lam');
         $v['hien']     = $request->boolean('hien', true);
         $v['gia']      = $v['gia'] ?? 0;
         $v['gia_goc']  = 0;
-        $v['sao']      = $v['sao'] ?? 0;
-        $v['da_ban']   = $v['da_ban'] ?? 0;
         $v['kho']      = $v['kho'] ?? 0;
         $v['thu_tu']   = $v['thu_tu'] ?? 0;
 

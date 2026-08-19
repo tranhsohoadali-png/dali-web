@@ -177,9 +177,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 
     <div class="sec">
       <h2>⚙️ Cách bán</h2>
+      <div class="hint" style="margin:-6px 0 14px">⭐ Điểm sao mặc định <b>5.0</b> (như tranhdali.vn khi chưa có đánh giá) · 🛒 Lượt bán <b>tự cộng</b> mỗi khi một Đơn 3D chuyển sang <b>Hoàn tất</b> — không cần nhập tay.</div>
       <div class="grid" style="margin-bottom:12px">
-        <label class="f"><span>Điểm sao <i>— ví dụ 4.9</i></span><input name="sao" inputmode="decimal" value="{{ old('sao', $sp ? rtrim(rtrim((string)$sp->sao,'0'),'.') : '') }}"></label>
-        <label class="f"><span>Số lượt đã bán</span><input name="da_ban" inputmode="numeric" value="{{ old('da_ban', $sp->da_ban ?? 0) }}"></label>
         <label class="f"><span>Chính sách thanh toán</span>
           <select name="payment_policy">
             @php $pp = old('payment_policy', $sp->payment_policy ?? 'deposit_50'); @endphp

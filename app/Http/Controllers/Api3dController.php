@@ -46,8 +46,9 @@ class Api3dController extends Controller
                     'khac_ten'       => (bool) $p->khac_ten,
                     'dat_lam'        => (bool) $p->dat_lam,
                     'nhan'           => $p->nhan,
-                    'sao'            => (float) $p->sao,
-                    'da_ban'         => (int) $p->da_ban,
+                    // Giống tranhdali.vn: chưa có đánh giá thì mặc định 5.0 sao.
+                    'sao'            => (float) ($p->sao ?: 5.0),
+                    'da_ban'         => (int) $p->da_ban, // tự cộng khi đơn hoàn tất
                     // Ảnh trả về URL đầy đủ — front-end dùng thẳng, không dựng URL PocketBase nữa
                     'anh'            => collect($p->anh ?: [])->map(fn ($a) => asset('storage/' . $a))->all(),
                     // Bản thu nhỏ ~400px cho thẻ/gallery (fallback ảnh lớn nếu chưa có thumbnail)
