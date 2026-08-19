@@ -92,7 +92,6 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         <label class="f"><span>Đường dẫn trên web <i>— để trống sẽ tự tạo</i></span><input name="slug" value="{{ old('slug', $sp->slug ?? '') }}" placeholder="mo-hinh-phan-tu"></label>
         <label class="f"><span>Nhóm hàng</span><input name="cat" value="{{ old('cat', $sp->cat ?? '') }}" placeholder="Góc học tập"></label>
         <label class="f"><span>Nhãn góc ảnh <i>— để trống nếu không cần</i></span><input name="nhan" value="{{ old('nhan', $sp->nhan ?? '') }}" placeholder="BÁN CHẠY NHẤT"></label>
-        <label class="f hep"><span>Biểu tượng dự phòng <i>— khi chưa có ảnh</i></span><input name="art" value="{{ old('art', $sp->art ?? '') }}" placeholder="🧩"></label>
         <label class="f rong"><span>Mô tả ngắn <i>— một câu hiện dưới tên sản phẩm</i></span><input name="mo_ta_ngan" value="{{ old('mo_ta_ngan', $sp->mo_ta_ngan ?? '') }}" placeholder="Nền + 40 thẻ môn học cắm rời như LEGO. Bé tự đổi lịch mỗi tuần."></label>
       </div>
     </div>
@@ -101,10 +100,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
       <h2>💰 Giá bán</h2>
       <div class="grid">
         <label class="f"><span>Giá bán (đ)</span><input name="gia" inputmode="numeric" value="{{ old('gia', $sp->gia ?? 0) }}"></label>
-        <label class="f"><span>Giá gốc <i>— hiện gạch ngang, 0 là không có</i></span><input name="gia_goc" inputmode="numeric" value="{{ old('gia_goc', $sp->gia_goc ?? 0) }}"></label>
         <label class="f"><span>Tồn kho <i>— 0 là không theo dõi</i></span><input name="kho" inputmode="numeric" value="{{ old('kho', $sp->kho ?? 0) }}"></label>
         <label class="f"><span>Thứ tự hiện trên web <i>— nhỏ đứng trước</i></span><input name="thu_tu" inputmode="numeric" value="{{ old('thu_tu', $sp->thu_tu ?? 0) }}"></label>
-        <label class="f rong"><span>Phân loại — mỗi dòng: <b>Tên | Giá</b> (bỏ trống nếu không có)</span><textarea name="variants_text" rows="3" placeholder="Cao 10 cm | 549000&#10;Cao 15 cm | 799000">{{ old('variants_text', $variText) }}</textarea></label>
       </div>
     </div>
 

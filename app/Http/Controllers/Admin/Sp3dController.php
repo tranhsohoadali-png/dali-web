@@ -70,16 +70,13 @@ class Sp3dController extends Controller
             'slug'           => 'nullable|string|max:200',
             'cat'            => 'nullable|string|max:100',
             'nhan'           => 'nullable|string|max:40',
-            'art'            => 'nullable|string|max:16',
             'mo_ta_ngan'     => 'nullable|string|max:300',
             'gia'            => 'nullable|integer|min:0',
-            'gia_goc'        => 'nullable|integer|min:0',
             'kho'            => 'nullable|integer|min:0',
             'thu_tu'         => 'nullable|integer',
             'sao'            => 'nullable|numeric|min:0|max:5',
             'da_ban'         => 'nullable|integer|min:0',
             'mota_text'      => 'nullable|string',
-            'variants_text'  => 'nullable|string',
             'payment_policy' => 'nullable|string|max:40',
             'shipping_class' => 'nullable|string|max:40',
         ]);
@@ -88,25 +85,19 @@ class Sp3dController extends Controller
         $v['mota'] = collect(preg_split('/\r?\n/', (string) $request->input('mota_text')))
             ->map(fn ($s) => trim($s))->filter()->values()->all();
 
-        // Phân loại: mỗi dòng "Tên | Giá"
-        $v['variants'] = collect(preg_split('/\r?\n/', (string) $request->input('variants_text')))
-            ->map(fn ($s) => trim($s))->filter()
-            ->map(function ($line) {
-                $p = explode('|', $line);
-                return ['ten' => trim($p[0] ?? ''), 'gia' => (int) preg_replace('/\D/', '', $p[1] ?? '0')];
-            })->values()->all();
-
+        // Biểu tượng dự phòng và phân loại đã bỏ khỏi form — KHÔNG ghi đè để giữ
+        // nguyên dữ liệu cũ (vd bookmark bán theo phân loại). Giá gốc bỏ hẳn -> 0.
         $v['khac_ten'] = $request->boolean('khac_ten');
         $v['dat_lam']  = $request->boolean('dat_lam');
         $v['hien']     = $request->boolean('hien', true);
         $v['gia']      = $v['gia'] ?? 0;
-        $v['gia_goc']  = $v['gia_goc'] ?? 0;
+        $v['gia_goc']  = 0;
         $v['sao']      = $v['sao'] ?? 0;
         $v['da_ban']   = $v['da_ban'] ?? 0;
         $v['kho']      = $v['kho'] ?? 0;
         $v['thu_tu']   = $v['thu_tu'] ?? 0;
 
-        unset($v['mota_text'], $v['variants_text']);
+        unset($v['mota_text']);
         return $v;
     }
 
