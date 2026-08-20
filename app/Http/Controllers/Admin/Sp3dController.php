@@ -3,6 +3,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sp3d;
+use App\Models\Nhom3d;
+use App\Models\DanhMuc3d;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -26,12 +28,17 @@ class Sp3dController extends Controller
 
     public function create()
     {
-        return view('admin.sp3d.form', ['sp' => null]);
+        return view('admin.sp3d.form', ['sp' => null, 'nhoms' => $this->nhomTree()]);
     }
 
     public function edit(Sp3d $san_pham)
     {
-        return view('admin.sp3d.form', ['sp' => $san_pham]);
+        return view('admin.sp3d.form', ['sp' => $san_pham, 'nhoms' => $this->nhomTree()]);
+    }
+
+    private function nhomTree()
+    {
+        return Nhom3d::with('danhMuc')->orderBy('thu_tu')->orderBy('ten')->get();
     }
 
     public function store(Request $request)
@@ -71,6 +78,7 @@ class Sp3dController extends Controller
             'ten'            => 'required|string|max:200',
             'slug'           => 'nullable|string|max:200',
             'cat'            => 'nullable|string|max:100',
+            'danh_muc_id'    => 'nullable|exists:danh_muc_3d,id',
             'nhan'           => 'nullable|string|max:40',
             'mo_ta_ngan'     => 'nullable|string|max:300',
             'gia'            => 'nullable|integer|min:0',
@@ -96,6 +104,13 @@ class Sp3dController extends Controller
         $v['gia_goc']  = 0;
         $v['kho']      = $v['kho'] ?? 0;
         $v['thu_tu']   = $v['thu_tu'] ?? 0;
+
+        // Danh mục: `cat` (chuỗi cũ) suy từ TÊN NHÓM của danh mục để breadcrumb/nhãn cũ vẫn chạy.
+        $v['danh_muc_id'] = $v['danh_muc_id'] ?? null;
+        if ($v['danh_muc_id']) {
+            $dm = DanhMuc3d::with('nhom')->find($v['danh_muc_id']);
+            $v['cat'] = $dm && $dm->nhom ? $dm->nhom->ten : ($v['cat'] ?? null);
+        }
 
         unset($v['mota_text']);
         return $v;

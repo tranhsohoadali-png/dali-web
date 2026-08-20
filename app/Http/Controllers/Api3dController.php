@@ -22,14 +22,19 @@ class Api3dController extends Controller
     /* ============ GET /api/3d/catalog ============ */
     public function catalog()
     {
-        $items = Sp3d::where('hien', true)->orderBy('thu_tu')->orderBy('ten')->get()
+        $items = Sp3d::where('hien', true)->with('danhMuc.nhom')->orderBy('thu_tu')->orderBy('ten')->get()
             ->map(function (Sp3d $p) {
+                $dm = $p->danhMuc;
+                $nh = $dm?->nhom;
                 return [
                     'id'             => (string) $p->id,
                     'slug'           => $p->slug,
                     'ten'            => $p->ten,
                     'art'            => $p->art,
                     'cat'            => $p->cat,
+                    // Cây danh mục: Nhóm -> Danh mục (front-end chia khu theo Nhóm)
+                    'nhom'           => ($nh && $nh->hien) ? ['ten' => $nh->ten, 'slug' => $nh->slug, 'thu_tu' => (int) $nh->thu_tu] : null,
+                    'danh_muc'       => ($dm && $dm->hien) ? ['ten' => $dm->ten, 'slug' => $dm->slug, 'icon' => $dm->icon, 'thu_tu' => (int) $dm->thu_tu] : null,
                     'gia'            => (int) $p->gia,
                     'gia_goc'        => (int) $p->gia_goc,
                     'mota'           => $p->mota ?: [],

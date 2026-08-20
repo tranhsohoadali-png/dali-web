@@ -131,6 +131,17 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Cài đặt Xưởng in 3D đã bỏ (19/08/2026): ngân hàng dùng chung admin_settings,
     // đã ngưng bán phiếu môn nên không cần trang GIA/MON riêng.
 
+    // ─── Danh mục 3D: Nhóm -> Danh mục ───
+    Route::prefix('3d/danh-muc')->name('danhmuc3d.')->group(function () {
+        Route::get('/',                [\App\Http\Controllers\Admin\DanhMuc3dController::class, 'index'])->name('index');
+        Route::post('nhom',            [\App\Http\Controllers\Admin\DanhMuc3dController::class, 'storeNhom'])->name('nhom.store');
+        Route::put('nhom/{nhom}',      [\App\Http\Controllers\Admin\DanhMuc3dController::class, 'updateNhom'])->name('nhom.update');
+        Route::delete('nhom/{nhom}',   [\App\Http\Controllers\Admin\DanhMuc3dController::class, 'destroyNhom'])->name('nhom.destroy');
+        Route::post('muc',             [\App\Http\Controllers\Admin\DanhMuc3dController::class, 'storeDanhMuc'])->name('muc.store');
+        Route::put('muc/{muc}',        [\App\Http\Controllers\Admin\DanhMuc3dController::class, 'updateDanhMuc'])->name('muc.update');
+        Route::delete('muc/{muc}',     [\App\Http\Controllers\Admin\DanhMuc3dController::class, 'destroyDanhMuc'])->name('muc.destroy');
+    });
+
     // Đơn hàng
     Route::get('orders',                       [OrderController::class, 'index'])->name('orders.index');
     Route::get('thiet-ke-cho-xu-ly',           [OrderController::class, 'designQueue'])->name('thietke.queue');

@@ -11,7 +11,7 @@ class Sp3d extends Model
     protected $table = 'sp_3d';
 
     protected $fillable = [
-        'slug', 'ten', 'art', 'cat', 'gia', 'gia_goc', 'nhan',
+        'slug', 'ten', 'art', 'cat', 'danh_muc_id', 'gia', 'gia_goc', 'nhan',
         'mo_ta_ngan', 'mo_ta_dai', 'mota', 'variants', 'variant_groups', 'anh',
         'khac_ten', 'dat_lam', 'sao', 'da_ban', 'kho', 'thu_tu', 'hien',
         'payment_policy', 'shipping_class',
@@ -27,6 +27,11 @@ class Sp3d extends Model
         'hien'     => 'boolean',
         'sao'      => 'decimal:1',
     ];
+
+    public function danhMuc()
+    {
+        return $this->belongsTo(DanhMuc3d::class, 'danh_muc_id');
+    }
 
     /** Ảnh bìa (ảnh đầu tiên), hoặc null nếu chưa có ảnh nào. */
     public function getAnhBiaAttribute(): ?string

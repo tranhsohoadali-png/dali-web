@@ -135,7 +135,17 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
       <div class="grid">
         <label class="f rong"><span>Tên sản phẩm</span><input name="ten" value="{{ old('ten', $sp->ten ?? '') }}" placeholder="Bộ lắp ghép mô hình phân tử" required></label>
         <label class="f"><span>Đường dẫn trên web <i>— để trống sẽ tự tạo</i></span><input name="slug" value="{{ old('slug', $sp->slug ?? '') }}" placeholder="mo-hinh-phan-tu"></label>
-        <label class="f"><span>Nhóm hàng</span><input name="cat" value="{{ old('cat', $sp->cat ?? '') }}" placeholder="Góc học tập"></label>
+        <label class="f"><span>Danh mục <i>— <a href="{{ route('admin.danhmuc3d.index') }}" style="color:var(--g);text-decoration:underline">quản lý nhóm/danh mục</a></i></span>
+          <select name="danh_muc_id">
+            <option value="">— Chưa phân loại —</option>
+            @foreach($nhoms as $nhom)
+              <optgroup label="{{ $nhom->ten }}">
+                @foreach($nhom->danhMuc as $muc)
+                  <option value="{{ $muc->id }}" {{ (string) old('danh_muc_id', $sp->danh_muc_id ?? '') === (string) $muc->id ? 'selected' : '' }}>{{ $muc->icon }} {{ $muc->ten }}</option>
+                @endforeach
+              </optgroup>
+            @endforeach
+          </select></label>
         <label class="f"><span>Nhãn góc ảnh <i>— để trống nếu không cần</i></span><input name="nhan" value="{{ old('nhan', $sp->nhan ?? '') }}" placeholder="BÁN CHẠY NHẤT"></label>
         <label class="f rong"><span>Mô tả ngắn <i>— một câu hiện dưới tên sản phẩm</i></span><input name="mo_ta_ngan" value="{{ old('mo_ta_ngan', $sp->mo_ta_ngan ?? '') }}" placeholder="Nền + 40 thẻ môn học cắm rời như LEGO. Bé tự đổi lịch mỗi tuần."></label>
       </div>
