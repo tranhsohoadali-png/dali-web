@@ -180,9 +180,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     </div>
 
     <div class="sec">
-      <h2>📄 Mô tả chi tiết</h2>
-      <div class="hint">Mỗi dòng một ý — hiện thành danh sách gạch đầu dòng trên trang sản phẩm.</div>
-      <textarea name="mota_text" rows="6" style="width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:13px;background:var(--gll);font-family:'Be Vietnam Pro',sans-serif;resize:vertical" placeholder="185 chi tiết: 20 carbon, 32 hydro…&#10;Mô hình dạng bi và thanh nối, dựng đúng góc chuẩn VSEPR&#10;Nhựa an toàn cho bé từ 8 tuổi">{{ old('mota_text', $motaText) }}</textarea>
+      <h2>📄 Mô tả sản phẩm</h2>
+      <div class="hint"><b>Mô tả đầy đủ</b>: đoạn văn giới thiệu (mỗi dòng trống ngăn một đoạn) — hiện thành bài mô tả trên trang sản phẩm.</div>
+      <textarea name="mo_ta_dai" rows="8" style="width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:13px;background:#fff;font-family:'Be Vietnam Pro',sans-serif;resize:vertical" placeholder="Đoạn 1: giới thiệu sản phẩm, cảm giác/trải nghiệm.&#10;&#10;Đoạn 2: chi tiết kỹ thuật, chất liệu, an toàn.&#10;&#10;Đoạn 3: gợi ý sử dụng / cam kết.">{{ old('mo_ta_dai', $sp->mo_ta_dai ?? '') }}</textarea>
+      <div class="hint" style="margin:14px 0 6px"><b>Ý chính (gạch đầu dòng)</b>: mỗi dòng một ý — hiện thành danh sách ✓ bên dưới bài mô tả.</div>
+      <textarea name="mota_text" rows="5" style="width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:13px;background:var(--gll);font-family:'Be Vietnam Pro',sans-serif;resize:vertical" placeholder="Bảng nền + đủ 79 phiếu 23 môn&#10;Lắp ghép như LEGO, thay đổi dễ dàng&#10;Nhựa PLA an toàn cho bé&#10;Khắc tên bé miễn phí">{{ old('mota_text', $motaText) }}</textarea>
     </div>
 
     <div class="sec">

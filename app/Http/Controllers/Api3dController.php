@@ -39,6 +39,7 @@ class Api3dController extends Controller
                     'gia_goc'        => (int) $p->gia_goc,
                     'mota'           => $p->mota ?: [],
                     'mo_ta_ngan'     => $p->mo_ta_ngan,
+                    'mo_ta_dai'      => $p->mo_ta_dai,
                     'variants'       => collect($p->variants ?: [])->map(function ($v) {
                         $out = ['ten' => (string) ($v['ten'] ?? ''), 'gia' => (int) ($v['gia'] ?? 0)];
                         if (array_key_exists('gia_them', $v)) $out['gia_them'] = (int) $v['gia_them'];

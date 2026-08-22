@@ -81,6 +81,7 @@ class Sp3dController extends Controller
             'danh_muc_id'    => 'nullable|exists:danh_muc_3d,id',
             'nhan'           => 'nullable|string|max:40',
             'mo_ta_ngan'     => 'nullable|string|max:300',
+            'mo_ta_dai'      => 'nullable|string|max:3000',
             'gia'            => 'nullable|integer|min:0',
             'kho'            => 'nullable|integer|min:0',
             'thu_tu'         => 'nullable|integer',
