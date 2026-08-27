@@ -46,6 +46,7 @@ class Sp3dController extends Controller
         $data = $this->validated($request);
         $data['slug'] = $this->uniqueSlug($request->input('slug') ?: $request->input('ten'));
         [$data['variant_groups'], $data['variants']] = $this->buildVariants($request, null, (int) $data['gia']);
+        $data = $this->syncGiaTheoBienThe($data);
         $data['anh']  = $this->buildImages($request, []);
         Sp3d::create($data);
         return redirect()->route('admin.sp3d.index')->with('ok', 'Đã thêm sản phẩm 3D!');
@@ -56,6 +57,7 @@ class Sp3dController extends Controller
         $data = $this->validated($request);
         $data['slug'] = $this->uniqueSlug($request->input('slug') ?: $request->input('ten'), $san_pham->id);
         [$data['variant_groups'], $data['variants']] = $this->buildVariants($request, $san_pham, (int) $data['gia']);
+        $data = $this->syncGiaTheoBienThe($data);
         $data['anh']  = $this->buildImages($request, $san_pham->anh ?: []);
         $san_pham->update($data);
         return redirect()->route('admin.sp3d.index')->with('ok', 'Đã cập nhật sản phẩm!');
@@ -68,6 +70,20 @@ class Sp3dController extends Controller
         }
         $san_pham->delete();
         return back()->with('ok', 'Đã xoá sản phẩm!');
+    }
+
+    /**
+     * Sản phẩm CÓ phân loại: giá bán = giá RẺ NHẤT trong các phân loại — để thẻ ngoài
+     * trang chủ/danh sách hiển thị đúng theo giá phân loại (khỏi sửa "Giá bán" riêng).
+     * Bỏ qua bang-tkb (bán qua bộ cấu hình TKB, có giá riêng).
+     */
+    private function syncGiaTheoBienThe(array $data): array
+    {
+        if (!empty($data['variants']) && ($data['slug'] ?? '') !== 'bang-tkb') {
+            $prices = array_filter(array_map(fn ($v) => (int) ($v['gia'] ?? 0), $data['variants']), fn ($x) => $x > 0);
+            if ($prices) $data['gia'] = min($prices);
+        }
+        return $data;
     }
 
     /* ---------- helpers ---------- */

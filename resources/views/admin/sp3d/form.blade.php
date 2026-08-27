@@ -154,7 +154,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     <div class="sec">
       <h2>💰 Giá bán</h2>
       <div class="grid">
-        <label class="f"><span>Giá bán (đ)</span><input name="gia" inputmode="numeric" value="{{ old('gia', $sp->gia ?? 0) }}"></label>
+        <label class="f"><span>Giá bán (đ) <i>— nếu có phân loại, hệ tự lấy giá RẺ NHẤT của phân loại</i></span><input name="gia" inputmode="numeric" value="{{ old('gia', $sp->gia ?? 0) }}"></label>
         <label class="f"><span>Tồn kho <i>— 0 là không theo dõi</i></span><input name="kho" inputmode="numeric" value="{{ old('kho', $sp->kho ?? 0) }}"></label>
         <label class="f"><span>Thứ tự hiện trên web <i>— nhỏ đứng trước</i></span><input name="thu_tu" inputmode="numeric" value="{{ old('thu_tu', $sp->thu_tu ?? 0) }}"></label>
       </div>
