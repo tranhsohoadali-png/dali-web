@@ -181,7 +181,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     </div>
 
     <div class="sec">
-      <h2>📄 Mô tả sản phẩm</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:2px">
+        <h2 style="margin:0">📄 Mô tả sản phẩm</h2>
+        <button type="button" id="btnMotaAi" class="vg-btn" style="border-style:solid" title="Nhờ AI viết mô tả từ tên + ảnh + ý chính">✨ Gợi ý mô tả</button>
+      </div>
+      <div id="motaAiMsg" class="hint" style="display:none;margin:6px 0 10px"></div>
       <div class="hint"><b>Mô tả đầy đủ</b>: đoạn văn giới thiệu (mỗi dòng trống ngăn một đoạn) — hiện thành bài mô tả trên trang sản phẩm.</div>
       <textarea name="mo_ta_dai" rows="8" style="width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:13px;background:#fff;font-family:'Be Vietnam Pro',sans-serif;resize:vertical" placeholder="Đoạn 1: giới thiệu sản phẩm, cảm giác/trải nghiệm.&#10;&#10;Đoạn 2: chi tiết kỹ thuật, chất liệu, an toàn.&#10;&#10;Đoạn 3: gợi ý sử dụng / cam kết.">{{ old('mo_ta_dai', $sp->mo_ta_dai ?? '') }}</textarea>
       <div class="hint" style="margin:14px 0 6px"><b>Ý chính (gạch đầu dòng)</b>: mỗi dòng một ý — hiện thành danh sách ✓ bên dưới bài mô tả.</div>
@@ -489,6 +493,45 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
   if(form) form.addEventListener('submit', serialize); // chốt lần cuối trước khi gửi
 
   renderAll();
+})();
+</script>
+
+<script>
+/* Trợ lý viết mô tả: gom tên + danh mục + giá + ý chính + ảnh (đã hosted) gửi lên
+   server; server gọi Claude (nếu có key) hoặc trả bản mẫu. Điền vào 3 ô mô tả. */
+(function(){
+  var btn=document.getElementById('btnMotaAi'), msg=document.getElementById('motaAiMsg');
+  if(!btn) return;
+  var URL_AI=@json(route('admin.sp3d.motaAi'));
+  function tok(){var e=document.querySelector('[name=_token]');return e?e.value:'';}
+  function val(n){var e=document.querySelector('[name="'+n+'"]');return e?String(e.value||'').trim():'';}
+  function setVal(n,v){var e=document.querySelector('[name="'+n+'"]');if(e){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));}}
+  function dmText(){var s=document.querySelector('[name=danh_muc_id]');if(!s||!s.value)return '';var o=s.selectedOptions[0];return o?String(o.textContent||'').trim():'';}
+  function khac(){var e=document.querySelector('[name=khac_ten]');return e&&e.checked?1:0;}
+  function hostedAnh(){return [].slice.call(document.querySelectorAll('#imgGrid .imgo img'))
+    .map(function(i){return i.getAttribute('src')||'';})
+    .filter(function(u){return u.indexOf('/storage/sp3d/')>=0;});}
+  function show(t,err){msg.style.display='block';msg.style.color=err?'#B91C1C':'var(--gd)';msg.textContent=t;}
+
+  btn.addEventListener('click', function(){
+    var ten=val('ten'), tuKhoa=val('mota_text');
+    if(!ten && !tuKhoa){ show('Nhập TÊN sản phẩm hoặc vài ý chính (ô gạch đầu dòng) trước đã.',true); return; }
+    var old=btn.textContent; btn.disabled=true; btn.textContent='✨ Đang viết…'; show('Đang nhờ AI viết mô tả…');
+    fetch(URL_AI,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':tok(),'Accept':'application/json'},
+      body:JSON.stringify({ten:ten,danh_muc:dmText(),gia:parseInt(val('gia')||'0',10)||0,tu_khoa:tuKhoa,khac_ten:khac(),anh:hostedAnh()})})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+    .then(function(res){
+      var d=res.d||{};
+      if(!res.ok||!d.ok){ show(d.error||('Không tạo được mô tả ('+(d.message||'lỗi')+').'),true); return; }
+      if(d.mo_ta_ngan) setVal('mo_ta_ngan',d.mo_ta_ngan);
+      if(d.mota&&d.mota.length) setVal('mota_text',d.mota.join('\n'));
+      if(d.mo_ta_dai) setVal('mo_ta_dai',d.mo_ta_dai);
+      if(d.source==='ai') show('✓ AI đã viết xong — xem lại, sửa nếu cần rồi Lưu.');
+      else show('✓ Đã điền bản mẫu. '+(d.warn?('⚠ '+d.warn+' '):'')+'Thêm ANTHROPIC_API_KEY vào .env để AI tự viết theo ảnh.');
+    })
+    .catch(function(e){ show('Lỗi mạng: '+e.message,true); })
+    .finally(function(){ btn.disabled=false; btn.textContent=old; });
+  });
 })();
 </script>
 

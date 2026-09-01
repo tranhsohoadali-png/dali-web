@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // Trợ lý viết mô tả sản phẩm (Anthropic Claude). Để trống key -> dùng bản mẫu (không AI).
+    'anthropic' => [
+        'key'   => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5'),
+    ],
+
 ];

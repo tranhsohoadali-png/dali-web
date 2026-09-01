@@ -8,6 +8,7 @@ use App\Models\DanhMuc3d;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 /**
  * Quản lý sản phẩm khu "Xưởng in 3D".
@@ -365,5 +366,149 @@ class Sp3dController extends Controller
             $slug = $base . '-' . (++$i);
         }
         return $slug;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Trợ lý viết mô tả (Claude nếu có ANTHROPIC_API_KEY, không thì bản mẫu)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Nhận tên/danh mục/giá/từ khoá + ảnh (URL đã hosted) -> trả JSON
+     * { ok, source, mo_ta_ngan, mota[], mo_ta_dai }. Người dùng xem lại rồi mới lưu.
+     */
+    public function motaAi(Request $request)
+    {
+        $v = $request->validate([
+            'ten'      => 'nullable|string|max:200',
+            'danh_muc' => 'nullable|string|max:120',
+            'gia'      => 'nullable|integer|min:0',
+            'tu_khoa'  => 'nullable|string|max:2000',
+            'khac_ten' => 'nullable|boolean',
+            'anh'      => 'nullable|array|max:6',
+            'anh.*'    => 'nullable|string|max:400',
+        ]);
+        $ten     = trim($v['ten'] ?? '');
+        $danhMuc = trim($v['danh_muc'] ?? '');
+        $gia     = (int) ($v['gia'] ?? 0);
+        $tuKhoa  = trim($v['tu_khoa'] ?? '');
+        $khacTen = !empty($v['khac_ten']);
+        // Chỉ nhận ảnh https đã hosted trong thư mục lưu trữ của mình (tránh SSRF).
+        $anh = collect($v['anh'] ?? [])
+            ->filter(fn ($u) => is_string($u) && preg_match('#^https?://#', $u) && str_contains($u, '/storage/sp3d/'))
+            ->take(3)->values()->all();
+
+        if ($ten === '' && $tuKhoa === '') {
+            return response()->json(['ok' => false, 'error' => 'Cần ít nhất tên sản phẩm hoặc vài từ khoá.'], 422);
+        }
+
+        $key = config('services.anthropic.key');
+        if (!$key) {
+            return response()->json(['ok' => true, 'source' => 'template']
+                + $this->motaMau($ten, $danhMuc, $gia, $tuKhoa, $khacTen));
+        }
+
+        try {
+            return response()->json(['ok' => true, 'source' => 'ai']
+                + $this->motaClaude($key, $ten, $danhMuc, $gia, $tuKhoa, $khacTen, $anh));
+        } catch (\Throwable $e) {
+            // API lỗi -> vẫn trả bản mẫu để không chặn người dùng.
+            return response()->json([
+                'ok' => true, 'source' => 'template',
+                'warn' => 'AI chưa gọi được (' . mb_substr($e->getMessage(), 0, 120) . '), tạm dùng bản mẫu.',
+            ] + $this->motaMau($ten, $danhMuc, $gia, $tuKhoa, $khacTen));
+        }
+    }
+
+    /** Gọi Claude qua HTTP (Guzzle của Laravel) — ảnh truyền bằng URL, không base64. */
+    private function motaClaude(string $key, string $ten, string $danhMuc, int $gia, string $tuKhoa, bool $khacTen, array $anh): array
+    {
+        $model = config('services.anthropic.model', 'claude-opus-5');
+        $sys = 'Bạn là copywriter của xưởng in 3D DALI 3D (Việt Nam). Viết mô tả sản phẩm bằng tiếng Việt, '
+            . 'giọng ấm áp và đáng tin, gợi cảm xúc nhưng TRUNG THỰC — không phóng đại, không hứa điều không có. '
+            . 'Văn phong như các shop quà tặng cao cấp: câu gọn, cụ thể, tập trung vào trải nghiệm và lợi ích của người dùng. '
+            . 'Chỉ dựa vào thông tin và ảnh được cung cấp; KHÔNG bịa thông số (kích thước, chất liệu) nếu không được cho. '
+            . 'Nếu có khắc tên miễn phí thì nhắc tới một cách nhẹ nhàng.';
+
+        $facts = "Thông tin sản phẩm:\n- Tên: {$ten}\n";
+        if ($danhMuc) $facts .= "- Danh mục: {$danhMuc}\n";
+        if ($gia)     $facts .= '- Giá: ' . number_format($gia, 0, ',', '.') . "đ\n";
+        if ($khacTen) $facts .= "- Có khắc tên miễn phí\n";
+        if ($tuKhoa)  $facts .= "- Ý chính / từ khoá gợi ý (mỗi dòng một ý):\n{$tuKhoa}\n";
+        $facts .= "\nHãy viết (dựa cả vào ảnh nếu có):\n"
+            . "1) mo_ta_ngan: MỘT câu (tối đa ~160 ký tự) hiện dưới tên sản phẩm.\n"
+            . "2) mota: 4–6 gạch đầu dòng ngắn, mỗi ý một lợi ích/đặc điểm cụ thể.\n"
+            . "3) mo_ta_dai: 2–3 đoạn văn (mỗi đoạn 2–4 câu), ngăn nhau bằng một dòng trống.\n"
+            . 'CHỈ trả về JSON thuần đúng dạng: '
+            . '{"mo_ta_ngan":"...","mota":["...","..."],"mo_ta_dai":"đoạn 1\n\nđoạn 2"} — không thêm chữ nào ngoài JSON.';
+
+        $content = [];
+        foreach ($anh as $u) {
+            $content[] = ['type' => 'image', 'source' => ['type' => 'url', 'url' => $u]];
+        }
+        $content[] = ['type' => 'text', 'text' => $facts];
+
+        $resp = Http::withHeaders([
+            'x-api-key'         => $key,
+            'anthropic-version' => '2023-06-01',
+        ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+            'model'      => $model,
+            'max_tokens' => 1500,
+            'system'     => $sys,
+            'messages'   => [['role' => 'user', 'content' => $content]],
+        ]);
+
+        if (!$resp->successful()) {
+            throw new \RuntimeException('HTTP ' . $resp->status() . ' ' . mb_substr($resp->body(), 0, 160));
+        }
+        $text = collect($resp->json('content') ?: [])
+            ->where('type', 'text')->pluck('text')->implode("\n");
+        $json = $this->jsonTuText($text);
+        if (!$json) throw new \RuntimeException('Không đọc được JSON từ phản hồi AI.');
+
+        return [
+            'mo_ta_ngan' => trim((string) ($json['mo_ta_ngan'] ?? '')),
+            'mota'       => array_values(array_filter(array_map(fn ($x) => trim((string) $x), (array) ($json['mota'] ?? [])))),
+            'mo_ta_dai'  => trim((string) ($json['mo_ta_dai'] ?? '')),
+        ];
+    }
+
+    /** Rút mảng JSON từ text trả về (bỏ hàng rào ```json và chữ thừa quanh JSON). */
+    private function jsonTuText(string $text): ?array
+    {
+        $t = trim($text);
+        $t = preg_replace('/```(?:json)?/i', '', $t);
+        $s = strpos($t, '{');
+        $e = strrpos($t, '}');
+        if ($s === false || $e === false || $e < $s) return null;
+        $d = json_decode(substr($t, $s, $e - $s + 1), true);
+        return is_array($d) ? $d : null;
+    }
+
+    /** Bản mẫu (không AI): ghép khung mô tả theo văn phong DALI từ dữ liệu đã nhập. */
+    private function motaMau(string $ten, string $danhMuc, int $gia, string $tuKhoa, bool $khacTen): array
+    {
+        $ten = $ten !== '' ? $ten : 'Sản phẩm';
+        $kw  = collect(preg_split('/[\r\n]+/', $tuKhoa))
+            ->map(fn ($x) => trim($x))->filter()->values()->all();
+
+        $mota = array_map(fn ($k) => Str::ucfirst($k), $kw);
+        if ($khacTen) $mota[] = 'Khắc tên miễn phí trước khi in';
+        if (!$mota)   $mota = ['Thiết kế in 3D tỉ mỉ, chắc chắn', 'Màu sắc tươi, an toàn khi sử dụng', 'Phù hợp làm quà tặng hoặc trang trí'];
+
+        $short = $khacTen
+            ? "{$ten} — in 3D theo yêu cầu tại DALI 3D, khắc tên miễn phí."
+            : "{$ten} — in 3D theo yêu cầu tại DALI 3D.";
+
+        $p1 = "{$ten} được xưởng DALI 3D in theo yêu cầu, chăm chút từng chi tiết để bạn nhận đúng món mình hình dung.";
+        $p2 = $kw
+            ? ('Điểm nổi bật: ' . implode('; ', array_slice($kw, 0, 4)) . '.')
+            : 'Sản phẩm hoàn thiện gọn gàng, chắc chắn, phù hợp làm quà tặng hoặc trang trí góc nhỏ của bạn.';
+        $p3 = ($khacTen ? 'Xưởng khắc tên miễn phí trước khi in. ' : '') . 'Đặt hàng dễ dàng, giao toàn quốc.';
+
+        return [
+            'mo_ta_ngan' => $short,
+            'mota'       => array_values($mota),
+            'mo_ta_dai'  => $p1 . "\n\n" . $p2 . "\n\n" . $p3,
+        ];
     }
 }

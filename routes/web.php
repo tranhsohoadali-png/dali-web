@@ -117,6 +117,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('san-pham/{san_pham}/sua', [\App\Http\Controllers\Admin\Sp3dController::class, 'edit'])->name('sp3d.edit');
         Route::put('san-pham/{san_pham}',     [\App\Http\Controllers\Admin\Sp3dController::class, 'update'])->name('sp3d.update');
         Route::delete('san-pham/{san_pham}',  [\App\Http\Controllers\Admin\Sp3dController::class, 'destroy'])->name('sp3d.destroy');
+        Route::post('san-pham-mota-ai',       [\App\Http\Controllers\Admin\Sp3dController::class, 'motaAi'])->name('sp3d.motaAi');
     });
 
     // ─── Đơn hàng khu Xưởng in 3D ───
