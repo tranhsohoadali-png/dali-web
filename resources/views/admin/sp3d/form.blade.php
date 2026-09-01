@@ -123,6 +123,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     @if($sp)@method('PUT')@endif
     <input type="hidden" name="anh_keep" id="anhKeep" value='@json($anh)'>
     <input type="hidden" name="anh_order" id="anhOrder">
+    {{-- Mặc định cố định: sản phẩm luôn có hàng, cọc 50%, gửi tiêu chuẩn, không đặt làm --}}
+    <input type="hidden" name="kho" value="{{ old('kho', $sp->kho ?? 0) }}">
+    <input type="hidden" name="payment_policy" value="{{ old('payment_policy', $sp->payment_policy ?? 'deposit_50') }}">
+    <input type="hidden" name="shipping_class" value="{{ old('shipping_class', $sp->shipping_class ?? 'standard') }}">
+    <input type="hidden" name="dat_lam" value="{{ old('dat_lam', $sp->dat_lam ?? false) ? 1 : 0 }}">
 
     <div class="sec">
       <h2>📷 Ảnh sản phẩm</h2>
@@ -150,13 +155,17 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         <label class="f"><span>Nhãn góc ảnh <i>— để trống nếu không cần</i></span><input name="nhan" value="{{ old('nhan', $sp->nhan ?? '') }}" placeholder="BÁN CHẠY NHẤT"></label>
         <label class="f rong"><span>Mô tả ngắn <i>— một câu hiện dưới tên sản phẩm</i></span><input name="mo_ta_ngan" value="{{ old('mo_ta_ngan', $sp->mo_ta_ngan ?? '') }}" placeholder="Nền + 40 thẻ môn học cắm rời như LEGO. Bé tự đổi lịch mỗi tuần."></label>
       </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <label class="tick" style="flex:1;min-width:220px;margin:0"><input type="checkbox" name="khac_ten" value="1" {{ old('khac_ten', $sp->khac_ten ?? false) ? 'checked' : '' }}><span><b>Có khắc tên miễn phí</b><small>Hiện ô nhập tên khi khách đặt</small></span></label>
+        <input type="hidden" name="hien" value="0">
+        <label class="tick" style="flex:1;min-width:220px;margin:0"><input type="checkbox" name="hien" value="1" {{ old('hien', $sp->hien ?? true) ? 'checked' : '' }}><span><b>Đang bán</b><small>Bỏ tích để ẩn khỏi web</small></span></label>
+      </div>
     </div>
 
     <div class="sec">
       <h2>💰 Giá bán</h2>
       <div class="grid">
         <label class="f"><span>Giá bán (đ) <i>— nếu có phân loại, hệ tự lấy giá RẺ NHẤT của phân loại</i></span><input name="gia" inputmode="numeric" value="{{ old('gia', $sp->gia ?? 0) }}"></label>
-        <label class="f"><span>Tồn kho <i>— 0 là không theo dõi</i></span><input name="kho" inputmode="numeric" value="{{ old('kho', $sp->kho ?? 0) }}"></label>
         <label class="f"><span>Thứ tự hiện trên web <i>— nhỏ đứng trước</i></span><input name="thu_tu" inputmode="numeric" value="{{ old('thu_tu', $sp->thu_tu ?? 0) }}"></label>
       </div>
     </div>
@@ -190,28 +199,6 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
       <textarea name="mo_ta_dai" rows="8" style="width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:13px;background:#fff;font-family:'Be Vietnam Pro',sans-serif;resize:vertical" placeholder="Đoạn 1: giới thiệu sản phẩm, cảm giác/trải nghiệm.&#10;&#10;Đoạn 2: chi tiết kỹ thuật, chất liệu, an toàn.&#10;&#10;Đoạn 3: gợi ý sử dụng / cam kết.">{{ old('mo_ta_dai', $sp->mo_ta_dai ?? '') }}</textarea>
       <div class="hint" style="margin:14px 0 6px"><b>Ý chính (gạch đầu dòng)</b>: mỗi dòng một ý — hiện thành danh sách ✓ bên dưới bài mô tả.</div>
       <textarea name="mota_text" rows="5" style="width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:11px 13px;font-size:13px;background:var(--gll);font-family:'Be Vietnam Pro',sans-serif;resize:vertical" placeholder="Bảng nền + đủ 79 phiếu 23 môn&#10;Lắp ghép như LEGO, thay đổi dễ dàng&#10;Nhựa PLA an toàn cho bé&#10;Khắc tên bé miễn phí">{{ old('mota_text', $motaText) }}</textarea>
-    </div>
-
-    <div class="sec">
-      <h2>⚙️ Cách bán</h2>
-      <div class="hint" style="margin:-6px 0 14px">⭐ Điểm sao mặc định <b>5.0</b> (như tranhdali.vn khi chưa có đánh giá) · 🛒 Lượt bán <b>tự cộng</b> mỗi khi một Đơn 3D chuyển sang <b>Hoàn tất</b> — không cần nhập tay.</div>
-      <div class="grid" style="margin-bottom:12px">
-        <label class="f"><span>Chính sách thanh toán</span>
-          <select name="payment_policy">
-            @php $pp = old('payment_policy', $sp->payment_policy ?? 'deposit_50'); @endphp
-            <option value="deposit_50" {{ $pp=='deposit_50'?'selected':'' }}>Cọc 50% khi đặt, 50% khi nhận (mặc định)</option>
-            <option value="cod_or_prepaid_10" {{ $pp=='cod_or_prepaid_10'?'selected':'' }}>Nhận hàng trả tiền (CK trước giảm 10%)</option>
-          </select></label>
-        <label class="f"><span>Cách gửi hàng</span>
-          <select name="shipping_class">
-            @php $sc = old('shipping_class', $sp->shipping_class ?? 'standard'); @endphp
-            <option value="standard" {{ $sc=='standard'?'selected':'' }}>Tiêu chuẩn</option>
-            <option value="phieu" {{ $sc=='phieu'?'selected':'' }}>Phong bì phiếu lẻ</option>
-          </select></label>
-      </div>
-      <label class="tick"><input type="checkbox" name="khac_ten" value="1" {{ old('khac_ten', $sp->khac_ten ?? false) ? 'checked' : '' }}><span><b>Có khắc tên miễn phí</b><small>Hiện ô nhập tên khi khách đặt</small></span></label>
-      <label class="tick"><input type="checkbox" name="dat_lam" value="1" {{ old('dat_lam', $sp->dat_lam ?? false) ? 'checked' : '' }}><span><b>Hàng đặt làm theo yêu cầu</b><small>Khách phải cọc 50% và duyệt mẫu trước khi in</small></span></label>
-      <label class="tick"><input type="checkbox" name="hien" value="1" {{ old('hien', $sp->hien ?? true) ? 'checked' : '' }}><span><b>Đang bán</b><small>Bỏ tích để ẩn khỏi web</small></span></label>
     </div>
 
     <div class="sec"><div class="bar">
