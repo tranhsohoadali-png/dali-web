@@ -86,7 +86,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     <div><div class="tb-bc">Admin › Xưởng in 3D › <b>{{ $sp ? 'Sửa sản phẩm' : 'Thêm sản phẩm' }}</b></div>
       <div class="tb-title">{{ $sp ? $sp->ten : 'Thêm sản phẩm 3D' }}</div></div>
     <div style="display:flex;gap:10px;align-items:center">
-      @if($sp)<a href="https://3d.tranhdali.vn/san-pham/{{ $sp->slug }}" target="_blank" rel="noopener" class="btn-xem">👁️ Xem trên web ↗</a>@endif
+      <button type="button" id="btnPrev" class="btn-xem" style="cursor:pointer;border:1px solid var(--bd2)">👁️ Xem trước</button>
+      @if($sp)<a href="https://3d.tranhdali.vn/san-pham/{{ $sp->slug }}" target="_blank" rel="noopener" class="btn-xem">🌐 Xem trên web ↗</a>@endif
       <a href="{{ route('admin.sp3d.index') }}" class="back">← Tất cả sản phẩm 3D</a>
     </div>
   </div>
@@ -488,6 +489,148 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
   if(form) form.addEventListener('submit', serialize); // chốt lần cuối trước khi gửi
 
   renderAll();
+})();
+</script>
+
+<!-- ===== Xem trước trực tiếp: thẻ ngoài trang + trang sản phẩm, cập nhật realtime ===== -->
+<style>
+#prevBack{position:fixed;inset:0;background:rgba(20,40,8,.32);opacity:0;visibility:hidden;transition:opacity .25s;z-index:60}
+#prevBack.on{opacity:1;visibility:visible}
+#prevDraw{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:92vw;background:#EEF6FF;box-shadow:-8px 0 34px rgba(20,40,8,.18);
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.16,1,.3,1);z-index:61;display:flex;flex-direction:column}
+#prevDraw.on{transform:none}
+.pv-hd{flex:none;height:52px;padding:0 16px;background:#fff;border-bottom:1px solid #DCEBD0;display:flex;align-items:center;justify-content:space-between}
+.pv-hd b{font-size:14px;font-weight:900;color:#2D6A08}
+.pv-x{border:none;background:#F0F6E8;color:#3E7A0A;width:32px;height:32px;border-radius:9px;font-size:16px;cursor:pointer}
+.pv-body{flex:1;overflow-y:auto;padding:16px;font-family:'Be Vietnam Pro',sans-serif}
+.pv-lb{font-size:10px;font-weight:800;letter-spacing:.6px;color:#7FA968;text-transform:uppercase;margin:2px 2px 8px}
+.pv-lb2{margin-top:22px}
+/* Thẻ ngoài trang */
+.pv-card{width:210px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 22px -12px rgba(20,60,20,.4);border:1px solid #EAF2E0}
+.pv-card .im{aspect-ratio:1/1;background:#F1F6EA center/cover no-repeat;position:relative}
+.pv-card .nhan{position:absolute;top:8px;left:8px;background:#FF5A3C;color:#fff;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.3px}
+.pv-card .bd{padding:11px 12px 13px}
+.pv-card .bd h4{font-size:13.5px;font-weight:800;color:#173A12;line-height:1.3;margin-bottom:4px}
+.pv-card .bd .sh{font-size:11px;color:#7C9A6E;line-height:1.35;margin-bottom:7px;min-height:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pv-card .bd .st{font-size:10.5px;color:#E8A200;margin-bottom:6px}
+.pv-card .bd .pr{font-size:16px;font-weight:900;color:#FF5A3C}
+/* Trang sản phẩm */
+.pv-pg{background:#fff;border-radius:16px;overflow:hidden;border:1px solid #EAF2E0;box-shadow:0 8px 22px -14px rgba(20,60,20,.4)}
+.pv-pg .big{aspect-ratio:1/1;background:#F1F6EA center/cover no-repeat}
+.pv-pg .thumbs{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;background:#FAFDF6}
+.pv-pg .thumbs img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex:none;border:1px solid #E3EED6}
+.pv-pg .pad{padding:13px 15px 16px}
+.pv-crumb{font-size:10.5px;color:#9DB98C;margin-bottom:7px}
+.pv-pg h3{font-size:18px;font-weight:900;color:#143A0F;line-height:1.25;margin-bottom:5px}
+.pv-star{font-size:11px;color:#E8A200;margin-bottom:10px}
+.pv-sh{font-size:12.5px;color:#5B7A4E;line-height:1.5;margin-bottom:12px}
+.pv-price{font-size:24px;font-weight:900;color:#FF5A3C;margin-bottom:4px}
+.pv-cocbox{background:#F3F9EC;border:1px solid #DCEBD0;border-radius:11px;padding:10px 12px;margin:10px 0;font-size:12px}
+.pv-cocbox .r{display:flex;justify-content:space-between;padding:3px 0;color:#33590F}
+.pv-cocbox .r b{font-weight:800}
+.pv-cocbox .r.tot{border-top:1px dashed #CADFB6;margin-top:4px;padding-top:6px}
+.pv-khac{background:#FFF6F9;border:1px dashed #FBC7D8;border-radius:10px;padding:9px 12px;margin:10px 0;font-size:11.5px;color:#B0466B}
+.pv-ul{list-style:none;margin:10px 0 0}
+.pv-ul li{font-size:12px;color:#33500F;line-height:1.5;padding-left:20px;position:relative;margin-bottom:5px}
+.pv-ul li:before{content:"✓";position:absolute;left:0;color:#6BBF1F;font-weight:900}
+.pv-para{margin-top:12px}
+.pv-para p{font-size:12.5px;color:#4A6A3E;line-height:1.6;margin-bottom:9px}
+.pv-empty{font-size:12px;color:#A9C199;font-style:italic;padding:8px 2px}
+</style>
+<div id="prevBack"></div>
+<aside id="prevDraw" aria-hidden="true">
+  <div class="pv-hd"><b>👁️ Xem trước</b><button type="button" class="pv-x" id="prevClose">✕</button></div>
+  <div class="pv-body" id="prevBody"></div>
+</aside>
+<script>
+/* Xem trước trực tiếp — đọc thẳng từ form, vẽ lại thẻ + trang y như web thật.
+   Không gọi mạng: ảnh lấy từ lưới ảnh (#imgGrid), giá lấy min phân loại (như syncGiaTheoBienThe). */
+(function(){
+  var draw=document.getElementById('prevDraw'), back=document.getElementById('prevBack'),
+      body=document.getElementById('prevBody'), btn=document.getElementById('btnPrev'),
+      xBtn=document.getElementById('prevClose'), form=document.getElementById('spForm');
+  if(!draw||!btn) return;
+  var mo=false; // đang mở?
+
+  function val(n){var e=document.querySelector('[name="'+n+'"]');return e?String(e.value||'').trim():'';}
+  function chk(n){var e=document.querySelector('[name="'+n+'"]');return !!(e&&e.checked);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function vnd(n){return (Number(n)||0).toLocaleString('vi-VN')+'₫';}
+  function anhs(){return [].slice.call(document.querySelectorAll('#imgGrid .imgo img')).map(function(i){return i.getAttribute('src');});}
+  function gia(){
+    var base=parseInt(val('gia')||'0',10)||0;
+    try{var vg=JSON.parse((document.getElementById('vgJson')||{}).value||'{}');
+      var ps=(vg.rows||[]).map(function(r){return parseInt(r.gia,10)||0;}).filter(function(x){return x>0;});
+      if(ps.length) return Math.min.apply(null,ps);
+    }catch(e){}
+    return base;
+  }
+  function dm(){
+    var s=document.querySelector('[name="danh_muc_id"]');
+    if(!s||!s.value) return {nhom:'',dm:''};
+    var o=s.selectedOptions[0]; if(!o) return {nhom:'',dm:''};
+    return {nhom:(o.parentElement&&o.parentElement.label)||'', dm:(o.textContent||'').trim()};
+  }
+  function lines(n){return val(n).split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);}
+  function paras(){return val('mo_ta_dai').split(/\r?\n\s*\r?\n/).map(function(x){return x.trim();}).filter(Boolean);}
+
+  function render(){
+    if(!mo) return;
+    var ten=val('ten')||'(chưa có tên)', sh=val('mo_ta_ngan'), nhan=val('nhan'),
+        g=gia(), imgs=anhs(), cover=imgs[0]||'', c=dm(),
+        bullets=lines('mota_text'), pr=paras(), khac=chk('khac_ten'), pp=val('payment_policy');
+    var crumb=[c.nhom,c.dm].filter(Boolean).join(' / ')||'Sản phẩm';
+
+    // Thẻ ngoài trang
+    var card='<div class="pv-card"><div class="im" style="'+(cover?'background-image:url(\''+esc(cover)+'\')':'')+'">'
+      + (nhan?'<span class="nhan">'+esc(nhan)+'</span>':'')
+      + (cover?'':'<div style="display:grid;place-items:center;height:100%;color:#B7CDA6;font-size:11px">chưa có ảnh</div>')
+      + '</div><div class="bd"><h4>'+esc(ten)+'</h4>'
+      + '<div class="sh">'+esc(sh)+'</div>'
+      + '<div class="st">★★★★★ 5.0</div>'
+      + '<div class="pr">'+vnd(g)+'</div></div></div>';
+
+    // Trang sản phẩm
+    var thumbs=imgs.slice(0,6).map(function(u){return '<img src="'+esc(u)+'">';}).join('');
+    var coc='';
+    if(pp==='deposit_50'){
+      var c1=Math.ceil(g*0.5/1000)*1000, c2=g-c1;
+      coc='<div class="pv-cocbox"><div class="r"><span>Tạm tính</span><b>'+vnd(g)+'</b></div>'
+        + '<div class="r"><span>Cọc trước (50%)</span><b>'+vnd(c1)+'</b></div>'
+        + '<div class="r tot"><span>Trả khi nhận hàng</span><b>'+vnd(c2)+'</b></div></div>';
+    } else {
+      coc='<div class="pv-cocbox"><div class="r"><span>Nhận hàng trả tiền</span><b>'+vnd(g)+'</b></div>'
+        + '<div class="r"><span>Chuyển khoản trước</span><b>giảm 10%</b></div></div>';
+    }
+    var page='<div class="pv-pg">'
+      + '<div class="big" style="'+(cover?'background-image:url(\''+esc(cover)+'\')':'')+'">'+(cover?'':'<div style="display:grid;place-items:center;height:100%;color:#B7CDA6;font-size:12px">chưa có ảnh</div>')+'</div>'
+      + (thumbs?'<div class="thumbs">'+thumbs+'</div>':'')
+      + '<div class="pad"><div class="pv-crumb">'+esc(crumb)+'</div>'
+      + '<h3>'+esc(ten)+'</h3><div class="pv-star">★★★★★ 5.0 · Kiểm tra hàng khi nhận</div>'
+      + (sh?'<div class="pv-sh">'+esc(sh)+'</div>':'')
+      + '<div class="pv-price">'+vnd(g)+'</div>'
+      + coc
+      + (khac?'<div class="pv-khac">✏️ Khắc tên bé (miễn phí) — hiện ô nhập khi khách đặt</div>':'')
+      + (bullets.length?'<ul class="pv-ul">'+bullets.map(function(b){return '<li>'+esc(b)+'</li>';}).join('')+'</ul>':'')
+      + (pr.length?'<div class="pv-para">'+pr.map(function(p){return '<p>'+esc(p)+'</p>';}).join('')+'</div>':'')
+      + '</div></div>';
+
+    body.innerHTML='<div class="pv-lb">Thẻ ngoài trang chủ / danh sách</div>'+card
+      + '<div class="pv-lb pv-lb2">Trang sản phẩm</div>'+page;
+  }
+
+  function open(){ mo=true; draw.classList.add('on'); back.classList.add('on'); draw.setAttribute('aria-hidden','false'); render(); }
+  function close(){ mo=false; draw.classList.remove('on'); back.classList.remove('on'); draw.setAttribute('aria-hidden','true'); }
+
+  btn.addEventListener('click', open);
+  xBtn.addEventListener('click', close);
+  back.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'&&mo) close(); });
+
+  // Cập nhật realtime: mọi thay đổi trên form + khi lưới ảnh đổi.
+  if(form){ form.addEventListener('input', render); form.addEventListener('change', render); }
+  var grid=document.getElementById('imgGrid');
+  if(grid && window.MutationObserver){ new MutationObserver(render).observe(grid,{childList:true,subtree:true,attributes:true}); }
 })();
 </script>
 </body>
