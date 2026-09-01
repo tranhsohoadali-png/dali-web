@@ -77,7 +77,7 @@ tr:hover td{background:var(--gll)}
       <table>
         <thead><tr>
           <th>#</th><th>Ảnh</th><th>Tên sản phẩm</th><th>Nhóm</th><th>Giá</th>
-          <th>Nhãn</th><th>Kho</th><th>Trạng thái</th><th>Thao tác</th>
+          <th>Nhãn</th><th>Trạng thái</th><th>Thao tác</th>
         </tr></thead>
         <tbody>
         @forelse($items as $p)
@@ -101,7 +101,6 @@ tr:hover td{background:var(--gll)}
             @if($p->gia_goc_ht)<div class="price-old">{{ $p->gia_goc_ht }}</div>@endif
           </td>
           <td>@if($p->nhan)<span class="badge">{{ $p->nhan }}</span>@else<span style="color:var(--tx3);font-size:11px">—</span>@endif</td>
-          <td style="font-size:12px;color:var(--tx3)">{{ $p->kho ? $p->kho : 'không theo dõi' }}</td>
           <td>@if($p->hien)<span class="badge-act">Hiện</span>@else<span class="badge-off">Ẩn</span>@endif</td>
           <td>
             <div style="display:flex;gap:6px">
@@ -114,7 +113,7 @@ tr:hover td{background:var(--gll)}
           </td>
         </tr>
         @empty
-        <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--tx3)">
+        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--tx3)">
           Chưa có sản phẩm 3D nào. <a href="{{ route('admin.sp3d.create') }}" style="color:var(--g);font-weight:700">Thêm ngay →</a>
         </td></tr>
         @endforelse
