@@ -26,4 +26,8 @@ Route::prefix('3d')->group(function () {
     Route::post('checkout',     [\App\Http\Controllers\Api3dController::class, 'checkout']);
     Route::post('event',        [\App\Http\Controllers\Api3dController::class, 'event']);
     Route::post('order-lookup', [\App\Http\Controllers\Api3dController::class, 'orderLookup']);
+    // Đại lý: đăng nhập để xem giá sỉ (giá sỉ chỉ trả cho token hợp lệ ở /catalog)
+    Route::post('dai-ly/login',  [\App\Http\Controllers\Api3dController::class, 'dealerLogin']);
+    Route::get('dai-ly/me',      [\App\Http\Controllers\Api3dController::class, 'dealerMe']);
+    Route::post('dai-ly/logout', [\App\Http\Controllers\Api3dController::class, 'dealerLogout']);
 });

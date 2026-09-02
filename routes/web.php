@@ -121,6 +121,15 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('san-pham-mota-ai',       [\App\Http\Controllers\Admin\Sp3dController::class, 'motaAi'])->name('sp3d.motaAi');
     });
 
+    // ─── Đại lý (xem giá sỉ trên web 3D) ───
+    Route::prefix('3d/dai-ly')->name('daily.')->group(function () {
+        Route::get('/',                [\App\Http\Controllers\Admin\DaiLyController::class, 'index'])->name('index');
+        Route::post('/',               [\App\Http\Controllers\Admin\DaiLyController::class, 'store'])->name('store');
+        Route::put('{dai_ly}',         [\App\Http\Controllers\Admin\DaiLyController::class, 'update'])->name('update');
+        Route::post('{dai_ly}/toggle', [\App\Http\Controllers\Admin\DaiLyController::class, 'toggle'])->name('toggle');
+        Route::delete('{dai_ly}',      [\App\Http\Controllers\Admin\DaiLyController::class, 'destroy'])->name('destroy');
+    });
+
     // ─── Đơn hàng khu Xưởng in 3D ───
     Route::prefix('3d')->group(function () {
         Route::get('don-hang',                  [\App\Http\Controllers\Admin\Don3dController::class, 'index'])->name('don3d.index');

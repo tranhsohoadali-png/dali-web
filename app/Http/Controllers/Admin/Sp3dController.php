@@ -100,6 +100,7 @@ class Sp3dController extends Controller
             'mo_ta_ngan'     => 'nullable|string|max:300',
             'mo_ta_dai'      => 'nullable|string|max:3000',
             'gia'            => 'nullable|integer|min:0',
+            'gia_si'         => 'nullable|integer|min:0',
             'kho'            => 'nullable|integer|min:0',
             'thu_tu'         => 'nullable|integer',
             'mota_text'      => 'nullable|string',
@@ -119,6 +120,7 @@ class Sp3dController extends Controller
         $v['dat_lam']  = $request->boolean('dat_lam');
         $v['hien']     = $request->boolean('hien', true);
         $v['gia']      = $v['gia'] ?? 0;
+        $v['gia_si']   = $v['gia_si'] ?? 0;
         $v['gia_goc']  = 0;
         $v['kho']      = $v['kho'] ?? 0;
         $v['thu_tu']   = $v['thu_tu'] ?? 0;

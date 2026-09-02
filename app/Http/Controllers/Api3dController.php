@@ -3,9 +3,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Sp3d;
 use App\Models\Don3d;
+use App\Models\DaiLy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -20,10 +22,11 @@ class Api3dController extends Controller
     private const ALLOWED_ORIGIN = 'https://3d.tranhdali.vn';
 
     /* ============ GET /api/3d/catalog ============ */
-    public function catalog()
+    public function catalog(Request $request)
     {
+        $daiLy = $this->daiLyTuRequest($request); // đại lý đăng nhập -> kèm giá sỉ
         $items = Sp3d::where('hien', true)->with('danhMuc.nhom')->orderBy('thu_tu')->orderBy('ten')->get()
-            ->map(function (Sp3d $p) {
+            ->map(function (Sp3d $p) use ($daiLy) {
                 $dm = $p->danhMuc;
                 $nh = $dm?->nhom;
                 return [
@@ -37,6 +40,8 @@ class Api3dController extends Controller
                     'danh_muc'       => ($dm && $dm->hien) ? ['ten' => $dm->ten, 'slug' => $dm->slug, 'icon' => $dm->icon, 'thu_tu' => (int) $dm->thu_tu] : null,
                     'gia'            => (int) $p->gia,
                     'gia_goc'        => (int) $p->gia_goc,
+                    // Giá sỉ CHỈ trả cho đại lý đã đăng nhập (null với khách thường)
+                    'gia_si'         => $daiLy ? (int) $p->gia_si : null,
                     'mota'           => $p->mota ?: [],
                     'mo_ta_ngan'     => $p->mo_ta_ngan,
                     'mo_ta_dai'      => $p->mo_ta_dai,
@@ -66,6 +71,62 @@ class Api3dController extends Controller
             });
         return response()->json(['items' => $items])
             ->header('Access-Control-Allow-Origin', self::ALLOWED_ORIGIN);
+    }
+
+    /* ============ Đại lý: đăng nhập / phiên / đăng xuất ============ */
+
+    /** Lấy đại lý từ header X-Dai-Ly-Token (nếu hợp lệ + đang mở khoá). */
+    private function daiLyTuRequest(Request $request): ?DaiLy
+    {
+        $token = trim((string) $request->header('X-Dai-Ly-Token', ''));
+        if (strlen($token) < 20) return null;
+        return DaiLy::where('token', $token)->where('hien', true)->first();
+    }
+
+    private function cors($resp)
+    {
+        return $resp->header('Access-Control-Allow-Origin', self::ALLOWED_ORIGIN);
+    }
+
+    /** POST /api/3d/dai-ly/login  {sdt, matkhau} -> {ok, token, ten} */
+    public function dealerLogin(Request $request)
+    {
+        $key = 'dl-login:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 8)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Thử lại sau ít phút.'], 429));
+        }
+        RateLimiter::hit($key, 300);
+
+        $v = $request->validate([
+            'sdt'     => 'required|string|max:20',
+            'matkhau' => 'required|string|max:100',
+        ]);
+        $sdt = preg_replace('/[^0-9+]/', '', $v['sdt']);
+        $dl  = DaiLy::where('sdt', $sdt)->where('hien', true)->first();
+        if (!$dl || !Hash::check($v['matkhau'], $dl->matkhau)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Sai số điện thoại hoặc mật khẩu.'], 401));
+        }
+        $dl->token = Str::random(48);
+        $dl->dang_nhap_luc = now();
+        $dl->save();
+        RateLimiter::clear($key);
+        return $this->cors(response()->json(['ok' => true, 'token' => $dl->token, 'ten' => $dl->ten]));
+    }
+
+    /** GET /api/3d/dai-ly/me (header token) -> {ok, ten} | 401 */
+    public function dealerMe(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
+        return $this->cors(response()->json(['ok' => true, 'ten' => $dl->ten]));
+    }
+
+    /** POST /api/3d/dai-ly/logout (header token) — xoá token phiên. */
+    public function dealerLogout(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if ($dl) { $dl->token = null; $dl->save(); }
+        return $this->cors(response()->json(['ok' => true]));
     }
 
     /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */
