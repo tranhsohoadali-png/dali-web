@@ -111,6 +111,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
 
     // ─── Xưởng in 3D (khu riêng, bảng sp_3d) ───
     Route::prefix('3d')->group(function () {
+        Route::get('/',                       [\App\Http\Controllers\Admin\Dashboard3dController::class, 'index'])->name('tongquan3d');
         Route::get('san-pham',                [\App\Http\Controllers\Admin\Sp3dController::class, 'index'])->name('sp3d.index');
         Route::get('san-pham/them',           [\App\Http\Controllers\Admin\Sp3dController::class, 'create'])->name('sp3d.create');
         Route::post('san-pham',               [\App\Http\Controllers\Admin\Sp3dController::class, 'store'])->name('sp3d.store');
