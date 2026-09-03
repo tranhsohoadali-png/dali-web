@@ -333,26 +333,35 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     });
   }
 
-  function combos(){
-    if(!st.groups.length) return [];
-    if(st.groups.some(function(g){ return !opts(g).filter(Boolean).length; })) return [];
+  /* Nhóm đã "làm sạch" — GIỐNG HỆT buildVariants() ở PHP: bỏ lựa chọn rỗng, bỏ
+     nhóm không còn lựa chọn, giữ ảnh nhóm 0 song song, tối đa 2 nhóm. Dùng cho
+     tổ hợp/bảng/lưu để chỉ số JS ↔ PHP luôn khớp (tránh gán giá/ảnh sai). */
+  function cleanG(){
+    return st.groups.map(function(g,gi){
+      var keep=[];
+      (g.options||[]).forEach(function(o,i){ if(String(o||'').trim()!=='') keep.push(i); });
+      var ng={ten:(String(g.ten||'').trim()||'Phân loại'), options:keep.map(function(i){return String(g.options[i]).trim();})};
+      if(gi===0){ var im=g.imgs||[]; ng.imgs=keep.map(function(i){return im[i]||null;}); }
+      return ng;
+    }).filter(function(g){ return g.options.length; }).slice(0,2);
+  }
+
+  function combos(cg){
+    cg=cg||cleanG();
+    if(!cg.length) return [];
     var out=[[]];
-    st.groups.forEach(function(g){
-      var os=g.options||[], nx=[];
-      out.forEach(function(c){ os.forEach(function(_,i){ nx.push(c.concat(i)); }); });
-      out=nx;
-    });
+    cg.forEach(function(g){ var nx=[]; out.forEach(function(c){ g.options.forEach(function(_,i){ nx.push(c.concat(i)); }); }); out=nx; });
     return out;
   }
 
+  /* Giữ giá theo NHÃN (không theo vị trí) -> đổi thứ tự/xoá lựa chọn thì giá bám đúng màu. */
   function rebuildRows(){
-    var old={}; (st.rows||[]).forEach(function(r){ old[(r.combo||[]).join('-')]=r; });
-    st.rows = combos().map(function(combo){
-      var label=combo.map(function(oi,gi){ return String(st.groups[gi].options[oi]||'').trim(); });
-      var key=combo.join('-'), prev=old[key]||{};
-      return {combo:combo, ten:label.join(' · '),
-              gia:(prev.gia!=null?prev.gia:base()),
-              kho:(prev.kho!=null?prev.kho:null)};
+    var cg=cleanG();
+    var old={}; (st.rows||[]).forEach(function(r){ if(r.ten!=null) old[r.ten]=r; });
+    st.rows = combos(cg).map(function(combo){
+      var ten=combo.map(function(oi,gi){ return cg[gi].options[oi]; }).join(' · ');
+      var prev=old[ten]||{};
+      return {combo:combo, ten:ten, gia:(prev.gia!=null?prev.gia:base()), kho:(prev.kho!=null?prev.kho:null)};
     });
   }
 
@@ -373,8 +382,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
   // Chuẩn bị gửi: đổi {tmp}->{new:k}, nạp file vào variant_img_new[], viết #vgJson.
   function serialize(){
     var dt=new DataTransfer();
-    var out={groups:st.groups.map(function(g,gi){
-      var ng={ten:g.ten||'', options:(g.options||[]).slice()};
+    var cg=cleanG();  // gửi đúng mảng đã làm sạch (khớp PHP) — không gửi lựa chọn rỗng
+    var groups=cg.map(function(g,gi){
+      var ng={ten:g.ten, options:g.options.slice()};
       if(gi===0){
         ng.imgs=(g.imgs||[]).map(function(im){
           if(!im) return null;
@@ -384,9 +394,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         });
       }
       return ng;
-    }), rows:st.rows};
+    });
     fileIn.files=dt.files;
-    elJson.value=JSON.stringify(out);
+    elJson.value=JSON.stringify({groups:groups, rows:st.rows});
   }
 
   function renderGroups(){

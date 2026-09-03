@@ -329,6 +329,8 @@ class Api3dController extends Controller
                     if (!isset($variants[$idx])) abort(400, 'Biến thể không hợp lệ.');
                     $variant = $variants[$idx];
                 }
+                // Sản phẩm CÓ phân loại thì bắt buộc chọn (không cho đơn thiếu biến thể).
+                if (!empty($variants) && $idx < 0) abort(400, 'Vui lòng chọn phân loại sản phẩm.');
                 $pers = trim((string) ($raw['personalization'] ?? ''));
                 if (mb_strlen($pers) > 60) abort(400, 'Tên khắc quá dài.');
                 if ($pers !== '' && !$product->khac_ten) abort(400, 'Sản phẩm này không hỗ trợ khắc tên.');
