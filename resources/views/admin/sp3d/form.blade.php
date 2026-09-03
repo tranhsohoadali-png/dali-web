@@ -182,7 +182,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         <div style="overflow-x:auto"><table class="vg-table">
           <thead id="vgThead"></thead><tbody id="vgTbody"></tbody>
         </table></div>
-        <div class="vg-note">Kho để trống = không theo dõi tồn (in theo đơn). Phí ship tính theo bậc, không theo cân nặng.</div>
+        <div class="vg-note">Mỗi tổ hợp một dòng giá. Giá để trống = lấy theo "Giá bán" ở trên. Phí ship tính theo bậc, không theo cân nặng.</div>
       </div>
 
       <input type="hidden" name="variant_groups_json" id="vgJson">
@@ -419,12 +419,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     elTblW.hidden=false;
     elThead.innerHTML='<tr>'
       + st.groups.map(function(g){ return '<th>'+esc(g.ten||'Phân loại')+'</th>'; }).join('')
-      + '<th>Giá (₫)</th><th>Kho</th></tr>';
+      + '<th>Giá (₫)</th></tr>';
     elTbody.innerHTML=rows.map(function(r,ri){
       var cells=(r.combo||[]).map(function(oi,gi){ return '<td>'+esc(st.groups[gi].options[oi])+'</td>'; }).join('');
       return '<tr>'+cells
         + '<td><input class="vg-in" type="number" min="0" step="1000" data-price="'+ri+'" value="'+(r.gia!=null?r.gia:'')+'"></td>'
-        + '<td><input class="vg-in" type="number" min="0" step="1" data-stock="'+ri+'" placeholder="—" value="'+(r.kho!=null?r.kho:'')+'"></td>'
         + '</tr>';
     }).join('');
   }
