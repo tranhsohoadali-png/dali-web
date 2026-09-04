@@ -30,4 +30,5 @@ Route::prefix('3d')->group(function () {
     Route::post('dai-ly/login',  [\App\Http\Controllers\Api3dController::class, 'dealerLogin']);
     Route::get('dai-ly/me',      [\App\Http\Controllers\Api3dController::class, 'dealerMe']);
     Route::post('dai-ly/logout', [\App\Http\Controllers\Api3dController::class, 'dealerLogout']);
+    Route::get('dai-ly/tai-anh/{slug}', [\App\Http\Controllers\Api3dController::class, 'dealerTaiAnh']);
 });

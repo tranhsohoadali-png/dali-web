@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -42,6 +43,8 @@ class Api3dController extends Controller
                     'gia_goc'        => (int) $p->gia_goc,
                     // Giá sỉ CHỈ trả cho đại lý đã đăng nhập (null với khách thường)
                     'gia_si'         => $daiLy ? (int) $p->gia_si : null,
+                    'gia_si_sll'     => $daiLy ? (int) $p->gia_si_sll : null, // giá theo số lượng lớn
+                    'sll_tu'         => $daiLy ? (int) $p->sll_tu : null,      // mua từ N cái
                     'mota'           => $p->mota ?: [],
                     'mo_ta_ngan'     => $p->mo_ta_ngan,
                     'mo_ta_dai'      => $p->mo_ta_dai,
@@ -127,6 +130,33 @@ class Api3dController extends Controller
         $dl = $this->daiLyTuRequest($request);
         if ($dl) { $dl->token = null; $dl->save(); }
         return $this->cors(response()->json(['ok' => true]));
+    }
+
+    /** GET /api/3d/dai-ly/tai-anh/{slug} (header token) — tải ZIP ảnh sản phẩm cho đại lý. */
+    public function dealerTaiAnh(Request $request, string $slug)
+    {
+        if (!$this->daiLyTuRequest($request)) abort(401);
+        $p = Sp3d::where('slug', $slug)->first();
+        if (!$p) abort(404);
+        $anh = array_values(array_filter((array) ($p->anh ?: []), fn ($a) => is_string($a) && $a !== ''));
+        if (!$anh) abort(404, 'Sản phẩm chưa có ảnh.');
+
+        $disk = Storage::disk('public');
+        $tmp  = tempnam(sys_get_temp_dir(), 'dlanh') . '.zip';
+        $zip  = new \ZipArchive();
+        if ($zip->open($tmp, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) abort(500);
+        $i = 0;
+        foreach ($anh as $rel) {
+            if (!$disk->exists($rel)) continue;
+            $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION) ?: 'jpg');
+            $zip->addFile($disk->path($rel), $p->slug . '-' . (++$i) . '.' . $ext);
+        }
+        $zip->close();
+        if ($i === 0) { @unlink($tmp); abort(404, 'Không có ảnh hợp lệ.'); }
+
+        return response()->download($tmp, 'anh-' . $p->slug . '.zip', [
+            'Access-Control-Allow-Origin' => self::ALLOWED_ORIGIN,
+        ])->deleteFileAfterSend(true);
     }
 
     /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */

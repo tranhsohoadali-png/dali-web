@@ -11,7 +11,7 @@ class Sp3d extends Model
     protected $table = 'sp_3d';
 
     protected $fillable = [
-        'slug', 'ten', 'art', 'cat', 'danh_muc_id', 'gia', 'gia_goc', 'gia_si', 'nhan',
+        'slug', 'ten', 'art', 'cat', 'danh_muc_id', 'gia', 'gia_goc', 'gia_si', 'gia_si_sll', 'sll_tu', 'nhan',
         'mo_ta_ngan', 'mo_ta_dai', 'mota', 'variants', 'variant_groups', 'anh',
         'khac_ten', 'dat_lam', 'sao', 'da_ban', 'kho', 'thu_tu', 'hien',
         'payment_policy', 'shipping_class',
