@@ -46,6 +46,8 @@ tr:hover td{background:var(--gll)}
 .btn-del:hover{background:#EF4444;color:#fff}
 .price-curr{font-size:14px;font-weight:900;color:var(--g)}
 .price-old{font-size:11px;color:var(--tx3);text-decoration:line-through}
+.price-si{font-size:11px;font-weight:800;color:#B45309;background:#FFF7E6;border:1px solid #F1D084;border-radius:7px;padding:2px 7px;margin-top:4px;display:inline-block;white-space:nowrap}
+.price-si i{font-style:normal;font-weight:600;color:#9A6A00}
 .pagination{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap;justify-content:center}
 .pagination a,.pagination span{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1.5px solid var(--bd);color:var(--tx2);background:#fff}
 .pagination a:hover{background:var(--g);color:#fff}
@@ -99,6 +101,9 @@ tr:hover td{background:var(--gll)}
           <td>
             <div class="price-curr">{{ $p->gia_ht }}</div>
             @if($p->gia_goc_ht)<div class="price-old">{{ $p->gia_goc_ht }}</div>@endif
+            @if($p->gia_si > 0)
+              <div class="price-si">🤝 Sỉ {{ number_format($p->gia_si,0,',','.') }}đ@if($p->gia_si_sll > 0 && $p->sll_tu > 0) <i>· từ {{ $p->sll_tu }}: {{ number_format($p->gia_si_sll,0,',','.') }}đ</i>@endif</div>
+            @endif
           </td>
           <td>@if($p->nhan)<span class="badge">{{ $p->nhan }}</span>@else<span style="color:var(--tx3);font-size:11px">—</span>@endif</td>
           <td>@if($p->hien)<span class="badge-act">Hiện</span>@else<span class="badge-off">Ẩn</span>@endif</td>
