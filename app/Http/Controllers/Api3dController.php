@@ -255,13 +255,13 @@ class Api3dController extends Controller
                 'con_lai'         => $remaining,
                 'phuong_thuc_tt'  => $priced['mode'],
                 'shipping_method' => $priced['shipping_method'],
-                'nguon'           => 'website-v2',
+                'nguon'           => $priced['dai_ly'] ? 'dai-ly' : 'website-v2',
                 'ten'             => $name,
                 'sdt'             => $phone,
                 'email'           => $email,
                 'tinh'            => $province,
                 'dia_chi'         => $address,
-                'ghi_chu'         => $note,
+                'ghi_chu'         => ($priced['dai_ly'] ? '[ĐẠI LÝ: ' . $priced['dai_ly'] . ' — giá sỉ] ' : '') . $note,
             ]);
         } catch (\Throwable $ex) {
             // Đua nhau tạo đơn cùng client_ref -> chỉ số unique chặn, trả đơn đã có
@@ -332,6 +332,7 @@ class Api3dController extends Controller
      */
     private function priceCart(Request $request): array
     {
+        $daiLy = $this->daiLyTuRequest($request); // đại lý đăng nhập -> áp giá sỉ khi đặt
         $GIA = $this->config('GIA', [
             'full' => 289000, 'board' => 165000, 'phieu' => 8000, 'custom' => 12000,
             'chan' => 15000, 'boPhieu' => 149000, 'shipPhieu' => 15000, 'freeshipPhieu' => 99000,
@@ -372,6 +373,14 @@ class Api3dController extends Controller
                     $unit = $vp >= 0 ? $vp : $base;
                 } else {
                     $unit = $base;
+                }
+                // Đại lý đăng nhập: áp GIÁ SỈ thay giá lẻ. Dùng giá SLL khi mua đủ số
+                // lượng (sll_tu) HOẶC đại lý được tích "luôn nhận giá SLL".
+                if ($daiLy && (int) $product->gia_si > 0) {
+                    $unit = (int) $product->gia_si;
+                    $sll  = (int) $product->gia_si_sll;
+                    $tu   = (int) $product->sll_tu;
+                    if ($sll > 0 && ($daiLy->sll_luon || ($tu > 0 && $qty >= $tu))) $unit = $sll;
                 }
                 $line = [
                     'sku' => $sku, 'ten' => $product->ten, 'qty' => $qty, 'don_gia' => $unit,
@@ -449,6 +458,7 @@ class Api3dController extends Controller
             'mode' => $mode, 'shipping_method' => $shippingMethod,
             'only_subject' => $onlySubject, 'policies' => $policies,
             'only_prepaid_eligible' => $onlyPrepaidEligible,
+            'dai_ly' => $daiLy ? $daiLy->ten : null,
         ];
     }
 

@@ -35,6 +35,11 @@ th{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--tx3);text-trans
 td{padding:12px 16px;border-bottom:1px solid var(--gl);font-size:13px;vertical-align:middle}
 .badge-on{background:var(--gl);color:var(--gd);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px}
 .badge-off{background:#F3F4F6;color:#9CA3AF;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px}
+.badge-sll{background:#FFF7E6;color:#B45309;border:1px solid #F1D084;font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.tick-si{display:flex;gap:9px;align-items:flex-start;background:#FFF7E6;border:1px solid #F1D084;border-radius:10px;padding:11px 13px;margin-top:12px;cursor:pointer;font-size:13px}
+.tick-si input{accent-color:#B45309;margin-top:2px;width:16px;height:16px;flex:none}
+.tick-si b{font-weight:800;color:#B45309}
+.tick-si small{display:block;color:var(--tx3);font-size:11.5px;margin-top:2px}
 details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webkit-details-marker{display:none}
 .edit-box{margin-top:10px;padding:12px;background:var(--gll);border:1px solid var(--bd);border-radius:10px}
 .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -63,6 +68,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
           <label class="f"><span>Mật khẩu</span><input name="matkhau" value="{{ old('matkhau') }}" placeholder="tối thiểu 4 ký tự" required></label>
           <label class="f rong"><span>Ghi chú <i style="font-weight:500;color:var(--tx3)">— không bắt buộc</i></span><input name="ghi_chu" value="{{ old('ghi_chu') }}" placeholder="Khu vực, chiết khấu thoả thuận…"></label>
         </div>
+        <label class="tick-si"><input type="checkbox" name="sll_luon" value="1"><span><b>Luôn nhận giá SLL</b><small>Đại lý này hưởng giá số-lượng-lớn cho MỌI đơn, không cần mua đủ số lượng.</small></span></label>
         <div style="margin-top:14px"><button class="btn" type="submit">Thêm đại lý</button></div>
       </form>
     </div>
@@ -79,7 +85,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
             <td style="font-weight:700">{{ $d->ten }}</td>
             <td>{{ $d->sdt }}</td>
             <td style="font-size:12px;color:var(--tx3);max-width:200px">{{ $d->ghi_chu ?: '—' }}</td>
-            <td>@if($d->hien)<span class="badge-on">Hoạt động</span>@else<span class="badge-off">Đã khoá</span>@endif</td>
+            <td>@if($d->hien)<span class="badge-on">Hoạt động</span>@else<span class="badge-off">Đã khoá</span>@endif @if($d->sll_luon)<span class="badge-sll">⚡ Giá SLL</span>@endif</td>
             <td style="font-size:12px;color:var(--tx3)">{{ $d->dang_nhap_luc ? $d->dang_nhap_luc->format('d/m H:i') : 'chưa' }}</td>
             <td>
               <div class="acts">
@@ -100,6 +106,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
                       <label class="f"><span>Mật khẩu mới <i style="font-weight:500;color:var(--tx3)">— để trống nếu giữ nguyên</i></span><input name="matkhau" placeholder="••••"></label>
                       <label class="f rong"><span>Ghi chú</span><input name="ghi_chu" value="{{ $d->ghi_chu }}"></label>
                     </div>
+                    <label class="tick-si"><input type="checkbox" name="sll_luon" value="1" {{ $d->sll_luon ? 'checked' : '' }}><span><b>Luôn nhận giá SLL</b><small>Hưởng giá số-lượng-lớn cho MỌI đơn, không cần đủ số lượng.</small></span></label>
                     <div style="margin-top:12px"><button class="btn" type="submit">Lưu</button></div>
                   </form>
                 </div>

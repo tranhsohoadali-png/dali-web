@@ -11,6 +11,7 @@ class DaiLy extends Model
     protected $hidden = ['matkhau', 'token'];
     protected $casts = [
         'hien'          => 'boolean',
+        'sll_luon'      => 'boolean',
         'dang_nhap_luc' => 'datetime',
     ];
 }
