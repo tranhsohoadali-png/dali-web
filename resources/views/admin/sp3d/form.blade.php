@@ -123,7 +123,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     @if($sp)@method('PUT')@endif
     <input type="hidden" name="anh_keep" id="anhKeep" value='@json($anh)'>
     <input type="hidden" name="anh_order" id="anhOrder">
-    {{-- Mặc định cố định: sản phẩm luôn có hàng, cọc 50%, gửi tiêu chuẩn, không đặt làm --}}
+    {{-- Mặc định cố định: sản phẩm luôn có hàng, cọc 30%, gửi tiêu chuẩn, không đặt làm --}}
     <input type="hidden" name="kho" value="{{ old('kho', $sp->kho ?? 0) }}">
     <input type="hidden" name="payment_policy" value="{{ old('payment_policy', $sp->payment_policy ?? 'deposit_50') }}">
     <input type="hidden" name="shipping_class" value="{{ old('shipping_class', $sp->shipping_class ?? 'standard') }}">
@@ -636,9 +636,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
     var thumbs=imgs.slice(0,6).map(function(u){return '<img src="'+esc(u)+'">';}).join('');
     var coc='';
     if(pp==='deposit_50'){
-      var c1=Math.ceil(g*0.5/1000)*1000, c2=g-c1;
+      var c1=Math.ceil(g*0.3/1000)*1000, c2=g-c1;
       coc='<div class="pv-cocbox"><div class="r"><span>Tạm tính</span><b>'+vnd(g)+'</b></div>'
-        + '<div class="r"><span>Cọc trước (50%)</span><b>'+vnd(c1)+'</b></div>'
+        + '<div class="r"><span>Cọc trước (30%)</span><b>'+vnd(c1)+'</b></div>'
         + '<div class="r tot"><span>Trả khi nhận hàng</span><b>'+vnd(c2)+'</b></div></div>';
     } else {
       coc='<div class="pv-cocbox"><div class="r"><span>Nhận hàng trả tiền</span><b>'+vnd(g)+'</b></div>'

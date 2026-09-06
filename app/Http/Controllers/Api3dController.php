@@ -68,7 +68,7 @@ class Api3dController extends Controller
                     'anh'            => collect($p->anh ?: [])->map(fn ($a) => asset('storage/' . $a))->all(),
                     // Bản thu nhỏ ~400px cho thẻ/gallery (fallback ảnh lớn nếu chưa có thumbnail)
                     'anhNho'         => collect($p->anh ?: [])->map(fn ($a) => $this->thumbUrl($a))->all(),
-                    'payment_policy' => $p->payment_policy ?: 'deposit_50', // mặc định cọc 50% trước
+                    'payment_policy' => $p->payment_policy ?: 'deposit_50', // mặc định cọc 30% trước
                     'shipping_class' => $p->shipping_class ?: 'standard',
                 ];
             });
@@ -386,7 +386,7 @@ class Api3dController extends Controller
                     'sku' => $sku, 'ten' => $product->ten, 'qty' => $qty, 'don_gia' => $unit,
                     'bien_the' => $variant ? (string) ($variant['ten'] ?? '') : null,
                     'khac_ten' => $pers,
-                    'payment_policy' => $product->payment_policy ?: 'deposit_50', // mặc định cọc 50% trước
+                    'payment_policy' => $product->payment_policy ?: 'deposit_50', // mặc định cọc 30% trước
                     'shipping_class' => $product->shipping_class ?: 'standard',
                 ];
             } elseif (in_array($sku, ['tkb:full', 'tkb:board', 'subject:predefined', 'subject:custom', 'subject:leg', 'subject:set'], true)) {
@@ -447,7 +447,7 @@ class Api3dController extends Controller
         } else {
             foreach ($lines as $l) {
                 if ($l['payment_policy'] === 'prepaid_100') $dueNow += $l['thanh_tien'];
-                if ($l['payment_policy'] === 'deposit_50')  $dueNow += (int) (ceil($l['thanh_tien'] * 0.5 / 1000) * 1000);
+                if ($l['payment_policy'] === 'deposit_50')  $dueNow += (int) (ceil($l['thanh_tien'] * 0.3 / 1000) * 1000); // cọc 30% (đổi từ 50% theo yêu cầu 2026-09-06)
             }
             if ($dueNow > 0) $dueNow += $shipping;
         }
