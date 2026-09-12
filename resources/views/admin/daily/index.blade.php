@@ -128,7 +128,10 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
 document.querySelectorAll('td .acts details.edit > summary.btn-sm').forEach(function(sm){
   sm.addEventListener('click', function(e){
     e.preventDefault();
-    var box = this.closest('td').querySelector('details.edit:nth-of-type(2)');
+    /* Hai thẻ details.edit nằm ở 2 khối cha khác nhau nên :nth-of-type(2) không khớp;
+       lấy thẳng thẻ details.edit thứ 2 trong ô (khung sửa) mới đúng. */
+    var boxes = this.closest('td').querySelectorAll('details.edit');
+    var box = boxes[1];
     if(box){ box.open = !box.open; }
   });
 });
