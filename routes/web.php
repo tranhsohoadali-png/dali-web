@@ -94,6 +94,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 });
 
+// ─── Cổng kiểm đăng nhập cho nginx auth_request (app Thay tên mẫu in 3D) ───
+// NGOÀI admin.auth: admin.auth trả 302, còn auth_request cần 204/401.
+// Gỡ StartSession (+ 2 middleware cần phiên): controller tự đọc phiên, KHÔNG ghi lại,
+// vì app gọi mỗi 0,7-5 giây -> tránh ghi SQLite liên tục và làm mất flash ở tab admin khác.
+Route::get('admin/3d/thay-ten/kiem', [\App\Http\Controllers\Admin\ThayTenController::class, 'kiem'])
+    ->withoutMiddleware([
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+    ])
+    ->name('admin.thayten.kiem');
+
 // ─── ADMIN (protected) ──────────────────────────
 Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function () {
     Route::get('/',         [DashboardController::class, 'index'])->name('dashboard');
@@ -129,6 +141,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('{dai_ly}/toggle', [\App\Http\Controllers\Admin\DaiLyController::class, 'toggle'])->name('toggle');
         Route::delete('{dai_ly}',      [\App\Http\Controllers\Admin\DaiLyController::class, 'destroy'])->name('destroy');
     });
+
+    // ─── Thay tên mẫu in 3D: iframe tới app FastAPI (nginx proxy /admin/3d/thay-ten/app/) ───
+    // Cổng kiểm đăng nhập admin.thayten.kiem nằm NGOÀI nhóm này (xem trên).
+    Route::get('3d/thay-ten', [\App\Http\Controllers\Admin\ThayTenController::class, 'index'])->name('thayten');
 
     // ─── Đơn hàng khu Xưởng in 3D ───
     Route::prefix('3d')->group(function () {
