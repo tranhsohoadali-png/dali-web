@@ -169,7 +169,10 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Mặc định true: tranhdali.vn chỉ phục vụ qua HTTPS (server :80 chỉ 301 sang https), nên cookie
+    // phiên admin không bao giờ bị gửi dạng rõ qua http. Chạy máy nhà bằng http thì đặt
+    // SESSION_SECURE_COOKIE=false trong .env (trình duyệt vẫn nhận cookie Secure trên localhost).
+    'secure' => env('SESSION_SECURE_COOKIE', true),
 
     /*
     |--------------------------------------------------------------------------

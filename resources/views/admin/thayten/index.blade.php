@@ -1,4 +1,9 @@
-@php $duongApp = '/admin/3d/thay-ten/app/'; @endphp
+@php
+  $duongApp = '/admin/3d/thay-ten/app/';
+  // ?toan=1 (tab "Mở toàn màn hình"): chỉ còn app. Sidebar vẫn được nạp (ẩn đi) vì script
+  // hỏi đơn mới mỗi 25 giây của nó là thứ gia hạn phiên đăng nhập; mở thẳng app thì sau 120 phút bị đẩy ra.
+  $toan = $toan ?? false;
+@endphp
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -20,19 +25,26 @@ body{background:var(--bg);color:var(--tx);overflow:hidden}
 .cot{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
 .vung{flex:1;min-height:0;display:flex;padding:14px 18px 18px}
 .vung iframe{flex:1;min-width:0;border:1.5px solid var(--bd);border-radius:14px;background:#fff;box-shadow:0 3px 18px rgba(58,122,10,.07);display:block}
+/* Nút nổi PWA của sidebar (Bật thông báo đơn / Cài app) ghim góc dưới phải, đè lên nút của app.
+   Khối có style inline display:flex nên phải !important. Chuông, toast, thông báo đơn vẫn chạy. */
+#dali-pwa-dock{display:none!important}
 /* Máy tính: sidebar cao đúng màn hình, menu dài thì cuộn trong sidebar */
 @media(min-width:821px){#adminSidebar{height:100vh;height:100dvh;min-height:0!important}#adminSidebar nav{min-height:0}}
 /* Điện thoại: sidebar là ngăn kéo (partials.sidebar), iframe gần tràn viền */
 @media(max-width:820px){.vung{padding:8px}.vung iframe{border-radius:10px}.tb-title{font-size:16px}}
+/* Toàn màn hình: chỉ còn iframe (sidebar vẫn nằm trong trang để gia hạn phiên) */
+body.toan #adminSidebar,body.toan #adminHamb,body.toan #adminBackdrop,body.toan .topbar{display:none!important}
+body.toan .vung{padding:0!important}
+body.toan .vung iframe{border:0;border-radius:0;box-shadow:none}
 </style>
 </head>
-<body>
+<body @class(['toan' => $toan])>
 <div class="khung">
 @include('admin.partials.sidebar')
 <div class="cot">
   <div class="topbar">
     <div><div class="tb-bc">Admin › Xưởng in 3D › <b>Thay tên mẫu</b></div><div class="tb-title">Thay tên mẫu in 3D</div></div>
-    <a class="btn-sm" href="{{ $duongApp }}" target="_blank" rel="noopener">Mở toàn màn hình ↗</a>
+    <a class="btn-sm" href="{{ route('admin.thayten', ['toan' => 1]) }}" target="_blank" rel="noopener">Mở toàn màn hình ↗</a>
   </div>
   <div class="vung">
     <iframe src="{{ $duongApp }}" title="Ứng dụng thay tên mẫu in 3D"></iframe>
