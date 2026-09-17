@@ -389,6 +389,8 @@ class Api3dController extends Controller
                     'payment_policy' => $product->payment_policy ?: 'deposit_50', // mặc định cọc 30% trước
                     'shipping_class' => $product->shipping_class ?: 'standard',
                 ];
+                // Thẻ môn học lẻ: personalization mang TÊN MÔN -> hiển thị "Môn:" (không phải "Khắc tên") ở admin.
+                if ($slug === 'the-mon-hoc-le' && $pers !== '') { $line['mon_hoc'] = $pers; $line['khac_ten'] = ''; }
             } elseif (in_array($sku, ['tkb:full', 'tkb:board', 'subject:predefined', 'subject:custom', 'subject:leg', 'subject:set'], true)) {
                 $subjectIndex = isset($raw['subjectIndex']) ? (int) $raw['subjectIndex'] : -1;
                 $customText   = trim((string) ($raw['customText'] ?? ''));
