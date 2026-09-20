@@ -31,4 +31,7 @@ Route::prefix('3d')->group(function () {
     Route::get('dai-ly/me',      [\App\Http\Controllers\Api3dController::class, 'dealerMe']);
     Route::post('dai-ly/logout', [\App\Http\Controllers\Api3dController::class, 'dealerLogout']);
     Route::get('dai-ly/tai-anh/{slug}', [\App\Http\Controllers\Api3dController::class, 'dealerTaiAnh']);
+    // Đại lý: đi đơn hộ (đơn TMĐT) — gửi đơn + tải nhãn vận chuyển; xem đơn của mình
+    Route::post('dai-ly/di-don', [\App\Http\Controllers\Api3dController::class, 'dealerDiDonTao']);
+    Route::get('dai-ly/di-don',  [\App\Http\Controllers\Api3dController::class, 'dealerDiDonList']);
 });

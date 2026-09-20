@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sp3d;
 use App\Models\Don3d;
+use App\Models\DonDiHo;
 use App\Models\DaiLy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -157,6 +158,123 @@ class Api3dController extends Controller
         return response()->download($tmp, 'anh-' . $p->slug . '.zip', [
             'Access-Control-Allow-Origin' => self::ALLOWED_ORIGIN,
         ])->deleteFileAfterSend(true);
+    }
+
+    /* ============ Đại lý: ĐI ĐƠN HỘ (đơn TMĐT) ============ */
+
+    /**
+     * POST /api/3d/dai-ly/di-don (header token, multipart/form-data)
+     * Đại lý gửi đơn đi hộ: items[] (JSON) + nhãn/hoá đơn vận chuyển (file).
+     * KHÔNG thu tiền — chỉ ghi tổng giá sỉ tham khảo để hai bên đối soát.
+     */
+    public function dealerDiDonTao(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
+
+        // Chống spam: tối đa 20 đơn / 10 phút / đại lý
+        $key = 'diho:' . $dl->id;
+        if (RateLimiter::tooManyAttempts($key, 20)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Bạn gửi quá nhanh, thử lại sau ít phút.'], 429));
+        }
+        RateLimiter::hit($key, 600);
+
+        // items có thể là chuỗi JSON (gửi kèm multipart) hoặc mảng
+        $items = $request->input('items');
+        if (is_string($items)) $items = json_decode($items, true);
+        if (!is_array($items) || count($items) < 1 || count($items) > 40) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Danh sách sản phẩm không hợp lệ.'], 400));
+        }
+
+        // Nhãn vận chuyển BẮT BUỘC (ảnh hoặc PDF, tối đa 8MB). Chứa thông tin
+        // khách cuối nên lưu ở đĩa private, chỉ tải được qua trang quản trị.
+        if (!$request->hasFile('nhan') || !$request->file('nhan')->isValid()) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Vui lòng tải nhãn/hoá đơn vận chuyển lên.'], 400));
+        }
+        $file = $request->file('nhan');
+        if ($file->getSize() > 8 * 1024 * 1024) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'File nhãn quá lớn (tối đa 8MB).'], 400));
+        }
+        $mime = (string) $file->getMimeType();
+        if (!in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'], true)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Nhãn chỉ nhận ảnh JPG/PNG/WEBP hoặc PDF.'], 400));
+        }
+
+        $lines = [];
+        $tongSi = 0; $soLuong = 0;
+        foreach ($items as $raw) {
+            if (!is_array($raw)) return $this->cors(response()->json(['ok' => false, 'error' => 'Dòng sản phẩm không hợp lệ.'], 400));
+            $slug = trim((string) ($raw['slug'] ?? ''));
+            $p = $slug !== '' ? Sp3d::where('slug', $slug)->where('hien', true)->first() : null;
+            if (!$p) return $this->cors(response()->json(['ok' => false, 'error' => 'Sản phẩm không còn bán: ' . $slug], 400));
+
+            $qty = (int) ($raw['qty'] ?? 0);
+            if ($qty < 1 || $qty > 100) return $this->cors(response()->json(['ok' => false, 'error' => 'Số lượng không hợp lệ.'], 400));
+
+            $variants = $p->variants ?: [];
+            $idx = array_key_exists('variantIndex', $raw) ? (int) $raw['variantIndex'] : -1;
+            $bienThe = null;
+            if (!empty($variants)) {
+                if ($idx < 0 || !isset($variants[$idx])) {
+                    return $this->cors(response()->json(['ok' => false, 'error' => 'Vui lòng chọn phân loại: ' . $p->ten], 400));
+                }
+                $bienThe = (string) ($variants[$idx]['ten'] ?? '');
+            }
+
+            // Giá sỉ tính theo MÃ (không đổi theo phiên bản). Dùng giá SLL khi đại lý
+            // "luôn nhận SLL" hoặc mua đủ ngưỡng sll_tu.
+            $unit = (int) $p->gia_si;
+            $sll  = (int) $p->gia_si_sll; $tu = (int) $p->sll_tu;
+            if ($unit > 0 && $sll > 0 && ($dl->sll_luon || ($tu > 0 && $qty >= $tu))) $unit = $sll;
+
+            $capHoc = mb_substr(trim((string) ($raw['cap_hoc'] ?? '')), 0, 40);
+            $tenIn  = mb_substr(trim((string) ($raw['ten_in'] ?? '')), 0, 60);
+            $gc     = mb_substr(trim((string) ($raw['ghi_chu'] ?? '')), 0, 300);
+
+            $thanh = $unit * $qty;
+            $tongSi += $thanh; $soLuong += $qty;
+            $lines[] = [
+                'slug' => $p->slug, 'ten' => $p->ten, 'bien_the' => $bienThe, 'qty' => $qty,
+                'cap_hoc' => $capHoc, 'ten_in' => $tenIn, 'ghi_chu' => $gc,
+                'don_gia_si' => $unit, 'thanh_tien' => $thanh,
+            ];
+        }
+
+        $code = 'DH' . substr(now()->format('ymd'), 0, 6) . '-' . strtoupper(Str::random(6));
+        $ext  = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'dat');
+        $rel  = 'di-ho/' . $code . '.' . $ext;
+        $file->storeAs('di-ho', $code . '.' . $ext, 'local'); // đĩa private (storage/app/private)
+
+        $gcChung = mb_substr(trim((string) $request->input('ghi_chu', '')), 0, 500);
+
+        DonDiHo::create([
+            'ma' => $code, 'dai_ly_id' => $dl->id, 'dai_ly_ten' => $dl->ten, 'dai_ly_sdt' => $dl->sdt,
+            'chi_tiet' => $lines, 'so_luong' => $soLuong, 'tong_si' => $tongSi,
+            'nhan_vc_path' => $rel, 'nhan_vc_ten' => $file->getClientOriginalName(), 'nhan_vc_mime' => $mime,
+            'tt' => 'moi', 'ghi_chu' => $gcChung,
+        ]);
+
+        return $this->cors(response()->json(['ok' => true, 'ma' => $code, 'tong_si' => $tongSi, 'so_luong' => $soLuong], 201));
+    }
+
+    /** GET /api/3d/dai-ly/di-don (header token) — danh sách đơn đi hộ của chính đại lý. */
+    public function dealerDiDonList(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
+        $ds = DonDiHo::where('dai_ly_id', $dl->id)->orderByDesc('id')->limit(30)->get()
+            ->map(fn (DonDiHo $d) => [
+                'ma'       => $d->ma,
+                'tt'       => $d->tt,
+                'tt_ten'   => DonDiHo::TRANG_THAI[$d->tt] ?? $d->tt,
+                'so_luong' => (int) $d->so_luong,
+                'tong_si'  => (int) $d->tong_si,
+                'ma_vc'    => $d->ma_vc,
+                'sp'       => collect($d->chi_tiet ?: [])->map(fn ($l) => ($l['ten'] ?? '') . ' ×' . ($l['qty'] ?? 0))->implode('; '),
+                'luc'      => optional($d->created_at)->toIso8601String(),
+            ]);
+        return $this->cors(response()->json(['ok' => true, 'items' => $ds]));
     }
 
     /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */

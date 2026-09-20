@@ -153,6 +153,13 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::put('don-hang/{don}/trang-thai', [\App\Http\Controllers\Admin\Don3dController::class, 'updateStatus'])->name('don3d.status');
         Route::post('don-hang/{don}/da-coc',    [\App\Http\Controllers\Admin\Don3dController::class, 'markPaid'])->name('don3d.paid');
         Route::delete('don-hang/{don}',         [\App\Http\Controllers\Admin\Don3dController::class, 'destroy'])->name('don3d.destroy');
+
+        // Đơn đi hộ (đại lý bán trên sàn TMĐT)
+        Route::get('di-ho',                  [\App\Http\Controllers\Admin\DonDiHoController::class, 'index'])->name('diho.index');
+        Route::get('di-ho/{don}',            [\App\Http\Controllers\Admin\DonDiHoController::class, 'show'])->name('diho.show');
+        Route::get('di-ho/{don}/nhan',       [\App\Http\Controllers\Admin\DonDiHoController::class, 'taiNhan'])->name('diho.nhan');
+        Route::put('di-ho/{don}/trang-thai', [\App\Http\Controllers\Admin\DonDiHoController::class, 'updateStatus'])->name('diho.status');
+        Route::delete('di-ho/{don}',         [\App\Http\Controllers\Admin\DonDiHoController::class, 'destroy'])->name('diho.destroy');
     });
 
     // Cài đặt Xưởng in 3D đã bỏ (19/08/2026): ngân hàng dùng chung admin_settings,
