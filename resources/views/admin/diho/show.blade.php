@@ -104,6 +104,21 @@ select,input[type=text]{border:1.5px solid var(--bd);border-radius:9px;padding:9
         </div>
 
         <div class="sec">
+          <h2>💰 Thanh toán (đối soát)</h2>
+          <div class="row"><span>Tổng tiền sỉ</span><b style="color:#3E7A0A">{{ number_format((int)$don->tong_si,0,',','.') }}đ</b></div>
+          <div class="row"><span>Trạng thái thu tiền</span>
+            @if($don->da_thanh_toan)<span class="badge" style="background:#E8F9D0;color:#3E7A0A">✓ Đã thu{{ $don->thanh_toan_luc ? ' · '.$don->thanh_toan_luc->format('d/m/Y') : '' }}</span>
+            @else<span class="badge" style="background:#FEE2E2;color:#B91C1C">Chưa thu</span>@endif
+          </div>
+          <form method="POST" action="{{ route('admin.diho.tt', $don) }}" style="margin-top:10px">
+            @csrf
+            <button class="btn {{ $don->da_thanh_toan ? 'btn-o' : 'btn-g' }}" type="submit" style="width:100%">
+              {{ $don->da_thanh_toan ? '↩ Bỏ đánh dấu đã thu' : '✓ Đánh dấu ĐÃ thu tiền' }}
+            </button>
+          </form>
+        </div>
+
+        <div class="sec">
           <h2>⚙️ Xử lý</h2>
           <div class="row"><span>Trạng thái</span><span class="badge">{{ $tt[$don->tt] ?? $don->tt }}</span></div>
           @if($don->ma_vc)<div class="row"><span>Mã vận đơn</span><b>{{ $don->ma_vc }}</b></div>@endif

@@ -11,8 +11,10 @@ class DonDiHo extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'chi_tiet' => 'array',
-        'gui_luc'  => 'datetime',
+        'chi_tiet'       => 'array',
+        'gui_luc'        => 'datetime',
+        'da_thanh_toan'  => 'boolean',
+        'thanh_toan_luc' => 'datetime',
     ];
 
     /** Nhãn trạng thái tiếng Việt cho quản trị. */

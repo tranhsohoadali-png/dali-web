@@ -55,6 +55,11 @@ tr:hover td{background:var(--gll)}
           <option value="">🏷️ Tất cả trạng thái</option>
           @foreach($tt as $k => $v)<option value="{{ $k }}" {{ request('tt')==$k?'selected':'' }}>{{ $v }}</option>@endforeach
         </select>
+        <select name="tt_tt" class="filter-select" onchange="this.form.submit()">
+          <option value="">💰 Tất cả thanh toán</option>
+          <option value="chua" {{ request('tt_tt')=='chua'?'selected':'' }}>Chưa thu tiền</option>
+          <option value="da" {{ request('tt_tt')=='da'?'selected':'' }}>Đã thu tiền</option>
+        </select>
         <input type="text" name="search" class="filter-input" placeholder="🔍 Mã đơn / tên đại lý / SĐT" value="{{ request('search') }}" style="width:250px">
         <button type="submit" class="btn-filter">Lọc</button>
         @if(request()->hasAny(['tt','search']))<a href="{{ route('admin.diho.index') }}" style="font-size:12px;color:var(--pk);text-decoration:none;font-weight:700">✕ Xoá lọc</a>@endif
@@ -65,7 +70,7 @@ tr:hover td{background:var(--gll)}
       <div class="card-top"></div>
       <div class="card-head">{{ $orders->total() }} đơn @if($moi>0) · <span style="color:#B45309">{{ $moi }} mới</span>@endif</div>
       <table>
-        <thead><tr><th>Mã đơn</th><th>Đại lý</th><th>Sản phẩm</th><th>SL</th><th>Tổng sỉ</th><th>Nhãn VC</th><th>Trạng thái</th><th>Ngày</th><th></th></tr></thead>
+        <thead><tr><th>Mã đơn</th><th>Đại lý</th><th>Sản phẩm</th><th>SL</th><th>Tổng sỉ</th><th>Thu tiền</th><th>Nhãn VC</th><th>Trạng thái</th><th>Ngày</th><th></th></tr></thead>
         <tbody>
         @forelse($orders as $o)
         <tr>
@@ -74,13 +79,14 @@ tr:hover td{background:var(--gll)}
           <td style="max-width:260px;font-size:12px">{{ \Illuminate\Support\Str::limit(collect($o->chi_tiet ?: [])->map(fn($l)=>($l['ten']??'').' ×'.($l['qty']??0))->implode('; '), 70) }}</td>
           <td style="font-weight:700">{{ (int)$o->so_luong }}</td>
           <td class="money">{{ number_format((int)$o->tong_si,0,',','.') }}đ</td>
+          <td>@if($o->da_thanh_toan)<span class="badge" style="background:#E8F9D0;color:#3E7A0A">✓ Đã thu</span>@else<span class="badge" style="background:#FEE2E2;color:#B91C1C">Chưa thu</span>@endif</td>
           <td>@if($o->nhan_vc_path)<a href="{{ route('admin.diho.nhan', $o) }}" class="btn-dl">⬇ Tải nhãn</a>@else<span style="font-size:11px;color:var(--tx3)">—</span>@endif</td>
           <td><span class="badge b-{{ $o->tt }}">{{ $tt[$o->tt] ?? $o->tt }}</span></td>
           <td style="font-size:11px;color:var(--tx3)">{{ optional($o->created_at)->format('d/m H:i') }}</td>
           <td><a href="{{ route('admin.diho.show', $o) }}" class="btn-edit">Xem →</a></td>
         </tr>
         @empty
-        <tr><td colspan="9" style="text-align:center;padding:44px;color:var(--tx3)">
+        <tr><td colspan="10" style="text-align:center;padding:44px;color:var(--tx3)">
           Chưa có đơn đi hộ nào. Đại lý gửi đơn từ web 3d.tranhdali.vn (mục 🚚 Đi đơn hộ) sẽ về đây.
         </td></tr>
         @endforelse

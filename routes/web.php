@@ -156,6 +156,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
 
         // Đơn đi hộ (đại lý bán trên sàn TMĐT)
         Route::get('di-ho',                  [\App\Http\Controllers\Admin\DonDiHoController::class, 'index'])->name('diho.index');
+        Route::get('doi-soat',               [\App\Http\Controllers\Admin\DonDiHoController::class, 'doiSoat'])->name('diho.doisoat');
+        Route::post('doi-soat/dai-ly',       [\App\Http\Controllers\Admin\DonDiHoController::class, 'danhDauDaiLy'])->name('diho.doisoat.daily');
+        Route::post('di-ho/{don}/thanh-toan',[\App\Http\Controllers\Admin\DonDiHoController::class, 'danhDauTt'])->name('diho.tt');
         Route::get('di-ho/{don}',            [\App\Http\Controllers\Admin\DonDiHoController::class, 'show'])->name('diho.show');
         Route::get('di-ho/{don}/nhan',       [\App\Http\Controllers\Admin\DonDiHoController::class, 'taiNhan'])->name('diho.nhan');
         Route::get('di-ho/{don}/anh/{idx}',  [\App\Http\Controllers\Admin\DonDiHoController::class, 'taiAnhMon'])->whereNumber('idx')->name('diho.anhmon');

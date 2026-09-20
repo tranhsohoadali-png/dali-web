@@ -13,6 +13,9 @@ class DonDiHoController extends Controller
     {
         $q = DonDiHo::orderByDesc('created_at');
         if ($request->filled('tt'))     $q->where('tt', $request->tt);
+        if ($request->filled('dai_ly')) $q->where('dai_ly_id', (int) $request->dai_ly);
+        if ($request->tt_tt === 'chua') $q->where('da_thanh_toan', false);
+        elseif ($request->tt_tt === 'da') $q->where('da_thanh_toan', true);
         if ($request->filled('search')) $q->where(fn ($w) => $w->where('ma', 'like', '%' . $request->search . '%')
             ->orWhere('dai_ly_ten', 'like', '%' . $request->search . '%')
             ->orWhere('dai_ly_sdt', 'like', '%' . $request->search . '%'));
@@ -20,6 +23,52 @@ class DonDiHoController extends Controller
         $tt     = DonDiHo::TRANG_THAI;
         $moi    = DonDiHo::where('tt', 'moi')->count();
         return view('admin.diho.index', compact('orders', 'tt', 'moi'));
+    }
+
+    /** Đối soát đại lý: gộp tổng số đơn / số lượng / tiền sỉ theo từng đại lý (lọc theo ngày). */
+    public function doiSoat(Request $request)
+    {
+        $tu  = $request->filled('tu')  ? $request->date('tu')->startOfDay()  : null;
+        $den = $request->filled('den') ? $request->date('den')->endOfDay()   : null;
+        $base = DonDiHo::query()->where('tt', '!=', 'huy');
+        if ($tu)  $base->where('created_at', '>=', $tu);
+        if ($den) $base->where('created_at', '<=', $den);
+
+        $rows = (clone $base)
+            ->selectRaw('dai_ly_id, dai_ly_ten, dai_ly_sdt,
+                COUNT(*) as so_don, SUM(so_luong) as tong_sl, SUM(tong_si) as tong_tien,
+                SUM(CASE WHEN da_thanh_toan = 0 THEN tong_si ELSE 0 END) as chua_tien,
+                SUM(CASE WHEN da_thanh_toan = 0 THEN 1 ELSE 0 END) as chua_don')
+            ->groupBy('dai_ly_id', 'dai_ly_ten', 'dai_ly_sdt')
+            ->orderByDesc('chua_tien')->orderByDesc('tong_tien')
+            ->get();
+
+        $tong = [
+            'don'  => (int) $rows->sum('so_don'),
+            'sl'   => (int) $rows->sum('tong_sl'),
+            'tien' => (int) $rows->sum('tong_tien'),
+            'chua' => (int) $rows->sum('chua_tien'),
+        ];
+        return view('admin.diho.doisoat', compact('rows', 'tong', 'tu', 'den'));
+    }
+
+    /** Đảo trạng thái đã/chưa thu tiền của MỘT đơn. */
+    public function danhDauTt(DonDiHo $don)
+    {
+        $moi = !$don->da_thanh_toan;
+        $don->update(['da_thanh_toan' => $moi, 'thanh_toan_luc' => $moi ? now() : null]);
+        return back()->with('ok', ($moi ? 'Đã đánh dấu ĐÃ thu tiền đơn ' : 'Đã bỏ đánh dấu thu tiền đơn ') . $don->ma);
+    }
+
+    /** Đánh dấu ĐÃ thu tiền cho TẤT CẢ đơn chưa đối soát của một đại lý (trong khoảng ngày). */
+    public function danhDauDaiLy(Request $request)
+    {
+        $request->validate(['dai_ly_id' => 'required|integer']);
+        $q = DonDiHo::where('dai_ly_id', (int) $request->dai_ly_id)->where('da_thanh_toan', false)->where('tt', '!=', 'huy');
+        if ($request->filled('tu'))  $q->where('created_at', '>=', $request->date('tu')->startOfDay());
+        if ($request->filled('den')) $q->where('created_at', '<=', $request->date('den')->endOfDay());
+        $n = $q->update(['da_thanh_toan' => true, 'thanh_toan_luc' => now()]);
+        return back()->with('ok', "Đã đánh dấu {$n} đơn của đại lý là ĐÃ thu tiền.");
     }
 
     public function show(DonDiHo $don)

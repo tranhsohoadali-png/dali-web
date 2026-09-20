@@ -68,7 +68,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
           <label class="f"><span>Mật khẩu</span><input name="matkhau" value="{{ old('matkhau') }}" placeholder="tối thiểu 4 ký tự" required></label>
           <label class="f rong"><span>Ghi chú <i style="font-weight:500;color:var(--tx3)">— không bắt buộc</i></span><input name="ghi_chu" value="{{ old('ghi_chu') }}" placeholder="Khu vực, chiết khấu thoả thuận…"></label>
         </div>
-        <label class="tick-si"><input type="checkbox" name="sll_luon" value="1"><span><b>Luôn nhận giá SLL</b><small>Đại lý này hưởng giá số-lượng-lớn cho MỌI đơn, không cần mua đủ số lượng.</small></span></label>
+        <label class="tick-si"><input type="checkbox" name="sll_luon" value="1"><span><b>Giá áp dụng: luôn nhận GIÁ SLL</b><small>Tích = đại lý này hưởng giá số-lượng-lớn cho MỌI đơn. Bỏ tích = <b>giá sỉ thường</b> (chỉ lên giá SLL khi mua đủ số lượng của mã).</small></span></label>
         <div style="margin-top:14px"><button class="btn" type="submit">Thêm đại lý</button></div>
       </form>
     </div>
@@ -106,7 +106,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
                       <label class="f"><span>Mật khẩu mới <i style="font-weight:500;color:var(--tx3)">— để trống nếu giữ nguyên</i></span><input name="matkhau" placeholder="••••"></label>
                       <label class="f rong"><span>Ghi chú</span><input name="ghi_chu" value="{{ $d->ghi_chu }}"></label>
                     </div>
-                    <label class="tick-si"><input type="checkbox" name="sll_luon" value="1" {{ $d->sll_luon ? 'checked' : '' }}><span><b>Luôn nhận giá SLL</b><small>Hưởng giá số-lượng-lớn cho MỌI đơn, không cần đủ số lượng.</small></span></label>
+                    <label class="tick-si"><input type="checkbox" name="sll_luon" value="1" {{ $d->sll_luon ? 'checked' : '' }}><span><b>Giá áp dụng: luôn nhận GIÁ SLL</b><small>Tích = hưởng giá số-lượng-lớn cho MỌI đơn. Bỏ tích = <b>giá sỉ thường</b> (chỉ lên SLL khi mua đủ số lượng).</small></span></label>
                     <div style="margin-top:12px"><button class="btn" type="submit">Lưu</button></div>
                   </form>
                 </div>
