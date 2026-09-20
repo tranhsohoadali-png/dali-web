@@ -281,23 +281,49 @@ class Api3dController extends Controller
         return $this->cors(response()->json(['ok' => true, 'ma' => $code, 'tong_si' => $tongSi, 'so_luong' => $soLuong], 201));
     }
 
-    /** GET /api/3d/dai-ly/di-don (header token) — danh sách đơn đi hộ của chính đại lý. */
+    /** GET /api/3d/dai-ly/di-don (header token) — đơn đi hộ + đối soát của chính đại lý. */
     public function dealerDiDonList(Request $request)
     {
         $dl = $this->daiLyTuRequest($request);
         if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
-        $ds = DonDiHo::where('dai_ly_id', $dl->id)->orderByDesc('id')->limit(30)->get()
+        $ds = DonDiHo::where('dai_ly_id', $dl->id)->orderByDesc('id')->limit(50)->get()
             ->map(fn (DonDiHo $d) => [
-                'ma'       => $d->ma,
-                'tt'       => $d->tt,
-                'tt_ten'   => DonDiHo::TRANG_THAI[$d->tt] ?? $d->tt,
-                'so_luong' => (int) $d->so_luong,
-                'tong_si'  => (int) $d->tong_si,
-                'ma_vc'    => $d->ma_vc,
-                'sp'       => collect($d->chi_tiet ?: [])->map(fn ($l) => ($l['ten'] ?? '') . ' ×' . ($l['qty'] ?? 0))->implode('; '),
-                'luc'      => optional($d->created_at)->toIso8601String(),
+                'ma'            => $d->ma,
+                'tt'            => $d->tt,
+                'tt_ten'        => DonDiHo::TRANG_THAI[$d->tt] ?? $d->tt,
+                'so_luong'      => (int) $d->so_luong,
+                'tong_si'       => (int) $d->tong_si,
+                'ma_vc'         => $d->ma_vc,
+                'sp'            => collect($d->chi_tiet ?: [])->map(fn ($l) => ($l['ten'] ?? '') . ' ×' . ($l['qty'] ?? 0))->implode('; '),
+                'luc'           => optional($d->created_at)->toIso8601String(),
+                'da_thanh_toan' => (bool) $d->da_thanh_toan,   // đã đối soát/thu tiền chưa
+                'xac_nhan'      => (bool) $d->dai_ly_xac_nhan,  // ĐL đã xác nhận VC nhận hàng
             ]);
-        return $this->cors(response()->json(['ok' => true, 'items' => $ds]));
+        // Đối soát: tổng & còn phải thanh toán (bỏ đơn huỷ)
+        $base = DonDiHo::where('dai_ly_id', $dl->id)->where('tt', '!=', 'huy');
+        $tong = [
+            'don'  => (clone $base)->count(),
+            'tien' => (int) (clone $base)->sum('tong_si'),
+            'chua' => (int) (clone $base)->where('da_thanh_toan', false)->sum('tong_si'),
+        ];
+        return $this->cors(response()->json(['ok' => true, 'items' => $ds, 'tong' => $tong]));
+    }
+
+    /**
+     * POST /api/3d/dai-ly/xac-nhan-vc (header token) {ma}
+     * Đại lý đảo trạng thái "đơn vị vận chuyển đã nhận hàng thành công" cho đơn của mình.
+     */
+    public function dealerXacNhanVc(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
+        $ma = trim((string) $request->input('ma', ''));
+        $don = DonDiHo::where('ma', $ma)->where('dai_ly_id', $dl->id)->first();
+        if (!$don) return $this->cors(response()->json(['ok' => false, 'error' => 'Không tìm thấy đơn.'], 404));
+        $moi = !$don->dai_ly_xac_nhan;
+        $don->update(['dai_ly_xac_nhan' => $moi, 'xac_nhan_luc' => $moi ? now() : null]);
+        return $this->cors(response()->json(['ok' => true, 'xac_nhan' => $moi]));
     }
 
     /**

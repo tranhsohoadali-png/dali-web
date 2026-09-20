@@ -81,7 +81,7 @@ tr:hover td{background:var(--gll)}
           <td class="money">{{ number_format((int)$o->tong_si,0,',','.') }}đ</td>
           <td>@if($o->da_thanh_toan)<span class="badge" style="background:#E8F9D0;color:#3E7A0A">✓ Đã thu</span>@else<span class="badge" style="background:#FEE2E2;color:#B91C1C">Chưa thu</span>@endif</td>
           <td>@if($o->nhan_vc_path)<a href="{{ route('admin.diho.nhan', $o) }}" class="btn-dl">⬇ Tải nhãn</a>@else<span style="font-size:11px;color:var(--tx3)">—</span>@endif</td>
-          <td><span class="badge b-{{ $o->tt }}">{{ $tt[$o->tt] ?? $o->tt }}</span></td>
+          <td><span class="badge b-{{ $o->tt }}">{{ $tt[$o->tt] ?? $o->tt }}</span>@if($o->dai_ly_xac_nhan)<div style="font-size:10px;color:#3E7A0A;font-weight:800;margin-top:3px">✓ ĐL xác nhận VC</div>@endif</td>
           <td style="font-size:11px;color:var(--tx3)">{{ optional($o->created_at)->format('d/m H:i') }}</td>
           <td><a href="{{ route('admin.diho.show', $o) }}" class="btn-edit">Xem →</a></td>
         </tr>

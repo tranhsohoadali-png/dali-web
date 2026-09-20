@@ -35,4 +35,5 @@ Route::prefix('3d')->group(function () {
     Route::post('dai-ly/di-don', [\App\Http\Controllers\Api3dController::class, 'dealerDiDonTao']);
     Route::get('dai-ly/di-don',  [\App\Http\Controllers\Api3dController::class, 'dealerDiDonList']);
     Route::post('dai-ly/doc-mon-anh', [\App\Http\Controllers\Api3dController::class, 'dealerDocMonAnh']); // AI đọc môn từ ảnh
+    Route::post('dai-ly/xac-nhan-vc', [\App\Http\Controllers\Api3dController::class, 'dealerXacNhanVc']); // ĐL xác nhận VC nhận hàng
 });

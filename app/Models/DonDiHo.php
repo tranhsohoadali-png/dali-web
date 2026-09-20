@@ -13,8 +13,10 @@ class DonDiHo extends Model
     protected $casts = [
         'chi_tiet'       => 'array',
         'gui_luc'        => 'datetime',
-        'da_thanh_toan'  => 'boolean',
-        'thanh_toan_luc' => 'datetime',
+        'da_thanh_toan'   => 'boolean',
+        'thanh_toan_luc'  => 'datetime',
+        'dai_ly_xac_nhan' => 'boolean',
+        'xac_nhan_luc'    => 'datetime',
     ];
 
     /** Nhãn trạng thái tiếng Việt cho quản trị. */

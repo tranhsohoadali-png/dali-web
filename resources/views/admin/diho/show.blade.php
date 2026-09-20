@@ -121,6 +121,10 @@ select,input[type=text]{border:1.5px solid var(--bd);border-radius:9px;padding:9
         <div class="sec">
           <h2>⚙️ Xử lý</h2>
           <div class="row"><span>Trạng thái</span><span class="badge">{{ $tt[$don->tt] ?? $don->tt }}</span></div>
+          <div class="row"><span>ĐL xác nhận VC nhận hàng</span>
+            @if($don->dai_ly_xac_nhan)<b style="color:#3E7A0A">✓ Đã xác nhận{{ $don->xac_nhan_luc ? ' · '.$don->xac_nhan_luc->format('d/m/Y') : '' }}</b>
+            @else<span style="color:var(--tx3)">Chưa</span>@endif
+          </div>
           @if($don->ma_vc)<div class="row"><span>Mã vận đơn</span><b>{{ $don->ma_vc }}</b></div>@endif
           @if($don->vc)<div class="row"><span>Đơn vị VC</span><b>{{ $don->vc }}</b></div>@endif
           @if($don->gui_luc)<div class="row"><span>Gửi lúc</span><b>{{ $don->gui_luc->format('d/m/Y H:i') }}</b></div>@endif
