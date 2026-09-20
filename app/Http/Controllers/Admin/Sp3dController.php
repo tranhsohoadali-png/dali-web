@@ -103,6 +103,7 @@ class Sp3dController extends Controller
             'gia_si'         => 'nullable|integer|min:0',
             'gia_si_sll'     => 'nullable|integer|min:0',
             'sll_tu'         => 'nullable|integer|min:0',
+            'phu_phi_ten'    => 'nullable|integer|min:0',
             'kho'            => 'nullable|integer|min:0',
             'thu_tu'         => 'nullable|integer',
             'mota_text'      => 'nullable|string',
@@ -125,6 +126,7 @@ class Sp3dController extends Controller
         $v['gia_si']     = $v['gia_si'] ?? 0;
         $v['gia_si_sll'] = $v['gia_si_sll'] ?? 0;
         $v['sll_tu']     = $v['sll_tu'] ?? 0;
+        $v['phu_phi_ten'] = $v['phu_phi_ten'] ?? 0;
         $v['gia_goc']  = 0;
         $v['kho']      = $v['kho'] ?? 0;
         $v['thu_tu']   = $v['thu_tu'] ?? 0;

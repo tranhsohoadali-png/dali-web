@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Http;
 
 /**
  * API công khai cho web bán hàng 3d.tranhdali.vn.
@@ -46,6 +47,7 @@ class Api3dController extends Controller
                     'gia_si'         => $daiLy ? (int) $p->gia_si : null,
                     'gia_si_sll'     => $daiLy ? (int) $p->gia_si_sll : null, // giá theo số lượng lớn
                     'sll_tu'         => $daiLy ? (int) $p->sll_tu : null,      // mua từ N cái
+                    'phu_phi_ten'    => $daiLy ? (int) $p->phu_phi_ten : null, // phụ phí in tên riêng (đi đơn hộ)
                     'mota'           => $p->mota ?: [],
                     'mo_ta_ngan'     => $p->mo_ta_ngan,
                     'mo_ta_dai'      => $p->mo_ta_dai,
@@ -201,9 +203,11 @@ class Api3dController extends Controller
             return $this->cors(response()->json(['ok' => false, 'error' => 'Nhãn chỉ nhận ảnh JPG/PNG/WEBP hoặc PDF.'], 400));
         }
 
+        $code = 'DH' . substr(now()->format('ymd'), 0, 6) . '-' . strtoupper(Str::random(6));
+
         $lines = [];
         $tongSi = 0; $soLuong = 0;
-        foreach ($items as $raw) {
+        foreach ($items as $i => $raw) {
             if (!is_array($raw)) return $this->cors(response()->json(['ok' => false, 'error' => 'Dòng sản phẩm không hợp lệ.'], 400));
             $slug = trim((string) ($raw['slug'] ?? ''));
             $p = $slug !== '' ? Sp3d::where('slug', $slug)->where('hien', true)->first() : null;
@@ -232,16 +236,35 @@ class Api3dController extends Controller
             $tenIn  = mb_substr(trim((string) ($raw['ten_in'] ?? '')), 0, 60);
             $gc     = mb_substr(trim((string) ($raw['ghi_chu'] ?? '')), 0, 300);
 
-            $thanh = $unit * $qty;
+            // Phụ phí in tên riêng: tính MỘT LẦN cho dòng khi đại lý tích ô và mã có cấu hình phụ phí.
+            $phuPhi = 0;
+            if (!empty($raw['tinh_phu_phi_ten']) && $tenIn !== '' && (int) $p->phu_phi_ten > 0) {
+                $phuPhi = (int) $p->phu_phi_ten;
+            }
+
+            // Ảnh ghi chú của dòng (VD danh sách môn của khách) — chứa PII nên lưu đĩa private.
+            $anhGc = null; $anhGcMime = null;
+            $nf = $request->file("note_img_$i");
+            if ($nf && $nf->isValid()) {
+                if ($nf->getSize() > 8 * 1024 * 1024) return $this->cors(response()->json(['ok' => false, 'error' => 'Ảnh ghi chú quá lớn (tối đa 8MB).'], 400));
+                $nm = (string) $nf->getMimeType();
+                if (!in_array($nm, ['image/jpeg', 'image/png', 'image/webp'], true)) return $this->cors(response()->json(['ok' => false, 'error' => 'Ảnh ghi chú chỉ nhận JPG/PNG/WEBP.'], 400));
+                $ne = strtolower($nf->getClientOriginalExtension() ?: $nf->extension() ?: 'jpg');
+                $anhGc = 'di-ho/' . $code . '-mon-' . $i . '.' . $ne;
+                $nf->storeAs('di-ho', $code . '-mon-' . $i . '.' . $ne, 'local');
+                $anhGcMime = $nm;
+            }
+
+            $thanh = $unit * $qty + $phuPhi;
             $tongSi += $thanh; $soLuong += $qty;
             $lines[] = [
                 'slug' => $p->slug, 'ten' => $p->ten, 'bien_the' => $bienThe, 'qty' => $qty,
                 'cap_hoc' => $capHoc, 'ten_in' => $tenIn, 'ghi_chu' => $gc,
-                'don_gia_si' => $unit, 'thanh_tien' => $thanh,
+                'don_gia_si' => $unit, 'phu_phi_ten' => $phuPhi, 'thanh_tien' => $thanh,
+                'anh_ghi_chu' => $anhGc, 'anh_ghi_chu_mime' => $anhGcMime,
             ];
         }
 
-        $code = 'DH' . substr(now()->format('ymd'), 0, 6) . '-' . strtoupper(Str::random(6));
         $ext  = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'dat');
         $rel  = 'di-ho/' . $code . '.' . $ext;
         $file->storeAs('di-ho', $code . '.' . $ext, 'local'); // đĩa private (storage/app/private)
@@ -275,6 +298,88 @@ class Api3dController extends Controller
                 'luc'      => optional($d->created_at)->toIso8601String(),
             ]);
         return $this->cors(response()->json(['ok' => true, 'items' => $ds]));
+    }
+
+    /**
+     * POST /api/3d/dai-ly/doc-mon-anh (header token, multipart: anh)
+     * AI đọc ảnh danh sách môn của khách → trả [{mon, so_luong}] + chuỗi tóm tắt
+     * để đại lý dán vào ghi chú (đại lý tự soát lại, KHÔNG tự tạo đơn).
+     * Cần ANTHROPIC_API_KEY trong .env; chưa có key → báo chưa bật để nhập tay.
+     */
+    public function dealerDocMonAnh(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
+
+        // Chống lạm dụng gọi AI: 30 lần / 10 phút / đại lý
+        $rk = 'diho-ai:' . $dl->id;
+        if (RateLimiter::tooManyAttempts($rk, 30)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Bạn dùng AI quá nhanh, thử lại sau ít phút.'], 429));
+        }
+        RateLimiter::hit($rk, 600);
+
+        if (!$request->hasFile('anh') || !$request->file('anh')->isValid()) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Chưa có ảnh để đọc.'], 400));
+        }
+        $f = $request->file('anh');
+        if ($f->getSize() > 8 * 1024 * 1024) return $this->cors(response()->json(['ok' => false, 'error' => 'Ảnh quá lớn (tối đa 8MB).'], 400));
+        $mime = (string) $f->getMimeType();
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Chỉ đọc được ảnh JPG/PNG/WEBP.'], 400));
+        }
+
+        $key = config('services.anthropic.key');
+        if (!$key) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Tính năng AI chưa được bật (thiếu khoá API). Vui lòng nhập tay.'], 503));
+        }
+
+        try {
+            $data  = base64_encode(file_get_contents($f->getRealPath()));
+            $model = config('services.anthropic.model', 'claude-opus-5');
+            $sys = 'Bạn là trợ lý nhập liệu của xưởng in DALI 3D. Người dùng gửi ảnh chụp danh sách MÔN HỌC và SỐ LƯỢNG thẻ cần đặt (viết tay hoặc in). '
+                 . 'Đọc chính xác từng dòng, CHỈ dùng thông tin thấy trong ảnh, KHÔNG bịa. Chuẩn hoá tên môn về tiếng Việt có dấu. Nếu một dòng không ghi số lượng, đặt so_luong = 1.';
+            $ask = 'Trả về DUY NHẤT JSON dạng {"mon":[{"mon":"Toán","so_luong":3},{"mon":"Tiếng Việt","so_luong":2}]}. '
+                 . 'Không thêm chữ nào ngoài JSON. Nếu ảnh không phải danh sách môn, trả {"mon":[]}.';
+            $content = [
+                ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => $mime, 'data' => $data]],
+                ['type' => 'text', 'text' => $ask],
+            ];
+            $resp = Http::withHeaders(['x-api-key' => $key, 'anthropic-version' => '2023-06-01'])
+                ->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+                    'model' => $model, 'max_tokens' => 1200, 'system' => $sys,
+                    'messages' => [['role' => 'user', 'content' => $content]],
+                ]);
+            if (!$resp->successful()) throw new \RuntimeException('HTTP ' . $resp->status());
+            $text = collect($resp->json('content') ?: [])->where('type', 'text')->pluck('text')->implode("\n");
+            $json = $this->jsonTuTextDiHo($text);
+
+            $mon = [];
+            foreach ((array) ($json['mon'] ?? []) as $r) {
+                if (!is_array($r)) continue;
+                $ten = mb_substr(trim((string) ($r['mon'] ?? '')), 0, 40);
+                if ($ten === '') continue;
+                $sl = (int) ($r['so_luong'] ?? 1);
+                $sl = max(1, min(999, $sl));
+                $mon[] = ['mon' => $ten, 'so_luong' => $sl];
+                if (count($mon) >= 60) break;
+            }
+            $tomtat = collect($mon)->map(fn ($m) => $m['mon'] . ' x' . $m['so_luong'])->implode(', ');
+            $tong = (int) array_sum(array_column($mon, 'so_luong'));
+            return $this->cors(response()->json(['ok' => true, 'source' => 'ai', 'mon' => $mon, 'tong' => $tong, 'text' => $tomtat]));
+        } catch (\Throwable $e) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'AI chưa đọc được ảnh, vui lòng nhập tay.'], 502));
+        }
+    }
+
+    /** Rút JSON từ text AI (bỏ ```json và chữ thừa). */
+    private function jsonTuTextDiHo(string $text): array
+    {
+        $t = preg_replace('/```(?:json)?/i', '', trim($text));
+        $s = strpos($t, '{'); $e = strrpos($t, '}');
+        if ($s === false || $e === false || $e < $s) return [];
+        $d = json_decode(substr($t, $s, $e - $s + 1), true);
+        return is_array($d) ? $d : [];
     }
 
     /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */

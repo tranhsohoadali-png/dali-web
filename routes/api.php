@@ -34,4 +34,5 @@ Route::prefix('3d')->group(function () {
     // Đại lý: đi đơn hộ (đơn TMĐT) — gửi đơn + tải nhãn vận chuyển; xem đơn của mình
     Route::post('dai-ly/di-don', [\App\Http\Controllers\Api3dController::class, 'dealerDiDonTao']);
     Route::get('dai-ly/di-don',  [\App\Http\Controllers\Api3dController::class, 'dealerDiDonList']);
+    Route::post('dai-ly/doc-mon-anh', [\App\Http\Controllers\Api3dController::class, 'dealerDocMonAnh']); // AI đọc môn từ ảnh
 });

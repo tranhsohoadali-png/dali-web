@@ -169,6 +169,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         <label class="f"><span>Giá sỉ (đ) <i>— chỉ hiện cho đại lý đã đăng nhập; 0 = chưa có</i></span><input name="gia_si" inputmode="numeric" value="{{ old('gia_si', $sp->gia_si ?? 0) }}"></label>
         <label class="f"><span>Giá sỉ SLL (đ) <i>— giá khi mua số lượng lớn; 0 = không có</i></span><input name="gia_si_sll" inputmode="numeric" value="{{ old('gia_si_sll', $sp->gia_si_sll ?? 0) }}"></label>
         <label class="f"><span>SLL từ (cái) <i>— áp giá SLL khi mua từ số này trở lên</i></span><input name="sll_tu" inputmode="numeric" value="{{ old('sll_tu', $sp->sll_tu ?? 0) }}"></label>
+        <label class="f"><span>Phụ phí in tên riêng (đ) <i>— dùng ở "Đi đơn hộ": đại lý tích in tên thì cộng 1 lần/dòng; 0 = miễn phí</i></span><input name="phu_phi_ten" inputmode="numeric" value="{{ old('phu_phi_ten', $sp->phu_phi_ten ?? 0) }}"></label>
         <label class="f"><span>Thứ tự hiện trên web <i>— nhỏ đứng trước</i></span><input name="thu_tu" inputmode="numeric" value="{{ old('thu_tu', $sp->thu_tu ?? 0) }}"></label>
       </div>
     </div>

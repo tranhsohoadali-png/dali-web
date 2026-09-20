@@ -52,7 +52,7 @@ select,input[type=text]{border:1.5px solid var(--bd);border-radius:9px;padding:9
       <div>
         <div class="sec">
           <h2>🧾 Sản phẩm cần in &amp; đi</h2>
-          @foreach(($don->chi_tiet ?: []) as $l)
+          @foreach(($don->chi_tiet ?: []) as $li => $l)
           <div class="line">
             <div style="display:flex;justify-content:space-between">
               <div class="t">{{ $l['ten'] ?? '' }} <span style="color:var(--tx3)">×{{ $l['qty'] ?? 1 }}</span></div>
@@ -62,7 +62,15 @@ select,input[type=text]{border:1.5px solid var(--bd);border-radius:9px;padding:9
             @if(!empty($l['cap_hoc']))<div class="s">🎓 Cấp học: <b>{{ $l['cap_hoc'] }}</b></div>@endif
             @if(!empty($l['ten_in']))<div class="s">✍️ In tên riêng: <b>{{ $l['ten_in'] }}</b></div>@endif
             @if(!empty($l['ghi_chu']))<div class="s">📝 Ghi chú: {{ $l['ghi_chu'] }}</div>@endif
-            <div class="s">Đơn giá sỉ: {{ number_format((int)($l['don_gia_si'] ?? 0),0,',','.') }}đ</div>
+            <div class="s">Đơn giá sỉ: {{ number_format((int)($l['don_gia_si'] ?? 0),0,',','.') }}đ{{ !empty($l['phu_phi_ten']) ? ' · phụ phí in tên +'.number_format((int)$l['phu_phi_ten'],0,',','.').'đ' : '' }}</div>
+            @if(!empty($l['anh_ghi_chu']))
+            <div class="s" style="margin-top:6px">🖼️ Ảnh ghi chú:
+              <a href="{{ route('admin.diho.anhmon', ['don'=>$don,'idx'=>$li]) }}" style="color:#3730A3;font-weight:700">tải</a>
+            </div>
+            @if(\Illuminate\Support\Str::startsWith((string)($l['anh_ghi_chu_mime'] ?? ''), 'image/'))
+              <img src="{{ route('admin.diho.anhmon', ['don'=>$don,'idx'=>$li]) }}" class="nhan-img" alt="Ảnh ghi chú dòng {{ $li+1 }}">
+            @endif
+            @endif
           </div>
           @endforeach
           <div style="margin-top:12px">

@@ -53,10 +53,24 @@ class DonDiHoController extends Controller
         return Storage::disk('local')->download($don->nhan_vc_path, 'nhan-' . $don->ma . '.' . $ext);
     }
 
+    /** Tải ảnh ghi chú của một dòng (VD danh sách môn của khách) — đĩa private, chỉ admin. */
+    public function taiAnhMon(DonDiHo $don, int $idx)
+    {
+        $line = ($don->chi_tiet ?: [])[$idx] ?? null;
+        $rel  = $line['anh_ghi_chu'] ?? null;
+        if (!$rel || !Storage::disk('local')->exists($rel)) abort(404, 'Không tìm thấy ảnh.');
+        $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION) ?: 'jpg');
+        return Storage::disk('local')->download($rel, 'monanh-' . $don->ma . '-' . $idx . '.' . $ext);
+    }
+
     public function destroy(DonDiHo $don)
     {
         $ma = $don->ma;
         if ($don->nhan_vc_path) Storage::disk('local')->delete($don->nhan_vc_path);
+        // Xoá cả ảnh ghi chú từng dòng (nếu có)
+        foreach (($don->chi_tiet ?: []) as $l) {
+            if (!empty($l['anh_ghi_chu'])) Storage::disk('local')->delete($l['anh_ghi_chu']);
+        }
         $don->delete();
         return redirect()->route('admin.diho.index')->with('ok', 'Đã xoá đơn ' . $ma);
     }
