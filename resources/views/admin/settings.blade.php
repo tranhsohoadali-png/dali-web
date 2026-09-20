@@ -207,6 +207,35 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
           </form>
         </div>
 
+        {{-- AI Claude (mô tả sản phẩm + đọc môn từ ảnh) --}}
+        <div class="card" id="sec-ai">
+          <div class="rainbow"></div>
+          <div class="card-head"><div class="card-icon">🤖</div><div><div class="card-title">Trí tuệ nhân tạo (Claude)</div><div class="card-sub">Bật "AI mô tả sản phẩm" và "AI đọc số môn từ ảnh" ở mục Đi đơn hộ</div></div></div>
+          <form class="fb" method="POST" action="{{ route('admin.settings.update') }}">
+            @csrf
+            <input type="hidden" name="_anchor" value="sec-ai"><input type="hidden" name="_section" value="AI (Claude)">
+            @php $aiKeyLen = strlen((string)($settings['anthropic_key'] ?? '')); @endphp
+            <div class="g1">
+              <label class="flabel">Khoá API Anthropic (ANTHROPIC_API_KEY)</label>
+              <input type="password" name="anthropic_key" class="dinput" value="{{ $settings['anthropic_key'] ?? '' }}" placeholder="sk-ant-..." autocomplete="off">
+              <div class="fnote">
+                Lấy khoá tại <code>console.anthropic.com</code> › API Keys. Dán vào đây rồi Lưu — không cần sửa file trên máy chủ.
+                @if($aiKeyLen > 0)<b style="color:var(--g)">✔ Đang có khoá ({{ $aiKeyLen }} ký tự).</b>@else<b style="color:#C0392B">Chưa có khoá — tính năng AI đang tắt.</b>@endif
+                <br>Lưu ý: mỗi lần gọi AI tốn phí theo Anthropic.
+              </div>
+            </div>
+            <div class="g1" style="margin-top:4px">
+              <label class="flabel">Model (không bắt buộc)</label>
+              <input type="text" name="anthropic_model" class="dinput" value="{{ $settings['anthropic_model'] ?? '' }}" placeholder="claude-sonnet-4-5">
+              <div class="fnote">Để trống sẽ dùng mặc định. Nên dùng bản <b>Sonnet</b> mới cho rẻ &amp; nhanh (đọc danh sách môn không cần Opus).</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--bd)">
+              <button type="submit" class="btn-save">💾 Lưu khoá AI</button>
+              @if(session('saved_anchor')==='sec-ai')<span style="color:var(--g);font-weight:800;font-size:13px">✅ Đã lưu thành công!</span>@endif
+            </div>
+          </form>
+        </div>
+
         {{-- SEO --}}
         <div class="card" id="sec-seo">
           <div class="rainbow"></div>

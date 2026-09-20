@@ -329,14 +329,14 @@ class Api3dController extends Controller
             return $this->cors(response()->json(['ok' => false, 'error' => 'Chỉ đọc được ảnh JPG/PNG/WEBP.'], 400));
         }
 
-        $key = config('services.anthropic.key');
+        $key = $this->aiKey();
         if (!$key) {
             return $this->cors(response()->json(['ok' => false, 'error' => 'Tính năng AI chưa được bật (thiếu khoá API). Vui lòng nhập tay.'], 503));
         }
 
         try {
             $data  = base64_encode(file_get_contents($f->getRealPath()));
-            $model = config('services.anthropic.model', 'claude-opus-5');
+            $model = $this->aiModel();
             $sys = 'Bạn là trợ lý nhập liệu của xưởng in DALI 3D. Người dùng gửi ảnh chụp danh sách MÔN HỌC và SỐ LƯỢNG thẻ cần đặt (viết tay hoặc in). '
                  . 'Đọc chính xác từng dòng, CHỈ dùng thông tin thấy trong ảnh, KHÔNG bịa. Chuẩn hoá tên môn về tiếng Việt có dấu. Nếu một dòng không ghi số lượng, đặt so_luong = 1.';
             $ask = 'Trả về DUY NHẤT JSON dạng {"mon":[{"mon":"Toán","so_luong":3},{"mon":"Tiếng Việt","so_luong":2}]}. '
@@ -370,6 +370,23 @@ class Api3dController extends Controller
         } catch (\Throwable $e) {
             return $this->cors(response()->json(['ok' => false, 'error' => 'AI chưa đọc được ảnh, vui lòng nhập tay.'], 502));
         }
+    }
+
+    /** Khoá API Claude: ưu tiên admin_settings (nhập ở trang Cài đặt), fallback .env. */
+    private function aiKey(): ?string
+    {
+        $k = DB::table('admin_settings')->where('key', 'anthropic_key')->value('value');
+        if ($k !== null && trim((string) $k) !== '') return trim((string) $k);
+        $env = config('services.anthropic.key');
+        return $env ? (string) $env : null;
+    }
+
+    /** Model Claude: admin_settings > .env > mặc định. */
+    private function aiModel(): string
+    {
+        $m = DB::table('admin_settings')->where('key', 'anthropic_model')->value('value');
+        if ($m !== null && trim((string) $m) !== '') return trim((string) $m);
+        return (string) config('services.anthropic.model', 'claude-opus-5');
     }
 
     /** Rút JSON từ text AI (bỏ ```json và chữ thừa). */

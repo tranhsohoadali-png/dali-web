@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Quản lý sản phẩm khu "Xưởng in 3D".
@@ -409,7 +410,7 @@ class Sp3dController extends Controller
             return response()->json(['ok' => false, 'error' => 'Cần ít nhất tên sản phẩm hoặc vài từ khoá.'], 422);
         }
 
-        $key = config('services.anthropic.key');
+        $key = $this->aiKey();
         if (!$key) {
             return response()->json(['ok' => true, 'source' => 'template']
                 + $this->motaMau($ten, $danhMuc, $gia, $tuKhoa, $khacTen));
@@ -427,10 +428,27 @@ class Sp3dController extends Controller
         }
     }
 
+    /** Khoá API Claude: ưu tiên admin_settings (trang Cài đặt), fallback .env. */
+    private function aiKey(): ?string
+    {
+        $k = DB::table('admin_settings')->where('key', 'anthropic_key')->value('value');
+        if ($k !== null && trim((string) $k) !== '') return trim((string) $k);
+        $env = config('services.anthropic.key');
+        return $env ? (string) $env : null;
+    }
+
+    /** Model Claude: admin_settings > .env > mặc định. */
+    private function aiModel(): string
+    {
+        $m = DB::table('admin_settings')->where('key', 'anthropic_model')->value('value');
+        if ($m !== null && trim((string) $m) !== '') return trim((string) $m);
+        return (string) config('services.anthropic.model', 'claude-opus-5');
+    }
+
     /** Gọi Claude qua HTTP (Guzzle của Laravel) — ảnh truyền bằng URL, không base64. */
     private function motaClaude(string $key, string $ten, string $danhMuc, int $gia, string $tuKhoa, bool $khacTen, array $anh): array
     {
-        $model = config('services.anthropic.model', 'claude-opus-5');
+        $model = $this->aiModel();
         $sys = 'Bạn là copywriter của xưởng in 3D DALI 3D (Việt Nam). Viết mô tả sản phẩm bằng tiếng Việt, '
             . 'giọng ấm áp và đáng tin, gợi cảm xúc nhưng TRUNG THỰC — không phóng đại, không hứa điều không có. '
             . 'Văn phong như các shop quà tặng cao cấp: câu gọn, cụ thể, tập trung vào trải nghiệm và lợi ích của người dùng. '
