@@ -83,7 +83,7 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
             <div class="tot"><span>Tổng số lượng</span><span>{{ (int)$don->so_luong }}</span></div>
             <div class="tot"><span>Tiền sản phẩm (giá sỉ)</span><span>{{ number_format($tienSp,0,',','.') }}đ</span></div>
             @if($phuTen>0)<div class="tot"><span>✍️ Phụ phí in tên riêng</span><span>{{ number_format($phuTen,0,',','.') }}đ</span></div>@endif
-            @if((int)$don->thu_them>0)<div class="tot"><span>➕ Chi phí thu thêm@if($don->thu_them_gc) <i style="color:var(--tx3);font-weight:400">({{ $don->thu_them_gc }})</i>@endif</span><span>{{ number_format((int)$don->thu_them,0,',','.') }}đ</span></div>@endif
+            @if((int)$don->thu_them>0)<div class="tot"><span>➕ Chi phí thu thêm{!! $don->thu_them_gc ? ' <i style="color:var(--tx3);font-weight:400">('.e($don->thu_them_gc).')</i>' : '' !!}</span><span>{{ number_format((int)$don->thu_them,0,',','.') }}đ</span></div>@endif
             <div class="tot big"><span>Tổng cộng (tham khảo)</span><span>{{ number_format((int)$don->tong_si,0,',','.') }}đ</span></div>
             <div style="font-size:11px;color:var(--tx3);margin-top:4px">Con số này chỉ để hai bên đối soát — module không thu tiền online.</div>
           </div>
