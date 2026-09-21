@@ -28,7 +28,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
 .tot.big{font-size:16px;font-weight:900;color:var(--g);border-top:1.5px solid var(--bd);margin-top:6px;padding-top:10px}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:800;background:#FEF3C7;color:#B45309}
 select,input,.btn{font-family:'Be Vietnam Pro',sans-serif}
-select,input[type=text]{border:1.5px solid var(--bd);border-radius:9px;padding:9px 12px;font-size:13px;background:var(--gll);width:100%}
+select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-radius:9px;padding:9px 12px;font-size:13px;background:var(--gll);width:100%;font-family:'Be Vietnam Pro',sans-serif}
 .btn{padding:10px 16px;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer}
 .btn-g{background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff}
 .btn-dl{display:inline-flex;align-items:center;gap:6px;padding:11px 16px;background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE;border-radius:9px;font-size:13px;font-weight:800;text-decoration:none}
@@ -75,11 +75,28 @@ select,input[type=text]{border:1.5px solid var(--bd);border-radius:9px;padding:9
             @endif
           </div>
           @endforeach
+          @php
+            $tienSp = collect($don->chi_tiet ?: [])->sum(fn($l)=>(int)($l['don_gia_si'] ?? 0) * (int)($l['qty'] ?? 0));
+            $phuTen = collect($don->chi_tiet ?: [])->sum(fn($l)=>(int)($l['phu_phi_ten'] ?? 0));
+          @endphp
           <div style="margin-top:12px">
             <div class="tot"><span>Tổng số lượng</span><span>{{ (int)$don->so_luong }}</span></div>
-            <div class="tot big"><span>Tổng giá sỉ (tham khảo)</span><span>{{ number_format((int)$don->tong_si,0,',','.') }}đ</span></div>
+            <div class="tot"><span>Tiền sản phẩm (giá sỉ)</span><span>{{ number_format($tienSp,0,',','.') }}đ</span></div>
+            @if($phuTen>0)<div class="tot"><span>✍️ Phụ phí in tên riêng</span><span>{{ number_format($phuTen,0,',','.') }}đ</span></div>@endif
+            @if((int)$don->thu_them>0)<div class="tot"><span>➕ Chi phí thu thêm@if($don->thu_them_gc) <i style="color:var(--tx3);font-weight:400">({{ $don->thu_them_gc }})</i>@endif</span><span>{{ number_format((int)$don->thu_them,0,',','.') }}đ</span></div>@endif
+            <div class="tot big"><span>Tổng cộng (tham khảo)</span><span>{{ number_format((int)$don->tong_si,0,',','.') }}đ</span></div>
             <div style="font-size:11px;color:var(--tx3);margin-top:4px">Con số này chỉ để hai bên đối soát — module không thu tiền online.</div>
           </div>
+
+          <form method="POST" action="{{ route('admin.diho.thuthem', $don) }}" style="margin-top:14px;padding-top:12px;border-top:1.5px dashed var(--bd)">
+            @csrf
+            <div style="font-size:12.5px;font-weight:800;color:var(--char);margin-bottom:8px">➕ Chi phí thu thêm (nếu có)</div>
+            <div class="g2" style="align-items:flex-end">
+              <div style="flex:1;min-width:130px"><label style="display:block;font-size:11px;color:var(--tx3);font-weight:700;margin-bottom:3px">Số tiền (đ)</label><input type="number" name="thu_them" min="0" value="{{ (int)$don->thu_them }}" style="width:100%"></div>
+              <div style="flex:2;min-width:180px"><label style="display:block;font-size:11px;color:var(--tx3);font-weight:700;margin-bottom:3px">Ghi chú (thu tiền gì)</label><input type="text" name="thu_them_gc" maxlength="200" value="{{ $don->thu_them_gc }}" placeholder="VD: phí thiết kế riêng, ship xa…" style="width:100%"></div>
+              <button class="btn btn-g" type="submit">Lưu</button>
+            </div>
+          </form>
           @if($don->ghi_chu)<div style="margin-top:12px;font-size:12.5px;background:var(--gll);border-radius:9px;padding:9px 12px">📝 Ghi chú chung: {{ $don->ghi_chu }}</div>@endif
         </div>
 
@@ -107,7 +124,7 @@ select,input[type=text]{border:1.5px solid var(--bd);border-radius:9px;padding:9
 
         <div class="sec">
           <h2>💰 Thanh toán (đối soát)</h2>
-          <div class="row"><span>Tổng tiền sỉ</span><b style="color:#3E7A0A">{{ number_format((int)$don->tong_si,0,',','.') }}đ</b></div>
+          <div class="row"><span>Tổng phải thu</span><b style="color:#3E7A0A">{{ number_format((int)$don->tong_si,0,',','.') }}đ</b></div>
           <div class="row"><span>Trạng thái thu tiền</span>
             @if($don->da_thanh_toan)<span class="badge" style="background:#E8F9D0;color:#3E7A0A">✓ Đã thu{{ $don->thanh_toan_luc ? ' · '.$don->thanh_toan_luc->format('d/m/Y') : '' }}</span>
             @else<span class="badge" style="background:#FEE2E2;color:#B91C1C">Chưa thu</span>@endif

@@ -295,6 +295,8 @@ class Api3dController extends Controller
                 'luc'           => optional($d->created_at)->toIso8601String(),
                 'da_thanh_toan' => (bool) $d->da_thanh_toan,   // đã đối soát/thu tiền chưa
                 'xac_nhan'      => (bool) $d->dai_ly_xac_nhan,  // ĐL đã xác nhận VC nhận hàng
+                'thu_them'      => (int) $d->thu_them,
+                'thu_them_gc'   => $d->thu_them_gc,
             ]);
         // Đối soát: tổng & còn phải thanh toán (bỏ đơn huỷ)
         $base = DonDiHo::where('dai_ly_id', $dl->id)->where('tt', '!=', 'huy');

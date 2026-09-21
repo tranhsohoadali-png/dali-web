@@ -112,6 +112,23 @@ class DonDiHoController extends Controller
         return Storage::disk('local')->download($rel, 'monanh-' . $don->ma . '-' . $idx . '.' . $ext);
     }
 
+    /** Chi phí thu thêm (admin nhập) + ghi chú; cộng lại vào tong_si để đối soát đúng. */
+    public function capNhatThuThem(Request $request, DonDiHo $don)
+    {
+        $request->validate([
+            'thu_them'    => 'nullable|integer|min:0|max:100000000',
+            'thu_them_gc' => 'nullable|string|max:200',
+        ]);
+        $thuThem = (int) $request->input('thu_them', 0);
+        $base = collect($don->chi_tiet ?: [])->sum(fn ($l) => (int) ($l['thanh_tien'] ?? 0));
+        $don->update([
+            'thu_them'    => $thuThem,
+            'thu_them_gc' => trim((string) $request->input('thu_them_gc', '')) ?: null,
+            'tong_si'     => $base + $thuThem,
+        ]);
+        return back()->with('ok', 'Đã cập nhật chi phí thu thêm cho đơn ' . $don->ma);
+    }
+
     /** AI đọc số môn từ ảnh ghi chú của một dòng (dùng cho xưởng ngay trong admin). */
     public function docMonAi(DonDiHo $don, int $idx)
     {
