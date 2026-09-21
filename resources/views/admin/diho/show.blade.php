@@ -31,6 +31,7 @@ select,input,.btn{font-family:'Be Vietnam Pro',sans-serif}
 select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-radius:9px;padding:9px 12px;font-size:13px;background:var(--gll);width:100%;font-family:'Be Vietnam Pro',sans-serif}
 .btn{padding:10px 16px;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer}
 .btn-g{background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff}
+.btn-o{background:#FEF3C7;color:#B45309;border:1px solid #FCD34D}
 .btn-dl{display:inline-flex;align-items:center;gap:6px;padding:11px 16px;background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE;border-radius:9px;font-size:13px;font-weight:800;text-decoration:none}
 .btn-d{background:#FFF0F0;color:#EF4444;border:1px solid #FECACA}
 .g2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
