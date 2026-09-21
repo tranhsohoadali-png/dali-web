@@ -236,11 +236,8 @@ class Api3dController extends Controller
             $tenIn  = mb_substr(trim((string) ($raw['ten_in'] ?? '')), 0, 60);
             $gc     = mb_substr(trim((string) ($raw['ghi_chu'] ?? '')), 0, 300);
 
-            // Phụ phí in tên riêng: tính MỘT LẦN cho dòng khi đại lý tích ô và mã có cấu hình phụ phí.
-            $phuPhi = 0;
-            if (!empty($raw['tinh_phu_phi_ten']) && $tenIn !== '' && (int) $p->phu_phi_ten > 0) {
-                $phuPhi = (int) $p->phu_phi_ten;
-            }
+            // Phụ phí in tên riêng: CÓ điền tên -> tự cộng MỘT LẦN cho dòng (theo phụ phí của mã).
+            $phuPhi = ($tenIn !== '' && (int) $p->phu_phi_ten > 0) ? (int) $p->phu_phi_ten : 0;
 
             // Ảnh ghi chú của dòng (VD danh sách môn của khách) — chứa PII nên lưu đĩa private.
             $anhGc = null; $anhGcMime = null;
@@ -355,74 +352,14 @@ class Api3dController extends Controller
             return $this->cors(response()->json(['ok' => false, 'error' => 'Chỉ đọc được ảnh JPG/PNG/WEBP.'], 400));
         }
 
-        $key = $this->aiKey();
-        if (!$key) {
+        if (!\App\Services\DocMonAi::batAi()) {
             return $this->cors(response()->json(['ok' => false, 'error' => 'Tính năng AI chưa được bật (thiếu khoá API). Vui lòng nhập tay.'], 503));
         }
-
-        try {
-            $data  = base64_encode(file_get_contents($f->getRealPath()));
-            $model = $this->aiModel();
-            $sys = 'Bạn là trợ lý nhập liệu của xưởng in DALI 3D. Người dùng gửi ảnh chụp danh sách MÔN HỌC và SỐ LƯỢNG thẻ cần đặt (viết tay hoặc in). '
-                 . 'Đọc chính xác từng dòng, CHỈ dùng thông tin thấy trong ảnh, KHÔNG bịa. Chuẩn hoá tên môn về tiếng Việt có dấu. Nếu một dòng không ghi số lượng, đặt so_luong = 1.';
-            $ask = 'Trả về DUY NHẤT JSON dạng {"mon":[{"mon":"Toán","so_luong":3},{"mon":"Tiếng Việt","so_luong":2}]}. '
-                 . 'Không thêm chữ nào ngoài JSON. Nếu ảnh không phải danh sách môn, trả {"mon":[]}.';
-            $content = [
-                ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => $mime, 'data' => $data]],
-                ['type' => 'text', 'text' => $ask],
-            ];
-            $resp = Http::withHeaders(['x-api-key' => $key, 'anthropic-version' => '2023-06-01'])
-                ->timeout(60)->post('https://api.anthropic.com/v1/messages', [
-                    'model' => $model, 'max_tokens' => 1200, 'system' => $sys,
-                    'messages' => [['role' => 'user', 'content' => $content]],
-                ]);
-            if (!$resp->successful()) throw new \RuntimeException('HTTP ' . $resp->status());
-            $text = collect($resp->json('content') ?: [])->where('type', 'text')->pluck('text')->implode("\n");
-            $json = $this->jsonTuTextDiHo($text);
-
-            $mon = [];
-            foreach ((array) ($json['mon'] ?? []) as $r) {
-                if (!is_array($r)) continue;
-                $ten = mb_substr(trim((string) ($r['mon'] ?? '')), 0, 40);
-                if ($ten === '') continue;
-                $sl = (int) ($r['so_luong'] ?? 1);
-                $sl = max(1, min(999, $sl));
-                $mon[] = ['mon' => $ten, 'so_luong' => $sl];
-                if (count($mon) >= 60) break;
-            }
-            $tomtat = collect($mon)->map(fn ($m) => $m['mon'] . ' x' . $m['so_luong'])->implode(', ');
-            $tong = (int) array_sum(array_column($mon, 'so_luong'));
-            return $this->cors(response()->json(['ok' => true, 'source' => 'ai', 'mon' => $mon, 'tong' => $tong, 'text' => $tomtat]));
-        } catch (\Throwable $e) {
-            return $this->cors(response()->json(['ok' => false, 'error' => 'AI chưa đọc được ảnh, vui lòng nhập tay.'], 502));
+        $res = \App\Services\DocMonAi::doc(file_get_contents($f->getRealPath()), $mime);
+        if (!$res['ok']) {
+            return $this->cors(response()->json(['ok' => false, 'error' => ($res['error'] ?? 'AI chưa đọc được ảnh.') . ' Vui lòng nhập tay.'], 502));
         }
-    }
-
-    /** Khoá API Claude: ưu tiên admin_settings (nhập ở trang Cài đặt), fallback .env. */
-    private function aiKey(): ?string
-    {
-        $k = DB::table('admin_settings')->where('key', 'anthropic_key')->value('value');
-        if ($k !== null && trim((string) $k) !== '') return trim((string) $k);
-        $env = config('services.anthropic.key');
-        return $env ? (string) $env : null;
-    }
-
-    /** Model Claude: admin_settings > .env > mặc định. */
-    private function aiModel(): string
-    {
-        $m = DB::table('admin_settings')->where('key', 'anthropic_model')->value('value');
-        if ($m !== null && trim((string) $m) !== '') return trim((string) $m);
-        return (string) config('services.anthropic.model', 'claude-opus-5');
-    }
-
-    /** Rút JSON từ text AI (bỏ ```json và chữ thừa). */
-    private function jsonTuTextDiHo(string $text): array
-    {
-        $t = preg_replace('/```(?:json)?/i', '', trim($text));
-        $s = strpos($t, '{'); $e = strrpos($t, '}');
-        if ($s === false || $e === false || $e < $s) return [];
-        $d = json_decode(substr($t, $s, $e - $s + 1), true);
-        return is_array($d) ? $d : [];
+        return $this->cors(response()->json(['ok' => true, 'source' => 'ai', 'mon' => $res['mon'], 'tong' => $res['tong'], 'text' => $res['text']]));
     }
 
     /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */

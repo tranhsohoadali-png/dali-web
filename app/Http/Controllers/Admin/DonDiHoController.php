@@ -112,6 +112,23 @@ class DonDiHoController extends Controller
         return Storage::disk('local')->download($rel, 'monanh-' . $don->ma . '-' . $idx . '.' . $ext);
     }
 
+    /** AI đọc số môn từ ảnh ghi chú của một dòng (dùng cho xưởng ngay trong admin). */
+    public function docMonAi(DonDiHo $don, int $idx)
+    {
+        $line = ($don->chi_tiet ?: [])[$idx] ?? null;
+        $rel  = $line['anh_ghi_chu'] ?? null;
+        if (!$rel || !Storage::disk('local')->exists($rel)) {
+            return response()->json(['ok' => false, 'error' => 'Dòng này không có ảnh ghi chú.'], 404);
+        }
+        if (!\App\Services\DocMonAi::batAi()) {
+            return response()->json(['ok' => false, 'error' => 'Chưa bật AI — vào Cài đặt nhập khoá Anthropic.'], 503);
+        }
+        $bytes = Storage::disk('local')->get($rel);
+        $mime  = $line['anh_ghi_chu_mime'] ?? 'image/jpeg';
+        $res   = \App\Services\DocMonAi::doc($bytes, $mime);
+        return response()->json($res, $res['ok'] ? 200 : 502);
+    }
+
     public function destroy(DonDiHo $don)
     {
         $ma = $don->ma;
