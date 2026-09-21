@@ -65,7 +65,7 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
             <div class="s">Đơn giá sỉ: {{ number_format((int)($l['don_gia_si'] ?? 0),0,',','.') }}đ{{ !empty($l['phu_phi_ten']) ? ' · phụ phí in tên +'.number_format((int)$l['phu_phi_ten'],0,',','.').'đ' : '' }}</div>
             @if(!empty($l['anh_ghi_chu']))
             <div class="s" style="margin-top:6px">🖼️ Ảnh ghi chú:
-              <a href="{{ route('admin.diho.anhmon', ['don'=>$don,'idx'=>$li]) }}" style="color:#3730A3;font-weight:700">tải</a>
+              <a href="{{ route('admin.diho.anhmon', ['don'=>$don,'idx'=>$li]) }}" target="_blank" rel="noopener" style="color:#3730A3;font-weight:700">xem</a>
               <button type="button" class="ai-mon" data-url="{{ route('admin.diho.docmon', ['don'=>$don,'idx'=>$li]) }}" style="margin-left:8px;font-size:11px;font-weight:800;color:#5B21B6;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:20px;padding:3px 10px;cursor:pointer">🤖 Đọc số môn (AI)</button>
             </div>
             <div class="ai-mon-kq" style="display:none;font-size:12.5px;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:9px;padding:9px 12px;margin-top:6px;color:#4C1D95"></div>
@@ -103,11 +103,12 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
         <div class="sec">
           <h2>🏷️ Nhãn / hoá đơn vận chuyển</h2>
           @if($don->nhan_vc_path)
-            <a href="{{ route('admin.diho.nhan', $don) }}" class="btn-dl">⬇ Tải nhãn ({{ $don->nhan_vc_ten }})</a>
+            <a href="{{ route('admin.diho.nhan', $don) }}" target="_blank" rel="noopener" class="btn-dl">👁 Xem / In nhãn ({{ $don->nhan_vc_ten }})</a>
             @if(\Illuminate\Support\Str::startsWith((string)$don->nhan_vc_mime, 'image/'))
               <img src="{{ route('admin.diho.nhan', $don) }}" class="nhan-img" alt="Nhãn vận chuyển">
             @else
-              <div style="font-size:12px;color:var(--tx3);margin-top:8px">File PDF — bấm nút trên để tải &amp; in.</div>
+              <div style="font-size:12px;color:var(--tx3);margin-top:8px">File PDF — bấm nút trên để mở &amp; in ngay.</div>
+              <iframe src="{{ route('admin.diho.nhan', $don) }}" class="nhan-img" style="width:100%;height:480px;border:1.5px solid var(--bd)" title="Nhãn vận chuyển"></iframe>
             @endif
           @else
             <div style="font-size:12px;color:var(--tx3)">Đơn này chưa có file nhãn.</div>

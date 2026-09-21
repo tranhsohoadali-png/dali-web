@@ -92,14 +92,16 @@ class DonDiHoController extends Controller
         return back()->with('ok', 'Đã cập nhật đơn ' . $don->ma . ' → ' . (DonDiHo::TRANG_THAI[$request->tt] ?? $request->tt));
     }
 
-    /** Tải nhãn/hoá đơn vận chuyển (đĩa private) — chỉ admin đã đăng nhập. */
+    /** Mở nhãn/hoá đơn vận chuyển INLINE (xem/in ngay trong trình duyệt) — chỉ admin. */
     public function taiNhan(DonDiHo $don)
     {
         if (!$don->nhan_vc_path || !Storage::disk('local')->exists($don->nhan_vc_path)) {
             abort(404, 'Không tìm thấy file nhãn.');
         }
         $ext = strtolower(pathinfo($don->nhan_vc_path, PATHINFO_EXTENSION) ?: 'dat');
-        return Storage::disk('local')->download($don->nhan_vc_path, 'nhan-' . $don->ma . '.' . $ext);
+        $headers = $don->nhan_vc_mime ? ['Content-Type' => $don->nhan_vc_mime] : [];
+        // response() => Content-Disposition: inline (mở thẳng, không ép tải)
+        return Storage::disk('local')->response($don->nhan_vc_path, 'nhan-' . $don->ma . '.' . $ext, $headers);
     }
 
     /** Tải ảnh ghi chú của một dòng (VD danh sách môn của khách) — đĩa private, chỉ admin. */
@@ -109,7 +111,8 @@ class DonDiHoController extends Controller
         $rel  = $line['anh_ghi_chu'] ?? null;
         if (!$rel || !Storage::disk('local')->exists($rel)) abort(404, 'Không tìm thấy ảnh.');
         $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION) ?: 'jpg');
-        return Storage::disk('local')->download($rel, 'monanh-' . $don->ma . '-' . $idx . '.' . $ext);
+        $mime = $line['anh_ghi_chu_mime'] ?? null;
+        return Storage::disk('local')->response($rel, 'monanh-' . $don->ma . '-' . $idx . '.' . $ext, $mime ? ['Content-Type' => $mime] : []);
     }
 
     /** Chi phí thu thêm (admin nhập) + ghi chú; cộng lại vào tong_si để đối soát đúng. */
