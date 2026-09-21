@@ -326,6 +326,31 @@ class Api3dController extends Controller
     }
 
     /**
+     * POST /api/3d/dai-ly/xoa-don (header token) {ma}
+     * Đại lý tự xoá đơn của mình — CHỈ khi còn trạng thái "moi" (xưởng chưa xử lý).
+     * Đã chuyển trạng thái thì đại lý không xoá được (chỉ admin xoá).
+     */
+    public function dealerXoaDon(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
+        $ma = trim((string) $request->input('ma', ''));
+        $don = DonDiHo::where('ma', $ma)->where('dai_ly_id', $dl->id)->first();
+        if (!$don) return $this->cors(response()->json(['ok' => false, 'error' => 'Không tìm thấy đơn.'], 404));
+        if ($don->tt !== 'moi') {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Xưởng đã bắt đầu xử lý đơn này — không thể tự xoá. Vui lòng báo xưởng.'], 403));
+        }
+        if ($don->nhan_vc_path) Storage::disk('local')->delete($don->nhan_vc_path);
+        foreach (($don->chi_tiet ?: []) as $l) {
+            if (!empty($l['anh_ghi_chu'])) Storage::disk('local')->delete($l['anh_ghi_chu']);
+        }
+        $maCu = $don->ma;
+        $don->delete();
+        return $this->cors(response()->json(['ok' => true, 'ma' => $maCu]));
+    }
+
+    /**
      * POST /api/3d/dai-ly/doc-mon-anh (header token, multipart: anh)
      * AI đọc ảnh danh sách môn của khách → trả [{mon, so_luong}] + chuỗi tóm tắt
      * để đại lý dán vào ghi chú (đại lý tự soát lại, KHÔNG tự tạo đơn).

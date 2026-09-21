@@ -115,6 +115,33 @@ class DonDiHoController extends Controller
         return Storage::disk('local')->response($rel, 'monanh-' . $don->ma . '-' . $idx . '.' . $ext, $mime ? ['Content-Type' => $mime] : []);
     }
 
+    /** Tính lại giá đơn theo GIÁ SẢN PHẨM HIỆN TẠI (khi chủ xưởng sửa giá sỉ). */
+    public function tinhLaiGia(DonDiHo $don)
+    {
+        $dl = \App\Models\DaiLy::find($don->dai_ly_id);
+        $sllLuon = $dl ? (bool) $dl->sll_luon : false;
+        $lines = $don->chi_tiet ?: [];
+        $soLuong = 0; $thieu = [];
+        foreach ($lines as $i => $l) {
+            $qty = (int) ($l['qty'] ?? 1);
+            $soLuong += $qty;
+            $p = \App\Models\Sp3d::where('slug', $l['slug'] ?? '')->first();
+            if (!$p) { $thieu[] = ($l['ten'] ?? $l['slug'] ?? '?'); continue; } // SP đã xoá -> giữ giá cũ
+            $unit = (int) $p->gia_si;
+            $sll = (int) $p->gia_si_sll; $tu = (int) $p->sll_tu;
+            if ($unit > 0 && $sll > 0 && ($sllLuon || ($tu > 0 && $qty >= $tu))) $unit = $sll;
+            $phu = ((string) ($l['ten_in'] ?? '') !== '' && (int) $p->phu_phi_ten > 0) ? (int) $p->phu_phi_ten : 0;
+            $lines[$i]['don_gia_si']  = $unit;
+            $lines[$i]['phu_phi_ten'] = $phu;
+            $lines[$i]['thanh_tien']  = $unit * $qty + $phu;
+        }
+        $base = collect($lines)->sum(fn ($l) => (int) ($l['thanh_tien'] ?? 0));
+        $don->update(['chi_tiet' => $lines, 'so_luong' => $soLuong, 'tong_si' => $base + (int) $don->thu_them]);
+        $msg = 'Đã tính lại giá đơn ' . $don->ma . ' theo giá hiện tại. Tổng: ' . number_format((int) $don->tong_si, 0, ',', '.') . 'đ';
+        if ($thieu) $msg .= ' (bỏ qua mã đã xoá: ' . implode(', ', $thieu) . ')';
+        return back()->with('ok', $msg);
+    }
+
     /** Chi phí thu thêm (admin nhập) + ghi chú; cộng lại vào tong_si để đối soát đúng. */
     public function capNhatThuThem(Request $request, DonDiHo $don)
     {

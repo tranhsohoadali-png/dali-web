@@ -164,6 +164,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('di-ho/{don}/anh/{idx}',  [\App\Http\Controllers\Admin\DonDiHoController::class, 'taiAnhMon'])->whereNumber('idx')->name('diho.anhmon');
         Route::post('di-ho/{don}/doc-mon/{idx}', [\App\Http\Controllers\Admin\DonDiHoController::class, 'docMonAi'])->whereNumber('idx')->name('diho.docmon');
         Route::post('di-ho/{don}/thu-them',   [\App\Http\Controllers\Admin\DonDiHoController::class, 'capNhatThuThem'])->name('diho.thuthem');
+        Route::post('di-ho/{don}/tinh-lai-gia',[\App\Http\Controllers\Admin\DonDiHoController::class, 'tinhLaiGia'])->name('diho.tinhlaigia');
         Route::put('di-ho/{don}/trang-thai', [\App\Http\Controllers\Admin\DonDiHoController::class, 'updateStatus'])->name('diho.status');
         Route::delete('di-ho/{don}',         [\App\Http\Controllers\Admin\DonDiHoController::class, 'destroy'])->name('diho.destroy');
     });

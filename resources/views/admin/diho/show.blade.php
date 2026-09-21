@@ -88,6 +88,11 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
             <div style="font-size:11px;color:var(--tx3);margin-top:4px">Con số này chỉ để hai bên đối soát — module không thu tiền online.</div>
           </div>
 
+          <form method="POST" action="{{ route('admin.diho.tinhlaigia', $don) }}" style="margin-top:12px" onsubmit="return confirm('Tính lại giá đơn này theo GIÁ SỈ HIỆN TẠI của sản phẩm? Giá cũ trong đơn sẽ bị thay.')">
+            @csrf
+            <button class="btn btn-o" type="submit" style="width:100%">🔄 Cập nhật lại giá theo giá sản phẩm hiện tại</button>
+          </form>
+
           <form method="POST" action="{{ route('admin.diho.thuthem', $don) }}" style="margin-top:14px;padding-top:12px;border-top:1.5px dashed var(--bd)">
             @csrf
             <div style="font-size:12.5px;font-weight:800;color:var(--char);margin-bottom:8px">➕ Chi phí thu thêm (nếu có)</div>
