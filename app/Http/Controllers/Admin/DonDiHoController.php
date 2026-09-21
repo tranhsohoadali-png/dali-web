@@ -159,6 +159,43 @@ class DonDiHoController extends Controller
         return back()->with('ok', 'Đã cập nhật chi phí thu thêm cho đơn ' . $don->ma);
     }
 
+    /** Chuyển đơn sang soạn TKB: lưu danh sách môn (AI vừa đọc) vào đơn để làm checklist. */
+    public function luuSoan(Request $request, DonDiHo $don)
+    {
+        $mon = $request->input('mon', []);
+        if (is_string($mon)) $mon = json_decode($mon, true);
+        if (!is_array($mon)) $mon = [];
+        $ds = [];
+        foreach ($mon as $m) {
+            if (!is_array($m)) continue;
+            $ten = mb_substr(trim((string) ($m['mon'] ?? '')), 0, 40);
+            if ($ten === '') continue;
+            $sl = max(1, min(999, (int) ($m['so_luong'] ?? $m['sl'] ?? 1)));
+            $ds[] = ['mon' => $ten, 'sl' => $sl, 'xong' => false];
+            if (count($ds) >= 100) break;
+        }
+        if (!$ds) return back()->with('ok', 'Chưa có môn nào để soạn (bấm "Đọc số môn (AI)" trước).');
+        $don->update(['mon_soan' => $ds]);
+        return redirect()->route('admin.diho.soan', $don)->with('ok', 'Đã chuyển đơn ' . $don->ma . ' sang bảng soạn TKB (' . count($ds) . ' môn).');
+    }
+
+    /** Bảng soạn TKB của đơn: thông tin in + checklist môn để thợ làm, in được. */
+    public function soan(DonDiHo $don)
+    {
+        return view('admin.diho.soan', ['don' => $don]);
+    }
+
+    /** Tick/bỏ tick một môn đã soạn xong (AJAX). */
+    public function tickSoan(Request $request, DonDiHo $don)
+    {
+        $idx = (int) $request->input('idx', -1);
+        $ds = $don->mon_soan ?: [];
+        if (!isset($ds[$idx])) return response()->json(['ok' => false], 404);
+        $ds[$idx]['xong'] = !($ds[$idx]['xong'] ?? false);
+        $don->update(['mon_soan' => $ds]);
+        return response()->json(['ok' => true, 'xong' => $ds[$idx]['xong']]);
+    }
+
     /** AI đọc số môn từ ảnh ghi chú của một dòng (dùng cho xưởng ngay trong admin). */
     public function docMonAi(DonDiHo $don, int $idx)
     {

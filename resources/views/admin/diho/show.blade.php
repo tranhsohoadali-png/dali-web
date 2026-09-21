@@ -49,6 +49,9 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
   </div>
   <div class="cnt">
     @if(session('ok'))<div class="alert-ok">✅ {{ session('ok') }}</div>@endif
+    @if(!empty($don->mon_soan))
+      <a href="{{ route('admin.diho.soan', $don) }}" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#3A9A12,var(--g));color:#fff;text-decoration:none;font-weight:800;font-size:14px;padding:11px 18px;border-radius:11px;margin-bottom:16px;box-shadow:0 4px 14px -6px rgba(58,122,10,.6)">📋 Mở bảng soạn TKB ({{ collect($don->mon_soan)->where('xong',true)->count() }}/{{ count($don->mon_soan) }} môn xong) →</a>
+    @endif
     <div class="wrap">
       <div>
         <div class="sec">
@@ -176,19 +179,35 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
 </div>
 </div>
 <script>
+var DIHO_CSRF='{{ csrf_token() }}';
+var DIHO_LUUSOAN='{{ route('admin.diho.luusoan', $don) }}';
+var DIHO_SOAN='{{ route('admin.diho.soan', $don) }}';
 document.addEventListener('click',function(e){
   var b=e.target.closest('.ai-mon'); if(!b) return;
   var box=b.closest('.line').querySelector('.ai-mon-kq');
   var ob=b.textContent; b.disabled=true; b.textContent='🤖 Đang đọc…';
-  fetch(b.dataset.url,{method:'POST',headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'}})
+  fetch(b.dataset.url,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Accept':'application/json'}})
     .then(function(r){return r.json();})
     .then(function(d){
       box.style.display='block';
-      if(d.ok){ box.innerHTML='<b>AI đọc được '+((d.mon&&d.mon.length)||0)+' môn · tổng '+(d.tong||0)+' thẻ:</b><br>'+((d.text||'(trống)').replace(/</g,'&lt;')); }
+      if(d.ok){
+        box.innerHTML='<b>AI đọc được '+((d.mon&&d.mon.length)||0)+' môn · tổng '+(d.tong||0)+' thẻ:</b><br>'+((d.text||'(trống)').replace(/</g,'&lt;'))+
+          '<br><button type="button" class="soan-go" style="margin-top:8px;font-size:12px;font-weight:800;color:#fff;background:#3E7A0A;border:none;border-radius:8px;padding:7px 12px;cursor:pointer">📋 Chuyển sang soạn TKB</button>';
+        var g=box.querySelector('.soan-go'); if(g) g.__mon=d.mon||[];
+      }
       else { box.innerHTML='⚠️ '+((d.error||'AI chưa đọc được.').replace(/</g,'&lt;')); }
     })
     .catch(function(){ box.style.display='block'; box.textContent='⚠️ Lỗi mạng.'; })
     .finally(function(){ b.disabled=false; b.textContent=ob; });
+});
+// Chuyển đơn sang bảng soạn TKB (lưu danh sách môn rồi mở trang soạn)
+document.addEventListener('click',function(e){
+  var g=e.target.closest('.soan-go'); if(!g) return;
+  var mon=g.__mon||[]; if(!mon.length){ return; }
+  g.disabled=true; g.textContent='Đang chuyển…';
+  fetch(DIHO_LUUSOAN,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Content-Type':'application/json'},body:JSON.stringify({mon:mon})})
+    .then(function(){ window.location=DIHO_SOAN; })
+    .catch(function(){ g.disabled=false; g.textContent='📋 Chuyển sang soạn TKB'; });
 });
 </script>
 </body>

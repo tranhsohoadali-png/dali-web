@@ -12,6 +12,7 @@ class DonDiHo extends Model
 
     protected $casts = [
         'chi_tiet'       => 'array',
+        'mon_soan'       => 'array',
         'gui_luc'        => 'datetime',
         'da_thanh_toan'   => 'boolean',
         'thanh_toan_luc'  => 'datetime',
