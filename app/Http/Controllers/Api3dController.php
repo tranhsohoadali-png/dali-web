@@ -308,6 +308,58 @@ class Api3dController extends Controller
         return $this->cors(response()->json(['ok' => true, 'items' => $ds, 'tong' => $tong]));
     }
 
+    /** GET /api/3d/dai-ly/di-don/chi-tiet?ma= (header token) — chi tiết một đơn của chính đại lý. */
+    public function dealerDiDonChiTiet(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
+        $ma = trim((string) $request->query('ma', ''));
+        $don = DonDiHo::where('ma', $ma)->where('dai_ly_id', $dl->id)->first();
+        if (!$don) return $this->cors(response()->json(['ok' => false, 'error' => 'Không tìm thấy đơn.'], 404));
+
+        $lines = []; $tienSp = 0; $phuTen = 0;
+        foreach (($don->chi_tiet ?: []) as $i => $l) {
+            $dg = (int) ($l['don_gia_si'] ?? 0); $q = (int) ($l['qty'] ?? 0); $pt = (int) ($l['phu_phi_ten'] ?? 0);
+            $tienSp += $dg * $q; $phuTen += $pt;
+            $lines[] = [
+                'ten' => $l['ten'] ?? '', 'bien_the' => $l['bien_the'] ?? null, 'qty' => $q,
+                'cap_hoc' => $l['cap_hoc'] ?? '', 'ten_in' => $l['ten_in'] ?? '', 'ghi_chu' => $l['ghi_chu'] ?? '',
+                'don_gia_si' => $dg, 'phu_phi_ten' => $pt, 'thanh_tien' => (int) ($l['thanh_tien'] ?? 0),
+                'idx' => $i, 'co_anh' => !empty($l['anh_ghi_chu']),
+            ];
+        }
+        return $this->cors(response()->json(['ok' => true, 'don' => [
+            'ma' => $don->ma, 'tt' => $don->tt, 'tt_ten' => DonDiHo::TRANG_THAI[$don->tt] ?? $don->tt,
+            'da_thanh_toan' => (bool) $don->da_thanh_toan, 'xac_nhan' => (bool) $don->dai_ly_xac_nhan,
+            'ma_vc' => $don->ma_vc, 'vc' => $don->vc, 'so_luong' => (int) $don->so_luong,
+            'tien_sp' => $tienSp, 'phu_ten' => $phuTen, 'thu_them' => (int) $don->thu_them, 'thu_them_gc' => $don->thu_them_gc,
+            'tong_si' => (int) $don->tong_si, 'ghi_chu' => $don->ghi_chu,
+            'nhan_ten' => $don->nhan_vc_ten, 'co_nhan' => !empty($don->nhan_vc_path),
+            'luc' => optional($don->created_at)->toIso8601String(),
+            'lines' => $lines,
+        ]]));
+    }
+
+    /** GET /api/3d/dai-ly/di-don/file?ma=&loai=nhan|mon&idx= (header token) — xem file của đơn mình (inline). */
+    public function dealerDiDonFile(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) abort(401);
+        $ma = trim((string) $request->query('ma', ''));
+        $don = DonDiHo::where('ma', $ma)->where('dai_ly_id', $dl->id)->first();
+        if (!$don) abort(404);
+        if ($request->query('loai') === 'mon') {
+            $line = ($don->chi_tiet ?: [])[(int) $request->query('idx', -1)] ?? null;
+            $rel = $line['anh_ghi_chu'] ?? null; $mime = $line['anh_ghi_chu_mime'] ?? null;
+        } else {
+            $rel = $don->nhan_vc_path; $mime = $don->nhan_vc_mime;
+        }
+        if (!$rel || !Storage::disk('local')->exists($rel)) abort(404);
+        $headers = ['Access-Control-Allow-Origin' => self::ALLOWED_ORIGIN];
+        if ($mime) $headers['Content-Type'] = $mime;
+        return Storage::disk('local')->response($rel, 'file', $headers);
+    }
+
     /**
      * POST /api/3d/dai-ly/xac-nhan-vc (header token) {ma}
      * Đại lý đảo trạng thái "đơn vị vận chuyển đã nhận hàng thành công" cho đơn của mình.
