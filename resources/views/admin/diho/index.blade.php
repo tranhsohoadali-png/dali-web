@@ -29,6 +29,7 @@ td{padding:12px 14px;border-bottom:1px solid var(--gl);font-size:13px;color:var(
 tr:hover td{background:var(--gll)}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:800}
 .b-moi{background:#FEF3C7;color:#B45309}.b-da_in{background:#DBEAFE;color:#1D4ED8}
+.b-da_goi{background:#E9D8FD;color:#6B21A8}
 .b-da_gui{background:var(--gl);color:var(--gd)}.b-huy{background:#F3F4F6;color:#9CA3AF}
 .money{font-weight:900;color:var(--g)}
 .btn-edit{display:inline-flex;align-items:center;padding:5px 11px;background:var(--gl);color:var(--gd);border:1px solid var(--bd2);border-radius:7px;font-size:11px;font-weight:700;text-decoration:none}

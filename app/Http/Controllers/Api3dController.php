@@ -378,6 +378,26 @@ class Api3dController extends Controller
     }
 
     /**
+     * POST /api/3d/dai-ly/danh-dau-gui (header token) {ma}
+     * Đại lý tự cập nhật trạng thái "Đã gửi" (chỉ khi xưởng đã in/đóng gói xong). Đảo lại được.
+     */
+    public function dealerDanhDauGui(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
+        $ma = trim((string) $request->input('ma', ''));
+        $don = DonDiHo::where('ma', $ma)->where('dai_ly_id', $dl->id)->first();
+        if (!$don) return $this->cors(response()->json(['ok' => false, 'error' => 'Không tìm thấy đơn.'], 404));
+        if (!in_array($don->tt, ['da_in', 'da_goi', 'da_gui'], true)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Chờ xưởng in & đóng gói xong rồi mới đánh dấu Đã gửi.'], 400));
+        }
+        if ($don->tt === 'da_gui') { $don->update(['tt' => 'da_goi', 'gui_luc' => null]); $gui = false; }
+        else { $don->update(['tt' => 'da_gui', 'gui_luc' => now()]); $gui = true; }
+        return $this->cors(response()->json(['ok' => true, 'tt' => $don->tt, 'tt_ten' => DonDiHo::TRANG_THAI[$don->tt] ?? $don->tt, 'da_gui' => $gui]));
+    }
+
+    /**
      * POST /api/3d/dai-ly/xoa-don (header token) {ma}
      * Đại lý tự xoá đơn của mình — CHỈ khi còn trạng thái "moi" (xưởng chưa xử lý).
      * Đã chuyển trạng thái thì đại lý không xoá được (chỉ admin xoá).

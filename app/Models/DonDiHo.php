@@ -25,7 +25,8 @@ class DonDiHo extends Model
     public const TRANG_THAI = [
         'moi'    => 'Mới',
         'da_in'  => 'Đã in',
-        'da_gui' => 'Đã gửi',
+        'da_goi' => 'Đã đóng gói',
+        'da_gui' => 'Đã gửi',       // đại lý tự cập nhật
         'huy'    => 'Huỷ',
     ];
 }
