@@ -95,8 +95,34 @@ tr:hover td{background:var(--gll)}
       </table>
     </div>
     <div class="pagination">{{ $orders->links() }}</div>
+    <div style="text-align:center;margin-top:10px;font-size:11.5px;color:var(--tx3)"><span id="liveDot">🟢</span> Tự cập nhật mỗi 20 giây · <span id="liveTime">—</span></div>
   </div>
 </div>
 </div>
+<script>
+(function(){
+  if(!document.querySelector('table tbody')) return;
+  function p(n){return ('0'+n).slice(-2);}
+  function lamMoi(){
+    if(document.hidden) return;
+    fetch(location.href,{headers:{'X-Requested-With':'XMLHttpRequest'},cache:'no-store',credentials:'same-origin'})
+      .then(function(r){ return r.ok?r.text():null; })
+      .then(function(html){
+        if(!html) return;
+        var doc=new DOMParser().parseFromString(html,'text/html');
+        var nb=doc.querySelector('table tbody'), cb=document.querySelector('table tbody');
+        if(!nb||!cb) return; // vd bị đá về trang đăng nhập -> bỏ qua
+        if(cb.innerHTML!==nb.innerHTML) cb.innerHTML=nb.innerHTML;
+        var nh=doc.querySelector('.card-head'), ch=document.querySelector('.card-head');
+        if(nh&&ch&&ch.innerHTML!==nh.innerHTML) ch.innerHTML=nh.innerHTML;
+        var np=doc.querySelector('.pagination'), cp=document.querySelector('.pagination');
+        if(np&&cp&&cp.innerHTML!==np.innerHTML) cp.innerHTML=np.innerHTML;
+        var d=new Date(); var el=document.getElementById('liveTime'); if(el) el.textContent=p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+      }).catch(function(){});
+  }
+  setInterval(lamMoi,20000);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) lamMoi(); });
+})();
+</script>
 </body>
 </html>
