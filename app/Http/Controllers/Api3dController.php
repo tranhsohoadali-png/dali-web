@@ -361,6 +361,37 @@ class Api3dController extends Controller
     }
 
     /**
+     * POST /api/3d/dai-ly/di-don/doc-nhan-vc (header token) {ma}
+     * AI đọc MÃ VẬN ĐƠN từ nhãn vận chuyển đã tải lên (ảnh/PDF) → tự điền ma_vc/vc cho đơn.
+     */
+    public function dealerDocNhanVc(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
+        $rk = 'diho-ai:' . $dl->id;
+        if (RateLimiter::tooManyAttempts($rk, 40)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Bạn dùng AI quá nhanh, thử lại sau ít phút.'], 429));
+        }
+        RateLimiter::hit($rk, 600);
+        $ma = trim((string) $request->input('ma', ''));
+        $don = DonDiHo::where('ma', $ma)->where('dai_ly_id', $dl->id)->first();
+        if (!$don) return $this->cors(response()->json(['ok' => false, 'error' => 'Không tìm thấy đơn.'], 404));
+        if (!$don->nhan_vc_path || !Storage::disk('local')->exists($don->nhan_vc_path)) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Đơn chưa có nhãn vận chuyển.'], 400));
+        }
+        if (!\App\Services\DocMonAi::batAi()) {
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Chưa bật AI.'], 503));
+        }
+        $res = \App\Services\DocMonAi::docNhanVc(Storage::disk('local')->get($don->nhan_vc_path), (string) $don->nhan_vc_mime);
+        if (empty($res['ok'])) return $this->cors(response()->json(['ok' => false, 'error' => $res['error'] ?? 'Không đọc được nhãn.'], 502));
+        if (($res['ma_vc'] ?? '') !== '') {
+            $don->update(['ma_vc' => $res['ma_vc'], 'vc' => ($res['vc'] ?? '') ?: $don->vc]);
+        }
+        return $this->cors(response()->json(['ok' => true, 'ma_vc' => $res['ma_vc'], 'vc' => $res['vc']]));
+    }
+
+    /**
      * POST /api/3d/dai-ly/xac-nhan-vc (header token) {ma}
      * Đại lý đảo trạng thái "đơn vị vận chuyển đã nhận hàng thành công" cho đơn của mình.
      */

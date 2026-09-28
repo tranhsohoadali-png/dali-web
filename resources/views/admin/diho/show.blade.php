@@ -119,6 +119,10 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
               <div style="font-size:12px;color:var(--tx3);margin-top:8px">File PDF — bấm nút trên để mở &amp; in ngay.</div>
               <iframe src="{{ route('admin.diho.nhan', $don) }}" class="nhan-img" style="width:100%;height:480px;border:1.5px solid var(--bd)" title="Nhãn vận chuyển"></iframe>
             @endif
+            <form method="POST" action="{{ route('admin.diho.docnhanvc', $don) }}" style="margin-top:8px">
+              @csrf
+              <button type="submit" class="btn-o">🤖 Đọc mã vận đơn từ nhãn (AI)</button>
+            </form>
           @else
             <div style="font-size:12px;color:var(--tx3)">Đơn này chưa có file nhãn.</div>
           @endif

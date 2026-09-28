@@ -75,6 +75,45 @@ class DocMonAi
         }
     }
 
+    /**
+     * Đọc NHÃN / HOÁ ĐƠN VẬN CHUYỂN (ảnh hoặc PDF) -> mã vận đơn + đơn vị vận chuyển.
+     * @return array ['ok'=>bool, 'error'?=>string, 'ma_vc'=>string, 'vc'=>string]
+     */
+    public static function docNhanVc(string $bytes, string $mime): array
+    {
+        $key = self::key();
+        if (!$key) return ['ok' => false, 'error' => 'Chưa bật AI.'];
+        $la_pdf = stripos($mime, 'pdf') !== false;
+        if (!$la_pdf && !in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return ['ok' => false, 'error' => 'Chỉ đọc được ảnh JPG/PNG/WEBP hoặc PDF.'];
+        }
+        try {
+            $sys = 'Bạn là trợ lý xưởng in DALI 3D. Người dùng gửi NHÃN / PHIẾU / HOÁ ĐƠN VẬN CHUYỂN của đơn TMĐT '
+                 . '(Shopee/SPX, Lazada, TikTok, GHTK, GHN, VNPost, J&T, Viettel Post, Best...). '
+                 . 'Tìm MÃ VẬN ĐƠN (tracking number: dãy chữ-số dài, thường in đậm và có mã vạch kèm) và ĐƠN VỊ VẬN CHUYỂN. '
+                 . 'CHỈ lấy đúng thông tin thấy trên nhãn, KHÔNG bịa. Nếu có nhiều mã, lấy mã vận đơn chính (dưới mã vạch lớn).';
+            $ask = 'Trả về DUY NHẤT JSON {"ma_vc":"...","vc":"..."}. '
+                 . 'ma_vc = mã vận đơn (không thấy thì ""); vc = tên đơn vị vận chuyển viết gọn (SPX/GHTK/GHN/VNPost/J&T/Viettel Post..., không rõ thì ""). '
+                 . 'Không thêm chữ nào ngoài JSON.';
+            $src = $la_pdf
+                ? ['type' => 'document', 'source' => ['type' => 'base64', 'media_type' => 'application/pdf', 'data' => base64_encode($bytes)]]
+                : ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => $mime, 'data' => base64_encode($bytes)]];
+            $resp = Http::withHeaders(['x-api-key' => $key, 'anthropic-version' => '2023-06-01'])
+                ->timeout(45)->post('https://api.anthropic.com/v1/messages', [
+                    'model' => self::model(), 'max_tokens' => 400, 'system' => $sys,
+                    'messages' => [['role' => 'user', 'content' => [$src, ['type' => 'text', 'text' => $ask]]]],
+                ]);
+            if (!$resp->successful()) return ['ok' => false, 'error' => 'AI lỗi (HTTP ' . $resp->status() . ').'];
+            $textOut = collect($resp->json('content') ?: [])->where('type', 'text')->pluck('text')->implode("\n");
+            $j = self::jsonTuText($textOut);
+            $ma = mb_substr(trim((string) ($j['ma_vc'] ?? '')), 0, 60);
+            $vc = mb_substr(trim((string) ($j['vc'] ?? '')), 0, 40);
+            return ['ok' => true, 'ma_vc' => $ma, 'vc' => $vc];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => 'AI chưa đọc được nhãn.'];
+        }
+    }
+
     private static function jsonTuText(string $text): array
     {
         $t = preg_replace('/```(?:json)?/i', '', trim($text));

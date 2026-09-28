@@ -36,6 +36,7 @@ Route::prefix('3d')->group(function () {
     Route::get('dai-ly/di-don',  [\App\Http\Controllers\Api3dController::class, 'dealerDiDonList']);
     Route::get('dai-ly/di-don/chi-tiet', [\App\Http\Controllers\Api3dController::class, 'dealerDiDonChiTiet']);
     Route::get('dai-ly/di-don/file',     [\App\Http\Controllers\Api3dController::class, 'dealerDiDonFile']);
+    Route::post('dai-ly/di-don/doc-nhan-vc', [\App\Http\Controllers\Api3dController::class, 'dealerDocNhanVc']); // AI đọc mã vận đơn từ nhãn
     Route::post('dai-ly/doc-mon-anh', [\App\Http\Controllers\Api3dController::class, 'dealerDocMonAnh']); // AI đọc môn từ ảnh
     Route::post('dai-ly/xac-nhan-vc', [\App\Http\Controllers\Api3dController::class, 'dealerXacNhanVc']); // ĐL xác nhận VC nhận hàng (cũ)
     Route::post('dai-ly/danh-dau-gui', [\App\Http\Controllers\Api3dController::class, 'dealerDanhDauGui']); // ĐL đánh dấu Đã gửi

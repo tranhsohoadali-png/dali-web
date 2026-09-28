@@ -196,6 +196,24 @@ class DonDiHoController extends Controller
         return response()->json(['ok' => true, 'xong' => $ds[$idx]['xong']]);
     }
 
+    /** AI đọc mã vận đơn từ nhãn vận chuyển đã tải lên (điền ma_vc/vc). */
+    public function docNhanVc(DonDiHo $don)
+    {
+        if (!$don->nhan_vc_path || !Storage::disk('local')->exists($don->nhan_vc_path)) {
+            return back()->with('ok', 'Đơn chưa có nhãn vận chuyển.');
+        }
+        if (!\App\Services\DocMonAi::batAi()) {
+            return back()->with('ok', 'Chưa bật AI — vào Cài đặt nhập khoá Anthropic.');
+        }
+        $res = \App\Services\DocMonAi::docNhanVc(Storage::disk('local')->get($don->nhan_vc_path), (string) $don->nhan_vc_mime);
+        if (empty($res['ok'])) return back()->with('ok', 'AI chưa đọc được nhãn (' . ($res['error'] ?? '') . ').');
+        if (($res['ma_vc'] ?? '') !== '') {
+            $don->update(['ma_vc' => $res['ma_vc'], 'vc' => ($res['vc'] ?? '') ?: $don->vc]);
+            return back()->with('ok', '🤖 AI đọc mã vận đơn: ' . $res['ma_vc'] . ($res['vc'] ? ' (' . $res['vc'] . ')' : ''));
+        }
+        return back()->with('ok', 'AI không tìm thấy mã vận đơn trên nhãn — nhập tay giúp.');
+    }
+
     /** AI đọc số môn từ ảnh ghi chú của một dòng (dùng cho xưởng ngay trong admin). */
     public function docMonAi(DonDiHo $don, int $idx)
     {
