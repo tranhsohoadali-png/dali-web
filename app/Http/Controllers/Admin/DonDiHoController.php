@@ -92,6 +92,24 @@ class DonDiHoController extends Controller
         return back()->with('ok', 'Đã cập nhật đơn ' . $don->ma . ' → ' . (DonDiHo::TRANG_THAI[$request->tt] ?? $request->tt));
     }
 
+    /** Đổi trạng thái HÀNG LOẠT cho nhiều đơn đã tích chọn. */
+    public function capNhatTrangThaiHangLoat(Request $request)
+    {
+        $data = $request->validate([
+            'tt'    => 'required|in:' . implode(',', array_keys(DonDiHo::TRANG_THAI)),
+            'ids'   => 'required|array|min:1|max:500',
+            'ids.*' => 'integer',
+        ]);
+        $upd = ['tt' => $data['tt']];
+        if ($data['tt'] === 'da_gui') $upd['gui_luc'] = now();
+        $n = DonDiHo::whereIn('id', $data['ids'])->update($upd);
+        $nhan = DonDiHo::TRANG_THAI[$data['tt']] ?? $data['tt'];
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['ok' => true, 'so_don' => $n, 'nhan' => $nhan]);
+        }
+        return back()->with('ok', "Đã đổi {$n} đơn → {$nhan}");
+    }
+
     /** Mở nhãn/hoá đơn vận chuyển INLINE (xem/in ngay trong trình duyệt) — chỉ admin. */
     public function taiNhan(DonDiHo $don)
     {

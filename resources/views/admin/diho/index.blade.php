@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Đơn đi hộ | DALI Admin</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -37,6 +38,14 @@ tr:hover td{background:var(--gll)}
 .btn-dl{display:inline-flex;align-items:center;padding:5px 11px;background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;margin-left:6px}
 .pagination{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap;justify-content:center}
 .pagination a,.pagination span{padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1.5px solid var(--bd);color:var(--tx2);background:#fff}
+.dh-ck{width:17px;height:17px;accent-color:var(--g);cursor:pointer;vertical-align:middle}
+.bulkbar{display:none;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(135deg,var(--gll),#fff);border:1.5px solid var(--bd2);border-radius:12px;padding:11px 16px;margin-bottom:14px;box-shadow:0 3px 14px rgba(58,122,10,.08)}
+.bulkbar.on{display:flex}
+.bulkbar .bk-n{font-size:13px;font-weight:800;color:var(--gd)}
+.bulkbar select{background:#fff;border:1.5px solid var(--bd);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--tx);font-family:'Be Vietnam Pro',sans-serif;outline:none}
+.bulkbar .bk-go{padding:8px 18px;background:var(--g);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer}
+.bulkbar .bk-go:disabled{opacity:.5;cursor:not-allowed}
+.bulkbar .bk-x{font-size:12px;color:var(--pk);font-weight:700;cursor:pointer;background:none;border:none}
 </style>
 </head>
 <body>
@@ -67,14 +76,25 @@ tr:hover td{background:var(--gll)}
       </div>
     </form>
 
+    <div class="bulkbar" id="bulkBar">
+      <span class="bk-n"><span id="bkCount">0</span> đơn đã chọn</span>
+      <span style="color:var(--tx3)">→ đổi trạng thái:</span>
+      <select id="bkTt">
+        @foreach($tt as $k => $v)<option value="{{ $k }}">{{ $v }}</option>@endforeach
+      </select>
+      <button type="button" class="bk-go" id="bkGo">✓ Áp dụng</button>
+      <button type="button" class="bk-x" id="bkClear">Bỏ chọn</button>
+    </div>
+
     <div class="card">
       <div class="card-top"></div>
       <div class="card-head">{{ $orders->total() }} đơn @if($moi>0) · <span style="color:#B45309">{{ $moi }} mới</span>@endif</div>
       <table>
-        <thead><tr><th>Mã đơn</th><th>Đại lý</th><th>Sản phẩm</th><th>SL</th><th>Tổng sỉ</th><th>Thu tiền</th><th>Nhãn VC</th><th>Trạng thái</th><th>Ngày</th><th></th></tr></thead>
+        <thead><tr><th style="width:34px;text-align:center"><input type="checkbox" class="dh-ck" id="ckAll" title="Chọn tất cả"></th><th>Mã đơn</th><th>Đại lý</th><th>Sản phẩm</th><th>SL</th><th>Tổng sỉ</th><th>Thu tiền</th><th>Nhãn VC</th><th>Trạng thái</th><th>Ngày</th><th></th></tr></thead>
         <tbody>
         @forelse($orders as $o)
         <tr>
+          <td style="text-align:center"><input type="checkbox" class="dh-ck ck-row" data-id="{{ $o->id }}"></td>
           <td style="font-weight:800">{{ $o->ma }}</td>
           <td><div style="font-weight:600">{{ $o->dai_ly_ten }}</div><div style="font-size:11px;color:var(--tx3)">{{ $o->dai_ly_sdt }}</div></td>
           <td style="max-width:260px;font-size:12px">{{ \Illuminate\Support\Str::limit(collect($o->chi_tiet ?: [])->map(fn($l)=>($l['ten']??'').' ×'.($l['qty']??0))->implode('; '), 70) }}</td>
@@ -87,7 +107,7 @@ tr:hover td{background:var(--gll)}
           <td><a href="{{ route('admin.diho.show', $o) }}" class="btn-edit">Xem →</a></td>
         </tr>
         @empty
-        <tr><td colspan="10" style="text-align:center;padding:44px;color:var(--tx3)">
+        <tr><td colspan="11" style="text-align:center;padding:44px;color:var(--tx3)">
           Chưa có đơn đi hộ nào. Đại lý gửi đơn từ web 3d.tranhdali.vn (mục 🚚 Đi đơn hộ) sẽ về đây.
         </td></tr>
         @endforelse
@@ -103,8 +123,45 @@ tr:hover td{background:var(--gll)}
 (function(){
   if(!document.querySelector('table tbody')) return;
   function p(n){return ('0'+n).slice(-2);}
+
+  // ===== Tích chọn + đổi trạng thái hàng loạt =====
+  var bar=document.getElementById('bulkBar'), bkCount=document.getElementById('bkCount'),
+      bkGo=document.getElementById('bkGo'), bkClear=document.getElementById('bkClear'),
+      bkTt=document.getElementById('bkTt'), ckAll=document.getElementById('ckAll');
+  function daChon(){ return Array.prototype.slice.call(document.querySelectorAll('.ck-row:checked')); }
+  function coChon(){ return document.querySelector('.ck-row:checked')!=null; }
+  function refreshBar(){
+    var rows=document.querySelectorAll('.ck-row'), sel=daChon();
+    if(bkCount) bkCount.textContent=sel.length;
+    if(bar) bar.classList.toggle('on', sel.length>0);
+    if(ckAll){ ckAll.checked=(rows.length>0 && sel.length===rows.length); ckAll.indeterminate=(sel.length>0 && sel.length<rows.length); }
+  }
+  var tb=document.querySelector('table tbody');
+  tb && tb.addEventListener('change',function(e){ if(e.target.classList.contains('ck-row')) refreshBar(); });
+  ckAll && ckAll.addEventListener('change',function(){ document.querySelectorAll('.ck-row').forEach(function(c){ c.checked=ckAll.checked; }); refreshBar(); });
+  bkClear && bkClear.addEventListener('click',function(){ document.querySelectorAll('.ck-row').forEach(function(c){ c.checked=false; }); refreshBar(); });
+  bkGo && bkGo.addEventListener('click',function(){
+    var ids=daChon().map(function(c){ return c.getAttribute('data-id'); });
+    if(!ids.length) return;
+    var nhan=bkTt.options[bkTt.selectedIndex].text;
+    if(!confirm('Đổi '+ids.length+' đơn → "'+nhan+'"?')) return;
+    bkGo.disabled=true; var ob=bkGo.textContent; bkGo.textContent='Đang lưu…';
+    var tok=(document.querySelector('meta[name=csrf-token]')||{}).content||'';
+    var fd=new FormData(); fd.append('tt', bkTt.value); ids.forEach(function(i){ fd.append('ids[]', i); });
+    fetch('{{ route('admin.diho.statushangloat') }}',{method:'POST',headers:{'X-CSRF-TOKEN':tok,'X-Requested-With':'XMLHttpRequest','Accept':'application/json'},credentials:'same-origin',body:fd})
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(d){
+        if(!d||!d.ok){ alert('Không đổi được, thử lại.'); return; }
+        document.querySelectorAll('.ck-row').forEach(function(c){ c.checked=false; }); refreshBar();
+        lamMoi();
+      })
+      .catch(function(){ alert('Lỗi mạng, thử lại.'); })
+      .finally(function(){ bkGo.disabled=false; bkGo.textContent=ob; });
+  });
+
   function lamMoi(){
     if(document.hidden) return;
+    if(coChon()) return; // đang tích chọn -> không tráo bảng kẻo mất ô đã tích
     fetch(location.href,{headers:{'X-Requested-With':'XMLHttpRequest'},cache:'no-store',credentials:'same-origin'})
       .then(function(r){ return r.ok?r.text():null; })
       .then(function(html){
