@@ -273,21 +273,27 @@ class DonDiHoController extends Controller
     }
 
     /** AI đọc mã vận đơn từ nhãn vận chuyển đã tải lên (điền ma_vc/vc). */
-    public function docNhanVc(DonDiHo $don)
+    public function docNhanVc(Request $request, DonDiHo $don)
     {
+        $ajax = $request->expectsJson() || $request->ajax();
+        $tra = function (bool $ok, string $msg, array $them = []) use ($ajax, $don) {
+            if ($ajax) return response()->json(array_merge(['ok' => $ok, 'msg' => $msg, 'ma_vc' => $don->ma_vc, 'vc' => $don->vc], $them), $ok ? 200 : 200);
+            return back()->with('ok', $msg);
+        };
         if (!$don->nhan_vc_path || !Storage::disk('local')->exists($don->nhan_vc_path)) {
-            return back()->with('ok', 'Đơn chưa có nhãn vận chuyển.');
+            return $tra(false, 'Đơn chưa có nhãn vận chuyển.');
         }
         if (!\App\Services\DocMonAi::batAi()) {
-            return back()->with('ok', 'Chưa bật AI — vào Cài đặt nhập khoá Anthropic.');
+            return $tra(false, 'Chưa bật AI — vào Cài đặt nhập khoá Anthropic.');
         }
         $res = \App\Services\DocMonAi::docNhanVc(Storage::disk('local')->get($don->nhan_vc_path), (string) $don->nhan_vc_mime);
-        if (empty($res['ok'])) return back()->with('ok', 'AI chưa đọc được nhãn (' . ($res['error'] ?? '') . ').');
+        if (empty($res['ok'])) return $tra(false, 'AI chưa đọc được nhãn (' . ($res['error'] ?? '') . ').');
         if (($res['ma_vc'] ?? '') !== '') {
             $don->update(['ma_vc' => $res['ma_vc'], 'vc' => ($res['vc'] ?? '') ?: $don->vc]);
-            return back()->with('ok', '🤖 AI đọc mã vận đơn: ' . $res['ma_vc'] . ($res['vc'] ? ' (' . $res['vc'] . ')' : ''));
+            $don->refresh();
+            return $tra(true, '🤖 AI đọc mã vận đơn: ' . $res['ma_vc'] . ($res['vc'] ? ' (' . $res['vc'] . ')' : ''));
         }
-        return back()->with('ok', 'AI không tìm thấy mã vận đơn trên nhãn — nhập tay giúp.');
+        return $tra(false, 'AI không tìm thấy mã vận đơn trên nhãn — nhập tay giúp.');
     }
 
     /** AI đọc số môn từ ảnh ghi chú của một dòng (dùng cho xưởng ngay trong admin). */

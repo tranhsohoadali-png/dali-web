@@ -135,10 +135,8 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
               <div style="font-size:12px;color:var(--tx3);margin-top:8px">File PDF — bấm nút trên để mở &amp; in ngay.</div>
               <iframe src="{{ route('admin.diho.nhan', $don) }}" class="nhan-img" style="width:100%;height:480px;border:1.5px solid var(--bd)" title="Nhãn vận chuyển"></iframe>
             @endif
-            <form method="POST" action="{{ route('admin.diho.docnhanvc', $don) }}" style="margin-top:8px">
-              @csrf
-              <button type="submit" class="btn-o">🤖 Đọc mã vận đơn từ nhãn (AI)</button>
-            </form>
+            <button type="button" class="btn-o doc-vc" data-url="{{ route('admin.diho.docnhanvc', $don) }}" style="margin-top:8px;cursor:pointer">🤖 Đọc mã vận đơn từ nhãn (AI) → tự điền</button>
+            <div class="doc-vc-kq" style="display:none;font-size:12.5px;border-radius:9px;padding:9px 12px;margin-top:8px"></div>
           @else
             <div style="font-size:12px;color:var(--tx3)">Đơn này chưa có file nhãn.</div>
           @endif
@@ -184,8 +182,8 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
                 @foreach($tt as $k=>$v)<option value="{{ $k }}" {{ $don->tt==$k?'selected':'' }}>{{ $v }}</option>@endforeach
               </select>
             </div>
-            <div class="fld"><label>Mã vận đơn (nếu có)</label><input type="text" name="ma_vc" value="{{ $don->ma_vc }}" placeholder="VD: SPXVN..."></div>
-            <div class="fld"><label>Đơn vị vận chuyển</label><input type="text" name="vc" value="{{ $don->vc }}" placeholder="SPX / GHTK / VNPost..."></div>
+            <div class="fld"><label>Mã vận đơn (nếu có)</label><input type="text" id="fMaVc" name="ma_vc" value="{{ $don->ma_vc }}" placeholder="VD: SPXVN..."></div>
+            <div class="fld"><label>Đơn vị vận chuyển</label><input type="text" id="fVc" name="vc" value="{{ $don->vc }}" placeholder="SPX / GHTK / VNPost..."></div>
             <button class="btn btn-g" type="submit" style="margin-top:12px;width:100%">Cập nhật</button>
           </form>
           <form method="POST" action="{{ route('admin.diho.destroy', $don) }}" onsubmit="return confirm('Xoá đơn {{ $don->ma }}? File nhãn cũng bị xoá.')" style="margin-top:10px">
@@ -247,6 +245,29 @@ document.addEventListener('click',function(e){
     })
     .catch(function(){ box.style.display='block'; box.textContent='⚠️ Lỗi mạng / app thay tên bận, thử lại.'; b.textContent='🎨 Tạo file in tên'; })
     .finally(function(){ b.disabled=false; });
+});
+// Đọc mã vận đơn (AI) → tự điền thẳng vào ô Mã vận đơn + Đơn vị VC (đã lưu DB)
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.doc-vc'); if(!b) return;
+  var box=b.closest('.sec').querySelector('.doc-vc-kq');
+  var ob=b.textContent; b.disabled=true; b.textContent='🤖 Đang đọc nhãn…';
+  fetch(b.dataset.url,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Accept':'application/json'}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      box.style.display='block';
+      if(d.ok){
+        var mv=document.getElementById('fMaVc'), vc=document.getElementById('fVc');
+        if(mv){ mv.value=d.ma_vc||''; mv.style.background='#FEF9C3'; setTimeout(function(){mv.style.background='';},1800); }
+        if(vc){ vc.value=d.vc||''; vc.style.background='#FEF9C3'; setTimeout(function(){vc.style.background='';},1800); }
+        box.style.background='#ECFDF5'; box.style.border='1px solid #A7F3D0'; box.style.color='#065F46';
+        box.innerHTML='✅ Đã điền: <b>'+String(d.ma_vc||'').replace(/</g,'&lt;')+'</b>'+(d.vc?' · '+String(d.vc).replace(/</g,'&lt;'):'')+' — đã lưu vào đơn.';
+      } else {
+        box.style.background='#FEF3C7'; box.style.border='1px solid #FCD34D'; box.style.color='#92400E';
+        box.innerHTML='⚠️ '+String(d.msg||'AI chưa đọc được.').replace(/</g,'&lt;');
+      }
+    })
+    .catch(function(){ box.style.display='block'; box.style.background='#FEF3C7'; box.style.color='#92400E'; box.textContent='⚠️ Lỗi mạng, thử lại.'; })
+    .finally(function(){ b.disabled=false; b.textContent=ob; });
 });
 </script>
 </body>
