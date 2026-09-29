@@ -64,7 +64,23 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
             </div>
             @if(!empty($l['bien_the']))<div class="s">Phân loại: <b>{{ $l['bien_the'] }}</b></div>@endif
             @if(!empty($l['cap_hoc']))<div class="s">🎓 Cấp học: <b>{{ $l['cap_hoc'] }}</b></div>@endif
-            @if(!empty($l['ten_in']))<div class="s">✍️ In tên riêng: <b>{{ $l['ten_in'] }}</b></div>@endif
+            @if(!empty($l['ten_in']))
+            @php $midTt = \App\Http\Controllers\Admin\DonDiHoController::midThayTen($l['slug'] ?? null); @endphp
+            <div class="s">✍️ In tên riêng: <b>{{ $l['ten_in'] }}</b>
+              @if($midTt)
+                <button type="button" class="tao-ten" data-url="{{ route('admin.diho.taoten', ['don'=>$don,'idx'=>$li]) }}" style="margin-left:8px;font-size:11px;font-weight:800;color:#065F46;background:#D1FAE5;border:1px solid #6EE7B7;border-radius:20px;padding:3px 10px;cursor:pointer">🎨 {{ !empty($l['ten_3mf']) ? 'Tạo lại' : 'Tạo file in tên' }}</button>
+              @else
+                <span style="margin-left:8px;font-size:10.5px;color:var(--tx3)">(mẫu chưa nối app thay tên — soạn tay)</span>
+              @endif
+            </div>
+            <div class="tao-ten-kq" style="{{ !empty($l['ten_3mf']) ? '' : 'display:none;' }}font-size:12.5px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:9px;padding:9px 12px;margin-top:6px;color:#065F46">
+              @if(!empty($l['ten_3mf']))
+                ✅ Đã tạo: <b>{{ $l['ten_3mf_ten'] ?? 'file 3MF' }}</b>
+                <a href="{{ route('admin.diho.taiten', ['don'=>$don,'idx'=>$li]) }}" class="btn-dl" style="padding:5px 10px;font-size:11px;margin-left:6px">⬇ Tải file in</a>
+                @if(!empty($l['ten_3mf_cb']))<div style="font-size:11px;color:#92400E;margin-top:5px">@foreach((array)$l['ten_3mf_cb'] as $cb)⚠️ {{ $cb }}<br>@endforeach</div>@endif
+              @endif
+            </div>
+            @endif
             @if(!empty($l['ghi_chu']))<div class="s">📝 Ghi chú: {{ $l['ghi_chu'] }}</div>@endif
             <div class="s">Đơn giá sỉ: {{ number_format((int)($l['don_gia_si'] ?? 0),0,',','.') }}đ{{ !empty($l['phu_phi_ten']) ? ' · phụ phí in tên +'.number_format((int)$l['phu_phi_ten'],0,',','.').'đ' : '' }}</div>
             @if(!empty($l['anh_ghi_chu']))
@@ -212,6 +228,25 @@ document.addEventListener('click',function(e){
   fetch(DIHO_LUUSOAN,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Content-Type':'application/json'},body:JSON.stringify({mon:mon})})
     .then(function(){ window.location=DIHO_SOAN; })
     .catch(function(){ g.disabled=false; g.textContent='📋 Chuyển sang soạn TKB'; });
+});
+// Nối app thay tên: sinh file 3MF in tên (tên lấy nguyên văn từ đơn, không gõ lại)
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.tao-ten'); if(!b) return;
+  var box=b.closest('.line').querySelector('.tao-ten-kq');
+  b.disabled=true; b.textContent='🎨 Đang dựng… (~20s)';
+  fetch(b.dataset.url,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Accept':'application/json'}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      box.style.display='block';
+      if(d.ok){
+        var h='✅ Đã tạo: <b>'+((d.ten_file||'file 3MF').replace(/</g,'&lt;'))+'</b>'+
+          ' <a href="'+d.tai_url+'" class="btn-dl" style="padding:5px 10px;font-size:11px;margin-left:6px">⬇ Tải file in</a>';
+        if(d.canh_bao&&d.canh_bao.length){ h+='<div style="font-size:11px;color:#92400E;margin-top:5px">'+d.canh_bao.map(function(c){return '⚠️ '+String(c).replace(/</g,'&lt;');}).join('<br>')+'</div>'; }
+        box.innerHTML=h; b.textContent='🎨 Tạo lại';
+      } else { box.innerHTML='⚠️ '+((d.error||'Không tạo được.').replace(/</g,'&lt;')); b.textContent='🎨 Tạo file in tên'; }
+    })
+    .catch(function(){ box.style.display='block'; box.textContent='⚠️ Lỗi mạng / app thay tên bận, thử lại.'; b.textContent='🎨 Tạo file in tên'; })
+    .finally(function(){ b.disabled=false; });
 });
 </script>
 </body>

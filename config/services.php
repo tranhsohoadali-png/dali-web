@@ -41,4 +41,10 @@ return [
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5'),
     ],
 
+    // App "thay tên mẫu" (FastAPI nội bộ) — sinh 3MF in tên từ đơn Đi-đơn-hộ.
+    'thayten' => [
+        'url'  => env('THAYTEN_URL', 'http://127.0.0.1:8021'),
+        'khoa' => env('THAYTEN_KHOA'),
+    ],
+
 ];

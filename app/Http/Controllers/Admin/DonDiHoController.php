@@ -9,6 +9,23 @@ use Illuminate\Support\Facades\Storage;
 /** Đơn "đi đơn hộ" của đại lý (đơn TMĐT). Xem, đổi trạng thái, tải nhãn vận chuyển. */
 class DonDiHoController extends Controller
 {
+    /** Map slug sản phẩm (đơn) → mẫu app thay tên (DS_MAU). Mẫu chưa có thì bỏ trống → soạn tay. */
+    public const MAU_THAY_TEN = [
+        'tkb-bau-troi'    => 'ten_bau_troi',
+        'tkb-doraemon'    => 'ten_doraemon',
+        'tkb-hello-kitty' => 'ten_hello_kitty',
+        'tkb-dai-duong'   => 'ten_dai_duong',
+        'tkb-gundam'      => 'ten_gundam',
+        'tkb-spider-man'  => 'ten_spiderman',
+        'bang-tkb'        => 'tkb_basic_girl',
+    ];
+
+    /** Trả mid app thay tên cho một slug, hoặc null nếu chưa nối. */
+    public static function midThayTen(?string $slug): ?string
+    {
+        return $slug ? (self::MAU_THAY_TEN[$slug] ?? null) : null;
+    }
+
     public function index(Request $request)
     {
         $q = DonDiHo::orderByDesc('created_at');
@@ -108,6 +125,47 @@ class DonDiHoController extends Controller
             return response()->json(['ok' => true, 'so_don' => $n, 'nhan' => $nhan]);
         }
         return back()->with('ok', "Đã đổi {$n} đơn → {$nhan}");
+    }
+
+    /** Nối thẳng app thay tên: sinh file 3MF in tên cho MỘT dòng SP (tên lấy nguyên văn từ đơn). */
+    public function taoTenIn(Request $request, DonDiHo $don, int $idx)
+    {
+        @set_time_limit(90); // dựng mẫu mất ~15–40s, tránh FPM giết ở 30s
+        $ct = $don->chi_tiet ?: [];
+        if (!isset($ct[$idx])) return response()->json(['ok' => false, 'error' => 'Không thấy dòng sản phẩm.'], 404);
+        $ten = trim((string) ($ct[$idx]['ten_in'] ?? ''));
+        if ($ten === '') return response()->json(['ok' => false, 'error' => 'Dòng này không có tên in.'], 422);
+        $mid = self::midThayTen($ct[$idx]['slug'] ?? null);
+        if (!$mid) return response()->json(['ok' => false, 'error' => 'Sản phẩm này chưa nối app thay tên — soạn tay.'], 422);
+
+        $res = \App\Services\ThayTenClient::taoFile($mid, $ten);
+        if (empty($res['ok'])) return response()->json(['ok' => false, 'error' => $res['error'] ?? 'Không tạo được file.'], 502);
+
+        $path = 'di-ho/' . $don->ma . '-inten-' . $idx . '.3mf';
+        Storage::disk('local')->put($path, $res['noidung']);
+        $ct[$idx]['ten_3mf']     = $path;
+        $ct[$idx]['ten_3mf_ten'] = $res['ten_file'];
+        $ct[$idx]['ten_3mf_luc'] = now()->toDateTimeString();
+        $ct[$idx]['ten_3mf_cb']  = $res['canh_bao'];
+        $don->chi_tiet = $ct;
+        $don->save();
+
+        return response()->json([
+            'ok'       => true,
+            'ten_file' => $res['ten_file'],
+            'canh_bao' => $res['canh_bao'],
+            'tai_url'  => route('admin.diho.taiten', ['don' => $don->id, 'idx' => $idx]),
+        ]);
+    }
+
+    /** Tải file 3MF in tên đã sinh cho một dòng. */
+    public function taiTenFile(DonDiHo $don, int $idx)
+    {
+        $ct = $don->chi_tiet ?: [];
+        $p = $ct[$idx]['ten_3mf'] ?? null;
+        if (!$p || !Storage::disk('local')->exists($p)) abort(404, 'Chưa có file in tên.');
+        $ten = $ct[$idx]['ten_3mf_ten'] ?? ('in-ten-' . $idx . '.3mf');
+        return Storage::disk('local')->download($p, $ten);
     }
 
     /** Mở nhãn/hoá đơn vận chuyển INLINE (xem/in ngay trong trình duyệt) — chỉ admin. */

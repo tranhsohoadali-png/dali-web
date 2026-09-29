@@ -164,6 +164,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('di-ho/{don}/anh/{idx}',  [\App\Http\Controllers\Admin\DonDiHoController::class, 'taiAnhMon'])->whereNumber('idx')->name('diho.anhmon');
         Route::post('di-ho/{don}/doc-mon/{idx}', [\App\Http\Controllers\Admin\DonDiHoController::class, 'docMonAi'])->whereNumber('idx')->name('diho.docmon');
         Route::post('di-ho/{don}/doc-nhan-vc', [\App\Http\Controllers\Admin\DonDiHoController::class, 'docNhanVc'])->name('diho.docnhanvc');
+        Route::post('di-ho/{don}/tao-ten/{idx}', [\App\Http\Controllers\Admin\DonDiHoController::class, 'taoTenIn'])->whereNumber('idx')->name('diho.taoten');
+        Route::get('di-ho/{don}/ten-file/{idx}', [\App\Http\Controllers\Admin\DonDiHoController::class, 'taiTenFile'])->whereNumber('idx')->name('diho.taiten');
         Route::post('di-ho/{don}/thu-them',   [\App\Http\Controllers\Admin\DonDiHoController::class, 'capNhatThuThem'])->name('diho.thuthem');
         Route::post('di-ho/{don}/tinh-lai-gia',[\App\Http\Controllers\Admin\DonDiHoController::class, 'tinhLaiGia'])->name('diho.tinhlaigia');
         Route::post('di-ho/{don}/luu-soan',   [\App\Http\Controllers\Admin\DonDiHoController::class, 'luuSoan'])->name('diho.luusoan');
