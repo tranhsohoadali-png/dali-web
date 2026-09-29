@@ -47,8 +47,8 @@ class ThayTenClient
             if ($vid === '') return ['ok' => false, 'error' => 'App thay tên không trả mã việc.'];
 
             $kq = null;
-            for ($i = 0; $i < 25; $i++) {
-                usleep($i === 0 ? 1_500_000 : 2_500_000); // 1,5s rồi 2,5s mỗi vòng (tối đa ~61s)
+            for ($i = 0; $i < 18; $i++) {
+                usleep($i === 0 ? 1_500_000 : 2_500_000); // 1,5s rồi 2,5s mỗi vòng (~44s, dưới fastcgi 60s)
                 $s = self::http(12)->get($url . '/api/viec/' . $vid);
                 if (!$s->successful()) continue;
                 $tt = (string) $s->json('trang_thai');
