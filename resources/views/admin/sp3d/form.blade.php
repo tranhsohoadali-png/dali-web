@@ -159,6 +159,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--tx
         <label class="tick" style="flex:1;min-width:220px;margin:0"><input type="checkbox" name="khac_ten" value="1" {{ old('khac_ten', $sp->khac_ten ?? false) ? 'checked' : '' }}><span><b>Có khắc tên miễn phí</b><small>Hiện ô nhập tên khi khách đặt</small></span></label>
         <input type="hidden" name="hien" value="0">
         <label class="tick" style="flex:1;min-width:220px;margin:0"><input type="checkbox" name="hien" value="1" {{ old('hien', $sp->hien ?? true) ? 'checked' : '' }}><span><b>Đang bán</b><small>Bỏ tích để ẩn khỏi web</small></span></label>
+        <input type="hidden" name="tam_het" value="0">
+        <label class="tick" style="flex:1;min-width:220px;margin:0"><input type="checkbox" name="tam_het" value="1" {{ old('tam_het', $sp->tam_het ?? false) ? 'checked' : '' }}><span><b>🚫 Tạm hết hàng</b><small>Đại lý không đặt đi hộ được (vẫn hiện trên web)</small></span></label>
       </div>
     </div>
 

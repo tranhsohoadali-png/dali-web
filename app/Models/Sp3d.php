@@ -13,7 +13,7 @@ class Sp3d extends Model
     protected $fillable = [
         'slug', 'ten', 'art', 'cat', 'danh_muc_id', 'gia', 'gia_goc', 'gia_si', 'gia_si_sll', 'sll_tu', 'phu_phi_ten', 'nhan',
         'mo_ta_ngan', 'mo_ta_dai', 'mota', 'variants', 'variant_groups', 'anh',
-        'khac_ten', 'dat_lam', 'sao', 'da_ban', 'kho', 'thu_tu', 'hien',
+        'khac_ten', 'dat_lam', 'sao', 'da_ban', 'kho', 'tam_het', 'thu_tu', 'hien',
         'payment_policy', 'shipping_class',
     ];
 
@@ -24,6 +24,7 @@ class Sp3d extends Model
         'anh'            => 'array',
         'khac_ten' => 'boolean',
         'dat_lam'  => 'boolean',
+        'tam_het'  => 'boolean',
         'hien'     => 'boolean',
         'sao'      => 'decimal:1',
     ];

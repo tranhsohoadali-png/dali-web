@@ -62,6 +62,8 @@ class Api3dController extends Controller
                     })->all(),
                     'khac_ten'       => (bool) $p->khac_ten,
                     'dat_lam'        => (bool) $p->dat_lam,
+                    'tam_het'        => (bool) $p->tam_het, // Tạm hết hàng — đại lý không đặt đi hộ
+
                     'nhan'           => $p->nhan,
                     // Giống tranhdali.vn: chưa có đánh giá thì mặc định 5.0 sao.
                     // (sao cast decimal:1 trả chuỗi "0.0" — phải ép số rồi so >0, không dùng ?:)
@@ -212,6 +214,7 @@ class Api3dController extends Controller
             $slug = trim((string) ($raw['slug'] ?? ''));
             $p = $slug !== '' ? Sp3d::where('slug', $slug)->where('hien', true)->first() : null;
             if (!$p) return $this->cors(response()->json(['ok' => false, 'error' => 'Sản phẩm không còn bán: ' . $slug], 400));
+            if ($p->tam_het) return $this->cors(response()->json(['ok' => false, 'error' => 'Sản phẩm đang TẠM HẾT, chưa đặt đi hộ được: ' . $p->ten], 400));
 
             $qty = (int) ($raw['qty'] ?? 0);
             if ($qty < 1 || $qty > 100) return $this->cors(response()->json(['ok' => false, 'error' => 'Số lượng không hợp lệ.'], 400));

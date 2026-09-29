@@ -106,6 +106,7 @@ class Sp3dController extends Controller
             'sll_tu'         => 'nullable|integer|min:0',
             'phu_phi_ten'    => 'nullable|integer|min:0',
             'kho'            => 'nullable|integer|min:0',
+            'tam_het'        => 'nullable|boolean',
             'thu_tu'         => 'nullable|integer',
             'mota_text'      => 'nullable|string',
             'payment_policy' => 'nullable|string|max:40',
@@ -122,6 +123,7 @@ class Sp3dController extends Controller
         // Đơn 3D "hoàn tất" — nên KHÔNG set ở đây để không ghi đè.
         $v['khac_ten'] = $request->boolean('khac_ten');
         $v['dat_lam']  = $request->boolean('dat_lam');
+        $v['tam_het']  = $request->boolean('tam_het');
         $v['hien']     = $request->boolean('hien', true);
         $v['gia']      = $v['gia'] ?? 0;
         $v['gia_si']     = $v['gia_si'] ?? 0;
