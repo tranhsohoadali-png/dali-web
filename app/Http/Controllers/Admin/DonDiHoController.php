@@ -283,17 +283,26 @@ class DonDiHoController extends Controller
         if (!$don->nhan_vc_path || !Storage::disk('local')->exists($don->nhan_vc_path)) {
             return $tra(false, 'Đơn chưa có nhãn vận chuyển.');
         }
+        // 1) Đọc KHÔNG cần AI: rút lớp chữ PDF + dò mẫu (miễn phí, nhanh)
+        $full = Storage::disk('local')->path($don->nhan_vc_path);
+        $r = \App\Services\NhanVcReader::doc($full, (string) $don->nhan_vc_mime);
+        if (!empty($r['ok'])) {
+            $don->update(['ma_vc' => $r['ma_vc'], 'vc' => ($r['vc'] ?? '') ?: $don->vc]);
+            $don->refresh();
+            return $tra(true, '📄 Đọc từ chữ trên nhãn (không cần AI): ' . $r['ma_vc'] . ($r['vc'] ? ' (' . $r['vc'] . ')' : ''));
+        }
+        // 2) Nhãn là ẢNH / PDF scan không có chữ → nhờ AI (nếu đã bật)
         if (!\App\Services\DocMonAi::batAi()) {
-            return $tra(false, 'Chưa bật AI — vào Cài đặt nhập khoá Anthropic.');
+            return $tra(false, 'Nhãn không có lớp chữ để đọc tự động (có thể là ảnh). Bật AI hoặc nhập tay.');
         }
         $res = \App\Services\DocMonAi::docNhanVc(Storage::disk('local')->get($don->nhan_vc_path), (string) $don->nhan_vc_mime);
-        if (empty($res['ok'])) return $tra(false, 'AI chưa đọc được nhãn (' . ($res['error'] ?? '') . ').');
+        if (empty($res['ok'])) return $tra(false, 'Chưa đọc được nhãn (' . ($res['error'] ?? '') . ').');
         if (($res['ma_vc'] ?? '') !== '') {
             $don->update(['ma_vc' => $res['ma_vc'], 'vc' => ($res['vc'] ?? '') ?: $don->vc]);
             $don->refresh();
             return $tra(true, '🤖 AI đọc mã vận đơn: ' . $res['ma_vc'] . ($res['vc'] ? ' (' . $res['vc'] . ')' : ''));
         }
-        return $tra(false, 'AI không tìm thấy mã vận đơn trên nhãn — nhập tay giúp.');
+        return $tra(false, 'Không tìm thấy mã vận đơn trên nhãn — nhập tay giúp.');
     }
 
     /** AI đọc số môn từ ảnh ghi chú của một dòng (dùng cho xưởng ngay trong admin). */

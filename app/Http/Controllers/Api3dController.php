@@ -380,15 +380,23 @@ class Api3dController extends Controller
         if (!$don->nhan_vc_path || !Storage::disk('local')->exists($don->nhan_vc_path)) {
             return $this->cors(response()->json(['ok' => false, 'error' => 'Đơn chưa có nhãn vận chuyển.'], 400));
         }
+        // 1) Đọc KHÔNG cần AI: rút lớp chữ PDF + dò mẫu (miễn phí)
+        $full = Storage::disk('local')->path($don->nhan_vc_path);
+        $r = \App\Services\NhanVcReader::doc($full, (string) $don->nhan_vc_mime);
+        if (!empty($r['ok'])) {
+            $don->update(['ma_vc' => $r['ma_vc'], 'vc' => ($r['vc'] ?? '') ?: $don->vc]);
+            return $this->cors(response()->json(['ok' => true, 'ma_vc' => $r['ma_vc'], 'vc' => $r['vc'], 'nguon' => 'pdf']));
+        }
+        // 2) Nhãn ảnh / PDF scan → nhờ AI (nếu bật)
         if (!\App\Services\DocMonAi::batAi()) {
-            return $this->cors(response()->json(['ok' => false, 'error' => 'Chưa bật AI.'], 503));
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Nhãn không có lớp chữ; chưa bật AI.'], 503));
         }
         $res = \App\Services\DocMonAi::docNhanVc(Storage::disk('local')->get($don->nhan_vc_path), (string) $don->nhan_vc_mime);
         if (empty($res['ok'])) return $this->cors(response()->json(['ok' => false, 'error' => $res['error'] ?? 'Không đọc được nhãn.'], 502));
         if (($res['ma_vc'] ?? '') !== '') {
             $don->update(['ma_vc' => $res['ma_vc'], 'vc' => ($res['vc'] ?? '') ?: $don->vc]);
         }
-        return $this->cors(response()->json(['ok' => true, 'ma_vc' => $res['ma_vc'], 'vc' => $res['vc']]));
+        return $this->cors(response()->json(['ok' => true, 'ma_vc' => $res['ma_vc'], 'vc' => $res['vc'], 'nguon' => 'ai']));
     }
 
     /**
