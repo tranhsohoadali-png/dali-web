@@ -28,6 +28,18 @@ class DocMonAi
 
     public static function batAi(): bool { return (bool) self::key(); }
 
+    /** Dịch lỗi HTTP từ Anthropic sang câu tiếng Việt dễ hiểu cho xưởng. */
+    private static function loiHttp($resp): string
+    {
+        $msg = (string) ($resp->json('error.message') ?? '');
+        if (stripos($msg, 'credit balance') !== false || stripos($msg, 'too low') !== false) {
+            return 'Hết tín dụng API Anthropic — nạp thêm ở console.anthropic.com (Plans & Billing) rồi thử lại.';
+        }
+        if ($resp->status() === 401) return 'Khoá API Anthropic sai — kiểm tra lại ở Cài đặt.';
+        if ($resp->status() === 429) return 'API Anthropic đang quá tải/giới hạn — thử lại sau ít phút.';
+        return 'AI lỗi (HTTP ' . $resp->status() . ')' . ($msg ? ': ' . mb_substr($msg, 0, 120) : '') . '.';
+    }
+
     /**
      * @return array ['ok'=>bool, 'error'?=>string, 'mon'=>[{mon,so_luong}], 'tong'=>int, 'text'=>string]
      */
@@ -54,7 +66,7 @@ class DocMonAi
                     'model' => self::model(), 'max_tokens' => 1500, 'system' => $sys,
                     'messages' => [['role' => 'user', 'content' => $content]],
                 ]);
-            if (!$resp->successful()) return ['ok' => false, 'error' => 'AI lỗi (HTTP ' . $resp->status() . ').'];
+            if (!$resp->successful()) return ['ok' => false, 'error' => self::loiHttp($resp)];
             $textOut = collect($resp->json('content') ?: [])->where('type', 'text')->pluck('text')->implode("\n");
             $json = self::jsonTuText($textOut);
 
@@ -103,7 +115,7 @@ class DocMonAi
                     'model' => self::model(), 'max_tokens' => 400, 'system' => $sys,
                     'messages' => [['role' => 'user', 'content' => [$src, ['type' => 'text', 'text' => $ask]]]],
                 ]);
-            if (!$resp->successful()) return ['ok' => false, 'error' => 'AI lỗi (HTTP ' . $resp->status() . ').'];
+            if (!$resp->successful()) return ['ok' => false, 'error' => self::loiHttp($resp)];
             $textOut = collect($resp->json('content') ?: [])->where('type', 'text')->pluck('text')->implode("\n");
             $j = self::jsonTuText($textOut);
             $ma = mb_substr(trim((string) ($j['ma_vc'] ?? '')), 0, 60);
