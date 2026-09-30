@@ -16,7 +16,9 @@ class DaiLyController extends Controller
         $affIds = $items->pluck('affiliate_id')->merge($items->pluck('gioi_thieu_aff_id'))->filter()->unique();
         $affs = \App\Models\Affiliate::whereIn('id', $affIds)->get()->keyBy('id');
         $choDuyet = $items->where('cho_duyet', true)->count();
-        return view('admin.daily.index', compact('items', 'affs', 'choDuyet'));
+        // Số thiết bị đang đăng nhập (dò tài khoản bị cho mượn)
+        $soThietBi = \App\Models\DaiLyPhien::selectRaw('dai_ly_id, count(*) n, max(dung_luc) cuoi')->groupBy('dai_ly_id')->get()->keyBy('dai_ly_id');
+        return view('admin.daily.index', compact('items', 'affs', 'choDuyet', 'soThietBi'));
     }
 
     public function store(Request $request)
@@ -53,7 +55,8 @@ class DaiLyController extends Controller
             return back()->withErrors(['sdt' => 'Số điện thoại này đã có đại lý khác.'])->withInput();
         }
         $data = ['ten' => $v['ten'], 'sdt' => $sdt, 'ghi_chu' => $v['ghi_chu'] ?? null, 'sll_luon' => $request->boolean('sll_luon')];
-        if (!empty($v['matkhau'])) { $data['matkhau'] = Hash::make($v['matkhau']); $data['token'] = null; }
+        $doiMk = !empty($v['matkhau']);
+        if ($doiMk) $data['matkhau'] = Hash::make($v['matkhau']);
 
         // Người giới thiệu (mã giới thiệu). Để trống = không có. Chỉ ảnh hưởng hoa hồng các đơn thu tiền SAU này.
         if ($request->has('ma_gt')) {
@@ -70,7 +73,8 @@ class DaiLyController extends Controller
             }
         }
         $dai_ly->update($data);
-        return back()->with('ok', 'Đã cập nhật đại lý.');
+        if ($doiMk) \App\Models\DaiLyPhien::where('dai_ly_id', $dai_ly->id)->delete(); // đổi mật khẩu -> đăng xuất mọi thiết bị
+        return back()->with('ok', 'Đã cập nhật đại lý.' . ($doiMk ? ' Đã đăng xuất mọi thiết bị (đổi mật khẩu).' : ''));
     }
 
     /** Khoá/mở đại lý. Khoá thì xoá token phiên (đăng xuất ngay). */
@@ -78,9 +82,10 @@ class DaiLyController extends Controller
     {
         $moKhoa = !$dai_ly->hien;
         $duyet  = $moKhoa && $dai_ly->cho_duyet;
-        $upd = ['hien' => $moKhoa, 'token' => $moKhoa ? $dai_ly->token : null];
+        $upd = ['hien' => $moKhoa];
         if ($moKhoa) $upd['cho_duyet'] = false; // mở = duyệt luôn đăng ký tự gửi
         $dai_ly->update($upd);
+        if (!$moKhoa) \App\Models\DaiLyPhien::where('dai_ly_id', $dai_ly->id)->delete(); // khoá -> đăng xuất mọi thiết bị
         if ($duyet) return back()->with('ok', 'Đã DUYỆT đại lý "' . $dai_ly->ten . '" — nhắn Zalo ' . $dai_ly->sdt . ' báo đăng nhập được rồi.');
         return back()->with('ok', $moKhoa ? 'Đã mở lại đại lý.' : 'Đã khoá đại lý (đăng xuất khỏi web).');
     }
@@ -88,7 +93,15 @@ class DaiLyController extends Controller
     public function destroy(DaiLy $dai_ly)
     {
         $ten = $dai_ly->ten;
+        \App\Models\DaiLyPhien::where('dai_ly_id', $dai_ly->id)->delete();
         $dai_ly->delete();
         return back()->with('ok', 'Đã xoá đại lý "' . $ten . '".');
+    }
+
+    /** Đăng xuất đại lý khỏi MỌI thiết bị (vd nghi cho mượn tài khoản / mất máy). */
+    public function dangXuatHet(DaiLy $dai_ly)
+    {
+        $n = \App\Models\DaiLyPhien::where('dai_ly_id', $dai_ly->id)->delete();
+        return back()->with('ok', 'Đã đăng xuất "' . $dai_ly->ten . '" khỏi ' . $n . ' thiết bị.');
     }
 }

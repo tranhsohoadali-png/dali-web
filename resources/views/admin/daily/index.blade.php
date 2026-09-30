@@ -78,7 +78,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
       <div class="card-h"><div class="card-t">🤝 Danh sách đại lý ({{ $items->count() }}){!! $choDuyet > 0 ? ' · <span style="color:#B45309">⏳ '.$choDuyet.' chờ duyệt</span>' : '' !!}</div></div>
       <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>Tên</th><th>SĐT</th><th>Giới thiệu</th><th>Ghi chú</th><th>Trạng thái</th><th>Đăng nhập</th><th>Thao tác</th></tr></thead>
+        <thead><tr><th>Tên</th><th>SĐT</th><th>Giới thiệu</th><th>Ghi chú</th><th>Trạng thái</th><th>Đang đăng nhập</th><th>Thao tác</th></tr></thead>
         <tbody>
         @forelse($items as $d)
           @php $viMinh = $d->affiliate_id ? ($affs[$d->affiliate_id] ?? null) : null; $nguoiGt = $d->gioi_thieu_aff_id ? ($affs[$d->gioi_thieu_aff_id] ?? null) : null; @endphp
@@ -92,7 +92,18 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
             </td>
             <td style="font-size:12px;color:var(--tx3);max-width:200px">{{ $d->ghi_chu ?: '—' }}</td>
             <td>@if($d->cho_duyet)<span class="badge-off" style="background:#FEF3C7;color:#B45309">⏳ Chờ duyệt</span>@elseif($d->hien)<span class="badge-on">Hoạt động</span>@else<span class="badge-off">Đã khoá</span>@endif @if($d->sll_luon)<span class="badge-sll">⚡ Giá SLL</span>@endif</td>
-            <td style="font-size:12px;color:var(--tx3)">{{ $d->dang_nhap_luc ? $d->dang_nhap_luc->format('d/m H:i') : 'chưa' }}</td>
+            @php $tb = $soThietBi[$d->id] ?? null; @endphp
+            <td style="font-size:12px;color:var(--tx3);white-space:nowrap">
+              @if($tb)
+                <b style="color:{{ $tb->n >= 4 ? '#B45309' : 'var(--tx)' }}">📱 {{ $tb->n }} thiết bị</b>{!! $tb->n >= 4 ? ' <span title="Nhiều thiết bị — kiểm tra có cho mượn tài khoản không">⚠️</span>' : '' !!}
+                <div>dùng {{ $tb->cuoi ? \Illuminate\Support\Carbon::parse($tb->cuoi)->format('d/m H:i') : '—' }}</div>
+                <form method="POST" action="{{ route('admin.daily.dangxuathet',$d) }}" style="margin-top:3px" onsubmit="return confirm('Đăng xuất {{ $d->ten }} khỏi mọi thiết bị?')">@csrf
+                  <button class="btn-sm" type="submit" style="font-size:10.5px">⏏ Đăng xuất hết</button>
+                </form>
+              @else
+                {{ $d->dang_nhap_luc ? 'lần cuối '.$d->dang_nhap_luc->format('d/m H:i') : 'chưa' }}
+              @endif
+            </td>
             <td>
               <div class="acts">
                 <details class="edit"><summary class="btn-sm">✏️ Sửa</summary></details>

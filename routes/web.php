@@ -139,6 +139,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('/',               [\App\Http\Controllers\Admin\DaiLyController::class, 'store'])->name('store');
         Route::put('{dai_ly}',         [\App\Http\Controllers\Admin\DaiLyController::class, 'update'])->name('update');
         Route::post('{dai_ly}/toggle', [\App\Http\Controllers\Admin\DaiLyController::class, 'toggle'])->name('toggle');
+        Route::post('{dai_ly}/dang-xuat-het', [\App\Http\Controllers\Admin\DaiLyController::class, 'dangXuatHet'])->name('dangxuathet');
         Route::delete('{dai_ly}',      [\App\Http\Controllers\Admin\DaiLyController::class, 'destroy'])->name('destroy');
     });
 

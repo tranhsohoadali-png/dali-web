@@ -5,6 +5,7 @@ use App\Models\Sp3d;
 use App\Models\Don3d;
 use App\Models\DonDiHo;
 use App\Models\DaiLy;
+use App\Models\DaiLyPhien;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -88,7 +89,41 @@ class Api3dController extends Controller
     {
         $token = trim((string) $request->header('X-Dai-Ly-Token', ''));
         if (strlen($token) < 20) return null;
-        return DaiLy::where('token', $token)->where('hien', true)->first();
+        // Nhiều thiết bị: mỗi phiên một dòng dai_ly_phien (chỉ lưu băm token)
+        $p = DaiLyPhien::where('token_hash', DaiLyPhien::bam($token))->first();
+        if (!$p) return null;
+        if ($p->dung_luc && $p->dung_luc->lt(now()->subDays(DaiLyPhien::HET_HAN_NGAY))) { $p->delete(); return null; }
+        $dl = DaiLy::whereKey($p->dai_ly_id)->where('hien', true)->first();
+        if (!$dl) return null;
+        // Ghi "lần dùng" thưa (~10 phút/lần) — trang đối soát poll 15s, đừng ghi DB mỗi lần
+        if (!$p->dung_luc || $p->dung_luc->lt(now()->subMinutes(10))) {
+            DaiLyPhien::whereKey($p->id)->update(['dung_luc' => now(), 'ip' => $request->ip()]);
+        }
+        return $dl;
+    }
+
+    /** Tên thiết bị gọn từ user-agent, để đại lý/xưởng nhận ra phiên nào là máy nào. */
+    private static function thietBi(Request $r): string
+    {
+        $ua = (string) $r->userAgent();
+        $os = match (true) {
+            str_contains($ua, 'iPhone')  => 'iPhone',
+            str_contains($ua, 'iPad')    => 'iPad',
+            str_contains($ua, 'Android') => 'Android',
+            str_contains($ua, 'Windows') => 'Windows',
+            str_contains($ua, 'Mac OS')  => 'Mac',
+            default                      => 'Thiết bị khác',
+        };
+        $app = match (true) {
+            stripos($ua, 'Zalo') !== false                    => 'Zalo',
+            str_contains($ua, 'FBAN') || str_contains($ua, 'FBAV') => 'Facebook',
+            str_contains($ua, 'Edg/')    => 'Edge',
+            str_contains($ua, 'Chrome')  => 'Chrome',
+            str_contains($ua, 'Firefox') => 'Firefox',
+            str_contains($ua, 'Safari')  => 'Safari',
+            default                      => '',
+        };
+        return mb_substr($os . ($app !== '' ? ' · ' . $app : ''), 0, 120);
     }
 
     private function cors($resp)
@@ -119,11 +154,23 @@ class Api3dController extends Controller
                 ? 'Tài khoản đang chờ xưởng duyệt — xưởng sẽ báo cho bạn khi duyệt xong.'
                 : 'Tài khoản đại lý đang tạm khoá, vui lòng liên hệ xưởng.'], 403));
         }
-        $dl->token = Str::random(48);
+        // Mỗi lần đăng nhập = 1 phiên mới; KHÔNG đá phiên ở thiết bị khác
+        $token = Str::random(48);
+        DaiLyPhien::create([
+            'dai_ly_id'  => $dl->id,
+            'token_hash' => DaiLyPhien::bam($token),
+            'thiet_bi'   => self::thietBi($request),
+            'ip'         => $request->ip(),
+            'dung_luc'   => now(),
+        ]);
+        // Giữ tối đa N thiết bị gần nhất
+        $cu = DaiLyPhien::where('dai_ly_id', $dl->id)->orderByDesc('dung_luc')->orderByDesc('id')
+            ->skip(DaiLyPhien::TOI_DA)->take(1000)->pluck('id');
+        if ($cu->isNotEmpty()) DaiLyPhien::whereIn('id', $cu)->delete();
         $dl->dang_nhap_luc = now();
         $dl->save();
         RateLimiter::clear($key);
-        return $this->cors(response()->json(['ok' => true, 'token' => $dl->token, 'ten' => $dl->ten]));
+        return $this->cors(response()->json(['ok' => true, 'token' => $token, 'ten' => $dl->ten]));
     }
 
     /** GET /api/3d/dai-ly/me (header token) -> {ok, ten} | 401 */
@@ -137,9 +184,36 @@ class Api3dController extends Controller
     /** POST /api/3d/dai-ly/logout (header token) — xoá token phiên. */
     public function dealerLogout(Request $request)
     {
-        $dl = $this->daiLyTuRequest($request);
-        if ($dl) { $dl->token = null; $dl->save(); }
+        // Chỉ đăng xuất THIẾT BỊ NÀY
+        $token = trim((string) $request->header('X-Dai-Ly-Token', ''));
+        if (strlen($token) >= 20) DaiLyPhien::where('token_hash', DaiLyPhien::bam($token))->delete();
         return $this->cors(response()->json(['ok' => true]));
+    }
+
+    /** GET /api/3d/dai-ly/phien — các thiết bị đang đăng nhập của chính đại lý. */
+    public function dealerPhien(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
+        $hienTai = DaiLyPhien::bam(trim((string) $request->header('X-Dai-Ly-Token', '')));
+        $ds = DaiLyPhien::where('dai_ly_id', $dl->id)->orderByDesc('dung_luc')->get()
+            ->map(fn ($p) => [
+                'thiet_bi' => $p->thiet_bi ?: 'Thiết bị',
+                'dung_luc' => optional($p->dung_luc)->toIso8601String(),
+                'hien_tai' => hash_equals($p->getRawOriginal('token_hash'), $hienTai),
+            ])->all();
+        return $this->cors(response()->json(['ok' => true, 'phien' => $ds]));
+    }
+
+    /** POST /api/3d/dai-ly/dang-xuat-khac — đăng xuất mọi thiết bị trừ thiết bị đang dùng. */
+    public function dealerDangXuatKhac(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
+        $hienTai = DaiLyPhien::bam(trim((string) $request->header('X-Dai-Ly-Token', '')));
+        $n = DaiLyPhien::where('dai_ly_id', $dl->id)->where('token_hash', '!=', $hienTai)->delete();
+        return $this->cors(response()->json(['ok' => true, 'so' => $n]));
     }
 
     /** GET /api/3d/dai-ly/tai-anh/{slug} (header token) — tải ZIP ảnh sản phẩm cho đại lý. */
