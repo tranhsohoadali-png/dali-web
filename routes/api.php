@@ -35,6 +35,10 @@ Route::prefix('3d')->group(function () {
     Route::post('dai-ly/di-don', [\App\Http\Controllers\Api3dController::class, 'dealerDiDonTao']);
     Route::get('dai-ly/di-don',  [\App\Http\Controllers\Api3dController::class, 'dealerDiDonList']);
     Route::get('dai-ly/dashboard', [\App\Http\Controllers\Api3dController::class, 'dealerDashboard']); // bảng điều khiển đại lý
+    // Giới thiệu & hoa hồng (1 cấp) — ví dùng bảng affiliates, rút qua withdrawals
+    Route::get('dai-ly/hoa-hong',  [\App\Http\Controllers\Api3dController::class, 'dealerHoaHong']);
+    Route::post('dai-ly/rut-tien', [\App\Http\Controllers\Api3dController::class, 'dealerRutTien']);
+    Route::post('dai-ly/dang-ky',  [\App\Http\Controllers\Api3dController::class, 'dealerDangKy']);  // tự đăng ký, chờ duyệt
     Route::get('dai-ly/di-don/chi-tiet', [\App\Http\Controllers\Api3dController::class, 'dealerDiDonChiTiet']);
     Route::get('dai-ly/di-don/file',     [\App\Http\Controllers\Api3dController::class, 'dealerDiDonFile']);
     Route::post('dai-ly/di-don/doc-nhan-vc', [\App\Http\Controllers\Api3dController::class, 'dealerDocNhanVc']); // AI đọc mã vận đơn từ nhãn

@@ -13,5 +13,6 @@ class Don3d extends Model
     protected $casts = [
         'chi_tiet' => 'array',
         'xong_luc' => 'datetime',
+        'hoa_hong_da_cong' => 'boolean',
     ];
 }

@@ -12,6 +12,7 @@ class DaiLy extends Model
     protected $casts = [
         'hien'          => 'boolean',
         'sll_luon'      => 'boolean',
+        'cho_duyet'     => 'boolean',
         'dang_nhap_luc' => 'datetime',
     ];
 }

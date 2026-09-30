@@ -52,6 +52,9 @@ class Don3dController extends Controller
         if ($moi === 'hoan_tat' && $cu !== 'hoan_tat')      $this->capNhatDaBan($don, +1);
         elseif ($cu === 'hoan_tat' && $moi !== 'hoan_tat')  $this->capNhatDaBan($don, -1);
 
+        // Hoa hồng người giới thiệu (link ?ref=): cộng khi vào Hoàn tất, trừ khi rời Hoàn tất
+        \App\Services\HoaHong::dongBoDon3d($don);
+
         return back()->with('ok', 'Đã đổi trạng thái đơn ' . $don->ma . ' → ' . self::TRANG_THAI[$moi]);
     }
 
@@ -65,6 +68,7 @@ class Don3dController extends Controller
     {
         $ma = $don->ma;
         if ($don->tt === 'hoan_tat') $this->capNhatDaBan($don, -1); // gỡ lượt bán đã cộng
+        \App\Services\HoaHong::dongBoDon3d($don, true);             // gỡ hoa hồng đã cộng
         $don->delete();
         return redirect()->route('admin.don3d.index')->with('ok', 'Đã xoá đơn ' . $ma);
     }

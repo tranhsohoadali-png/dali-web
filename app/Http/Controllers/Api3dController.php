@@ -110,9 +110,14 @@ class Api3dController extends Controller
             'matkhau' => 'required|string|max:100',
         ]);
         $sdt = preg_replace('/[^0-9+]/', '', $v['sdt']);
-        $dl  = DaiLy::where('sdt', $sdt)->where('hien', true)->first();
+        $dl  = DaiLy::where('sdt', $sdt)->first();
         if (!$dl || !Hash::check($v['matkhau'], $dl->matkhau)) {
             return $this->cors(response()->json(['ok' => false, 'error' => 'Sai số điện thoại hoặc mật khẩu.'], 401));
+        }
+        if (!$dl->hien) { // chỉ nói lý do khi đã đúng mật khẩu
+            return $this->cors(response()->json(['ok' => false, 'error' => $dl->cho_duyet
+                ? 'Tài khoản đang chờ xưởng duyệt — xưởng sẽ báo cho bạn khi duyệt xong.'
+                : 'Tài khoản đại lý đang tạm khoá, vui lòng liên hệ xưởng.'], 403));
         }
         $dl->token = Str::random(48);
         $dl->dang_nhap_luc = now();
@@ -371,6 +376,156 @@ class Api3dController extends Controller
         ]));
     }
 
+    /* ============ Giới thiệu & hoa hồng của đại lý (ví = affiliates, rút = withdrawals) ============ */
+
+    private static function anSdt(?string $s): string
+    {
+        $s = (string) $s;
+        return strlen($s) >= 7 ? substr($s, 0, 4) . '***' . substr($s, -3) : $s;
+    }
+
+    /** GET /api/3d/dai-ly/hoa-hong — mã giới thiệu, link chia sẻ, số dư, hoa hồng gần đây, tuyến dưới, lịch sử rút. */
+    public function dealerHoaHong(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
+        $aff = \App\Services\HoaHong::viCuaDaiLy($dl);
+
+        $choDuyet = (int) \App\Models\Withdrawal::where('affiliate_id', $aff->id)->where('status', 'pending')->sum('amount');
+        $soDu     = (int) $aff->total_earned - (int) $aff->total_paid;
+
+        $le = Don3d::where('hoa_hong_aff_id', $aff->id)->where('hoa_hong_da_cong', true)
+            ->orderByDesc('xong_luc')->limit(15)->get(['ma', 'hoa_hong', 'xong_luc'])
+            ->map(fn ($d) => ['loai' => 'le', 'ma' => $d->ma, 'tien' => (int) $d->hoa_hong, 'ai' => 'Khách lẻ qua link', 'luc' => optional($d->xong_luc)->toIso8601String()]);
+        $dh = DonDiHo::where('hoa_hong_aff_id', $aff->id)->where('hoa_hong_da_cong', true)
+            ->orderByDesc('thanh_toan_luc')->limit(15)->get(['ma', 'hoa_hong', 'dai_ly_ten', 'thanh_toan_luc'])
+            ->map(fn ($d) => ['loai' => 'tuyen_duoi', 'ma' => $d->ma, 'tien' => (int) $d->hoa_hong, 'ai' => (string) $d->dai_ly_ten, 'luc' => optional($d->thanh_toan_luc)->toIso8601String()]);
+        $ganDay = $le->concat($dh)->sortByDesc('luc')->values()->take(15)->all();
+
+        $tuyenDuoi = DaiLy::where('gioi_thieu_aff_id', $aff->id)->orderByDesc('id')->limit(50)->get()
+            ->map(function (DaiLy $x) {
+                $base = DonDiHo::where('dai_ly_id', $x->id)->where('tt', '!=', 'huy');
+                return [
+                    'ten'        => $x->ten,
+                    'sdt'        => self::anSdt($x->sdt),
+                    'trang_thai' => $x->cho_duyet ? 'cho_duyet' : ($x->hien ? 'hoat_dong' : 'khoa'),
+                    'so_don'     => (clone $base)->count(),
+                    'da_thu'     => (int) (clone $base)->where('da_thanh_toan', true)->sum('tong_si'),
+                ];
+            })->all();
+
+        $rut = \App\Models\Withdrawal::where('affiliate_id', $aff->id)->latest()->limit(10)->get()
+            ->map(fn ($w) => ['tien' => (int) $w->amount, 'tt' => $w->status, 'tt_ten' => $w->status_label, 'luc' => optional($w->created_at)->toIso8601String()])->all();
+
+        $goc = 'https://3d.tranhdali.vn/?ref=' . rawurlencode($aff->code);
+        return $this->cors(response()->json([
+            'ok'              => true,
+            'ma'              => $aff->code,
+            'link_web'        => $goc,
+            'link_dang_ky'    => $goc . '&dangky=1',
+            'rate_le'         => (float) $aff->commission_rate,
+            'rate_tuyen_duoi' => (float) $aff->rate_tuyen_duoi,
+            'hoat_dong'       => (bool) $aff->is_active,
+            'vi'              => ['da_kiem' => (int) $aff->total_earned, 'da_rut' => (int) $aff->total_paid, 'cho_duyet' => $choDuyet, 'so_du' => $soDu, 'kha_dung' => max(0, $soDu - $choDuyet)],
+            'rut_toi_thieu'   => \App\Services\HoaHong::RUT_TOI_THIEU,
+            'bank'            => ['ten_nh' => (string) $aff->bank_name, 'stk' => (string) $aff->bank_acc, 'chu_tk' => (string) $aff->bank_owner],
+            'gan_day'         => $ganDay,
+            'tuyen_duoi'      => $tuyenDuoi,
+            'rut'             => $rut,
+        ]));
+    }
+
+    /** POST /api/3d/dai-ly/rut-tien {so_tien, ten_nh, stk, chu_tk, ghi_chu} — yêu cầu rút hoa hồng; admin duyệt ở trang Rút tiền. */
+    public function dealerRutTien(Request $request)
+    {
+        $this->guardOrigin($request);
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
+        $rk = 'dl-rut:' . $dl->id;
+        if (RateLimiter::tooManyAttempts($rk, 5)) return $this->cors(response()->json(['ok' => false, 'error' => 'Bạn gửi yêu cầu quá nhiều, thử lại sau.'], 429));
+        RateLimiter::hit($rk, 3600);
+
+        $soTien = (int) $request->input('so_tien', 0);
+        $tenNh  = mb_substr(trim((string) $request->input('ten_nh', '')), 0, 80);
+        $stk    = preg_replace('/\s+/', '', (string) $request->input('stk', ''));
+        $chuTk  = mb_substr(trim((string) $request->input('chu_tk', '')), 0, 80);
+        $gc     = mb_substr(trim((string) $request->input('ghi_chu', '')), 0, 200);
+        $min    = \App\Services\HoaHong::RUT_TOI_THIEU;
+        $loi = fn ($m) => $this->cors(response()->json(['ok' => false, 'error' => $m], 400));
+        if ($tenNh === '' || $stk === '' || $chuTk === '') return $loi('Vui lòng điền đủ ngân hàng, số tài khoản và chủ tài khoản.');
+        if (!preg_match('/^[0-9A-Za-z]{4,30}$/', $stk)) return $loi('Số tài khoản không hợp lệ.');
+        if ($soTien < $min) return $loi('Số tiền rút tối thiểu là ' . number_format($min, 0, ',', '.') . 'đ.');
+
+        $aff = \App\Services\HoaHong::viCuaDaiLy($dl);
+        if (!$aff->is_active) return $loi('Ví hoa hồng đang tạm khoá, vui lòng liên hệ xưởng.');
+
+        $kq = DB::transaction(function () use ($aff, $dl, $soTien, $tenNh, $stk, $chuTk, $gc) {
+            $a = \App\Models\Affiliate::whereKey($aff->id)->lockForUpdate()->first();
+            $choDuyet = (int) \App\Models\Withdrawal::where('affiliate_id', $a->id)->where('status', 'pending')->sum('amount');
+            $khaDung  = (int) $a->total_earned - (int) $a->total_paid - $choDuyet;
+            if ($soTien > $khaDung) return ['ok' => false, 'error' => 'Vượt số dư khả dụng (' . number_format(max(0, $khaDung), 0, ',', '.') . 'đ).'];
+            // Đổi STK so với lần trước -> đánh dấu cho admin soi kỹ (phòng tài khoản bị chiếm)
+            $doiTk = $a->bank_acc && ($a->bank_acc !== $stk || $a->bank_name !== $tenNh);
+            $a->update(['bank_name' => $tenNh, 'bank_acc' => $stk, 'bank_owner' => $chuTk]);
+            \App\Models\Withdrawal::create([
+                'affiliate_id' => $a->id, 'amount' => $soTien,
+                'bank_name' => $tenNh, 'bank_acc' => $stk, 'bank_owner' => $chuTk,
+                'status' => 'pending',
+                'note' => trim(($doiTk ? '⚠️ ĐỔI STK so với lần rút trước. ' : '') . 'Đại lý 3D: ' . $dl->ten . ($gc !== '' ? ' — ' . $gc : '')),
+            ]);
+            return ['ok' => true, 'doi_tk' => $doiTk];
+        });
+        if (empty($kq['ok'])) return $loi($kq['error']);
+
+        \App\Services\ThongBao::telegram("💸 YÊU CẦU RÚT HOA HỒNG (ĐẠI LÝ 3D)\n"
+            . '👤 ' . $dl->ten . ' (' . $dl->sdt . ")\n"
+            . '💰 ' . number_format($soTien, 0, ',', '.') . "đ\n"
+            . '🏦 ' . $tenNh . ' · ' . $stk . ' · ' . $chuTk . "\n"
+            . (!empty($kq['doi_tk']) ? "⚠️ STK KHÁC lần rút trước — kiểm tra kỹ!\n" : '')
+            . 'Vào Admin › Rút tiền để duyệt.');
+
+        return $this->cors(response()->json(['ok' => true, 'msg' => 'Đã gửi yêu cầu rút ' . number_format($soTien, 0, ',', '.') . 'đ. Xưởng sẽ duyệt và chuyển khoản sớm.']));
+    }
+
+    /** POST /api/3d/dai-ly/dang-ky {ten, sdt, matkhau, ma_gt?, ghi_chu?} — tự đăng ký làm đại lý, chờ xưởng duyệt. */
+    public function dealerDangKy(Request $request)
+    {
+        $this->guardOrigin($request);
+        $key = 'dl-dangky:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 5)) return $this->cors(response()->json(['ok' => false, 'error' => 'Thử lại sau ít phút.'], 429));
+        RateLimiter::hit($key, 3600);
+        $loi = fn ($m) => $this->cors(response()->json(['ok' => false, 'error' => $m], 400));
+
+        if (trim((string) $request->input('website', '')) !== '') { // bẫy bot
+            return $this->cors(response()->json(['ok' => true, 'msg' => 'Đã gửi đăng ký.']));
+        }
+        $ten = mb_substr(trim((string) $request->input('ten', '')), 0, 80);
+        $sdt = preg_replace('/[^0-9]/', '', (string) $request->input('sdt', ''));
+        if (strlen($sdt) === 11 && str_starts_with($sdt, '84')) $sdt = '0' . substr($sdt, 2);
+        $mk  = (string) $request->input('matkhau', '');
+        $gc  = mb_substr(trim((string) $request->input('ghi_chu', '')), 0, 300);
+        if (mb_strlen($ten) < 2) return $loi('Vui lòng nhập họ tên.');
+        if (!preg_match('/^0[0-9]{9}$/', $sdt)) return $loi('Số điện thoại cần 10 số, bắt đầu bằng 0.');
+        if (mb_strlen($mk) < 6 || mb_strlen($mk) > 100) return $loi('Mật khẩu cần ít nhất 6 ký tự.');
+        if (DaiLy::where('sdt', $sdt)->exists()) return $loi('Số điện thoại này đã có tài khoản đại lý — hãy đăng nhập hoặc nhắn Zalo xưởng.');
+
+        $aff = \App\Services\HoaHong::viTheoMa((string) $request->input('ma_gt', ''));
+        $dl = DaiLy::create([
+            'ten' => $ten, 'sdt' => $sdt, 'matkhau' => Hash::make($mk),
+            'hien' => false, 'cho_duyet' => true,
+            'gioi_thieu_aff_id' => $aff?->id,
+            'ghi_chu' => 'Tự đăng ký ' . now()->format('d/m/Y H:i') . ($aff ? ' · mã GT ' . $aff->code : '') . ($gc !== '' ? ' · ' . $gc : ''),
+        ]);
+
+        \App\Services\ThongBao::telegram("🆕 ĐĂNG KÝ ĐẠI LÝ 3D\n"
+            . '👤 ' . $ten . ' (' . $sdt . ")\n"
+            . ($aff ? '🎁 Giới thiệu bởi: ' . $aff->name . ' (' . $aff->code . ")\n" : '')
+            . ($gc !== '' ? '📝 ' . $gc . "\n" : '')
+            . 'Vào Admin › Đại lý 3D để duyệt.');
+
+        return $this->cors(response()->json(['ok' => true, 'msg' => 'Đã gửi đăng ký! Xưởng sẽ duyệt và báo cho bạn qua Zalo/điện thoại.', 'co_ma' => (bool) $aff]));
+    }
+
     /** GET /api/3d/dai-ly/di-don/chi-tiet?ma= (header token) — chi tiết một đơn của chính đại lý. */
     public function dealerDiDonChiTiet(Request $request)
     {
@@ -520,6 +675,7 @@ class Api3dController extends Controller
             if (!empty($l['anh_ghi_chu'])) Storage::disk('local')->delete($l['anh_ghi_chu']);
         }
         $maCu = $don->ma;
+        \App\Services\HoaHong::dongBoDiHo($don, true); // phòng khi đơn "Mới" đã được đánh dấu thu tiền
         $don->delete();
         return $this->cors(response()->json(['ok' => true, 'ma' => $maCu]));
     }
@@ -639,6 +795,13 @@ class Api3dController extends Controller
 
         $priced = $this->priceCart($request);
 
+        // Mã giới thiệu (link ?ref=): chỉ ghi nhận cho khách lẻ — đại lý mua giá sỉ thì không có hoa hồng.
+        $refCode = null;
+        if (!$priced['dai_ly']) {
+            $aff = \App\Services\HoaHong::viTheoMa((string) $request->input('ref', ''));
+            if ($aff) $refCode = $aff->code;
+        }
+
         $code = 'DL' . substr(now()->format('ymd'), 0, 6) . '-' . strtoupper(Str::random(6));
         $dueNow    = $priced['due_now'];
         $remaining = $priced['total'] - $dueNow;
@@ -660,6 +823,7 @@ class Api3dController extends Controller
                 'phuong_thuc_tt'  => $priced['mode'],
                 'shipping_method' => $priced['shipping_method'],
                 'nguon'           => $priced['dai_ly'] ? 'dai-ly' : 'website-v2',
+                'ref_code'        => $refCode,
                 'ten'             => $name,
                 'sdt'             => $phone,
                 'email'           => $email,

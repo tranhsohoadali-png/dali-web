@@ -74,6 +74,7 @@ class DonDiHoController extends Controller
     {
         $moi = !$don->da_thanh_toan;
         $don->update(['da_thanh_toan' => $moi, 'thanh_toan_luc' => $moi ? now() : null]);
+        \App\Services\HoaHong::dongBoDiHo($don); // cộng/trừ hoa hồng tuyến dưới
         return back()->with('ok', ($moi ? 'Đã đánh dấu ĐÃ thu tiền đơn ' : 'Đã bỏ đánh dấu thu tiền đơn ') . $don->ma);
     }
 
@@ -84,7 +85,9 @@ class DonDiHoController extends Controller
         $q = DonDiHo::where('dai_ly_id', (int) $request->dai_ly_id)->where('da_thanh_toan', false)->where('tt', '!=', 'huy');
         if ($request->filled('tu'))  $q->where('created_at', '>=', $request->date('tu')->startOfDay());
         if ($request->filled('den')) $q->where('created_at', '<=', $request->date('den')->endOfDay());
+        $ids = (clone $q)->pluck('id');
         $n = $q->update(['da_thanh_toan' => true, 'thanh_toan_luc' => now()]);
+        foreach (DonDiHo::whereIn('id', $ids)->get() as $d) \App\Services\HoaHong::dongBoDiHo($d);
         return back()->with('ok', "Đã đánh dấu {$n} đơn của đại lý là ĐÃ thu tiền.");
     }
 
@@ -106,6 +109,7 @@ class DonDiHoController extends Controller
         if ($request->filled('vc'))    $upd['vc']    = trim($request->vc);
         if ($request->tt === 'da_gui') $upd['gui_luc'] = now();
         $don->update($upd);
+        \App\Services\HoaHong::dongBoDiHo($don); // huỷ -> trừ hoa hồng; bỏ huỷ -> cộng lại
         return back()->with('ok', 'Đã cập nhật đơn ' . $don->ma . ' → ' . (DonDiHo::TRANG_THAI[$request->tt] ?? $request->tt));
     }
 
@@ -120,6 +124,7 @@ class DonDiHoController extends Controller
         $upd = ['tt' => $data['tt']];
         if ($data['tt'] === 'da_gui') $upd['gui_luc'] = now();
         $n = DonDiHo::whereIn('id', $data['ids'])->update($upd);
+        foreach (DonDiHo::whereIn('id', $data['ids'])->get() as $d) \App\Services\HoaHong::dongBoDiHo($d);
         $nhan = DonDiHo::TRANG_THAI[$data['tt']] ?? $data['tt'];
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json(['ok' => true, 'so_don' => $n, 'nhan' => $nhan]);
@@ -213,6 +218,7 @@ class DonDiHoController extends Controller
         }
         $base = collect($lines)->sum(fn ($l) => (int) ($l['thanh_tien'] ?? 0));
         $don->update(['chi_tiet' => $lines, 'so_luong' => $soLuong, 'tong_si' => $base + (int) $don->thu_them]);
+        \App\Services\HoaHong::tinhLaiDiHo($don); // tiền đổi -> hoa hồng đã cộng tính lại theo giá mới
         $msg = 'Đã tính lại giá đơn ' . $don->ma . ' theo giá hiện tại. Tổng: ' . number_format((int) $don->tong_si, 0, ',', '.') . 'đ';
         if ($thieu) $msg .= ' (bỏ qua mã đã xoá: ' . implode(', ', $thieu) . ')';
         return back()->with('ok', $msg);
@@ -232,6 +238,7 @@ class DonDiHoController extends Controller
             'thu_them_gc' => trim((string) $request->input('thu_them_gc', '')) ?: null,
             'tong_si'     => $base + $thuThem,
         ]);
+        \App\Services\HoaHong::tinhLaiDiHo($don);
         return back()->with('ok', 'Đã cập nhật chi phí thu thêm cho đơn ' . $don->ma);
     }
 
@@ -330,6 +337,7 @@ class DonDiHoController extends Controller
         foreach (($don->chi_tiet ?: []) as $l) {
             if (!empty($l['anh_ghi_chu'])) Storage::disk('local')->delete($l['anh_ghi_chu']);
         }
+        \App\Services\HoaHong::dongBoDiHo($don, true); // gỡ hoa hồng đã cộng TRƯỚC khi xoá
         $don->delete();
         return redirect()->route('admin.diho.index')->with('ok', 'Đã xoá đơn ' . $ma);
     }

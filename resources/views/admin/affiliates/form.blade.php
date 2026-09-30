@@ -99,7 +99,12 @@
               <div style="max-width:48%">
                 <label class="flabel">Tỷ lệ hoa hồng (%)</label>
                 <input type="number" name="commission_rate" class="dinput" value="{{ old('commission_rate',$affiliate->commission_rate??5) }}" min="0" max="50" step="0.5">
-                <div class="fnote">Ví dụ: 5 = CTV nhận 5% giá trị đơn hàng</div>
+                <div class="fnote">Ví dụ: 5 = CTV nhận 5% giá trị đơn hàng (cả đơn lẻ web 3D mua qua link ?ref=mã)</div>
+              </div>
+              <div style="max-width:48%;margin-top:12px">
+                <label class="flabel">Hoa hồng tuyến dưới — đại lý 3D (%)</label>
+                <input type="number" name="rate_tuyen_duoi" class="dinput" value="{{ old('rate_tuyen_duoi',$affiliate->rate_tuyen_duoi??3) }}" min="0" max="30" step="0.5">
+                <div class="fnote">% trên doanh số sỉ đi đơn hộ của đại lý do người này giới thiệu (chỉ 1 cấp), cộng khi xưởng đã thu tiền.</div>
               </div>
             </div>
 

@@ -157,6 +157,9 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
             @if($don->da_thanh_toan)<span class="badge" style="background:#E8F9D0;color:#3E7A0A">✓ Đã thu{{ $don->thanh_toan_luc ? ' · '.$don->thanh_toan_luc->format('d/m/Y') : '' }}</span>
             @else<span class="badge" style="background:#FEE2E2;color:#B91C1C">Chưa thu</span>@endif
           </div>
+          @if($don->hoa_hong_da_cong)
+          <div class="row"><span>🎁 Hoa hồng người giới thiệu</span><b>{{ number_format((int)$don->hoa_hong,0,',','.') }}đ (đã cộng)</b></div>
+          @endif
           <form method="POST" action="{{ route('admin.diho.tt', $don) }}" style="margin-top:10px">
             @csrf
             <button class="btn {{ $don->da_thanh_toan ? 'btn-o' : 'btn-g' }}" type="submit" style="width:100%">

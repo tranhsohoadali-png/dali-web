@@ -89,6 +89,9 @@ select{border:1.5px solid var(--bd);border-radius:9px;padding:9px 12px;font-size
           <h2>⚙️ Xử lý</h2>
           <div class="row"><span>Thanh toán</span><b>{{ $don->phuong_thuc_tt=='qr'?'Chuyển khoản QR':'COD' }} · {{ $don->trang_thai_tt }}</b></div>
           <div class="row"><span>Trạng thái</span><span class="badge">{{ $tt[$don->tt] ?? $don->tt }}</span></div>
+          @if($don->ref_code)
+          <div class="row"><span>🎁 Giới thiệu (link ref)</span><b>{{ $don->ref_code }} · {{ $don->hoa_hong_da_cong ? 'đã cộng '.number_format((int)$don->hoa_hong,0,',','.').'đ' : 'cộng khi Hoàn tất' }}</b></div>
+          @endif
           <form method="POST" action="{{ route('admin.don3d.status', $don) }}" class="g2" style="margin-top:12px">
             @csrf @method('PUT')
             <select name="tt" style="flex:1">

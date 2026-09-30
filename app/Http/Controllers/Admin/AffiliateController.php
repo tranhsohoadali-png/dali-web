@@ -38,6 +38,7 @@ class AffiliateController extends Controller
             'password'        => 'nullable|string|min:4|max:50',
             'type'            => 'nullable|in:ctv,agent',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
+            'rate_tuyen_duoi' => 'nullable|numeric|min:0|max:30',
             'deposit_percent' => 'nullable|integer|min:0|max:100',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
@@ -70,6 +71,7 @@ class AffiliateController extends Controller
         }
         $data['is_active']       = $request->boolean('is_active', true);
         $data['commission_rate'] = $data['commission_rate'] ?? 5;
+        $data['rate_tuyen_duoi'] = $data['rate_tuyen_duoi'] ?? 3;
         $affiliate = Affiliate::create($data);
         $this->saveAgentPrices($affiliate, $request);
         return redirect()->route('admin.affiliates.index')->with('success', $affiliate->isAgent() ? 'Đã thêm Đại lý!' : 'Đã thêm CTV!');
@@ -98,6 +100,7 @@ class AffiliateController extends Controller
             'password'        => 'nullable|string|min:4|max:50',
             'type'            => 'nullable|in:ctv,agent',
             'commission_rate' => 'nullable|numeric|min:0|max:50',
+            'rate_tuyen_duoi' => 'nullable|numeric|min:0|max:30',
             'deposit_percent' => 'nullable|integer|min:0|max:100',
             'bank_name'       => 'nullable|string|max:50',
             'bank_acc'        => 'nullable|string|max:30',
@@ -118,6 +121,7 @@ class AffiliateController extends Controller
         }
         $data['is_active']       = $request->boolean('is_active', true);
         $data['commission_rate'] = $data['commission_rate'] ?? 5;
+        $data['rate_tuyen_duoi'] = $data['rate_tuyen_duoi'] ?? 3;
         $affiliate->update($data);
         $this->saveAgentPrices($affiliate, $request);
         return redirect()->route('admin.affiliates.index')->with('success', $affiliate->isAgent() ? 'Đã cập nhật Đại lý!' : 'Đã cập nhật CTV!');

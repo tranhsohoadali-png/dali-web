@@ -19,6 +19,7 @@ class DonDiHo extends Model
         'dai_ly_xac_nhan' => 'boolean',
         'xac_nhan_luc'    => 'datetime',
         'thu_them'        => 'integer',
+        'hoa_hong_da_cong' => 'boolean',
     ];
 
     /** Nhãn trạng thái tiếng Việt cho quản trị. */

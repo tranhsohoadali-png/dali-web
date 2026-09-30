@@ -75,23 +75,29 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
 
     <div class="card">
       <div class="card-top"></div>
-      <div class="card-h"><div class="card-t">🤝 Danh sách đại lý ({{ $items->count() }})</div></div>
+      <div class="card-h"><div class="card-t">🤝 Danh sách đại lý ({{ $items->count() }}){!! $choDuyet > 0 ? ' · <span style="color:#B45309">⏳ '.$choDuyet.' chờ duyệt</span>' : '' !!}</div></div>
       <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>Tên</th><th>SĐT</th><th>Ghi chú</th><th>Trạng thái</th><th>Đăng nhập</th><th>Thao tác</th></tr></thead>
+        <thead><tr><th>Tên</th><th>SĐT</th><th>Giới thiệu</th><th>Ghi chú</th><th>Trạng thái</th><th>Đăng nhập</th><th>Thao tác</th></tr></thead>
         <tbody>
         @forelse($items as $d)
-          <tr>
+          @php $viMinh = $d->affiliate_id ? ($affs[$d->affiliate_id] ?? null) : null; $nguoiGt = $d->gioi_thieu_aff_id ? ($affs[$d->gioi_thieu_aff_id] ?? null) : null; @endphp
+          <tr @if($d->cho_duyet) style="background:#FFFBEB" @endif>
             <td style="font-weight:700">{{ $d->ten }}</td>
             <td>{{ $d->sdt }}</td>
+            <td style="font-size:12px;white-space:nowrap">
+              @if($viMinh)<div>🎁 Mã: <b style="font-family:monospace">{{ $viMinh->code }}</b></div>@endif
+              @if($nguoiGt)<div style="color:var(--tx3)">GT bởi: <b>{{ $nguoiGt->name }}</b> ({{ $nguoiGt->code }})</div>@endif
+              @if(!$viMinh && !$nguoiGt)<span style="color:var(--tx3)">—</span>@endif
+            </td>
             <td style="font-size:12px;color:var(--tx3);max-width:200px">{{ $d->ghi_chu ?: '—' }}</td>
-            <td>@if($d->hien)<span class="badge-on">Hoạt động</span>@else<span class="badge-off">Đã khoá</span>@endif @if($d->sll_luon)<span class="badge-sll">⚡ Giá SLL</span>@endif</td>
+            <td>@if($d->cho_duyet)<span class="badge-off" style="background:#FEF3C7;color:#B45309">⏳ Chờ duyệt</span>@elseif($d->hien)<span class="badge-on">Hoạt động</span>@else<span class="badge-off">Đã khoá</span>@endif @if($d->sll_luon)<span class="badge-sll">⚡ Giá SLL</span>@endif</td>
             <td style="font-size:12px;color:var(--tx3)">{{ $d->dang_nhap_luc ? $d->dang_nhap_luc->format('d/m H:i') : 'chưa' }}</td>
             <td>
               <div class="acts">
                 <details class="edit"><summary class="btn-sm">✏️ Sửa</summary></details>
                 <form method="POST" action="{{ route('admin.daily.toggle',$d) }}" style="display:inline">@csrf
-                  <button class="btn-sm btn-warn" type="submit">{{ $d->hien ? '🔒 Khoá' : '🔓 Mở' }}</button>
+                  <button class="btn-sm btn-warn" type="submit" @if($d->cho_duyet) style="background:#DCFCE7;color:#166534;border-color:#86EFAC" @endif>{{ $d->cho_duyet ? '✅ Duyệt' : ($d->hien ? '🔒 Khoá' : '🔓 Mở') }}</button>
                 </form>
                 <form method="POST" action="{{ route('admin.daily.destroy',$d) }}" style="display:inline" onsubmit="return confirm('Xoá đại lý {{ $d->ten }}?')">@csrf @method('DELETE')
                   <button class="btn-sm btn-del" type="submit">🗑 Xoá</button>
@@ -105,7 +111,9 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
                       <label class="f"><span>SĐT</span><input name="sdt" value="{{ $d->sdt }}" required></label>
                       <label class="f"><span>Mật khẩu mới <i style="font-weight:500;color:var(--tx3)">— để trống nếu giữ nguyên</i></span><input name="matkhau" placeholder="••••"></label>
                       <label class="f rong"><span>Ghi chú</span><input name="ghi_chu" value="{{ $d->ghi_chu }}"></label>
+                      <label class="f"><span>Mã người giới thiệu <i style="font-weight:500;color:var(--tx3)">— để trống nếu không có</i></span><input name="ma_gt" value="{{ $nguoiGt->code ?? '' }}" placeholder="VD: DLGIANG3" style="text-transform:uppercase"></label>
                     </div>
+                    <div style="font-size:11.5px;color:var(--tx3);margin-top:6px">Người giới thiệu hưởng hoa hồng tuyến dưới (mặc định 3%) trên các đơn đi hộ của đại lý này khi xưởng đánh dấu "Đã thu tiền". Chỉnh % ở Admin › CTV.</div>
                     <label class="tick-si"><input type="checkbox" name="sll_luon" value="1" {{ $d->sll_luon ? 'checked' : '' }}><span><b>Giá áp dụng: luôn nhận GIÁ SLL</b><small>Tích = hưởng giá số-lượng-lớn cho MỌI đơn. Bỏ tích = <b>giá sỉ thường</b> (chỉ lên SLL khi mua đủ số lượng).</small></span></label>
                     <div style="margin-top:12px"><button class="btn" type="submit">Lưu</button></div>
                   </form>
@@ -114,7 +122,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
             </td>
           </tr>
         @empty
-          <tr><td colspan="6" class="empty">Chưa có đại lý nào. Thêm ở khung trên.</td></tr>
+          <tr><td colspan="7" class="empty">Chưa có đại lý nào. Thêm ở khung trên.</td></tr>
         @endforelse
         </tbody>
       </table>

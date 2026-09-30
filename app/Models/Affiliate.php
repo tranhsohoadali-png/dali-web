@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class Affiliate extends Model
 {
     protected $fillable = [
-        'name','phone','email','password','code','type','commission_rate','deposit_percent',
+        'name','phone','email','password','code','type','commission_rate','rate_tuyen_duoi','deposit_percent',
         'total_earned','total_paid','total_orders',
         'bank_name','bank_acc','bank_owner','is_active','note',
     ];
