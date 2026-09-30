@@ -311,6 +311,66 @@ class Api3dController extends Controller
         return $this->cors(response()->json(['ok' => true, 'items' => $ds, 'tong' => $tong]));
     }
 
+    /**
+     * GET /api/3d/dai-ly/dashboard (header token) — bảng điều khiển của đại lý:
+     * tổng doanh số/đã thu/còn nợ, 6 tháng gần nhất, SP bán chạy, đếm theo trạng thái.
+     * Doanh số bỏ đơn huỷ (giống đối soát).
+     */
+    public function dealerDashboard(Request $request)
+    {
+        $dl = $this->daiLyTuRequest($request);
+        if (!$dl) return $this->cors(response()->json(['ok' => false], 401));
+
+        $all  = DonDiHo::where('dai_ly_id', $dl->id)->get(['tt', 'tong_si', 'so_luong', 'da_thanh_toan', 'chi_tiet', 'created_at']);
+        $song = $all->where('tt', '!=', 'huy');
+
+        $doanhThu = (int) $song->sum('tong_si');
+        $daThu    = (int) $song->where('da_thanh_toan', true)->sum('tong_si');
+
+        // 6 tháng gần nhất (kể cả tháng chưa có đơn)
+        $thang = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $k = now()->startOfMonth()->subMonths($i)->format('Y-m');
+            $thang[$k] = ['thang' => $k, 'so_don' => 0, 'sl' => 0, 'tien' => 0];
+        }
+        foreach ($song as $d) {
+            $k = optional($d->created_at)->format('Y-m');
+            if ($k && isset($thang[$k])) {
+                $thang[$k]['so_don']++;
+                $thang[$k]['sl']   += (int) $d->so_luong;
+                $thang[$k]['tien'] += (int) $d->tong_si;
+            }
+        }
+
+        // SP bán chạy — gom các dòng chi_tiet theo slug
+        $sp = [];
+        foreach ($song as $d) {
+            foreach ((array) $d->chi_tiet as $l) {
+                if (!is_array($l)) continue;
+                $key = (string) ($l['slug'] ?? $l['ten'] ?? '?');
+                if (!isset($sp[$key])) $sp[$key] = ['slug' => $l['slug'] ?? null, 'ten' => (string) ($l['ten'] ?? $key), 'sl' => 0, 'tien' => 0, 'don' => 0];
+                $sp[$key]['sl']   += (int) ($l['qty'] ?? 0);
+                $sp[$key]['tien'] += (int) ($l['thanh_tien'] ?? 0);
+                $sp[$key]['don']++;
+            }
+        }
+        $top = collect($sp)->sortByDesc('sl')->values()->take(8)->all();
+
+        $tt = [];
+        foreach (DonDiHo::TRANG_THAI as $k => $ten) {
+            $tt[] = ['tt' => $k, 'ten' => $ten, 'so' => $all->where('tt', $k)->count()];
+        }
+
+        return $this->cors(response()->json([
+            'ok'         => true,
+            'tong'       => ['don' => $song->count(), 'sl' => (int) $song->sum('so_luong'), 'doanh_thu' => $doanhThu, 'da_thu' => $daThu, 'con_no' => $doanhThu - $daThu],
+            'thang_nay'  => $thang[now()->format('Y-m')] ?? null,
+            'theo_thang' => array_values($thang),
+            'top_sp'     => $top,
+            'trang_thai' => $tt,
+        ]));
+    }
+
     /** GET /api/3d/dai-ly/di-don/chi-tiet?ma= (header token) — chi tiết một đơn của chính đại lý. */
     public function dealerDiDonChiTiet(Request $request)
     {
