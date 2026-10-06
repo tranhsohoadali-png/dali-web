@@ -27,7 +27,9 @@ apt-get install -y \
   php8.3 php8.3-cli php8.3-common php8.3-sqlite3 php8.3-mbstring \
   php8.3-xml php8.3-curl php8.3-gd php8.3-zip php8.3-bcmath php8.3-intl \
   composer git unzip curl \
-  python3 python3-venv python3-pip
+  python3 python3-venv python3-pip \
+  poppler-utils tesseract-ocr tesseract-ocr-vie python3-opencv python3-numpy
+# poppler-utils: đọc mã vận đơn từ nhãn PDF; tesseract + opencv: đọc môn từ ảnh TKB (scripts/doc_mon_tkb.py) — đều không cần AI
 
 echo "==> 2/6  Lay code tu GitHub vao $APP_DIR"
 if [ -d "$APP_DIR/.git" ]; then

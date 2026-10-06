@@ -320,13 +320,10 @@ class DonDiHoController extends Controller
         if (!$rel || !Storage::disk('local')->exists($rel)) {
             return response()->json(['ok' => false, 'error' => 'Dòng này không có ảnh ghi chú.'], 404);
         }
-        if (!\App\Services\DocMonAi::batAi()) {
-            return response()->json(['ok' => false, 'error' => 'Chưa bật AI — vào Cài đặt nhập khoá Anthropic.'], 503);
-        }
-        $bytes = Storage::disk('local')->get($rel);
-        $mime  = $line['anh_ghi_chu_mime'] ?? 'image/jpeg';
-        $res   = \App\Services\DocMonAi::doc($bytes, $mime);
-        return response()->json($res, $res['ok'] ? 200 : 502);
+        @set_time_limit(120);
+        // Đọc bằng MÁY (OCR), không dùng AI — chủ xưởng chốt 2026-10-06
+        $res = \App\Services\DocMonMay::doc(Storage::disk('local')->path($rel));
+        return response()->json($res, $res['ok'] ? 200 : 422);
     }
 
     public function destroy(DonDiHo $don)

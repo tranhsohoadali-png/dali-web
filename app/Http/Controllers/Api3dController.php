@@ -766,10 +766,10 @@ class Api3dController extends Controller
         $dl = $this->daiLyTuRequest($request);
         if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
 
-        // Chống lạm dụng gọi AI: 30 lần / 10 phút / đại lý
+        // Chống lạm dụng (mỗi lần đọc tốn ~4 giây CPU máy chủ): 30 lần / 10 phút / đại lý
         $rk = 'diho-ai:' . $dl->id;
         if (RateLimiter::tooManyAttempts($rk, 30)) {
-            return $this->cors(response()->json(['ok' => false, 'error' => 'Bạn dùng AI quá nhanh, thử lại sau ít phút.'], 429));
+            return $this->cors(response()->json(['ok' => false, 'error' => 'Bạn đọc ảnh quá nhanh, thử lại sau ít phút.'], 429));
         }
         RateLimiter::hit($rk, 600);
 
@@ -783,14 +783,13 @@ class Api3dController extends Controller
             return $this->cors(response()->json(['ok' => false, 'error' => 'Chỉ đọc được ảnh JPG/PNG/WEBP.'], 400));
         }
 
-        if (!\App\Services\DocMonAi::batAi()) {
-            return $this->cors(response()->json(['ok' => false, 'error' => 'Tính năng AI chưa được bật (thiếu khoá API). Vui lòng nhập tay.'], 503));
-        }
-        $res = \App\Services\DocMonAi::doc(file_get_contents($f->getRealPath()), $mime);
+        @set_time_limit(120);
+        // Đọc bằng MÁY (OCR), không dùng AI — chủ xưởng chốt 2026-10-06
+        $res = \App\Services\DocMonMay::doc($f->getRealPath());
         if (!$res['ok']) {
-            return $this->cors(response()->json(['ok' => false, 'error' => ($res['error'] ?? 'AI chưa đọc được ảnh.') . ' Vui lòng nhập tay.'], 502));
+            return $this->cors(response()->json(['ok' => false, 'error' => ($res['error'] ?? 'Máy chưa đọc được ảnh.') . ' Vui lòng nhập tay.'], 422));
         }
-        return $this->cors(response()->json(['ok' => true, 'source' => 'ai', 'mon' => $res['mon'], 'tong' => $res['tong'], 'text' => $res['text']]));
+        return $this->cors(response()->json(['ok' => true, 'source' => 'may', 'mon' => $res['mon'], 'tong' => $res['tong'], 'text' => $res['text']]));
     }
 
     /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */
