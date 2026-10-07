@@ -502,7 +502,7 @@ async function startOrderFlow(){
     try{
       var blob=await compressImage(fileInput.files[0],1600,0.82,previewImg);
       var fd=new FormData(); fd.append('image',blob,'anh.jpg'); fd.append('device_id',DEVICE);
-      var r=await fetch(URLS.saveImg,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); var d=await r.json();
+      var r=await fetch(URLS.saveImg,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json','X-Requested-With':'XMLHttpRequest'},body:fd}); var d=await r.json();
       if(d&&d.ok&&d.url) lastUploadUrl=d.url;
     }catch(e){}
     genBtn.disabled=false; genBtn.innerHTML=old;
@@ -660,8 +660,11 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
   const _price=curPrice(); fd.append('price',_price); fd.append('deposit',curDeposit());
   fd.append('size_index',selI); fd.append('color_index',selJ);
   const oldLabel=btn.innerHTML; btn.disabled=true; btn.innerHTML='<i class="ri-loader-4-line animate-spin"></i> Đang gửi…';
-  try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF},body:fd}); const d=await r.json();
-    if(!d.ok){ alert(d.msg||'Gửi đơn thất bại, thử lại.'); return; }
+  try{ const r=await fetch(URLS.order,{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json','X-Requested-With':'XMLHttpRequest'},body:fd});
+    // 419 = phiên bảo mật hết hạn (khách mở trang quá lâu) -> hướng dẫn tải lại, đừng báo "lỗi kết nối" chung chung
+    if(r.status===419){ alert('Trang đã mở khá lâu nên phiên bảo mật đã hết hạn. Bạn vui lòng tải lại trang (nhấn F5) rồi đặt cọc lại giúp shop nhé — thông tin bạn nhập không bị mất.'); return; }
+    let d=null; try{ d=await r.json(); }catch(_){}
+    if(!r.ok || !d || !d.ok){ alert((d&&d.msg) || ('Gửi đơn chưa được (mã lỗi '+r.status+'). Bạn thử tải lại trang rồi gửi lại, hoặc nhắn Zalo 0856911698 để shop hỗ trợ đặt cọc ngay nhé.')); return; }
     // Trạng thái thành công NGAY TRONG modal: giữ mã đơn + QR đặt cọc + Zalo
     document.getElementById('orderForm').classList.add('hidden');
     document.getElementById('orderSubmit').classList.add('hidden');
@@ -681,7 +684,7 @@ document.getElementById('orderSubmit').addEventListener('click', async ()=>{
     html+='<a href="{{ rtrim(config('tomau.url','https://tomau.tranhdali.vn'),'/') }}?utm_source=tranhdali.vn&utm_medium=order_success&utm_campaign=cross_promo" target="_blank" rel="noopener" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px;padding:13px 15px;background:linear-gradient(135deg,#FFF7ED,#FEF1F0);border:1px solid #FBD6BF;border-radius:18px;text-decoration:none;text-align:left"><span style="flex-shrink:0;width:70px;height:70px;border-radius:13px;overflow:hidden;background:#fff;border:1px solid #FBD6BF"><img src="{{ asset('images/tomau-promo-be.jpg') }}" alt="Tranh tô màu cho bé" style="width:100%;height:100%;object-fit:cover;display:block"></span><span style="flex:1;min-width:150px"><b style="display:block;color:#E15B2D;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">🎁 Quà miễn phí cho bé</b><b style="display:block;color:#B5451F;font-size:14px;margin-bottom:2px">Cho bé nhà bạn tô tranh nhé! 🎨</b><span style="display:block;color:#6B4A3A;font-size:12px;line-height:1.5">Kho tranh tô màu <b style="color:#E15B2D">MIỄN PHÍ</b> cho bé, tải về in tại nhà</span></span><span style="flex-shrink:0;font-weight:800;font-size:12.5px;color:#fff;white-space:nowrap;background:linear-gradient(135deg,#F5943F,#E15B2D);padding:10px 16px;border-radius:999px">Khám phá →</span></a>';
     document.getElementById('orderDesc').innerHTML=html;
     orderDone=true;
-  }catch(e){ alert('Lỗi kết nối, thử lại sau.'); }
+  }catch(e){ alert('Mất kết nối mạng khi gửi đơn. Bạn kiểm tra mạng rồi thử lại, hoặc nhắn Zalo 0856911698 để shop hỗ trợ đặt cọc ngay nhé.'); }
   finally{ btn.disabled=false; btn.innerHTML=oldLabel; }
 });
 </script>
