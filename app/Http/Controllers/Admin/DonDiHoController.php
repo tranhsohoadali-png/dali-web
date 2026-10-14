@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\DonDiHo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /** Đơn "đi đơn hộ" của đại lý (đơn TMĐT). Xem, đổi trạng thái, tải nhãn vận chuyển. */
@@ -60,13 +61,80 @@ class DonDiHoController extends Controller
             ->orderByDesc('chua_tien')->orderByDesc('tong_tien')
             ->get();
 
+        // Tiền đại lý đã trả trước (phần lẻ chưa đủ trọn 1 đơn) + sổ thu gần đây
+        $ids      = $rows->pluck('dai_ly_id')->unique()->values();
+        $traTruoc = \App\Models\DaiLy::whereIn('id', $ids)->pluck('tra_truoc', 'id');
+        $soThu    = \App\Models\DaiLyThuTien::whereIn('dai_ly_id', $ids)->orderByDesc('id')->get()->groupBy('dai_ly_id')
+            ->map(fn ($g) => $g->take(5));
+
         $tong = [
-            'don'  => (int) $rows->sum('so_don'),
-            'sl'   => (int) $rows->sum('tong_sl'),
-            'tien' => (int) $rows->sum('tong_tien'),
-            'chua' => (int) $rows->sum('chua_tien'),
+            'don'       => (int) $rows->sum('so_don'),
+            'sl'        => (int) $rows->sum('tong_sl'),
+            'tien'      => (int) $rows->sum('tong_tien'),
+            'chua'      => (int) $rows->sum('chua_tien'),
+            'tra_truoc' => (int) $traTruoc->sum(),
         ];
-        return view('admin.diho.doisoat', compact('rows', 'tong', 'tu', 'den'));
+        return view('admin.diho.doisoat', compact('rows', 'tong', 'tu', 'den', 'traTruoc', 'soThu'));
+    }
+
+    /**
+     * Thu tiền đại lý TỪNG PHẦN: số tiền thực nhận (+ phần trả trước còn lại) trừ vào đơn CŨ NHẤT trước;
+     * đơn đủ tiền -> "Đã thu" (cộng hoa hồng người giới thiệu như bình thường); phần lẻ giữ làm trả trước.
+     */
+    public function thuMotPhan(Request $request)
+    {
+        $request->validate(['dai_ly_id' => 'required|integer', 'ghi_chu' => 'nullable|string|max:200']);
+        $soTien = (int) preg_replace('/\D/', '', (string) $request->input('so_tien', ''));   // nhận "500.000", "500000"
+        if ($soTien <= 0 || $soTien > 1000000000) return back()->withErrors(['so_tien' => 'Số tiền không hợp lệ.']);
+
+        $kq = DB::transaction(function () use ($request, $soTien) {
+            $dl = \App\Models\DaiLy::whereKey((int) $request->dai_ly_id)->lockForUpdate()->firstOrFail();
+            $truoc = (int) $dl->tra_truoc;
+            $quy = $soTien + $truoc;
+            $danhDau = []; $daTru = 0;
+            $chua = DonDiHo::where('dai_ly_id', $dl->id)->where('da_thanh_toan', false)->where('tt', '!=', 'huy')
+                ->orderBy('created_at')->orderBy('id')->get();
+            foreach ($chua as $d) {
+                if ((int) $d->tong_si > $quy) break;          // FIFO chặt: đơn cũ chưa đủ tiền thì dừng, không nhảy cóc
+                $quy -= (int) $d->tong_si; $daTru += (int) $d->tong_si;
+                $d->update(['da_thanh_toan' => true, 'thanh_toan_luc' => now()]);
+                $danhDau[] = $d->id;
+            }
+            $dl->update(['tra_truoc' => $quy]);
+            \App\Models\DaiLyThuTien::create([
+                'dai_ly_id' => $dl->id, 'so_tien' => $soTien,
+                'ghi_chu' => trim((string) $request->input('ghi_chu', '')) ?: null,
+                'don_ids' => $danhDau, 'tra_truoc_truoc' => $truoc, 'tra_truoc_sau' => $quy,
+            ]);
+            $conNo = (int) DonDiHo::where('dai_ly_id', $dl->id)->where('da_thanh_toan', false)->where('tt', '!=', 'huy')->sum('tong_si');
+            return ['ten' => $dl->ten, 'ids' => $danhDau, 'da_tru' => $daTru, 'du' => $quy, 'con_no' => max(0, $conNo - $quy)];
+        });
+        foreach (DonDiHo::whereIn('id', $kq['ids'])->get() as $d) \App\Services\HoaHong::dongBoDiHo($d);
+
+        $f = fn ($n) => number_format((int) $n, 0, ',', '.') . 'đ';
+        return back()->with('ok', 'Đã ghi nhận thu ' . $f($soTien) . ' từ ' . $kq['ten'] . ': '
+            . (count($kq['ids']) ? 'trừ đủ ' . count($kq['ids']) . ' đơn (' . $f($kq['da_tru']) . ')' : 'chưa đủ trọn đơn nào')
+            . ($kq['du'] > 0 ? '; giữ ' . $f($kq['du']) . ' trả trước (trừ vào đơn kế tiếp)' : '')
+            . '. Còn nợ ' . $f($kq['con_no']) . '.');
+    }
+
+    /** Huỷ LẦN THU GẦN NHẤT của đại lý (nhập nhầm): bỏ "Đã thu" các đơn của lần đó + trả lại số trả trước cũ. */
+    public function huyThuTien(\App\Models\DaiLyThuTien $phieu)
+    {
+        $moiNhat = \App\Models\DaiLyThuTien::where('dai_ly_id', $phieu->dai_ly_id)->where('huy', false)->orderByDesc('id')->value('id');
+        if ($phieu->huy || (int) $moiNhat !== (int) $phieu->id) {
+            return back()->withErrors(['huy' => 'Chỉ huỷ được lần thu GẦN NHẤT còn hiệu lực của đại lý.']);
+        }
+        $ids = DB::transaction(function () use ($phieu) {
+            $dl = \App\Models\DaiLy::whereKey($phieu->dai_ly_id)->lockForUpdate()->firstOrFail();
+            $ids = array_map('intval', (array) $phieu->don_ids);
+            if ($ids) DonDiHo::whereIn('id', $ids)->update(['da_thanh_toan' => false, 'thanh_toan_luc' => null]);
+            $dl->update(['tra_truoc' => (int) $phieu->tra_truoc_truoc]);
+            $phieu->update(['huy' => true]);
+            return $ids;
+        });
+        foreach (DonDiHo::whereIn('id', $ids)->get() as $d) \App\Services\HoaHong::dongBoDiHo($d);
+        return back()->with('ok', 'Đã huỷ lần thu ' . number_format((int) $phieu->so_tien, 0, ',', '.') . 'đ — bỏ "Đã thu" ' . count($ids) . ' đơn, trả lại số trả trước cũ.');
     }
 
     /** Đảo trạng thái đã/chưa thu tiền của MỘT đơn. */

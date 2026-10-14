@@ -159,6 +159,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('di-ho',                  [\App\Http\Controllers\Admin\DonDiHoController::class, 'index'])->name('diho.index');
         Route::get('doi-soat',               [\App\Http\Controllers\Admin\DonDiHoController::class, 'doiSoat'])->name('diho.doisoat');
         Route::post('doi-soat/dai-ly',       [\App\Http\Controllers\Admin\DonDiHoController::class, 'danhDauDaiLy'])->name('diho.doisoat.daily');
+        Route::post('doi-soat/thu-mot-phan', [\App\Http\Controllers\Admin\DonDiHoController::class, 'thuMotPhan'])->name('diho.doisoat.thu');
+        Route::post('doi-soat/huy-thu/{phieu}', [\App\Http\Controllers\Admin\DonDiHoController::class, 'huyThuTien'])->name('diho.doisoat.huythu');
         Route::post('di-ho/{don}/thanh-toan',[\App\Http\Controllers\Admin\DonDiHoController::class, 'danhDauTt'])->name('diho.tt');
         Route::get('di-ho/{don}',            [\App\Http\Controllers\Admin\DonDiHoController::class, 'show'])->name('diho.show');
         Route::get('di-ho/{don}/nhan',       [\App\Http\Controllers\Admin\DonDiHoController::class, 'taiNhan'])->name('diho.nhan');

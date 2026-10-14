@@ -382,10 +382,12 @@ class Api3dController extends Controller
             ]);
         // Đối soát: tổng & còn phải thanh toán (bỏ đơn huỷ)
         $base = DonDiHo::where('dai_ly_id', $dl->id)->where('tt', '!=', 'huy');
+        $traTruoc = (int) $dl->tra_truoc;   // tiền đã trả trước, chưa đủ trọn 1 đơn
         $tong = [
-            'don'  => (clone $base)->count(),
-            'tien' => (int) (clone $base)->sum('tong_si'),
-            'chua' => (int) (clone $base)->where('da_thanh_toan', false)->sum('tong_si'),
+            'don'       => (clone $base)->count(),
+            'tien'      => (int) (clone $base)->sum('tong_si'),
+            'chua'      => max(0, (int) (clone $base)->where('da_thanh_toan', false)->sum('tong_si') - $traTruoc),
+            'tra_truoc' => $traTruoc,
         ];
         return $this->cors(response()->json(['ok' => true, 'items' => $ds, 'tong' => $tong]));
     }
@@ -442,7 +444,9 @@ class Api3dController extends Controller
 
         return $this->cors(response()->json([
             'ok'         => true,
-            'tong'       => ['don' => $song->count(), 'sl' => (int) $song->sum('so_luong'), 'doanh_thu' => $doanhThu, 'da_thu' => $daThu, 'con_no' => $doanhThu - $daThu],
+            'tong'       => ['don' => $song->count(), 'sl' => (int) $song->sum('so_luong'), 'doanh_thu' => $doanhThu,
+                             'da_thu' => $daThu + (int) $dl->tra_truoc, 'tra_truoc' => (int) $dl->tra_truoc,
+                             'con_no' => max(0, $doanhThu - $daThu - (int) $dl->tra_truoc)],
             'thang_nay'  => $thang[now()->format('Y-m')] ?? null,
             'theo_thang' => array_values($thang),
             'top_sp'     => $top,
