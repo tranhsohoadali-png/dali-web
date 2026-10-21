@@ -174,6 +174,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('di-ho/{don}/luu-soan',   [\App\Http\Controllers\Admin\DonDiHoController::class, 'luuSoan'])->name('diho.luusoan');
         Route::get('di-ho/{don}/soan',        [\App\Http\Controllers\Admin\DonDiHoController::class, 'soan'])->name('diho.soan');
         Route::post('di-ho/{don}/tick-soan',  [\App\Http\Controllers\Admin\DonDiHoController::class, 'tickSoan'])->name('diho.ticksoan');
+        Route::post('di-ho/{don}/du-phong',   [\App\Http\Controllers\Admin\DonDiHoController::class, 'congDuPhong'])->name('diho.duphong');
         Route::put('di-ho/{don}/trang-thai', [\App\Http\Controllers\Admin\DonDiHoController::class, 'updateStatus'])->name('diho.status');
         Route::post('di-ho-trang-thai-hang-loat', [\App\Http\Controllers\Admin\DonDiHoController::class, 'capNhatTrangThaiHangLoat'])->name('diho.statushangloat');
         Route::delete('di-ho/{don}',         [\App\Http\Controllers\Admin\DonDiHoController::class, 'destroy'])->name('diho.destroy');

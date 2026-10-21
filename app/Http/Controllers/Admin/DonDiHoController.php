@@ -383,6 +383,26 @@ class DonDiHoController extends Controller
         return response()->json(['ok' => true, 'xong' => $ds[$idx]['xong']]);
     }
 
+    /**
+     * Cộng thẻ dự phòng cho MỘT tờ soạn tạo trước quy tắc +1 (mục chưa có sl_tkb) — không cần đọc lại ảnh.
+     * dong = chỉ số dòng, hoặc 'chung' cho danh sách cũ không gắn dòng. Mục đã có sl_tkb bỏ qua -> bấm lại không cộng dồn.
+     */
+    public function congDuPhong(Request $request, DonDiHo $don)
+    {
+        $dong = (string) $request->input('dong', '');
+        $ds = $don->mon_soan ?: [];
+        $so = 0;
+        foreach ($ds as $i => $m) {
+            $nhom = isset($m['dong']) ? (string) (int) $m['dong'] : 'chung';
+            if ($nhom !== $dong || isset($m['sl_tkb'])) continue;
+            $ds[$i]['sl_tkb'] = (int) ($m['sl'] ?? 1);
+            $ds[$i]['sl'] = (int) ($m['sl'] ?? 1) + self::DU_PHONG_MOI_MON;
+            $so++;
+        }
+        if ($so) $don->update(['mon_soan' => $ds]);
+        return response()->json(['ok' => true, 'so_mon' => $so]);
+    }
+
     /** AI đọc mã vận đơn từ nhãn vận chuyển đã tải lên (điền ma_vc/vc). */
     public function docNhanVc(Request $request, DonDiHo $don)
     {

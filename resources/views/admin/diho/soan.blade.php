@@ -109,7 +109,15 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:#000;pad
   @foreach($nhom as $dong => $ms)
     @php $l = $dong === 'chung' ? null : ($ct[(int) $dong] ?? null); @endphp
     <div class="pwrap">
-      <div class="ptool"><span>Tờ {{ $loop->iteration }}/{{ $soTo }}</span><button type="button" class="in1">🖨️ In tờ này</button></div>
+      <div class="ptool"><span>Tờ {{ $loop->iteration }}/{{ $soTo }}</span>
+        <span>
+          @if($ms->contains(fn ($m) => !isset($m['sl_tkb'])))
+            {{-- tờ soạn trước quy tắc +1 dự phòng: cộng tại chỗ, không cần đọc lại ảnh --}}
+            <button type="button" class="cong-dp" data-dong="{{ $dong }}" style="border-color:#D97706;color:#92400E;background:#FFFBEB">➕ Cộng {{ \App\Http\Controllers\Admin\DonDiHoController::DU_PHONG_MOI_MON }} thẻ dự phòng mỗi môn</button>
+          @endif
+          <button type="button" class="in1">🖨️ In tờ này</button>
+        </span>
+      </div>
       <section class="page">
         <header class="ph">
           <div class="ph1">
@@ -247,6 +255,16 @@ document.addEventListener('click', function(e){
   boChon(); b.closest('.pwrap').classList.add('chon'); document.body.classList.add('in-mot'); window.print();
 });
 window.addEventListener('afterprint', boChon);
+
+// Cộng thẻ dự phòng cho tờ soạn cũ (chưa có +1) rồi tải lại
+document.addEventListener('click', function(e){
+  var b=e.target.closest('.cong-dp'); if(!b) return;
+  b.disabled=true; b.textContent='Đang cộng…';
+  fetch('{{ route('admin.diho.duphong', $don) }}',{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({dong:b.dataset.dong})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d.ok){ location.reload(); } else { b.disabled=false; b.textContent='⚠️ Chưa cộng được — thử lại'; } })
+    .catch(function(){ b.disabled=false; b.textContent='⚠️ Lỗi mạng — thử lại'; });
+});
 
 // Tick môn đã soạn xong (lưu ngay)
 document.addEventListener('change',function(e){
