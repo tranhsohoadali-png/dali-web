@@ -86,7 +86,7 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
             @if(!empty($l['anh_ghi_chu']))
             <div class="s" style="margin-top:6px">🖼️ Ảnh ghi chú:
               <a href="{{ route('admin.diho.anhmon', ['don'=>$don,'idx'=>$li]) }}" target="_blank" rel="noopener" style="color:#3730A3;font-weight:700">xem</a>
-              <button type="button" class="ai-mon" data-url="{{ route('admin.diho.docmon', ['don'=>$don,'idx'=>$li]) }}" style="margin-left:8px;font-size:11px;font-weight:800;color:#5B21B6;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:20px;padding:3px 10px;cursor:pointer">🔎 Đọc số môn (máy)</button>
+              <button type="button" class="ai-mon" data-url="{{ route('admin.diho.docmon', ['don'=>$don,'idx'=>$li]) }}" style="margin-left:8px;font-size:11px;font-weight:800;color:#5B21B6;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:20px;padding:3px 10px;cursor:pointer">🔎 Đọc số môn</button>
             </div>
             <div class="ai-mon-kq" style="display:none;font-size:12.5px;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:9px;padding:9px 12px;margin-top:6px;color:#4C1D95"></div>
             @if(\Illuminate\Support\Str::startsWith((string)($l['anh_ghi_chu_mime'] ?? ''), 'image/'))
@@ -206,17 +206,19 @@ var DIHO_SOAN='{{ route('admin.diho.soan', $don) }}';
 document.addEventListener('click',function(e){
   var b=e.target.closest('.ai-mon'); if(!b) return;
   var box=b.closest('.line').querySelector('.ai-mon-kq');
-  var ob=b.textContent; b.disabled=true; b.textContent='🔎 Máy đang đọc… (~5 giây)';
+  var ob=b.textContent; b.disabled=true; b.textContent='🔎 Đang đọc… (~15 giây)';
   fetch(b.dataset.url,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Accept':'application/json'}})
     .then(function(r){return r.json();})
     .then(function(d){
       box.style.display='block';
       if(d.ok){
-        box.innerHTML='<b>Máy đọc được '+((d.mon&&d.mon.length)||0)+' môn · tổng '+(d.tong||0)+' thẻ:</b><br>'+((d.text||'(trống)').replace(/</g,'&lt;'))+((d.khong_ro&&d.khong_ro.length)?'<br><span style="font-size:11.5px;color:#92400E">⚠️ Môn ngoài danh sách thẻ chuẩn (kiểm lại): '+d.khong_ro.join(', ').replace(/</g,'&lt;')+'</span>':'')+
+        box.innerHTML='<b>'+(d.nguon==='ai'?'🤖 AI':'🔎 Máy')+' đọc được '+((d.mon&&d.mon.length)||0)+' môn · tổng '+(d.tong||0)+' thẻ:</b><br>'+((d.text||'(trống)').replace(/</g,'&lt;'))+
+          (d.canh_bao?'<br><span style="font-size:11.5px;color:#B91C1C;font-weight:700">⚠️ '+String(d.canh_bao).replace(/</g,'&lt;')+'</span>':'')+
+          ((d.khong_ro&&d.khong_ro.length)?'<br><span style="font-size:11.5px;color:#92400E">⚠️ Không có thẻ trong thư viện (kiểm lại): '+d.khong_ro.join(', ').replace(/</g,'&lt;')+'</span>':'')+
           '<br><button type="button" class="soan-go" style="margin-top:8px;font-size:12px;font-weight:800;color:#fff;background:#3E7A0A;border:none;border-radius:8px;padding:7px 12px;cursor:pointer">📋 Chuyển sang soạn TKB</button>';
         var g=box.querySelector('.soan-go'); if(g) g.__mon=d.mon||[];
       }
-      else { box.innerHTML='⚠️ '+((d.error||'AI chưa đọc được.').replace(/</g,'&lt;')); }
+      else { box.innerHTML='⚠️ '+((d.error||'Chưa đọc được ảnh.').replace(/</g,'&lt;')); }
     })
     .catch(function(){ box.style.display='block'; box.textContent='⚠️ Lỗi mạng.'; })
     .finally(function(){ b.disabled=false; b.textContent=ob; });

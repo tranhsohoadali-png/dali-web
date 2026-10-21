@@ -28,6 +28,12 @@ class DocMonAi
 
     public static function batAi(): bool { return (bool) self::key(); }
 
+    /** Dùng chung cho các bộ đọc khác (DocMonTkb). */
+    public static function loiHttpPublic($resp): string
+    {
+        return self::loiHttp($resp);
+    }
+
     /** Dịch lỗi HTTP từ Anthropic sang câu tiếng Việt dễ hiểu cho xưởng. */
     private static function loiHttp($resp): string
     {

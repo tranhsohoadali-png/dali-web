@@ -770,7 +770,7 @@ class Api3dController extends Controller
         $dl = $this->daiLyTuRequest($request);
         if (!$dl) return $this->cors(response()->json(['ok' => false, 'error' => 'Cần đăng nhập đại lý.'], 401));
 
-        // Chống lạm dụng (mỗi lần đọc tốn ~4 giây CPU máy chủ): 30 lần / 10 phút / đại lý
+        // Chống lạm dụng (mỗi lần đọc tốn ~500 đ tiền API AI hoặc ~5 giây CPU máy): 30 lần / 10 phút / đại lý
         $rk = 'diho-ai:' . $dl->id;
         if (RateLimiter::tooManyAttempts($rk, 30)) {
             return $this->cors(response()->json(['ok' => false, 'error' => 'Bạn đọc ảnh quá nhanh, thử lại sau ít phút.'], 429));
@@ -788,12 +788,17 @@ class Api3dController extends Controller
         }
 
         @set_time_limit(120);
-        // Đọc bằng MÁY (OCR), không dùng AI — chủ xưởng chốt 2026-10-06
-        $res = \App\Services\DocMonMay::doc($f->getRealPath());
+        // AI đọc chính, máy (OCR) dự phòng — chủ xưởng chốt 2026-10-21
+        $res = \App\Services\DocMonTkb::doc($f->getRealPath(), $mime);
         if (!$res['ok']) {
-            return $this->cors(response()->json(['ok' => false, 'error' => ($res['error'] ?? 'Máy chưa đọc được ảnh.') . ' Vui lòng nhập tay.'], 422));
+            return $this->cors(response()->json(['ok' => false, 'error' => ($res['error'] ?? 'Chưa đọc được ảnh.') . ' Vui lòng nhập tay.'], 422));
         }
-        return $this->cors(response()->json(['ok' => true, 'source' => 'may', 'mon' => $res['mon'], 'tong' => $res['tong'], 'text' => $res['text']]));
+        return $this->cors(response()->json([
+            'ok' => true, 'source' => $res['nguon'] ?? 'may', 'mon' => $res['mon'], 'tong' => $res['tong'], 'text' => $res['text'],
+            // không lộ lý do nội bộ (hết tín dụng API…) cho đại lý
+            'khong_ro' => $res['khong_ro'] ?? [],
+            'canh_bao' => (($res['nguon'] ?? '') === 'may') ? 'Máy đọc thay AI — máy có thể sót ô, soát lại kỹ với ảnh.' : null,
+        ]));
     }
 
     /** URL ảnh thu nhỏ (sp3d/tn/<base>.jpg); nếu chưa có thì trả URL ảnh lớn (không 404). */

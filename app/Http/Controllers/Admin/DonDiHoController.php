@@ -389,8 +389,10 @@ class DonDiHoController extends Controller
             return response()->json(['ok' => false, 'error' => 'Dòng này không có ảnh ghi chú.'], 404);
         }
         @set_time_limit(120);
-        // Đọc bằng MÁY (OCR), không dùng AI — chủ xưởng chốt 2026-10-06
-        $res = \App\Services\DocMonMay::doc(Storage::disk('local')->path($rel));
+        // AI đọc chính, máy (OCR) dự phòng — chủ xưởng chốt 2026-10-21 (máy hay sót ô: đơn DH261015-B35R0T đọc 15/40)
+        $full = Storage::disk('local')->path($rel);
+        $mime = (string) ($line['anh_ghi_chu_mime'] ?? '') ?: (string) @mime_content_type($full);
+        $res = \App\Services\DocMonTkb::doc($full, $mime);
         return response()->json($res, $res['ok'] ? 200 : 422);
     }
 
