@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Storage;
 /** Đơn "đi đơn hộ" của đại lý (đơn TMĐT). Xem, đổi trạng thái, tải nhãn vận chuyển. */
 class DonDiHoController extends Controller
 {
+    /** Thẻ DỰ PHÒNG cộng thêm cho MỖI môn khi chuyển sang soạn (chủ xưởng 2026-10-21: tránh rủi ro thẻ lỗi). */
+    public const DU_PHONG_MOI_MON = 1;
+
     /** Map slug sản phẩm (đơn) → mẫu app thay tên (DS_MAU). Mẫu chưa có thì bỏ trống → soạn tay. */
     public const MAU_THAY_TEN = [
         'tkb-bau-troi'    => 'ten_bau_troi',
@@ -162,7 +165,18 @@ class DonDiHoController extends Controller
     public function show(DonDiHo $don)
     {
         $tt = DonDiHo::TRANG_THAI;
-        return view('admin.diho.show', compact('don', 'tt'));
+        // Kết quả đọc môn ĐÃ LƯU của từng ảnh ghi chú -> hiện sẵn khi mở đơn, khỏi bấm đọc (không tốn phí AI)
+        $daDoc = [];
+        foreach (($don->chi_tiet ?: []) as $i => $l) {
+            $rel = $l['anh_ghi_chu'] ?? null;
+            if ($rel && Storage::disk('local')->exists($rel)) {
+                $kq = \App\Services\DocMonTkb::daLuuTheoFile(Storage::disk('local')->path($rel));
+                if ($kq) $daDoc[$i] = $kq;
+            }
+        }
+        // Dòng đã có danh sách soạn -> nút chính thành "Mở phiếu soạn" (chuyển lại phải bấm 2 lần)
+        $daSoan = collect($don->mon_soan ?: [])->pluck('dong')->filter(fn ($d) => $d !== null)->map(fn ($d) => (int) $d)->unique()->values()->all();
+        return view('admin.diho.show', compact('don', 'tt', 'daDoc', 'daSoan'));
     }
 
     public function updateStatus(Request $request, DonDiHo $don)
@@ -322,13 +336,22 @@ class DonDiHoController extends Controller
         if (!is_array($mon)) $mon = [];
         $dong = $request->input('dong');
         $dong = ($dong === null || $dong === '') ? null : (int) $dong;
+        // Chuyển lại một dòng đã soạn: môn trùng tên GIỮ tick (đừng xoá công thợ đã soạn)
+        $daTick = [];
+        foreach (($don->mon_soan ?: []) as $m) {
+            if (!empty($m['xong']) && ($dong === null || (isset($m['dong']) && (int) $m['dong'] === $dong))) {
+                $daTick[mb_strtolower((string) ($m['mon'] ?? ''))] = true;
+            }
+        }
         $moi = [];
         foreach ($mon as $m) {
             if (!is_array($m)) continue;
             $ten = mb_substr(trim((string) ($m['mon'] ?? '')), 0, 40);
             if ($ten === '') continue;
             $sl = max(1, min(999, (int) ($m['so_luong'] ?? $m['sl'] ?? 1)));
-            $moi[] = ['mon' => $ten, 'sl' => $sl, 'xong' => false] + ($dong === null ? [] : ['dong' => $dong]);
+            // sl = số thẻ CẦN IN = số tiết trên TKB + dự phòng mỗi môn (thẻ lỗi khỏi in bù); sl_tkb giữ số gốc để phiếu ghi rõ
+            $moi[] = ['mon' => $ten, 'sl' => $sl + self::DU_PHONG_MOI_MON, 'sl_tkb' => $sl, 'xong' => isset($daTick[mb_strtolower($ten)])]
+                   + ($dong === null ? [] : ['dong' => $dong]);
             if (count($moi) >= 100) break;
         }
         if (!$moi) return back()->with('ok', 'Chưa có môn nào để soạn (bấm "Đọc số môn" trước).');
@@ -340,7 +363,7 @@ class DonDiHoController extends Controller
             }
         }
         $don->update(['mon_soan' => array_merge($giu, $moi)]);
-        return redirect()->route('admin.diho.soan', $don)->with('ok', 'Đã chuyển ' . ($dong === null ? 'đơn ' : 'dòng ' . ($dong + 1) . ' đơn ') . $don->ma . ' sang bảng soạn TKB (' . count($moi) . ' môn).');
+        return redirect()->route('admin.diho.soan', $don)->with('ok', 'Đã chuyển ' . ($dong === null ? 'đơn ' : 'dòng ' . ($dong + 1) . ' đơn ') . $don->ma . ' sang bảng soạn TKB (' . count($moi) . ' môn, mỗi môn +' . self::DU_PHONG_MOI_MON . ' thẻ dự phòng).');
     }
 
     /** Bảng soạn TKB của đơn: thông tin in + checklist môn để thợ làm, in được. */
@@ -393,8 +416,8 @@ class DonDiHoController extends Controller
         return $tra(false, 'Không tìm thấy mã vận đơn trên nhãn — nhập tay giúp.');
     }
 
-    /** AI đọc số môn từ ảnh ghi chú của một dòng (dùng cho xưởng ngay trong admin). */
-    public function docMonAi(DonDiHo $don, int $idx)
+    /** Đọc số môn từ ảnh ghi chú của một dòng (xưởng bấm trong admin). Ảnh AI đã đọc -> trả kết quả đã lưu; doc_lai=1 -> đọc lại. */
+    public function docMonAi(Request $request, DonDiHo $don, int $idx)
     {
         $line = ($don->chi_tiet ?: [])[$idx] ?? null;
         $rel  = $line['anh_ghi_chu'] ?? null;
@@ -405,7 +428,7 @@ class DonDiHoController extends Controller
         // AI đọc chính, máy (OCR) dự phòng — chủ xưởng chốt 2026-10-21 (máy hay sót ô: đơn DH261015-B35R0T đọc 15/40)
         $full = Storage::disk('local')->path($rel);
         $mime = (string) ($line['anh_ghi_chu_mime'] ?? '') ?: (string) @mime_content_type($full);
-        $res = \App\Services\DocMonTkb::doc($full, $mime);
+        $res = \App\Services\DocMonTkb::doc($full, $mime, $request->boolean('doc_lai'));
         return response()->json($res, $res['ok'] ? 200 : 422);
     }
 

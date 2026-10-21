@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Models\DocMonLuu;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -16,18 +17,62 @@ class DocMonTkb
 {
     private const MODEL_MAC_DINH = 'claude-sonnet-5-5';
 
-    public static function doc(string $fullPath, string $mime): array
+    /**
+     * Kết quả LƯU theo sha256 ảnh (bảng doc_mon_luu, chủ xưởng yêu cầu 2026-10-21 để đỡ tốn phí AI):
+     * ảnh AI đã đọc -> trả lại ngay, không gọi AI; kết quả máy chỉ là tạm (lần sau vẫn thử AI trước).
+     * @param bool $docLai true = bỏ qua kết quả đã lưu, đọc lại (tốn phí AI) — nút "Đọc lại" ở admin.
+     */
+    public static function doc(string $fullPath, string $mime, bool $docLai = false): array
     {
+        $hash = is_file($fullPath) ? (string) hash_file('sha256', $fullPath) : '';
+        $luu = self::daLuu($hash);
+        $coAi = $luu && $luu['nguon'] === 'ai';
+        if (!$docLai && $coAi) return $luu;
+
         $ai = self::docAi($fullPath, $mime);
-        if (!empty($ai['ok'])) return $ai;
-        if (($ai['khong_phai_tkb'] ?? false) === true) return $ai;   // AI đọc được và khẳng định không phải TKB: đừng để máy đoán bừa
-        $may = DocMonMay::doc($fullPath);
+        if (!empty($ai['ok']) || ($ai['khong_phai_tkb'] ?? false) === true) {   // AI khẳng định không phải TKB: đừng để máy đoán bừa
+            self::luu($hash, $ai);
+            return $ai;
+        }
         $lyDo = (string) ($ai['error'] ?? 'AI không dùng được');
+        if ($coAi) {   // ĐỌC LẠI mà AI lỗi: giữ kết quả AI đã lưu, đừng đưa kết quả máy (hay sót ô) ra thay trên màn hình
+            return array_merge($luu, ['canh_bao' => 'Đọc lại bằng AI không được (' . $lyDo . ') — vẫn giữ kết quả AI đã lưu.']);
+        }
+        $may = DocMonMay::doc($fullPath);
         if (!empty($may['ok'])) {
+            self::luu($hash, $may);
             $may['canh_bao'] = 'Máy đọc thay AI (' . $lyDo . ') — máy hay sót ô, KIỂM LẠI kỹ với ảnh.';
             return $may;
         }
         return ['ok' => false, 'error' => $lyDo . ' · Máy cũng chưa đọc được: ' . ($may['error'] ?? '') ];
+    }
+
+    /** Kết quả đã lưu của ảnh (theo sha256) hoặc null; kèm tu_luu=true + luu_luc để màn hình ghi "đã lưu, không tốn phí". */
+    public static function daLuu(string $hash): ?array
+    {
+        if ($hash === '') return null;
+        $r = DocMonLuu::where('sha256', $hash)->first();
+        if (!$r || !is_array($r->ket_qua)) return null;
+        return array_merge($r->ket_qua, ['nguon' => $r->nguon, 'tu_luu' => true, 'luu_luc' => optional($r->updated_at)->format('d/m/Y H:i')]);
+    }
+
+    public static function daLuuTheoFile(string $fullPath): ?array
+    {
+        return is_file($fullPath) ? self::daLuu((string) hash_file('sha256', $fullPath)) : null;
+    }
+
+    private static function luu(string $hash, array $kq): void
+    {
+        if ($hash === '') return;
+        $nguon = (($kq['nguon'] ?? '') === 'ai') ? 'ai' : 'may';
+        try {
+            $cu = DocMonLuu::where('sha256', $hash)->first();
+            if ($cu && $cu->nguon === 'ai' && $nguon === 'may') return;          // kết quả máy không đè kết quả AI
+            unset($kq['canh_bao'], $kq['tu_luu'], $kq['luu_luc']);
+            DocMonLuu::updateOrCreate(['sha256' => $hash], ['nguon' => $nguon, 'model' => $nguon === 'ai' ? self::model() : null, 'ket_qua' => $kq]);
+        } catch (\Throwable $e) {
+            // lưu hỏng (VD hai lần đọc cùng lúc đụng khoá unique) không được làm hỏng kết quả đọc
+        }
     }
 
     public static function model(): string
@@ -71,7 +116,7 @@ class DocMonTkb
         if (!is_array($j)) return ['ok' => false, 'error' => 'AI trả về sai định dạng'];
         $usage = ['in' => (int) $resp->json('usage.input_tokens'), 'out' => (int) $resp->json('usage.output_tokens')];
         if (($j['la_tkb'] ?? true) === false) {
-            return ['ok' => false, 'khong_phai_tkb' => true, 'error' => 'AI: ảnh này không phải thời khoá biểu/danh sách môn.', 'usage' => $usage];
+            return ['ok' => false, 'khong_phai_tkb' => true, 'nguon' => 'ai', 'error' => 'AI: ảnh này không phải thời khoá biểu/danh sách môn.', 'usage' => $usage];
         }
 
         $dem = []; $ten = []; $khongRo = [];

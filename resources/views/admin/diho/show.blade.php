@@ -88,7 +88,7 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
               <a href="{{ route('admin.diho.anhmon', ['don'=>$don,'idx'=>$li]) }}" target="_blank" rel="noopener" style="color:#3730A3;font-weight:700">xem</a>
               <button type="button" class="ai-mon" data-dong="{{ $li }}" data-url="{{ route('admin.diho.docmon', ['don'=>$don,'idx'=>$li]) }}" style="margin-left:8px;font-size:11px;font-weight:800;color:#5B21B6;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:20px;padding:3px 10px;cursor:pointer">🔎 Đọc số môn</button>
             </div>
-            <div class="ai-mon-kq" style="display:none;font-size:12.5px;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:9px;padding:9px 12px;margin-top:6px;color:#4C1D95"></div>
+            <div class="ai-mon-kq" data-dong="{{ $li }}" data-url="{{ route('admin.diho.docmon', ['don'=>$don,'idx'=>$li]) }}" @if(isset($daDoc[$li])) data-kq='@json($daDoc[$li])' @endif style="display:none;font-size:12.5px;background:#F3E8FF;border:1px solid #D8B4FE;border-radius:9px;padding:9px 12px;margin-top:6px;color:#4C1D95"></div>
             @if(\Illuminate\Support\Str::startsWith((string)($l['anh_ghi_chu_mime'] ?? ''), 'image/'))
               <img src="{{ route('admin.diho.anhmon', ['don'=>$don,'idx'=>$li]) }}" class="nhan-img" alt="Ảnh ghi chú dòng {{ $li+1 }}">
             @endif
@@ -203,30 +203,57 @@ select,input[type=text],input[type=number]{border:1.5px solid var(--bd);border-r
 var DIHO_CSRF='{{ csrf_token() }}';
 var DIHO_LUUSOAN='{{ route('admin.diho.luusoan', $don) }}';
 var DIHO_SOAN='{{ route('admin.diho.soan', $don) }}';
+var DIHO_DASOAN=@json($daSoan ?? []);   // các dòng đã có danh sách soạn
+function escK(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Vẽ kết quả đọc môn vào ô kết quả của dòng — dùng cả khi bấm đọc lẫn khi mở đơn đã có kết quả LƯU (không tốn phí AI)
+function veKq(box, d, dong){
+  box.style.display='block';
+  var luu=d.tu_luu?'<div style="font-size:11px;color:#6D28D9;margin-top:2px">💾 Đã lưu lúc '+escK(d.luu_luc)+' — mở lại không tốn phí đọc.</div>':'';
+  var docLai='<button type="button" class="ai-mon" data-doc-lai="1" data-dong="'+escK(dong)+'" data-url="'+escK(box.dataset.url)+'" style="margin:8px 0 0 6px;font-size:11px;font-weight:800;color:#5B21B6;background:#fff;border:1px solid #C4B5FD;border-radius:8px;padding:7px 10px;cursor:pointer">🔄 Đọc lại bằng AI</button>';
+  if(d.ok){
+    var cb=d.canh_bao||((d.tu_luu&&d.nguon!=='ai')?'Kết quả MÁY đọc (AI chưa đọc ảnh này) — máy hay sót ô, kiểm lại với ảnh.':'');
+    box.innerHTML='<b>'+(d.nguon==='ai'?'🤖 AI':'🔎 Máy')+' đọc được '+((d.mon&&d.mon.length)||0)+' môn · tổng '+(d.tong||0)+' thẻ:</b>'+(luu||'<br>')+escK(d.text||'(trống)')+
+      (cb?'<br><span style="font-size:11.5px;color:#B91C1C;font-weight:700">⚠️ '+escK(cb)+'</span>':'')+
+      ((d.khong_ro&&d.khong_ro.length)?'<br><span style="font-size:11.5px;color:#92400E">⚠️ Không có thẻ trong thư viện (kiểm lại): '+escK(d.khong_ro.join(', '))+'</span>':'')+
+      '<br>'+(DIHO_DASOAN.indexOf(+dong)>=0
+        // dòng ĐÃ soạn: nút chính chỉ mở phiếu; thay danh sách phải bấm 2 lần (môn trùng tên vẫn giữ tick)
+        ? '<a href="'+escK(DIHO_SOAN)+'" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:800;color:#fff;background:#3E7A0A;border-radius:8px;padding:7px 12px;text-decoration:none">📋 Mở phiếu soạn</a>'+
+          '<button type="button" class="soan-go" data-thay="1" style="margin:8px 0 0 6px;font-size:11px;font-weight:800;color:#3E7A0A;background:#fff;border:1px solid #A8D870;border-radius:8px;padding:7px 10px;cursor:pointer">↻ Thay danh sách đang soạn</button>'
+        : '<button type="button" class="soan-go" style="margin-top:8px;font-size:12px;font-weight:800;color:#fff;background:#3E7A0A;border:none;border-radius:8px;padding:7px 12px;cursor:pointer">📋 Chuyển dòng này sang soạn TKB</button>')+
+      docLai+
+      '<div style="font-size:11px;color:#6D28D9;margin-top:4px">Khi chuyển sang soạn, mỗi môn tự cộng {{ \App\Http\Controllers\Admin\DonDiHoController::DU_PHONG_MOI_MON }} thẻ dự phòng.</div>';
+    var g=box.querySelector('.soan-go'); if(g){ g.__mon=d.mon||[]; g.__dong=dong; }
+  }
+  else { box.innerHTML='⚠️ '+escK(d.error||'Chưa đọc được ảnh.')+luu+docLai; }
+}
+document.querySelectorAll('.ai-mon-kq[data-kq]').forEach(function(box){
+  try{ veKq(box, JSON.parse(box.dataset.kq), box.dataset.dong); }catch(e){}
+});
+// Bấm 2 lần trong 3 giây cho thao tác tốn phí / xoá dữ liệu (webview chặn confirm()). Trả true khi đã xác nhận.
+function haiLan(b, hoi){
+  if(b.__xn){ clearTimeout(b.__xnT); b.__xn=false; return true; }
+  var t0=b.textContent; b.__xn=true; b.textContent=hoi;
+  b.__xnT=setTimeout(function(){ b.__xn=false; b.textContent=t0; },3000);
+  return false;
+}
 document.addEventListener('click',function(e){
   var b=e.target.closest('.ai-mon'); if(!b) return;
-  var box=b.closest('.line').querySelector('.ai-mon-kq');
-  var ob=b.textContent; b.disabled=true; b.textContent='🔎 Đang đọc… (~15 giây)';
-  fetch(b.dataset.url,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Accept':'application/json'}})
+  var line=b.closest('.line'), box=line.querySelector('.ai-mon-kq');
+  if(line.__dangDoc) return;                     // đang đọc dòng này: bỏ qua bấm thêm (tránh vẽ đè kết quả cũ)
+  var lai=!!b.dataset.docLai;
+  if(lai && !haiLan(b,'Bấm lần nữa để đọc lại (tốn phí AI)')) return;
+  var ob=b.textContent; line.__dangDoc=true; b.disabled=true; b.textContent='🔎 Đang đọc… (~15 giây)';
+  fetch(b.dataset.url,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify({doc_lai:lai?1:0})})
     .then(function(r){return r.json();})
-    .then(function(d){
-      box.style.display='block';
-      if(d.ok){
-        box.innerHTML='<b>'+(d.nguon==='ai'?'🤖 AI':'🔎 Máy')+' đọc được '+((d.mon&&d.mon.length)||0)+' môn · tổng '+(d.tong||0)+' thẻ:</b><br>'+((d.text||'(trống)').replace(/</g,'&lt;'))+
-          (d.canh_bao?'<br><span style="font-size:11.5px;color:#B91C1C;font-weight:700">⚠️ '+String(d.canh_bao).replace(/</g,'&lt;')+'</span>':'')+
-          ((d.khong_ro&&d.khong_ro.length)?'<br><span style="font-size:11.5px;color:#92400E">⚠️ Không có thẻ trong thư viện (kiểm lại): '+d.khong_ro.join(', ').replace(/</g,'&lt;')+'</span>':'')+
-          '<br><button type="button" class="soan-go" style="margin-top:8px;font-size:12px;font-weight:800;color:#fff;background:#3E7A0A;border:none;border-radius:8px;padding:7px 12px;cursor:pointer">📋 Chuyển dòng này sang soạn TKB</button>';
-        var g=box.querySelector('.soan-go'); if(g){ g.__mon=d.mon||[]; g.__dong=b.dataset.dong; }
-      }
-      else { box.innerHTML='⚠️ '+((d.error||'Chưa đọc được ảnh.').replace(/</g,'&lt;')); }
-    })
+    .then(function(d){ veKq(box, d, b.dataset.dong); })
     .catch(function(){ box.style.display='block'; box.textContent='⚠️ Lỗi mạng.'; })
-    .finally(function(){ b.disabled=false; b.textContent=ob; });
+    .finally(function(){ line.__dangDoc=false; b.disabled=false; b.textContent=ob; });
 });
 // Chuyển đơn sang bảng soạn TKB (lưu danh sách môn rồi mở trang soạn)
 document.addEventListener('click',function(e){
   var g=e.target.closest('.soan-go'); if(!g) return;
   var mon=g.__mon||[]; if(!mon.length){ return; }
+  if(g.dataset.thay && !haiLan(g,'Bấm lần nữa: thay danh sách (môn trùng giữ tick)')) return;
   g.disabled=true; g.textContent='Đang chuyển…';
   fetch(DIHO_LUUSOAN,{method:'POST',headers:{'X-CSRF-TOKEN':DIHO_CSRF,'Content-Type':'application/json'},body:JSON.stringify({mon:mon,dong:g.__dong})})
     .then(function(){ window.location=DIHO_SOAN; })

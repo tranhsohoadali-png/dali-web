@@ -788,13 +788,15 @@ class Api3dController extends Controller
         }
 
         @set_time_limit(120);
-        // AI đọc chính, máy (OCR) dự phòng — chủ xưởng chốt 2026-10-21
+        // AI đọc chính, máy (OCR) dự phòng — chủ xưởng chốt 2026-10-21. Ảnh AI đã đọc (cùng nội dung) -> kết quả lưu, không tốn phí.
+        // Đại lý KHÔNG có "đọc lại" (tránh đốt phí); xưởng đọc lại được trong admin.
         $res = \App\Services\DocMonTkb::doc($f->getRealPath(), $mime);
         if (!$res['ok']) {
             return $this->cors(response()->json(['ok' => false, 'error' => ($res['error'] ?? 'Chưa đọc được ảnh.') . ' Vui lòng nhập tay.'], 422));
         }
         return $this->cors(response()->json([
             'ok' => true, 'source' => $res['nguon'] ?? 'may', 'mon' => $res['mon'], 'tong' => $res['tong'], 'text' => $res['text'],
+            'tu_luu' => !empty($res['tu_luu']),
             // không lộ lý do nội bộ (hết tín dụng API…) cho đại lý
             'khong_ro' => $res['khong_ro'] ?? [],
             'canh_bao' => (($res['nguon'] ?? '') === 'may') ? 'Máy đọc thay AI — máy có thể sót ô, soát lại kỹ với ảnh.' : null,
