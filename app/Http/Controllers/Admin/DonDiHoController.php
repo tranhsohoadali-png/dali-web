@@ -310,24 +310,37 @@ class DonDiHoController extends Controller
         return back()->with('ok', 'Đã cập nhật chi phí thu thêm cho đơn ' . $don->ma);
     }
 
-    /** Chuyển đơn sang soạn TKB: lưu danh sách môn (AI vừa đọc) vào đơn để làm checklist. */
+    /**
+     * Chuyển đơn sang soạn TKB: lưu danh sách môn (vừa đọc từ ảnh) vào đơn để làm checklist.
+     * Danh sách gắn theo DÒNG đơn ('dong'): đơn 2 bảng TKB chuyển dòng 2 không xoá danh sách dòng 1
+     * (lỗi cũ: DH261015-B35R0T mất cả 40 thẻ lớp 3A3). Mục cũ chưa có 'dong': bỏ, trừ mục đã tick (giữ công thợ).
+     */
     public function luuSoan(Request $request, DonDiHo $don)
     {
         $mon = $request->input('mon', []);
         if (is_string($mon)) $mon = json_decode($mon, true);
         if (!is_array($mon)) $mon = [];
-        $ds = [];
+        $dong = $request->input('dong');
+        $dong = ($dong === null || $dong === '') ? null : (int) $dong;
+        $moi = [];
         foreach ($mon as $m) {
             if (!is_array($m)) continue;
             $ten = mb_substr(trim((string) ($m['mon'] ?? '')), 0, 40);
             if ($ten === '') continue;
             $sl = max(1, min(999, (int) ($m['so_luong'] ?? $m['sl'] ?? 1)));
-            $ds[] = ['mon' => $ten, 'sl' => $sl, 'xong' => false];
-            if (count($ds) >= 100) break;
+            $moi[] = ['mon' => $ten, 'sl' => $sl, 'xong' => false] + ($dong === null ? [] : ['dong' => $dong]);
+            if (count($moi) >= 100) break;
         }
-        if (!$ds) return back()->with('ok', 'Chưa có môn nào để soạn (bấm "Đọc số môn (AI)" trước).');
-        $don->update(['mon_soan' => $ds]);
-        return redirect()->route('admin.diho.soan', $don)->with('ok', 'Đã chuyển đơn ' . $don->ma . ' sang bảng soạn TKB (' . count($ds) . ' môn).');
+        if (!$moi) return back()->with('ok', 'Chưa có môn nào để soạn (bấm "Đọc số môn" trước).');
+        $giu = [];
+        if ($dong !== null) {
+            foreach (($don->mon_soan ?: []) as $m) {
+                $d = $m['dong'] ?? null;
+                if (($d !== null && (int) $d !== $dong) || ($d === null && !empty($m['xong']))) $giu[] = $m;
+            }
+        }
+        $don->update(['mon_soan' => array_merge($giu, $moi)]);
+        return redirect()->route('admin.diho.soan', $don)->with('ok', 'Đã chuyển ' . ($dong === null ? 'đơn ' : 'dòng ' . ($dong + 1) . ' đơn ') . $don->ma . ' sang bảng soạn TKB (' . count($moi) . ' môn).');
     }
 
     /** Bảng soạn TKB của đơn: thông tin in + checklist môn để thợ làm, in được. */

@@ -77,17 +77,31 @@ h2{font-size:13.5px;font-weight:900;color:var(--char);margin:2px 0 9px}
     <h2>✅ Danh sách thẻ môn cần làm (tick khi xong)</h2>
     @if(count($ds))
       <div class="prog" id="prog">Đã xong {{ collect($ds)->where('xong',true)->count() }}/{{ count($ds) }} môn · {{ $xong }}/{{ $tong }} thẻ</div>
-      <div class="mon-list">
-      @foreach($ds as $i => $m)
-        <label class="mon {{ !empty($m['xong']) ? 'done' : '' }}" data-tick="{{ route('admin.diho.ticksoan', $don) }}" data-idx="{{ $i }}">
-          <input type="checkbox" {{ !empty($m['xong']) ? 'checked' : '' }}>
-          <span class="ten">{{ $m['mon'] }}</span>
-          <span class="sl">×{{ $m['sl'] }}</span>
-        </label>
+      @php
+        // Nhóm theo DÒNG đơn (mỗi dòng = 1 bảng TKB); giữ chỉ số gốc $i để tick đúng mục
+        $nhom = collect($ds)->map(fn ($m, $i) => $m + ['_i' => $i])->groupBy(fn ($m) => isset($m['dong']) ? (string) $m['dong'] : 'chung');
+        $ct = $don->chi_tiet ?: [];
+      @endphp
+      @foreach($nhom as $dong => $ms)
+        @if($nhom->count() > 1 || count($ct) > 1)
+          @php $l = $dong === 'chung' ? null : ($ct[(int) $dong] ?? null); @endphp
+          <div class="sub" style="font-weight:800;color:var(--char);margin:8px 0 6px">
+            {{ $dong === 'chung' ? 'Chưa rõ dòng (danh sách cũ)' : 'Dòng ' . ((int) $dong + 1) . ': ' . ($l['ten'] ?? '') . (!empty($l['bien_the']) ? ' · ' . $l['bien_the'] : '') . (!empty($l['ten_in']) ? ' · tên in: ' . $l['ten_in'] : '') }}
+            — {{ $ms->sum('sl') }} thẻ
+          </div>
+        @endif
+        <div class="mon-list">
+        @foreach($ms as $m)
+          <label class="mon {{ !empty($m['xong']) ? 'done' : '' }}" data-tick="{{ route('admin.diho.ticksoan', $don) }}" data-idx="{{ $m['_i'] }}">
+            <input type="checkbox" {{ !empty($m['xong']) ? 'checked' : '' }}>
+            <span class="ten">{{ $m['mon'] }}</span>
+            <span class="sl">×{{ $m['sl'] }}</span>
+          </label>
+        @endforeach
+        </div>
       @endforeach
-      </div>
     @else
-      <div class="empty">Chưa có danh sách môn. Về đơn, bấm <b>“🤖 Đọc số môn (AI)”</b> rồi <b>“📋 Chuyển sang soạn TKB”</b>.</div>
+      <div class="empty">Chưa có danh sách môn. Về đơn, bấm <b>“🔎 Đọc số môn”</b> rồi <b>“📋 Chuyển dòng này sang soạn TKB”</b>.</div>
     @endif
   </div>
 </div></div>
