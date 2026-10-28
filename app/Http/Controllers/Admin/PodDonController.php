@@ -39,16 +39,8 @@ class PodDonController extends Controller
             'trang_thai' => 'required|in:dang_in,da_giao',
             'ma_van_don' => 'nullable|string|max:60',
         ]);
-        $duoc = ['dang_in' => ['cho_in'], 'da_giao' => ['cho_in', 'dang_in']];
-        if (!in_array($don->trang_thai, $duoc[$v['trang_thai']], true)) {
-            return back()->withErrors(['trang_thai' => 'Đơn đang ở "' . $don->tenTrangThai() . '", không chuyển được.']);
-        }
-        $data = ['trang_thai' => $v['trang_thai']];
-        if ($v['trang_thai'] === 'da_giao') {
-            $data['giao_luc'] = now();
-            $data['ma_van_don'] = trim((string) ($v['ma_van_don'] ?? '')) ?: $don->ma_van_don;
-        }
-        $don->update($data);
+        $loi = PodSo::chuyenTrangThai($don, $v['trang_thai'], $v['ma_van_don'] ?? null, 'Admin');
+        if ($loi) return back()->withErrors(['trang_thai' => $loi]);
         return back()->with('ok', 'Đơn ' . $don->ma . ': ' . $don->tenTrangThai() . '.');
     }
 

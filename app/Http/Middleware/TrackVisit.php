@@ -18,6 +18,7 @@ class TrackVisit
                 || $request->ajax()
                 || $request->wantsJson()
                 || str_starts_with($path, 'admin')
+                || $path === 'pod' || str_starts_with($path, 'tho-in')   // cổng seller + thợ in: không phải khách xem web
                 || preg_match('#\.(css|js|png|jpe?g|gif|svg|ico|webp|woff2?|map|xml|txt)$#i', $path)
                 || $path === 'gio-hang/so-luong'; // bỏ qua polling giỏ hàng
 

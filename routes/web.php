@@ -70,6 +70,19 @@ Route::post('/dat-hang/confirm',  [WebsiteController::class, 'confirmPayment'])-
 // ─── CỔNG SELLER POD (một trang, gọi /api/pod/*; không cho máy tìm kiếm lập chỉ mục) ───
 Route::get('/pod', fn () => response()->view('pod.cong')->header('X-Robots-Tag', 'noindex, nofollow'))->name('pod.cong');
 
+// ─── THỢ IN: chỉ hàng đợi in POD; tài khoản riêng, KHÔNG vào được admin ───
+Route::prefix('tho-in')->name('tho-in.')->group(function () {
+    Route::get('dang-nhap',             [\App\Http\Controllers\ThoInController::class, 'dangNhapForm'])->name('dang-nhap');
+    Route::post('dang-nhap',            [\App\Http\Controllers\ThoInController::class, 'dangNhap'])->middleware('throttle:10,1')->name('dang-nhap.post');
+    Route::middleware('tho.in')->group(function () {
+        Route::post('dang-xuat',            [\App\Http\Controllers\ThoInController::class, 'dangXuat'])->name('dang-xuat');
+        Route::get('/',                     [\App\Http\Controllers\ThoInController::class, 'hangDoi'])->name('hang-doi');
+        Route::get('don/{don}',             [\App\Http\Controllers\ThoInController::class, 'don'])->name('don');
+        Route::post('don/{don}/trang-thai', [\App\Http\Controllers\ThoInController::class, 'trangThai'])->name('trang-thai');
+        Route::get('don/{don}/nhan',        [\App\Http\Controllers\ThoInController::class, 'nhan'])->name('nhan');
+    });
+});
+
 // ─── CỔNG CỘNG TÁC VIÊN (CTV) ───────────────────
 Route::prefix('ctv')->name('ctv.')->group(function () {
     Route::get('dang-nhap',  [CtvController::class, 'showLogin'])->name('login');
@@ -145,6 +158,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('don/{don}/trang-thai',  [\App\Http\Controllers\Admin\PodDonController::class, 'trangThai'])->name('don.status');
         Route::post('don/{don}/huy',         [\App\Http\Controllers\Admin\PodDonController::class, 'huy'])->name('don.huy');
         Route::get('don/{don}/nhan',         [\App\Http\Controllers\Admin\PodDonController::class, 'nhan'])->name('don.nhan');
+        Route::get('tho-in',                 [\App\Http\Controllers\Admin\PodThoInController::class, 'index'])->name('thoin.index');
+        Route::post('tho-in',                [\App\Http\Controllers\Admin\PodThoInController::class, 'store'])->name('thoin.store');
+        Route::put('tho-in/{tho}',           [\App\Http\Controllers\Admin\PodThoInController::class, 'update'])->name('thoin.update');
+        Route::post('tho-in/{tho}/khoa',     [\App\Http\Controllers\Admin\PodThoInController::class, 'khoa'])->name('thoin.khoa');
     });
 
     // ─── Xưởng in 3D (khu riêng, bảng sp_3d) ───

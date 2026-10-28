@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.auth'       => \App\Http\Middleware\AdminAuth::class,
             'ctv.auth'         => \App\Http\Middleware\CtvAuth::class,
             'integration.auth' => \App\Http\Middleware\IntegrationAuth::class,
+            'tho.in'           => \App\Http\Middleware\ThoInAuth::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\TrackVisit::class,

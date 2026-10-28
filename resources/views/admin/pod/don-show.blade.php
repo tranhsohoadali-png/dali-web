@@ -1,7 +1,7 @@
 @include('admin.pod._dau', ['tieuDe' => 'Đơn ' . $don->ma])
 <div class="card">
   <div class="card-h"><div class="card-t">{{ $don->ma }} · <span class="badge b-{{ $don->trang_thai }}">{{ $don->tenTrangThai() }}</span></div>
-    <div class="card-hint">Đặt {{ optional($don->created_at)->format('d/m/Y H:i') }} · {{ $don->da_tru ? 'Đã trừ ví' : 'Chưa trừ ví' }}@if($don->huy_luc) · Huỷ {{ $don->huy_luc->format('d/m/Y H:i') }}@endif @if($don->giao_luc) · Giao {{ $don->giao_luc->format('d/m/Y H:i') }}@endif</div></div>
+    <div class="card-hint">Đặt {{ optional($don->created_at)->format('d/m/Y H:i') }} · {{ $don->da_tru ? 'Đã trừ ví' : 'Chưa trừ ví' }}@if($don->huy_luc) · Huỷ {{ $don->huy_luc->format('d/m/Y H:i') }}@endif @if($don->giao_luc) · Giao {{ $don->giao_luc->format('d/m/Y H:i') }}@endif @if($don->nguoi_in) · In: {{ $don->nguoi_in }}@endif @if($don->nguoi_giao) · Giao bởi: {{ $don->nguoi_giao }}@endif</div></div>
   <div class="pad grid" style="align-items:start">
     <div><div class="muted">Seller</div><b>{{ optional($don->seller)->ten }}</b> ({{ optional($don->seller)->ma }})<div class="muted">{{ optional($don->seller)->sdt }}</div></div>
     <div><div class="muted">Giao tới</div>@if($don->noi_giao)<b>{{ $don->noi_giao['ten'] ?? '' }}</b><div>{{ $don->noi_giao['dia_chi'] ?? '' }}</div><div class="muted">{{ $don->noi_giao['sdt'] ?? '' }} {{ $don->noi_giao['ghi_chu'] ?? '' }}</div>@else<span class="muted">—</span>@endif</div>

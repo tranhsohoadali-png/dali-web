@@ -9,6 +9,7 @@ use App\Models\PodNhatKy;
 use App\Models\PodNoiGiao;
 use App\Models\PodPhien;
 use App\Models\PodSeller;
+use App\Models\PodThoIn;
 use App\Services\PodSo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -230,6 +231,76 @@ class PodTest extends TestCase
         $don = PodDon::where('ma', $r->json('don.ma'))->first();
         Storage::disk('local')->assertExists($don->getRawOriginal('nhan'));
         $this->assertStringStartsWith('pod/nhan/', $don->getRawOriginal('nhan'));
+    }
+
+    /* ---------------- Thợ in: chỉ hàng đợi in ---------------- */
+
+    private function taoTho(bool $hien = true): PodThoIn
+    {
+        return PodThoIn::create(['ten' => 'Thợ Minh', 'sdt' => '0911000001', 'matkhau' => Hash::make('thoin123'), 'hien' => $hien]);
+    }
+
+    /** Đơn đã trả của A: 12 g × 3 × 1.300 + 5.000 phí chữ = 51.800đ. */
+    private function donChoIn(): PodDon
+    {
+        PodSo::napTien($this->a, 100000, 'nap', null);
+        return PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->riengA), 'so_luong' => 3, 'chu' => 'Layla']], ['ten' => 'Line bay HCM'], null, null, null);
+    }
+
+    public function test_tho_in_thay_hang_doi_khong_thay_tien_khong_thay_don_chua_tra(): void
+    {
+        $don = $this->donChoIn();
+        $choNap = PodSo::datDon($this->b, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null);
+        $this->assertSame('cho_nap', $choNap->trang_thai);
+        $this->taoTho();
+        $this->post('/tho-in/dang-nhap', ['sdt' => '0911000001', 'matkhau' => 'thoin123'])->assertRedirect(route('tho-in.hang-doi'));
+        $this->get('/tho-in')->assertOk()->assertSee($don->ma)->assertSee('Layla')->assertDontSee($choNap->ma)->assertDontSee('51.800');
+        $this->get('/tho-in/don/' . $don->id)->assertOk()->assertSee('Layla')->assertDontSee('51.800');
+        $this->get('/tho-in/don/' . $choNap->id)->assertNotFound();
+    }
+
+    public function test_tho_in_cap_nhat_trang_thai_ghi_ten_khong_dung_tien(): void
+    {
+        $don = $this->donChoIn();
+        $s = $this->withSession(['tho_in_id' => $this->taoTho()->id]);
+        $s->post('/tho-in/don/' . $don->id . '/trang-thai', ['trang_thai' => 'dang_in'])->assertRedirect(route('tho-in.hang-doi'));
+        $this->assertSame('dang_in', $don->fresh()->trang_thai);
+        $this->assertSame('Thợ Minh', $don->fresh()->nguoi_in);
+        $s->post('/tho-in/don/' . $don->id . '/trang-thai', ['trang_thai' => 'da_giao', 'ma_van_don' => 'GHN123']);
+        $this->assertSame('da_giao', $don->fresh()->trang_thai);
+        $this->assertSame('GHN123', $don->fresh()->ma_van_don);
+        $this->assertSame('Thợ Minh', $don->fresh()->nguoi_giao);
+        $this->assertSame(100000 - 51800, $this->a->soDu());
+    }
+
+    public function test_tho_in_khong_vao_duoc_admin_khong_huy_duoc_don(): void
+    {
+        $don = $this->donChoIn();
+        $s = $this->withSession(['tho_in_id' => $this->taoTho()->id]);
+        foreach (['/admin', '/admin/3d/pod/mau', '/admin/3d/pod/seller', '/admin/3d/pod/don/' . $don->id, '/admin/3d/pod/nhat-ky', '/admin/3d/pod/tho-in'] as $u) {
+            $s->get($u)->assertRedirect(route('admin.login'));
+        }
+        $s->post('/admin/3d/pod/don/' . $don->id . '/huy')->assertRedirect(route('admin.login'));
+        $this->assertSame('cho_in', $don->fresh()->trang_thai);
+        $s->getJson('/api/pod/mau')->assertStatus(401);
+    }
+
+    public function test_tho_in_bi_khoa_hoac_chua_dang_nhap_ve_trang_dang_nhap(): void
+    {
+        $this->get('/tho-in')->assertRedirect(route('tho-in.dang-nhap'));
+        $tho = $this->taoTho(false);
+        $this->withSession(['tho_in_id' => $tho->id])->get('/tho-in')->assertRedirect(route('tho-in.dang-nhap'));
+        $this->post('/tho-in/dang-nhap', ['sdt' => '0911000001', 'matkhau' => 'thoin123'])->assertSessionHasErrors('sdt');
+    }
+
+    public function test_admin_cap_va_khoa_tho_in(): void
+    {
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $admin->get('/admin/3d/pod/tho-in')->assertOk();
+        $admin->post('/admin/3d/pod/tho-in', ['ten' => 'Thợ Lan', 'sdt' => '0911 000 002', 'matkhau' => 'matkhau9'])->assertSessionHasNoErrors();
+        $t = PodThoIn::where('sdt', '0911000002')->firstOrFail();
+        $admin->post('/admin/3d/pod/tho-in/' . $t->id . '/khoa');
+        $this->assertFalse($t->fresh()->hien);
     }
 
     /* ---------------- Admin ---------------- */

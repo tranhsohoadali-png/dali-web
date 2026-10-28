@@ -181,6 +181,29 @@ class PodSo
         return true;
     }
 
+    /**
+     * Chờ in -> Đang in -> Đã giao (kèm mã vận đơn). Không lùi trạng thái; huỷ đi đường huyDon().
+     * Admin và thợ in dùng chung. Trả null nếu xong, hoặc câu báo lỗi.
+     */
+    public static function chuyenTrangThai(PodDon $don, string $tt, ?string $maVanDon, string $nguoi): ?string
+    {
+        $duoc = ['dang_in' => ['cho_in'], 'da_giao' => ['cho_in', 'dang_in']];
+        if (!isset($duoc[$tt])) return 'Trạng thái không hợp lệ.';
+        if (!in_array($don->trang_thai, $duoc[$tt], true)) {
+            return 'Đơn đang ở "' . $don->tenTrangThai() . '", không chuyển được.';
+        }
+        $data = ['trang_thai' => $tt];
+        if ($tt === 'dang_in') $data['nguoi_in'] = $nguoi;
+        if ($tt === 'da_giao') {
+            $data['giao_luc'] = now();
+            $data['nguoi_giao'] = $nguoi;
+            $data['ma_van_don'] = trim((string) $maVanDon) ?: $don->ma_van_don;
+            if (!$don->nguoi_in) $data['nguoi_in'] = $nguoi;
+        }
+        $don->update($data);
+        return null;
+    }
+
     /** Đường dẫn file nhãn trên đĩa private (cho admin tải). */
     public static function duongNhan(PodDon $don): ?string
     {
