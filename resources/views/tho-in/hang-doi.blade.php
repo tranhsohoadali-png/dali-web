@@ -8,7 +8,7 @@
     </div>
     <div class="mu">Đặt {{ optional($d->created_at)->format('d/m H:i') }} · giao tới {{ $d->noi_giao['ten'] ?? '—' }}</div>
     @foreach($d->dong as $x)
-      <div class="dong">{{ $x->ten_mau }} · {{ $x->ten_bien_the }}@if($x->chat_lieu) · <b>{{ $x->chat_lieu }}</b>@endif @if($x->mau_sac) · <b>{{ $x->mau_sac }}</b>@endif × <span class="sl">{{ $x->so_luong }}</span>@if($x->chu_ca_nhan) <span class="mu">chữ: "{{ $x->chu_ca_nhan }}"</span>@endif</div>
+      <div class="dong">{{ $x->ten_mau }} · {{ $x->ten_bien_the }}@if($x->chat_lieu) · <b>{{ $x->chat_lieu }}</b>@endif @if($x->mau_sac) · <b>{{ $x->mau_sac }}</b>@endif × <span class="sl">{{ $x->so_luong }}</span>@if($x->chu_ca_nhan) <span class="mu">chữ: "{{ $x->chu_ca_nhan }}"@if($x->font) · {{ $x->font }}@endif</span>@endif</div>
     @endforeach
   </a>
 @empty

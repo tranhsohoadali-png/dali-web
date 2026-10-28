@@ -20,7 +20,7 @@
       <td>{{ optional($d->seller)->ten }}<div class="muted">{{ optional($d->seller)->ma }}</div></td>
       <td>
         @foreach($d->dong as $x)
-          <div>{{ $x->ten_mau }} · {{ $x->ten_bien_the }}@if($x->chat_lieu) · <b>{{ $x->chat_lieu }}</b>@endif @if($x->mau_sac) · {{ $x->mau_sac }}@endif × <b>{{ $x->so_luong }}</b>@if($x->chu_ca_nhan) <span class="muted">"{{ $x->chu_ca_nhan }}"</span>@endif</div>
+          <div>{{ $x->ten_mau }} · {{ $x->ten_bien_the }}@if($x->chat_lieu) · <b>{{ $x->chat_lieu }}</b>@endif @if($x->mau_sac) · {{ $x->mau_sac }}@endif × <b>{{ $x->so_luong }}</b>@if($x->chu_ca_nhan) <span class="muted">"{{ $x->chu_ca_nhan }}"@if($x->font) · {{ $x->font }}@endif</span>@endif</div>
         @endforeach
       </td>
       <td class="num">{{ number_format($d->tong_tien, 0, ',', '.') }}đ</td>

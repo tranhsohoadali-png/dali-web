@@ -18,7 +18,7 @@
       <td><b>{{ $x->ten_mau }}</b><div class="muted">{{ $x->ten_bien_the }}@if($x->chat_lieu) · <b>{{ $x->chat_lieu }}</b>@endif · {{ rtrim(rtrim(number_format($x->gram, 1, ',', '.'), '0'), ',') }} g × {{ number_format($x->don_gia_gram, 0, ',', '.') }}đ</div></td>
       <td>{{ $x->mau_sac ?: '—' }}</td>
       <td class="num"><b>{{ $x->so_luong }}</b></td>
-      <td>{{ $x->chu_ca_nhan ?: '—' }}@if($x->phi_ca_nhan)<div class="muted">+{{ number_format($x->phi_ca_nhan, 0, ',', '.') }}đ</div>@endif</td>
+      <td>{{ $x->chu_ca_nhan ?: '—' }}@if($x->font)<div class="muted">font {{ $x->font }}</div>@endif @if($x->phi_ca_nhan)<div class="muted">+{{ number_format($x->phi_ca_nhan, 0, ',', '.') }}đ</div>@endif</td>
       <td class="muted" style="word-break:break-all">{{ $fileIn[$x->bien_the_id] ?? '—' }}</td>
       <td class="num">{{ number_format($x->thanh_tien, 0, ',', '.') }}đ</td>
     </tr>

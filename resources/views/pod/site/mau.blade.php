@@ -23,6 +23,11 @@
 .chip-mau{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--bd);background:#fff;border-radius:20px;padding:6px 12px 6px 7px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .chip-mau i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);display:block}
 .chip-mau.on{border-color:var(--gd);box-shadow:0 0 0 2px var(--gl)}
+.chip-kieu{border:1.5px solid var(--bd);background:#fff;border-radius:12px;padding:8px 14px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.chip-kieu.on{border-color:var(--gd);background:var(--gll);box-shadow:0 0 0 2px var(--gl)}
+.chip-kieu .ten-font{font-size:19px;font-weight:400;line-height:1.2;display:block}
+.chip-kieu small{display:block;color:var(--mu);font-size:11px;font-weight:600}
+.nhom-tieu{margin-top:14px;font-weight:700;font-size:14px}
 @endsection
 @section('noi_dung')
 <div class="wrap">
@@ -31,10 +36,14 @@
     @php
       $xt = $m->tenToiDa() ? $m->xem_truoc : null;
       $mauSac = $m->bienThe->flatMap(fn ($b) => $b->dsMau())->unique()->values();
+      $theoKieu = $m->bienThe->groupBy(fn ($b) => (string) $b->kieu);   // '' = mẫu không chia kiểu
+      $kieu0 = (string) $theoKieu->keys()->first();
+      $khung0 = ($xt && $kieu0 !== '' && isset($xt['kieu'][$kieu0])) ? $xt['kieu'][$kieu0] : $xt;
+      $fonts = $m->dsFont();
     @endphp
     <div>
       @if($xt)
-      <div class="anh-chinh" style="aspect-ratio:auto"><canvas id="cvXt" width="900" height="{{ (int) round(900 * $xt['h'] / $xt['w']) }}" style="width:100%;height:auto;display:block" aria-label="Ảnh xem trước {{ $m->ten }} theo tên"></canvas></div>
+      <div class="anh-chinh" style="aspect-ratio:auto"><canvas id="cvXt" width="900" height="{{ (int) round(900 * $khung0['h'] / $khung0['w']) }}" style="width:100%;height:auto;display:block" aria-label="Ảnh xem trước {{ $m->ten }} theo tên"></canvas></div>
       <button type="button" class="nut nut-vien nut-nho" id="taiXt" style="margin-top:12px">Tải ảnh xem trước</button>
       @else
       <div class="anh-chinh">@if(!empty($m->anh))<img id="anhChinh" src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}">@endif</div>
@@ -52,13 +61,13 @@
       @php
         $bg = \App\Services\PodSo::bangGia();
         $cls = $m->bienThe->map(fn ($b) => \App\Services\PodSo::chatLieu($b->chat_lieu))->unique()->values();
-        $theoCo = $m->bienThe->groupBy('ten');
       @endphp
       @if($m->bienThe->isNotEmpty())
-        <table class="bang gia-co">
-          <thead><tr><th>Kích thước</th>@foreach($cls as $cl)<th class="so">{{ $cl }}</th>@endforeach</tr></thead>
+        @foreach($theoKieu as $k => $dsKieu)
+        <table class="bang gia-co" data-kieu="{{ $k }}" @if($k !== $kieu0) hidden @endif>
+          <thead><tr><th>{{ $k !== '' ? $m->tenKieu($k) . ' · kích thước' : 'Kích thước' }}</th>@foreach($cls as $cl)<th class="so">{{ $cl }}</th>@endforeach</tr></thead>
           <tbody>
-            @foreach($theoCo as $tenCo => $ds)
+            @foreach($dsKieu->groupBy('ten') as $tenCo => $ds)
             <tr><td><b>{{ $tenCo }}</b></td>
               @foreach($cls as $cl)
                 @php $b = $ds->first(fn ($x) => \App\Services\PodSo::chatLieu($x->chat_lieu) === $cl); @endphp
@@ -68,16 +77,25 @@
             @endforeach
           </tbody>
         </table>
+        @endforeach
         <p style="color:var(--mu);font-size:13px;margin-top:6px">Giá in 1 chiếc, chưa gồm phí vận chuyển.@if($xt) Kích thước đo theo bề ngang.@endif</p>
       @endif
       @if($xt)
         <div class="thu-ten">
-          <label><span>Thử tên của bạn</span><input id="tenXt" maxlength="{{ $m->tenToiDa() }}" placeholder="Vd: Emma" autocomplete="off"></label>
+          @if($theoKieu->count() > 1)
+          <div class="nhom-tieu" style="margin-top:0">Kiểu</div>
+          <div class="pl" id="kieuXt">@foreach($theoKieu->keys() as $i => $k)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-kieu="{{ $k }}">{{ $m->tenKieu($k) }}</button>@endforeach</div>
+          @endif
+          <label style="margin-top:14px"><span>Thử tên của bạn</span><input id="tenXt" maxlength="{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}" placeholder="Vd: Emma" autocomplete="off"></label>
           @if($mauSac->isNotEmpty())
-          <div style="margin-top:14px;font-weight:700;font-size:14px">Màu nhựa</div>
+          <div class="nhom-tieu">Màu nhựa</div>
           <div class="pl" id="mauXt">@foreach($mauSac as $i => $c)<button type="button" class="chip-mau {{ $i ? '' : 'on' }}" data-mau="{{ $c }}"><i></i>{{ $c }}</button>@endforeach</div>
           @endif
-          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật bằng font của mẫu, gần giống bản in. Tên tối đa {{ $m->tenToiDa() }} ký tự.</p>
+          @if(count($fonts) > 1)
+          <div class="nhom-tieu">Font chữ</div>
+          <div class="pl" id="fontXt">@foreach($fonts as $i => $f)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-font="{{ $f }}"><span class="ten-font">Emma</span><small>{{ $f }}</small></button>@endforeach</div>
+          @endif
+          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.</p>
         </div>
       @elseif($m->phi_ca_nhan > 0)<p style="margin-top:14px;font-size:15px">Có nhận chữ cá nhân hoá theo từng đơn.</p>@endif
       <div class="khoa">
@@ -101,15 +119,33 @@
 <script>
 (function () {
   var d = @json($xt), cv = document.getElementById('cvXt'), ip = document.getElementById('tenXt');
-  var chips = document.querySelectorAll('#mauXt .chip-mau'), mau = chips.length ? chips[0].dataset.mau : '';
-  chips.forEach(function (c) {
-    c.querySelector('i').style.background = PodVeTen.mauHex(c.dataset.mau);
-    c.onclick = function () { mau = c.dataset.mau; chips.forEach(function (x) { x.classList.toggle('on', x === c); }); ve(); };
+  var kieu = @json($kieu0 !== '' ? $kieu0 : null), fonts = @json($fonts), font = fonts[0] || '', mau = '';
+  function chon(sel, ham) {
+    var ds = document.querySelectorAll(sel);
+    ds.forEach(function (c) { c.onclick = function () { ds.forEach(function (x) { x.classList.toggle('on', x === c); }); ham(c); ve(); }; });
+    return ds;
+  }
+  var chips = chon('#mauXt .chip-mau', function (c) { mau = c.dataset.mau; });
+  if (chips.length) mau = chips[0].dataset.mau;
+  chips.forEach(function (c) { c.querySelector('i').style.background = PodVeTen.mauHex(c.dataset.mau); });
+  chon('#kieuXt .chip-kieu', function (c) {
+    kieu = c.dataset.kieu;
+    var k = PodVeTen.khung(d, kieu), td = k.toi_da || d.toi_da || 12;
+    ip.maxLength = td; document.getElementById('toiDaXt').textContent = td;
+    if (ip.value.length > td) ip.value = ip.value.slice(0, td);
+    document.querySelectorAll('table.gia-co[data-kieu]').forEach(function (t) { t.hidden = t.dataset.kieu !== kieu; });
   });
-  function ve() { PodVeTen.choFont().then(function () { PodVeTen.ve(cv, d, ip.value.trim() || 'Tên của bạn', mau); }); }
+  chon('#fontXt .chip-kieu', function (c) { font = c.dataset.font; })
+    .forEach(function (c) { c.querySelector('.ten-font').style.font = PodVeTen.css(c.dataset.font, 19); });
+  function ve() {
+    var k = PodVeTen.khung(d, kieu), ten = ip.value.trim();
+    cv.height = Math.round(cv.width * k.h / k.w);
+    document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
+    PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font); });
+  }
   ip.oninput = ve;
   document.getElementById('taiXt').onclick = function () {
-    PodVeTen.tai(cv, ({!! json_encode($m->ten, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!} + '-' + (ip.value.trim() || 'mau') + (mau ? '-' + mau : '')).replace(/[\\/:*?"<>|]+/g, '') + '.png');
+    PodVeTen.tai(cv, [{!! json_encode($m->ten, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}, PodVeTen.khung(d, kieu).ten, ip.value.trim() || 'mau', mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
   };
   ve();
 })();

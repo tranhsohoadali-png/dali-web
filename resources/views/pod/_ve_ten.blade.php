@@ -21,15 +21,18 @@ window.PodVeTen = (function () {
     var f = function (v) { return Math.max(0, Math.round(v * (1 - k))); };
     return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
   }
-  var hua = null;
-  function choFont() {
-    if (!hua) hua = (document.fonts && document.fonts.load)
-      ? Promise.all([document.fonts.load('40px Pacifico'), document.fonts.load('40px Pacifico', 'ăâêôơưđẮỆ')]).catch(function () {})
+  var DAM = { 'Dancing Script': '700 ' }; // font cần nét đậm cho đủ dày khi in
+  function css(font, co) { return (DAM[font] || '') + co + 'px "' + font + '"'; }
+  var hua = {};
+  function choFont(font) {
+    font = font || 'Pacifico';
+    if (!hua[font]) hua[font] = (document.fonts && document.fonts.load)
+      ? document.fonts.load(css(font, 40), 'Aaăâêôơưđ Ẵ').catch(function () {})
       : Promise.resolve();
-    return hua;
+    return hua[font];
   }
-  /** Vẽ lên canvas: d = dữ liệu xem_truoc của mẫu, ten = chữ cần in, mau = tên màu nhựa. */
-  function ve(cv, d, ten, mau) {
+  /** Vẽ lên canvas: d = khung (w, h, khung, o_ten), ten = chữ cần in, mau = tên màu nhựa, font = font chữ tên. */
+  function ve(cv, d, ten, mau, font) {
     var W = cv.width, H = cv.height, ctx = cv.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     var c = mauHex(mau), sau = toi(c, c === '#F4F2EC' ? 0.16 : 0.32);
@@ -47,12 +50,12 @@ window.PodVeTen = (function () {
     ctx.fillStyle = c; ctx.fill(khung, 'evenodd');
     ten = String(ten || '').trim();
     if (ten && d.o_ten) {
-      var o = d.o_ten, font = d.font || 'Pacifico';
+      var o = d.o_ten; font = font || d.font || 'Pacifico';
       ctx.save(); ctx.translate(o.cx, o.cy); ctx.rotate((o.goc || 0) * Math.PI / 180);
-      ctx.font = '10px ' + font; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.font = css(font, 10); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
       var m = ctx.measureText(ten), cao = (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) || 12;
       var co = 10 * Math.min(o.w / Math.max(m.width, 0.01), (o.h * 1.08) / cao);
-      ctx.font = co + 'px ' + font; m = ctx.measureText(ten);
+      ctx.font = css(font, co); m = ctx.measureText(ten);
       var y = (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
       ctx.fillStyle = sau; ctx.fillText(ten, day, y + day * 1.3);
       ctx.fillStyle = c; ctx.fillText(ten, 0, y);
@@ -67,6 +70,8 @@ window.PodVeTen = (function () {
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
     }, 'image/png');
   }
-  return { ve: ve, tai: tai, choFont: choFont, mauHex: mauHex };
+  /** Khung của một kiểu: mẫu nhiều kiểu lấy xem_truoc.kieu[k], mẫu một kiểu dùng chính xem_truoc. */
+  function khung(xt, kieu) { return (xt && xt.kieu && kieu && xt.kieu[kieu]) ? xt.kieu[kieu] : xt; }
+  return { ve: ve, tai: tai, choFont: choFont, mauHex: mauHex, khung: khung, css: css };
 })();
 </script>

@@ -102,10 +102,16 @@ class PodSo
                 throw ValidationException::withMessages(["dong.$i" => "Dòng $so: chọn một màu có sẵn."]);
             }
             $chu = mb_substr(trim((string) ($d['chu'] ?? '')), 0, 300);
-            if ($toiDa = $mau->tenToiDa()) { // mẫu khắc tên: bắt buộc có tên, không quá số ký tự ô tên chứa được
+            if ($toiDa = $mau->tenToiDa($bt->kieu)) { // mẫu khắc tên: bắt buộc có tên, không quá số ký tự ô tên chứa được
                 if ($chu === '') throw ValidationException::withMessages(["dong.$i" => "Dòng $so: nhập tên cần in."]);
                 if (mb_strlen($chu) > $toiDa) throw ValidationException::withMessages(["dong.$i" => "Dòng $so: tên tối đa $toiDa ký tự."]);
             }
+            $font = null;
+            if ($dsFont = $mau->dsFont()) { // mẫu cho chọn font: phải là font trong danh sách, bỏ trống = font mặc định
+                $font = trim((string) ($d['font'] ?? '')) ?: $dsFont[0];
+                if (!in_array($font, $dsFont, true)) throw ValidationException::withMessages(["dong.$i" => "Dòng $so: chọn một font có sẵn."]);
+            }
+            $tenKieu = $mau->tenKieu($bt->kieu);
             $phi = (int) $mau->phi_ca_nhan;
             $chatLieu = self::chatLieu($bt->chat_lieu);
             $donGia = $bangGia[$chatLieu];
@@ -113,7 +119,8 @@ class PodSo
                 'mau_id'       => $mau->id,
                 'bien_the_id'  => $bt->id,
                 'ten_mau'      => $mau->ten,
-                'ten_bien_the' => $bt->ten,
+                'ten_bien_the' => mb_substr(($tenKieu ? $tenKieu . ' · ' : '') . $bt->ten, 0, 120), // chụp cả kiểu: "Nơ + hoa · 3 inch"
+                'font'         => $font,
                 'mau_sac'      => $mauSac !== '' ? mb_substr($mauSac, 0, 60) : null,
                 'so_luong'     => $sl,
                 'gram'         => (float) $bt->gram,

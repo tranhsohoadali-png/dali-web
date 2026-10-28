@@ -13,7 +13,7 @@
 @hasSection('og_anh')<meta property="og:image" content="@yield('og_anh')">@endif
 <link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Pacifico&family=Lobster&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
 :root{--g:#6BBF1F;--g2:#8CC63E;--gd:#2F6B05;--gdd:#14320A;--ink:#16300A;--mu:#5B6B52;--bg:#FBFEF7;--gl:#EEF8E2;--gll:#F6FCEE;--bd:#DCEFC6;--pk:#FF8FB1;--r:16px}
 *{box-sizing:border-box;margin:0;padding:0}

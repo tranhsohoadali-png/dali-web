@@ -9,7 +9,7 @@
   @foreach($don->dong as $x)
     <div class="dong">
       <div>{{ $x->ten_mau }} · {{ $x->ten_bien_the }}@if($x->chat_lieu) · nhựa <b>{{ $x->chat_lieu }}</b>@endif @if($x->mau_sac) · <b>{{ $x->mau_sac }}</b>@endif × <span class="sl">{{ $x->so_luong }}</span></div>
-      @if($x->chu_ca_nhan)<div>Chữ cá nhân hoá: <b>{{ $x->chu_ca_nhan }}</b></div>@endif
+      @if($x->chu_ca_nhan)<div>Chữ cá nhân hoá: <b>{{ $x->chu_ca_nhan }}</b>@if($x->font) · font <b>{{ $x->font }}</b>@endif</div>@endif
       <div class="mu" style="word-break:break-all">File in: {{ $fileIn[$x->bien_the_id] ?? 'chưa ghi, hỏi chủ xưởng' }}</div>
     </div>
   @endforeach

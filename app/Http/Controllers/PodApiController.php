@@ -169,6 +169,7 @@ class PodApiController extends Controller
             'bien_the'    => $m->bienThe->map(fn ($b) => [
                 'id'        => $b->id,
                 'ten'       => $b->ten,
+                'kieu'      => $b->kieu,
                 'chat_lieu' => PodSo::chatLieu($b->chat_lieu),
                 'gram'      => (float) $b->gram,
                 'mau_sac'   => $b->dsMau(),
@@ -295,6 +296,7 @@ class PodApiController extends Controller
                 'so_luong'     => (int) $x->so_luong,
                 'gram'         => (float) $x->gram,
                 'chu'          => $x->chu_ca_nhan,
+                'font'         => $x->font,
                 'thanh_tien'   => (int) $x->thanh_tien,
             ])->all(),
         ];

@@ -89,6 +89,40 @@ class PodTest extends TestCase
             ->assertSee('cvXt')->assertSee('Thử tên của bạn')->assertSee('8.100đ');
     }
 
+    public function test_mot_san_pham_nhieu_kieu_chon_font(): void
+    {
+        $khung = fn ($ten, $toiDa) => ['ten' => $ten, 'toi_da' => $toiDa, 'w' => 90, 'h' => 104, 'khung' => 'M0 0 L90 0 L90 104 L0 104Z',
+            'o_ten' => ['cx' => 45, 'cy' => 55, 'w' => 70, 'h' => 20, 'goc' => 0]];
+        $m = PodMau::create(['ma' => 'ornkieu001', 'ten' => 'Ornament gộp', 'chu_seller_id' => null, 'hien' => true, 'anh' => [],
+            'xem_truoc' => ['loai' => 'ten', 'font' => 'Pacifico', 'fonts' => ['Pacifico', 'Lobster'], 'toi_da' => 12,
+                'kieu' => ['la' => $khung('Lá + chuông', 12), 'chan' => $khung('Chân thú cưng', 4)]]]);
+        $la = PodBienThe::create(['mau_id' => $m->id, 'kieu' => 'la', 'ten' => '3 inch', 'gram' => 5, 'chat_lieu' => 'PETG'])->id;
+        $chan = PodBienThe::create(['mau_id' => $m->id, 'kieu' => 'chan', 'ten' => '3 inch', 'gram' => 6, 'chat_lieu' => 'PETG'])->id;
+        foreach ([[$chan, 'Alexa', null, 'tối đa 4'], [$la, 'Emma', 'Comic Sans', 'font có sẵn']] as [$bt, $chu, $font, $loi]) {
+            try {
+                PodSo::datDon($this->a, [['bien_the_id' => $bt, 'so_luong' => 1, 'chu' => $chu, 'font' => $font]], null, null, null, null);
+                $this->fail('Phải báo lỗi: ' . $loi);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $this->assertStringContainsString($loi, collect($e->errors())->flatten()->first());
+            }
+        }
+        $don = PodSo::datDon($this->a, [
+            ['bien_the_id' => $la, 'so_luong' => 1, 'chu' => 'Alexandra', 'font' => 'Lobster'],
+            ['bien_the_id' => $chan, 'so_luong' => 1, 'chu' => 'Max'],                      // bỏ trống font -> font mặc định
+        ], null, null, null, null);
+        $dong = $don->dong()->orderBy('id')->get();
+        $this->assertSame(['Lá + chuông · 3 inch', 'Chân thú cưng · 3 inch'], $dong->pluck('ten_bien_the')->all());
+        $this->assertSame(['Lobster', 'Pacifico'], $dong->pluck('font')->all());
+        $h = $this->token($this->a);
+        $this->assertSame(['la', 'chan'], collect($this->getJson('/api/pod/mau/' . $m->ma, $h)->json('mau.bien_the'))->pluck('kieu')->all());
+        $this->assertSame('Lobster', collect($this->getJson('/api/pod/don', $h)->json('don.0.dong'))->firstWhere('chu', 'Alexandra')['font'] ?? null);
+        // Trang công khai: chip kiểu + chip font, bảng giá từng kiểu (kiểu sau ẩn chờ chọn)
+        $html = $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()
+            ->assertSee('id="kieuXt"', false)->assertSee('Chân thú cưng')->assertSee('data-font="Lobster"', false)->getContent();
+        $this->assertMatchesRegularExpression('/<table class="bang gia-co" data-kieu="chan"\s+hidden/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<table class="bang gia-co" data-kieu="la"\s+hidden/', $html);
+    }
+
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
     {
         $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');

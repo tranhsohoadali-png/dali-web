@@ -41,11 +41,29 @@ class PodMau extends Model
         return $this->chu_seller_id !== null;
     }
 
-    /** Mẫu khắc tên (có ảnh xem trước theo tên): đặt đơn bắt buộc có tên. Trả số ký tự tối đa, hoặc 0 nếu không phải. */
-    public function tenToiDa(): int
+    /**
+     * Mẫu khắc tên (có ảnh xem trước theo tên): đặt đơn bắt buộc có tên. Trả số ký tự tối đa, hoặc 0 nếu không phải.
+     * Mẫu nhiều kiểu: kiểu có toi_da riêng (vd chân thú cưng ô tên hẹp hơn) thì dùng số đó.
+     */
+    public function tenToiDa(?string $kieu = null): int
     {
         $x = $this->xem_truoc;
-        return is_array($x) && ($x['loai'] ?? '') === 'ten' ? max(1, (int) ($x['toi_da'] ?? 12)) : 0;
+        if (!is_array($x) || ($x['loai'] ?? '') !== 'ten') return 0;
+        $k = $kieu !== null ? ($x['kieu'][$kieu] ?? null) : null;
+        return max(1, (int) ($k['toi_da'] ?? $x['toi_da'] ?? 12));
+    }
+
+    /** Tên hiển thị của một kiểu (mẫu nhiều kiểu), vd "Nơ + hoa"; null nếu mẫu không chia kiểu. */
+    public function tenKieu(?string $kieu): ?string
+    {
+        return $kieu !== null ? ($this->xem_truoc['kieu'][$kieu]['ten'] ?? $kieu) : null;
+    }
+
+    /** Font seller được chọn cho tên (font đầu = mặc định). Rỗng = không cho chọn. */
+    public function dsFont(): array
+    {
+        $f = $this->xem_truoc['fonts'] ?? null;
+        return is_array($f) ? array_values(array_filter($f, 'is_string')) : [];
     }
 
     /** Mã 10 ký tự ngẫu nhiên. */
