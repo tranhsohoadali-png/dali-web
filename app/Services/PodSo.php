@@ -59,11 +59,24 @@ class PodSo
         );
     }
 
+    /** Đơn giá mỗi gram của MỘT mẫu: đơn giá chung của nhựa, cộng phần tăng giá riêng của mẫu (pod_mau.tang_gia, %). */
+    public static function donGia(PodMau $m, ?string $chatLieu, ?array $bangGia = null): int
+    {
+        $bangGia ??= self::bangGia();
+        return (int) round($bangGia[self::chatLieu($chatLieu)] * (100 + (int) $m->tang_gia) / 100);
+    }
+
+    /** Giá in 1 chiếc của một phân loại (chưa gồm phí cá nhân hoá). */
+    public static function giaBienThe(PodMau $m, PodBienThe $b, ?array $bangGia = null): int
+    {
+        return self::giaDong((float) $b->gram, 1, self::donGia($m, $b->chat_lieu, $bangGia), 0, false);
+    }
+
     /** Giá in 1 chiếc rẻ nhất của mẫu (theo đơn giá nhựa hiện hành), null nếu chưa có phân loại. Dùng cho chữ "từ …đ" trên thẻ. */
     public static function giaTu(PodMau $m, ?array $bangGia = null): ?int
     {
         $bangGia ??= self::bangGia();
-        $ds = $m->bienThe->map(fn ($b) => self::giaDong((float) $b->gram, 1, $bangGia[self::chatLieu($b->chat_lieu)], 0, false));
+        $ds = $m->bienThe->map(fn ($b) => self::giaBienThe($m, $b, $bangGia));
         return $ds->isEmpty() ? null : (int) $ds->min();
     }
 
@@ -114,7 +127,7 @@ class PodSo
             $tenKieu = $mau->tenKieu($bt->kieu);
             $phi = (int) $mau->phi_ca_nhan;
             $chatLieu = self::chatLieu($bt->chat_lieu);
-            $donGia = $bangGia[$chatLieu];
+            $donGia = self::donGia($mau, $chatLieu, $bangGia); // đã gồm tăng giá riêng của mẫu: dòng đơn tự khớp gram × đơn giá
             $kq[] = [
                 'mau_id'       => $mau->id,
                 'bien_the_id'  => $bt->id,

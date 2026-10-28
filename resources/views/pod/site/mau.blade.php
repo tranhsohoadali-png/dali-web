@@ -71,14 +71,14 @@
             <tr><td><b>{{ $tenCo }}</b></td>
               @foreach($cls as $cl)
                 @php $b = $ds->first(fn ($x) => \App\Services\PodSo::chatLieu($x->chat_lieu) === $cl); @endphp
-                <td class="so">{{ $b ? number_format(\App\Services\PodSo::giaDong((float) $b->gram, 1, $bg[$cl], 0, false), 0, ',', '.') . 'đ' : '—' }}</td>
+                <td class="so">{{ $b ? number_format(\App\Services\PodSo::giaBienThe($m, $b, $bg), 0, ',', '.') . 'đ' : '—' }}</td>
               @endforeach
             </tr>
             @endforeach
           </tbody>
         </table>
         @endforeach
-        <p style="color:var(--mu);font-size:13px;margin-top:6px">Giá in 1 chiếc, chưa gồm phí vận chuyển.@if($xt) Kích thước đo theo bề ngang.@endif</p>
+        <p style="color:var(--mu);font-size:13px;margin-top:6px">Giá in 1 chiếc, chưa gồm phí vận chuyển.@if($xt) {{ $xt['ghi_co'] ?? 'Kích thước đo theo bề ngang.' }}@endif</p>
       @endif
       @if($xt)
         <div class="thu-ten">

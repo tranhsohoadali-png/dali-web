@@ -19,6 +19,7 @@
         </select>
       </label>
       <label class="f"><span>Phí cá nhân hoá (đ/dòng có chữ riêng, 0–10.000)</span><input name="phi_ca_nhan" type="number" min="0" max="10000" step="500" value="{{ old('phi_ca_nhan', (int) $mau->phi_ca_nhan) }}"></label>
+      <label class="f"><span>Tăng giá riêng mẫu này (%, 0 = theo đơn giá chung)</span><input name="tang_gia" type="number" min="0" max="300" step="1" value="{{ old('tang_gia', (int) $mau->tang_gia) }}"></label>
       <label class="f"><span>Phí thiết kế seller đã trả (đ)</span><input name="phi_thiet_ke" type="number" min="0" step="1000" value="{{ old('phi_thiet_ke', (int) $mau->phi_thiet_ke) }}"></label>
       <label class="f" style="flex-direction:row;gap:8px;align-items:center"><input type="checkbox" name="hien" value="1" style="width:auto" @checked(old('hien', $mau->hien))> <span>Hiện cho seller</span></label>
       <label class="f rong"><span>Mô tả cho seller</span><textarea name="mo_ta" rows="3" maxlength="5000">{{ old('mo_ta', $mau->mo_ta) }}</textarea></label>

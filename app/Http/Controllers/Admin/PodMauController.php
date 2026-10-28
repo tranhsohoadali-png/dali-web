@@ -44,6 +44,7 @@ class PodMauController extends Controller
             $mau = PodMau::create([
                 'ma' => PodMau::taoMa(), 'ten' => $v['ten'], 'nhom' => $v['nhom'] ?? null, 'mo_ta' => $v['mo_ta'] ?? null,
                 'chu_seller_id' => $v['chu_seller_id'] ?? null, 'phi_ca_nhan' => (int) ($v['phi_ca_nhan'] ?? 0),
+                'tang_gia' => (int) ($v['tang_gia'] ?? 0),
                 'phi_thiet_ke' => (int) ($v['phi_thiet_ke'] ?? 0), 'hien' => $request->boolean('hien'), 'anh' => [],
             ]);
             $this->luuBienThe($mau, $v['bt'] ?? []);
@@ -77,6 +78,7 @@ class PodMauController extends Controller
             $mau->update([
                 'ten' => $v['ten'], 'nhom' => $v['nhom'] ?? null, 'mo_ta' => $v['mo_ta'] ?? null,
                 'chu_seller_id' => $chuMoi, 'phi_ca_nhan' => (int) ($v['phi_ca_nhan'] ?? 0),
+                'tang_gia' => (int) ($v['tang_gia'] ?? 0),
                 'phi_thiet_ke' => (int) ($v['phi_thiet_ke'] ?? 0), 'hien' => $request->boolean('hien'),
             ]);
             $this->luuBienThe($mau, $v['bt'] ?? []);
@@ -127,6 +129,7 @@ class PodMauController extends Controller
             'mo_ta'          => 'nullable|string|max:5000',
             'chu_seller_id'  => 'nullable|integer|exists:pod_seller,id',
             'phi_ca_nhan'    => 'nullable|integer|min:0|max:10000',
+            'tang_gia'       => 'nullable|integer|min:0|max:300',
             'phi_thiet_ke'   => 'nullable|integer|min:0|max:100000000',
             'bt'             => 'nullable|array|max:40',
             'bt.*.id'        => 'nullable|integer',

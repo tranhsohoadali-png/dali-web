@@ -173,7 +173,7 @@ class PodApiController extends Controller
                 'chat_lieu' => PodSo::chatLieu($b->chat_lieu),
                 'gram'      => (float) $b->gram,
                 'mau_sac'   => $b->dsMau(),
-                'gia'       => PodSo::giaDong((float) $b->gram, 1, $gia[PodSo::chatLieu($b->chat_lieu)], 0, false),
+                'gia'       => PodSo::giaBienThe($m, $b, $gia),
             ])->all(),
         ];
     }

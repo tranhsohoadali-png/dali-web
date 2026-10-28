@@ -33,7 +33,7 @@
       <td>
         @forelse($m->bienThe as $b)
           @php $cl = \App\Services\PodSo::chatLieu($b->chat_lieu); @endphp
-          <div>{{ $b->ten }} · <b>{{ $cl }}</b> — {{ rtrim(rtrim(number_format($b->gram, 1, ',', '.'), '0'), ',') }} g = <b>{{ number_format(\App\Services\PodSo::giaDong($b->gram, 1, $bangGia[$cl], 0, false), 0, ',', '.') }}đ</b></div>
+          <div>{{ $b->ten }} · <b>{{ $cl }}</b> — {{ rtrim(rtrim(number_format($b->gram, 1, ',', '.'), '0'), ',') }} g = <b>{{ number_format(\App\Services\PodSo::giaBienThe($m, $b, $bangGia), 0, ',', '.') }}đ</b></div>
         @empty
           <span class="muted">Chưa có phân loại, seller chưa đặt được</span>
         @endforelse

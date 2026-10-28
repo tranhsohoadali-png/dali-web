@@ -146,6 +146,23 @@ class PodTest extends TestCase
             ->assertSee('height="520"', false)->assertSee('data-mau="Trắng + chữ đỏ"', false)->assertSee('5.940đ');
     }
 
+    public function test_tang_gia_rieng_mot_mau(): void
+    {
+        $m = $this->taoMau('Móc khoá tăng giá', null, 10.0, 'PETG');
+        $m->update(['tang_gia' => 20]);
+        PodBienThe::create(['mau_id' => $m->id, 'ten' => 'Mặc định', 'gram' => 10.0, 'chat_lieu' => 'PLA']);
+        $m->load('bienThe');
+        $this->assertSame([1080, 1560], [PodSo::donGia($m, 'PETG'), PodSo::donGia($m, 'PLA')]);
+        $this->assertSame(10800, PodSo::giaTu($m));                                   // 10 g × 900 × 1,2
+        $dong = PodSo::datDon($this->a, [['bien_the_id' => $this->bt($m), 'so_luong' => 2]], null, null, null, null)->dong()->first();
+        $this->assertSame([1080, 21600], [(int) $dong->don_gia_gram, (int) $dong->thanh_tien]); // dòng đơn khớp gram × đơn giá mẫu
+        $gia = collect($this->getJson('/api/pod/mau/' . $m->ma, $this->token($this->a))->json('mau.bien_the'))->pluck('gia')->all();
+        $this->assertSame([10800, 15600], $gia);
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()->assertSee('10.800đ')->assertSee('15.600đ');
+        // mẫu khác không bị ảnh hưởng
+        $this->assertSame(1300, PodSo::donGia($this->chung, 'PLA'));
+    }
+
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
     {
         $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');
