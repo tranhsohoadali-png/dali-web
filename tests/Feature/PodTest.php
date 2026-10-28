@@ -136,10 +136,48 @@ class PodTest extends TestCase
         $this->assertStringNotContainsString('Mẫu độc quyền của A', $body);
     }
 
-    public function test_cong_o_ten_mien_rieng_gan_noindex_link_cu_chuyen_huong(): void
+    public function test_giu_kin_web_cong_khai_khong_lo_mau_rieng(): void
     {
         $goc = 'http://' . config('pod.domain');
-        $this->get($goc . '/')->assertOk()->assertSee('Cổng seller POD')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        foreach (['/', '/kho-mau', '/sitemap.xml'] as $u) {
+            $body = $this->get($goc . $u)->assertOk()->getContent();
+            $this->assertStringNotContainsString($this->riengA->ma, $body, $u);
+            $this->assertStringNotContainsString('Mẫu độc quyền của A', $body, $u);
+        }
+        $this->assertStringContainsString($this->chung->ma, $this->get($goc . '/sitemap.xml')->getContent());
+        $this->get($goc . '/kho-mau/' . $this->riengA->ma)->assertNotFound();
+        $this->get($goc . '/anh-mau/' . $this->riengA->ma . '/0')->assertNotFound();
+        $this->get($goc . '/anh-mau/' . $this->chung->ma . '/0')->assertOk();
+        // Giá từng mẫu chỉ hiện sau đăng nhập: 18,8 g × 1.300 = 24.440đ không được lộ ở trang công khai
+        $this->get($goc . '/kho-mau/' . $this->chung->ma)->assertOk()->assertSee('Khuôn bánh Eid')->assertDontSee('24.440');
+    }
+
+    public function test_dang_ky_seller_cho_duyet_roi_moi_dang_nhap(): void
+    {
+        $goc = 'http://' . config('pod.domain');
+        $this->post($goc . '/dang-ky', ['ten' => 'Shop Mới', 'sdt' => '0933 444 555', 'matkhau' => 'matkhau7', 'matkhau_confirmation' => 'matkhau7', 'san_ban' => 'Etsy', 'dong_y' => '1'])
+            ->assertRedirect()->assertSessionHas('xong');
+        $s = PodSeller::where('sdt', '0933444555')->firstOrFail();
+        $this->assertTrue($s->cho_duyet);
+        $this->assertFalse($s->hien);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0933444555', 'matkhau' => 'matkhau7'])->assertStatus(403)
+            ->assertJsonFragment(['error' => 'Tài khoản đang chờ xưởng duyệt. Xưởng sẽ báo qua Zalo khi duyệt xong.']);
+        $this->withSession(['admin_logged_in' => true])->post('/admin/3d/pod/seller/' . $s->id . '/duyet')->assertSessionHasNoErrors();
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0933444555', 'matkhau' => 'matkhau7'])->assertOk();
+        // Ô bẫy máy spam: không tạo tài khoản
+        $this->post($goc . '/dang-ky', ['website' => 'http://spam.example', 'ten' => 'Bot', 'sdt' => '0900999888', 'matkhau' => 'matkhau7', 'matkhau_confirmation' => 'matkhau7', 'dong_y' => '1'])->assertRedirect();
+        $this->assertFalse(PodSeller::where('sdt', '0900999888')->exists());
+    }
+
+    public function test_ten_mien_pod_trang_cong_khai_cho_google_cong_thi_an(): void
+    {
+        $goc = 'http://' . config('pod.domain');
+        foreach (['/', '/bang-gia', '/kho-mau', '/dang-ky', '/kho-mau/' . $this->chung->ma] as $u) {
+            $r = $this->get($goc . $u)->assertOk();
+            $this->assertNull($r->headers->get('X-Robots-Tag'), "$u phải cho Google lập chỉ mục");
+        }
+        $this->get($goc . '/cong')->assertOk()->assertSee('Cổng seller')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $this->get($goc . '/robots.txt')->assertOk()->assertSee('Disallow: /cong');
         $this->get('/pod')->assertStatus(301)->assertRedirect(config('pod.url'));
         $this->get($goc . '/tho-in')->assertRedirectContains('/tho-in/dang-nhap');
         $this->getJson($goc . '/api/pod/mau', $this->token($this->a))->assertOk();

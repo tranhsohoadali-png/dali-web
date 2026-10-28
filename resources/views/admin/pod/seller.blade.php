@@ -24,12 +24,24 @@
     @php $du = (int) ($soDu[$s->id] ?? 0); $cn = $choNap[$s->id] ?? null; @endphp
     <tr>
       <td><b>{{ $s->ma }}</b></td>
-      <td><b>{{ $s->ten }}</b><div class="muted">{{ $s->sdt }}@if($s->ghi_chu) · {{ $s->ghi_chu }}@endif</div></td>
+      <td><b>{{ $s->ten }}</b><div class="muted">{{ $s->sdt }}@if($s->ghi_chu) · {{ $s->ghi_chu }}@endif</div>
+        @if($s->san_ban || $s->link_shop)<div class="muted">Bán trên: {{ $s->san_ban ?: '—' }}@if($s->link_shop) · <a href="{{ $s->link_shop }}" target="_blank" rel="noopener nofollow" style="color:var(--gd)">link shop</a>@endif</div>@endif
+        @if($s->loi_nhan)<div class="muted" style="max-width:340px">"{{ $s->loi_nhan }}"</div>@endif
+      </td>
       <td class="num"><b>{{ number_format($du, 0, ',', '.') }}đ</b></td>
       <td>@if($cn)<span class="badge b-cho_nap">{{ $cn->n }} đơn · {{ number_format($cn->t, 0, ',', '.') }}đ</span>@else<span class="muted">—</span>@endif</td>
       <td>@if($s->dong_y_luc)<span class="muted">Đồng ý {{ $s->dong_y_luc->format('d/m/Y') }}</span>@else<span class="muted">Chưa đăng nhập</span>@endif</td>
-      <td>@if($s->hien)<span class="badge b-on">Đang mở</span>@else<span class="badge b-off">Đã khoá</span>@endif</td>
+      <td>@if($s->cho_duyet)<span class="badge b-cho_nap">Chờ duyệt · {{ $s->created_at->format('d/m H:i') }}</span>@elseif($s->hien)<span class="badge b-on">Đang mở</span>@else<span class="badge b-off">Đã khoá</span>@endif</td>
       <td>
+        @if($s->cho_duyet)
+        <div class="acts">
+          <form method="POST" action="{{ route('admin.pod.seller.duyet', $s) }}">@csrf<button class="btn-sm">Duyệt, mở tài khoản</button></form>
+          <form method="POST" action="{{ route('admin.pod.seller.tuchoi', $s) }}" class="acts">@csrf
+            <label style="font-size:11px;display:flex;gap:4px;align-items:center"><input type="checkbox" required> chắc chắn</label>
+            <button class="btn-sm btn-del">Từ chối</button>
+          </form>
+        </div>
+        @else
         <div class="acts">
           <details class="edit"><summary class="btn-sm">Nạp tiền</summary>
             <form method="POST" action="{{ route('admin.pod.seller.nap', $s) }}" class="edit-box">
@@ -53,6 +65,7 @@
           </details>
           <form method="POST" action="{{ route('admin.pod.seller.khoa', $s) }}">@csrf<button class="btn-sm {{ $s->hien ? 'btn-warn' : '' }}">{{ $s->hien ? 'Khoá' : 'Mở' }}</button></form>
         </div>
+        @endif
       </td>
     </tr>
     @endforeach

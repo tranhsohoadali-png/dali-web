@@ -16,7 +16,8 @@ class PodSellerController extends Controller
 {
     public function index()
     {
-        $items = PodSeller::orderByDesc('created_at')->get();
+        // Đơn đăng ký chờ duyệt lên đầu
+        $items = PodSeller::orderByDesc('cho_duyet')->orderByDesc('created_at')->get();
         $soDu = DB::table('pod_vi')->selectRaw('seller_id, sum(so_tien) t')->groupBy('seller_id')->pluck('t', 'seller_id');
         $choNap = PodDon::where('trang_thai', 'cho_nap')->selectRaw('seller_id, count(*) n, sum(tong_tien) t')->groupBy('seller_id')->get()->keyBy('seller_id');
         return view('admin.pod.seller', compact('items', 'soDu', 'choNap'));
@@ -38,7 +39,24 @@ class PodSellerController extends Controller
             'ma' => PodSeller::taoMa(), 'ten' => $v['ten'], 'sdt' => $sdt,
             'matkhau' => Hash::make($v['matkhau']), 'ghi_chu' => $v['ghi_chu'] ?? null, 'hien' => true,
         ]);
-        return back()->with('ok', 'Đã tạo seller "' . $s->ten . '" — mã ' . $s->ma . '. Gửi seller link ' . config('pod.url') . ', số điện thoại và mật khẩu.');
+        return back()->with('ok', 'Đã tạo seller "' . $s->ten . '" — mã ' . $s->ma . '. Gửi seller link ' . config('pod.url') . '/cong, số điện thoại và mật khẩu.');
+    }
+
+    /** Duyệt seller tự đăng ký: mở tài khoản, seller đăng nhập bằng mật khẩu họ đã đặt khi đăng ký. */
+    public function duyet(PodSeller $seller)
+    {
+        if (!$seller->cho_duyet) return back()->withErrors(['seller' => 'Seller này không ở trạng thái chờ duyệt.']);
+        $seller->update(['cho_duyet' => false, 'hien' => true]);
+        return back()->with('ok', 'Đã duyệt "' . $seller->ten . '" (mã ' . $seller->ma . '). Báo seller qua Zalo ' . $seller->sdt . ' đăng nhập ở ' . config('pod.url') . '/cong.');
+    }
+
+    /** Từ chối đơn đăng ký: xoá hẳn (chưa có ví, đơn hay mẫu nào). */
+    public function tuChoi(PodSeller $seller)
+    {
+        if (!$seller->cho_duyet) return back()->withErrors(['seller' => 'Chỉ xoá được đơn đăng ký đang chờ duyệt.']);
+        $ten = $seller->ten;
+        $seller->delete();
+        return back()->with('ok', 'Đã từ chối và xoá đơn đăng ký "' . $ten . '".');
     }
 
     public function update(Request $request, PodSeller $seller)

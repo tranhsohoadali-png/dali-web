@@ -69,8 +69,10 @@ class PodApiController extends Controller
         if (!$s || !Hash::check($v['matkhau'], $s->matkhau)) {
             return response()->json(['ok' => false, 'error' => 'Sai số điện thoại hoặc mật khẩu.'], 401);
         }
-        if (!$s->hien) {
-            return response()->json(['ok' => false, 'error' => 'Tài khoản đang tạm khoá, vui lòng liên hệ xưởng.'], 403);
+        if (!$s->hien) { // chỉ nói lý do khi đã đúng mật khẩu
+            return response()->json(['ok' => false, 'error' => $s->cho_duyet
+                ? 'Tài khoản đang chờ xưởng duyệt. Xưởng sẽ báo qua Zalo khi duyệt xong.'
+                : 'Tài khoản đang tạm khoá, vui lòng liên hệ xưởng.'], 403);
         }
         $token = Str::random(48);
         PodPhien::create([

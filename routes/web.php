@@ -20,10 +20,20 @@ use App\Http\Controllers\WebhookController;
 // ─── WEBHOOK (ngoài, không CSRF) ────────────────
 Route::post('/webhook/viettelpost', [WebhookController::class, 'viettelpost'])->name('webhook.vtp');
 
-// ─── TÊN MIỀN CỔNG POD: trang gốc là cổng seller (gọi /api/pod/*, không cho máy tìm kiếm lập chỉ mục).
-//     Phải đăng ký TRƯỚC route "/" của web tranh để thắng khi Host là tên miền cổng.
+// ─── TÊN MIỀN POD (pod.tranhdali.vn): web riêng cho seller. Trang công khai cho Google lập chỉ mục;
+//     cổng sau đăng nhập /cong (gọi /api/pod/*) và /tho-in thì noindex.
+//     Phải đăng ký TRƯỚC route "/" của web tranh để thắng khi Host là tên miền POD.
 Route::domain(config('pod.domain'))->group(function () {
-    Route::get('/', fn () => response()->view('pod.cong')->header('X-Robots-Tag', 'noindex, nofollow'))->name('pod.trang-chu');
+    Route::get('/',              [\App\Http\Controllers\PodSiteController::class, 'trangChu'])->name('pod.trang-chu');
+    Route::get('bang-gia',       [\App\Http\Controllers\PodSiteController::class, 'bangGia'])->name('pod.site.bang-gia');
+    Route::get('kho-mau',        [\App\Http\Controllers\PodSiteController::class, 'khoMau'])->name('pod.site.kho-mau');
+    Route::get('kho-mau/{ma}',   [\App\Http\Controllers\PodSiteController::class, 'mau'])->name('pod.site.mau');
+    Route::get('anh-mau/{ma}/{i}', [\App\Http\Controllers\PodSiteController::class, 'anh'])->whereNumber('i')->name('pod.site.anh');   // chỉ ảnh mẫu Kho chung
+    Route::get('dang-ky',        [\App\Http\Controllers\PodSiteController::class, 'dangKyForm'])->name('pod.site.dang-ky');
+    Route::post('dang-ky',       [\App\Http\Controllers\PodSiteController::class, 'dangKy'])->middleware('throttle:10,1')->name('pod.site.dang-ky.post');
+    Route::get('robots.txt',     [\App\Http\Controllers\PodSiteController::class, 'robots']);
+    Route::get('sitemap.xml',    [\App\Http\Controllers\PodSiteController::class, 'sitemap']);
+    Route::get('cong', fn () => response()->view('pod.cong')->header('X-Robots-Tag', 'noindex, nofollow'))->name('pod.cong-seller');
 });
 
 // ─── FRONTEND ───────────────────────────────────
@@ -149,6 +159,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('seller',                [\App\Http\Controllers\Admin\PodSellerController::class, 'store'])->name('seller.store');
         Route::put('seller/{seller}',        [\App\Http\Controllers\Admin\PodSellerController::class, 'update'])->name('seller.update');
         Route::post('seller/{seller}/khoa',  [\App\Http\Controllers\Admin\PodSellerController::class, 'khoa'])->name('seller.khoa');
+        Route::post('seller/{seller}/duyet', [\App\Http\Controllers\Admin\PodSellerController::class, 'duyet'])->name('seller.duyet');
+        Route::post('seller/{seller}/tu-choi', [\App\Http\Controllers\Admin\PodSellerController::class, 'tuChoi'])->name('seller.tuchoi');
         Route::post('seller/{seller}/nap',   [\App\Http\Controllers\Admin\PodSellerController::class, 'nap'])->name('seller.nap');
         Route::get('seller/{seller}/vi',     [\App\Http\Controllers\Admin\PodSellerController::class, 'vi'])->name('seller.vi');
         Route::get('mau',                    [\App\Http\Controllers\Admin\PodMauController::class, 'index'])->name('mau.index');

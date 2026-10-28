@@ -12,6 +12,7 @@ class PodSeller extends Model
     protected $hidden = ['matkhau'];
     protected $casts = [
         'hien'          => 'boolean',
+        'cho_duyet'     => 'boolean',
         'dong_y_luc'    => 'datetime',
         'dang_nhap_luc' => 'datetime',
     ];
