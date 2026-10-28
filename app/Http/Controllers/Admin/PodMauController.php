@@ -26,8 +26,8 @@ class PodMauController extends Controller
         elseif (ctype_digit($kho)) $q->where('chu_seller_id', (int) $kho);
         $items = $q->get();
         $sellers = PodSeller::orderBy('ten')->get(['id', 'ten', 'ma']);
-        $giaGram = PodSo::giaGram();
-        return view('admin.pod.mau-index', compact('items', 'sellers', 'kho', 'giaGram'));
+        $bangGia = PodSo::bangGia();
+        return view('admin.pod.mau-index', compact('items', 'sellers', 'kho', 'bangGia'));
     }
 
     public function create()
@@ -102,9 +102,14 @@ class PodMauController extends Controller
 
     public function giaGram(Request $request)
     {
-        $v = $request->validate(['gia_gram' => 'required|integer|min:100|max:100000']);
-        PodSo::datGiaGram((int) $v['gia_gram']);
-        return back()->with('ok', 'Đơn giá mới: ' . number_format($v['gia_gram'], 0, ',', '.') . 'đ/gram. Đơn đã đặt giữ giá cũ.');
+        $v = $request->validate([
+            'gia_petg' => 'required|integer|min:100|max:100000',
+            'gia_pla'  => 'required|integer|min:100|max:100000',
+        ]);
+        PodSo::datGiaGram('PETG', (int) $v['gia_petg']);
+        PodSo::datGiaGram('PLA', (int) $v['gia_pla']);
+        return back()->with('ok', 'Đơn giá mới: PETG ' . number_format($v['gia_petg'], 0, ',', '.') . 'đ, PLA '
+            . number_format($v['gia_pla'], 0, ',', '.') . 'đ mỗi gram. Đơn đã đặt giữ giá cũ.');
     }
 
     public function nhatKy()
@@ -127,6 +132,7 @@ class PodMauController extends Controller
             'bt.*.id'        => 'nullable|integer',
             'bt.*.ten'       => 'nullable|string|max:120',
             'bt.*.gram'      => 'nullable|numeric|min:0.1|max:5000',
+            'bt.*.chat_lieu' => 'nullable|in:PETG,PLA',
             'bt.*.mau_sac'   => 'nullable|string|max:300',
             'bt.*.file_in'   => 'nullable|string|max:300',
             'anh_moi'        => 'nullable|array|max:12',
@@ -152,6 +158,7 @@ class PodMauController extends Controller
             if ($ten === '') continue;
             $data = [
                 'ten' => $ten, 'gram' => round((float) $b['gram'], 1),
+                'chat_lieu' => PodSo::chatLieu($b['chat_lieu'] ?? null),
                 'mau_sac' => trim((string) ($b['mau_sac'] ?? '')) ?: null,
                 'file_in' => trim((string) ($b['file_in'] ?? '')) ?: null,
                 'thu_tu' => $thuTu++,

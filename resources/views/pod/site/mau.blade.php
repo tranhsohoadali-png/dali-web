@@ -32,12 +32,12 @@
       @if($m->mo_ta)<p style="color:var(--mu);margin-top:12px;white-space:pre-line">{{ $m->mo_ta }}</p>@endif
       @if($m->bienThe->isNotEmpty())
         <div style="margin-top:20px;font-weight:700">Phân loại</div>
-        <div class="pl">@foreach($m->bienThe as $b)<span>{{ $b->ten }}</span>@endforeach</div>
+        <div class="pl">@foreach($m->bienThe as $b)<span>{{ $b->ten }} · {{ \App\Services\PodSo::chatLieu($b->chat_lieu) }}</span>@endforeach</div>
       @endif
       @if($m->phi_ca_nhan > 0)<p style="margin-top:14px;font-size:15px">Có nhận chữ cá nhân hoá theo từng đơn.</p>@endif
       <div class="khoa">
         <b>Giá và đặt in nằm trong cổng seller</b>
-        <p style="color:var(--mu);font-size:15px;margin:6px 0 14px">Giá tính theo gram × {{ number_format(\App\Services\PodSo::giaGram(), 0, ',', '.') }}đ, hiện ngay khi bạn chọn phân loại. Ảnh mockup tải trong cổng để đăng bán.</p>
+        <p style="color:var(--mu);font-size:15px;margin:6px 0 14px">@php $bg = \App\Services\PodSo::bangGia(); @endphp Giá tính theo gram × đơn giá nhựa (PETG {{ number_format($bg['PETG'], 0, ',', '.') }}đ, PLA {{ number_format($bg['PLA'], 0, ',', '.') }}đ), hiện ngay khi bạn chọn phân loại. Ảnh mockup tải trong cổng để đăng bán.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap"><a href="/cong" class="nut nut-chinh nut-nho">Đăng nhập để đặt</a><a href="/dang-ky" class="nut nut-vien nut-nho">Chưa có tài khoản? Đăng ký</a></div>
       </div>
     </div>

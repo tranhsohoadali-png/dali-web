@@ -22,21 +22,39 @@ use Illuminate\Validation\ValidationException;
  */
 class PodSo
 {
-    public const GIA_GRAM_MAC_DINH = 1300; // bảng giá in 3D PLA 10/2026
-    public const SL_TOI_DA         = 500;
+    /** Giá mặc định đ/gram theo chất liệu. PETG là nhựa chính của xưởng nên đứng đầu (mặc định). */
+    public const CHAT_LIEU = ['PETG' => 900, 'PLA' => 1300];
+    private const KHOA_GIA = ['PETG' => 'POD_GIA_GRAM_PETG', 'PLA' => 'POD_GIA_GRAM']; // POD_GIA_GRAM có từ trước = PLA
+    public const SL_TOI_DA = 500;
 
-    /** Đơn giá mỗi gram (đổi ở admin, lưu cau_hinh_3d.POD_GIA_GRAM). */
-    public static function giaGram(): int
+    /** Chất liệu hợp lệ; lạ hoặc trống -> PETG. */
+    public static function chatLieu(?string $c): string
     {
-        $v = DB::table('cau_hinh_3d')->where('khoa', 'POD_GIA_GRAM')->value('gia_tri');
-        $n = $v === null ? null : json_decode($v, true);
-        return is_numeric($n) && $n > 0 ? (int) $n : self::GIA_GRAM_MAC_DINH;
+        $c = strtoupper(trim((string) $c));
+        return isset(self::CHAT_LIEU[$c]) ? $c : 'PETG';
     }
 
-    public static function datGiaGram(int $gia): void
+    /** Đơn giá mỗi gram của một chất liệu (đổi ở admin, lưu cau_hinh_3d). */
+    public static function giaGram(string $chatLieu = 'PETG'): int
+    {
+        $c = self::chatLieu($chatLieu);
+        $v = DB::table('cau_hinh_3d')->where('khoa', self::KHOA_GIA[$c])->value('gia_tri');
+        $n = $v === null ? null : json_decode($v, true);
+        return is_numeric($n) && $n > 0 ? (int) $n : self::CHAT_LIEU[$c];
+    }
+
+    /** ['PETG' => 900, 'PLA' => 1300] theo đơn giá hiện hành. */
+    public static function bangGia(): array
+    {
+        $kq = [];
+        foreach (array_keys(self::CHAT_LIEU) as $c) $kq[$c] = self::giaGram($c);
+        return $kq;
+    }
+
+    public static function datGiaGram(string $chatLieu, int $gia): void
     {
         DB::table('cau_hinh_3d')->updateOrInsert(
-            ['khoa' => 'POD_GIA_GRAM'],
+            ['khoa' => self::KHOA_GIA[self::chatLieu($chatLieu)]],
             ['gia_tri' => json_encode($gia), 'updated_at' => now(), 'created_at' => now()]
         );
     }
@@ -57,7 +75,7 @@ class PodSo
     {
         if (!$dongIn) throw ValidationException::withMessages(['dong' => 'Đơn chưa có dòng nào.']);
         if (count($dongIn) > 50) throw ValidationException::withMessages(['dong' => 'Tối đa 50 dòng mỗi đơn.']);
-        $donGia = self::giaGram();
+        $bangGia = self::bangGia();
         $kq = [];
         foreach (array_values($dongIn) as $i => $d) {
             $so = $i + 1;
@@ -77,6 +95,8 @@ class PodSo
             }
             $chu = mb_substr(trim((string) ($d['chu'] ?? '')), 0, 300);
             $phi = (int) $mau->phi_ca_nhan;
+            $chatLieu = self::chatLieu($bt->chat_lieu);
+            $donGia = $bangGia[$chatLieu];
             $kq[] = [
                 'mau_id'       => $mau->id,
                 'bien_the_id'  => $bt->id,
@@ -85,6 +105,7 @@ class PodSo
                 'mau_sac'      => $mauSac !== '' ? mb_substr($mauSac, 0, 60) : null,
                 'so_luong'     => $sl,
                 'gram'         => (float) $bt->gram,
+                'chat_lieu'    => $chatLieu,
                 'don_gia_gram' => $donGia,
                 'chu_ca_nhan'  => $chu !== '' ? $chu : null,
                 'phi_ca_nhan'  => $chu !== '' ? $phi : 0,

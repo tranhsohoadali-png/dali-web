@@ -27,17 +27,17 @@ class PodSiteController extends Controller
     public function trangChu()
     {
         $noiBat = $this->khoChung()->orderByDesc('id')->limit(8)->get()->filter(fn ($m) => !empty($m->anh))->values();
-        return view('pod.site.trang-chu', ['noiBat' => $noiBat, 'giaGram' => PodSo::giaGram(), 'soMau' => $this->khoChung()->count()]);
+        return view('pod.site.trang-chu', ['noiBat' => $noiBat, 'gia' => PodSo::bangGia(), 'soMau' => $this->khoChung()->count()]);
     }
 
     public function bangGia()
     {
-        $gia = PodSo::giaGram();
-        // Ví dụ tham khảo lấy đúng từ bảng giá in 3D PLA (10/2026); tiền tính theo đơn giá hiện hành
+        $gia = PodSo::bangGia(); // ['PETG' => 900, 'PLA' => 1300]
+        // Ví dụ tham khảo lấy từ bảng giá in 3D (10/2026); tiền tính theo đơn giá hiện hành từng chất liệu
         $viDu = collect([
             ['Móc khoá tên 2 màu', 15], ['Biển tên / logo để bàn', 50], ['Lithophane / khung ảnh', 80],
             ['Tượng chibi 10 cm nhiều màu', 120], ['Đèn / bình trang trí', 300],
-        ])->map(fn ($r) => ['ten' => $r[0], 'gram' => $r[1], 'gia' => $r[1] * $gia]);
+        ])->map(fn ($r) => ['ten' => $r[0], 'gram' => $r[1], 'petg' => $r[1] * $gia['PETG'], 'pla' => $r[1] * $gia['PLA']]);
         return view('pod.site.bang-gia', compact('gia', 'viDu'));
     }
 

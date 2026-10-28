@@ -149,6 +149,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function tien(n) { return (Number(n) || 0).toLocaleString('vi-VN') + 'đ'; }
   function gram(n) { return String(Number(n)).replace('.', ',') + ' g'; }
+  function giaNhua() { var g = (st.me && st.me.gia) || {}; return 'Giá in PETG ' + tien(g.PETG) + ', PLA ' + tien(g.PLA) + ' mỗi gram'; }
   function $(id) { return document.getElementById(id); }
   var main = $('main');
 
@@ -285,7 +286,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     var ds = await layMau(kho);
     var q = st.tim.trim().toLowerCase();
     var loc = ds.filter(function (m) { return !q || (m.ten + ' ' + (m.nhom || '')).toLowerCase().includes(q); });
-    var html = thongBao + '<h2>' + tieuDe + '</h2><p class="sub">' + mo + ' Giá in ' + tien(st.me.gia_gram) + '/gram.</p>';
+    var html = thongBao + '<h2>' + tieuDe + '</h2><p class="sub">' + mo + ' ' + giaNhua() + '.</p>';
     if (rieng) html += '<div class="bang-rieng"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div><b>Chỉ tài khoản của bạn thấy những mẫu này.</b><div class="mu">Seller khác không biết mẫu tồn tại; xưởng không in mẫu này cho ai khác. Phí thiết kế được hoàn vào ví khi mẫu đạt 20 đơn.</div></div></div>';
     if (ds.length > 6) html += '<div class="timbox">' + IC_TIM + '<input id="tim" placeholder="Tìm mẫu theo tên hoặc nhóm" value="' + esc(st.tim) + '"></div>';
     if (!ds.length) {
@@ -322,7 +323,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         '</div><div>' + (m.rieng ? '<span class="tag t-rieng">' + IC_KHOA + ' Mẫu độc quyền</span>' : '<span class="tag t-chung">Kho chung</span>') + '<h2 style="margin-top:8px">' + esc(m.ten) + '</h2>' +
         (m.mo_ta ? '<p class="sub" style="white-space:pre-line">' + esc(m.mo_ta) + '</p>' : '') +
         (m.bien_the.length ? '<div style="margin:12px 0 6px;font-weight:700">Phân loại</div>' + m.bien_the.map(function (x) {
-          return '<div class="opt' + (x.id === chon ? ' on' : '') + '" data-id="' + x.id + '"><span>' + esc(x.ten) + ' <span class="mu">· ' + gram(x.gram) + '</span></span><span class="gia">' + tien(x.gia) + '</span></div>';
+          return '<div class="opt' + (x.id === chon ? ' on' : '') + '" data-id="' + x.id + '"><span>' + esc(x.ten) + ' <span class="mu">· <b>' + esc(x.chat_lieu) + '</b> · ' + gram(x.gram) + '</span></span><span class="gia">' + tien(x.gia) + '</span></div>';
         }).join('') : '<p class="msg err">Mẫu chưa có phân loại, chưa đặt được.</p>');
       if (b) {
         h += (b.mau_sac.length ? '<label class="f" style="margin-top:10px">Màu<select id="mMau">' + b.mau_sac.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select></label>' : '') +
@@ -338,7 +339,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       if (nut) nut.onclick = function () {
         var sl = Math.max(1, Math.min(500, parseInt($('mSl').value, 10) || 1));
         var chu = ($('mChu').value || '').trim();
-        st.gio.push({ bien_the_id: b.id, ten_mau: m.ten, ten_bt: b.ten, gia: b.gia, phi_ca_nhan: m.phi_ca_nhan, mau_sac: $('mMau') ? $('mMau').value : '', chu: chu, so_luong: sl });
+        st.gio.push({ bien_the_id: b.id, ten_mau: m.ten, ten_bt: b.ten, chat_lieu: b.chat_lieu, gia: b.gia, phi_ca_nhan: m.phi_ca_nhan, mau_sac: $('mMau') ? $('mMau').value : '', chu: chu, so_luong: sl });
         luuGio(); dongModal();
         st.msg = { ok: 'Đã thêm "' + esc(m.ten) + '" vào đơn đang soạn. <a href="#gio">Xem đơn</a>' }; ve();
       };
@@ -356,7 +357,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     var h = veMsg() + '<h2>Đơn đang soạn</h2><p class="sub">Một đơn giao tới một nơi. Giá chính thức do máy chủ tính lại khi gửi.</p>';
     if (!st.gio.length) { main.innerHTML = h + '<div class="box trong"><b>Chưa có dòng nào</b>Chọn mẫu ở <a href="#chung">Kho chung</a> hoặc <a href="#rieng">Mẫu độc quyền</a>.</div>'; return; }
     h += '<div class="box"><table><tr><th>Mẫu</th><th>SL</th><th class="num">Tạm tính</th><th></th></tr>' + st.gio.map(function (d, i) {
-      return '<tr><td><b>' + esc(d.ten_mau) + '</b><div class="mu">' + esc(d.ten_bt) + (d.mau_sac ? ' · ' + esc(d.mau_sac) : '') + (d.chu ? ' · "' + esc(d.chu) + '"' : '') + '</div></td>' +
+      return '<tr><td><b>' + esc(d.ten_mau) + '</b><div class="mu">' + esc(d.ten_bt) + (d.chat_lieu ? ' · ' + esc(d.chat_lieu) : '') + (d.mau_sac ? ' · ' + esc(d.mau_sac) : '') + (d.chu ? ' · "' + esc(d.chu) + '"' : '') + '</div></td>' +
         '<td><input type="number" min="1" max="500" value="' + d.so_luong + '" data-sl="' + i + '" style="width:72px;border:1.5px solid var(--bd);border-radius:9px;padding:6px 8px"></td>' +
         '<td class="num">' + tien(giaDong(d)) + '</td><td class="num"><button class="btn2 btn-del" data-xoa="' + i + '">Bỏ</button></td></tr>';
     }).join('') + '<tr><td colspan="2" class="num"><b>Tổng tạm tính</b></td><td class="num gia">' + tien(tong) + '</td><td></td></tr></table></div>';
@@ -399,7 +400,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       return '<div class="box"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><b>' + esc(d.ma) + '</b> <span class="mu">· ' + esc(d.luc) + (d.ma_don_san ? ' · ' + esc(d.ma_don_san) : '') + '</span></div>' +
         '<span class="st st-' + d.trang_thai + '">' + esc(d.ten_tt) + '</span></div>' +
         '<table style="margin-top:8px">' + d.dong.map(function (x) {
-          return '<tr><td>' + esc(x.ten_mau) + ' <span class="mu">· ' + esc(x.ten_bien_the) + (x.mau_sac ? ' · ' + esc(x.mau_sac) : '') + (x.chu ? ' · "' + esc(x.chu) + '"' : '') + '</span></td><td class="num">× ' + x.so_luong + '</td><td class="num">' + tien(x.thanh_tien) + '</td></tr>';
+          return '<tr><td>' + esc(x.ten_mau) + ' <span class="mu">· ' + esc(x.ten_bien_the) + (x.chat_lieu ? ' · ' + esc(x.chat_lieu) : '') + (x.mau_sac ? ' · ' + esc(x.mau_sac) : '') + (x.chu ? ' · "' + esc(x.chu) + '"' : '') + '</span></td><td class="num">× ' + x.so_luong + '</td><td class="num">' + tien(x.thanh_tien) + '</td></tr>';
         }).join('') + '<tr><td colspan="2" class="num"><b>Tổng</b></td><td class="num gia">' + tien(d.tong_tien) + '</td></tr></table>' +
         '<div class="mu" style="margin-top:6px">Giao tới: ' + esc(d.noi_giao ? d.noi_giao.ten : '—') + (d.ma_van_don ? ' · Mã vận đơn: <b>' + esc(d.ma_van_don) + '</b>' : '') + '</div>' +
         (d.trang_thai === 'cho_nap' || d.trang_thai === 'cho_in' ? '<button class="btn2 btn-del" style="margin-top:10px" data-huy="' + esc(d.ma) + '">Huỷ đơn</button>' : '') + '</div>';
@@ -417,7 +418,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
   async function veVi() {
     var v = await api('vi'); capNhatDu(v.so_du);
     var n = v.nap;
-    var h = veMsg() + '<h2>Ví</h2><p class="sub">Nạp trước, mỗi đơn trừ thẳng theo gram × ' + tien(st.me.gia_gram) + '.</p>' +
+    var h = veMsg() + '<h2>Ví</h2><p class="sub">Nạp trước, mỗi đơn trừ thẳng theo gram. ' + giaNhua() + '.</p>' +
       '<div class="du"><div style="opacity:.85;font-weight:600">Số dư</div><div class="so">' + tien(v.so_du) + '</div>' +
       (v.can_them > 0 ? '<div style="margin-top:8px;background:rgba(255,255,255,.18);border-radius:10px;padding:8px 12px;font-size:14px">Cần nạp thêm <b>' + tien(v.can_them) + '</b> để chạy các đơn đang chờ nạp tiền.</div>' : '') + '</div>' +
       '<div class="box"><b>Nạp tiền bằng chuyển khoản</b><div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;align-items:flex-start">' +

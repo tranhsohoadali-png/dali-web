@@ -12,7 +12,8 @@
     </form>
     <form method="POST" action="{{ route('admin.pod.giagram') }}" class="acts">
       @csrf
-      <label class="f" style="width:150px"><span>Đơn giá (đ/gram)</span><input name="gia_gram" type="number" value="{{ $giaGram }}" min="100" required></label>
+      <label class="f" style="width:120px"><span>PETG (đ/gram)</span><input name="gia_petg" type="number" value="{{ $bangGia['PETG'] }}" min="100" required></label>
+      <label class="f" style="width:120px"><span>PLA (đ/gram)</span><input name="gia_pla" type="number" value="{{ $bangGia['PLA'] }}" min="100" required></label>
       <button class="btn-sm">Lưu giá</button>
     </form>
     <a class="btn" href="{{ route('admin.pod.mau.create') }}">+ Thêm mẫu</a>
@@ -31,7 +32,8 @@
       <td>@if($m->chu)<span class="badge b-rieng">Riêng · {{ $m->chu->ten }}</span>@else<span class="badge b-chung">Kho chung</span>@endif</td>
       <td>
         @forelse($m->bienThe as $b)
-          <div>{{ $b->ten }} — {{ rtrim(rtrim(number_format($b->gram, 1, ',', '.'), '0'), ',') }} g = <b>{{ number_format(\App\Services\PodSo::giaDong($b->gram, 1, $giaGram, 0, false), 0, ',', '.') }}đ</b></div>
+          @php $cl = \App\Services\PodSo::chatLieu($b->chat_lieu); @endphp
+          <div>{{ $b->ten }} · <b>{{ $cl }}</b> — {{ rtrim(rtrim(number_format($b->gram, 1, ',', '.'), '0'), ',') }} g = <b>{{ number_format(\App\Services\PodSo::giaDong($b->gram, 1, $bangGia[$cl], 0, false), 0, ',', '.') }}đ</b></div>
         @empty
           <span class="muted">Chưa có phân loại, seller chưa đặt được</span>
         @endforelse

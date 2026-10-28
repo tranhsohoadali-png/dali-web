@@ -101,7 +101,7 @@ class PodApiController extends Controller
             'ma'       => $s->ma,
             'dong_y'   => (bool) $s->dong_y_luc,
             'so_du'    => $s->soDu(),
-            'gia_gram' => PodSo::giaGram(),
+            'gia'      => PodSo::bangGia(),   // đ/gram theo chất liệu, vd {"PETG":900,"PLA":1300}
         ]);
     }
 
@@ -132,7 +132,7 @@ class PodApiController extends Controller
         $kho = $request->query('kho');
         if ($kho === 'chung') $q->whereNull('chu_seller_id');
         if ($kho === 'rieng') $q->where('chu_seller_id', $s->id);
-        $gia = PodSo::giaGram();
+        $gia = PodSo::bangGia();
         return response()->json(['ok' => true, 'mau' => $q->get()->map(fn ($m) => $this->mauJson($m, $s, $gia))->all()]);
     }
 
@@ -142,10 +142,11 @@ class PodApiController extends Controller
         $s = $this->seller($request);
         $m = PodMau::hienCho($s->id)->with('bienThe')->where('ma', $ma)->first();
         if (!$m) return response()->json(['ok' => false, 'error' => 'Không tìm thấy mẫu.'], 404);
-        return response()->json(['ok' => true, 'mau' => $this->mauJson($m, $s, PodSo::giaGram())]);
+        return response()->json(['ok' => true, 'mau' => $this->mauJson($m, $s, PodSo::bangGia())]);
     }
 
-    private function mauJson(PodMau $m, PodSeller $s, int $gia): array
+    /** @param array<string,int> $gia đ/gram theo chất liệu (PodSo::bangGia()) */
+    private function mauJson(PodMau $m, PodSeller $s, array $gia): array
     {
         $anh = [];
         foreach (array_values((array) ($m->anh ?: [])) as $i => $rel) {
@@ -160,11 +161,12 @@ class PodApiController extends Controller
             'anh'         => $anh,
             'phi_ca_nhan' => (int) $m->phi_ca_nhan,
             'bien_the'    => $m->bienThe->map(fn ($b) => [
-                'id'      => $b->id,
-                'ten'     => $b->ten,
-                'gram'    => (float) $b->gram,
-                'mau_sac' => $b->dsMau(),
-                'gia'     => PodSo::giaDong((float) $b->gram, 1, $gia, 0, false),
+                'id'        => $b->id,
+                'ten'       => $b->ten,
+                'chat_lieu' => PodSo::chatLieu($b->chat_lieu),
+                'gram'      => (float) $b->gram,
+                'mau_sac'   => $b->dsMau(),
+                'gia'       => PodSo::giaDong((float) $b->gram, 1, $gia[PodSo::chatLieu($b->chat_lieu)], 0, false),
             ])->all(),
         ];
     }
@@ -282,6 +284,7 @@ class PodApiController extends Controller
             'dong'        => $d->dong->map(fn ($x) => [
                 'ten_mau'      => $x->ten_mau,
                 'ten_bien_the' => $x->ten_bien_the,
+                'chat_lieu'    => $x->chat_lieu,
                 'mau_sac'      => $x->mau_sac,
                 'so_luong'     => (int) $x->so_luong,
                 'gram'         => (float) $x->gram,

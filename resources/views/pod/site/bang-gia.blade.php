@@ -1,10 +1,13 @@
 @extends('pod.site._khung', ['tab' => 'gia'])
 @section('tieu_de', 'Bảng giá in 3D cho seller POD')
-@section('mo_ta', 'Giá in 3D nhựa PLA ' . number_format($gia, 0, ',', '.') . 'đ/gram, tính cả support và nhựa xả. Phí thiết kế mẫu riêng cho seller, hoàn phí khi mẫu đạt 20 đơn in.')
+@section('mo_ta', 'Giá in 3D nhựa PETG ' . number_format($gia['PETG'], 0, ',', '.') . 'đ/gram, PLA ' . number_format($gia['PLA'], 0, ',', '.') . 'đ/gram, tính cả support và nhựa xả. Phí thiết kế mẫu riêng cho seller, hoàn phí khi mẫu đạt 20 đơn in.')
 @section('css')
 .dau-trang{padding:56px 0 24px}
-.gia-to{background:linear-gradient(140deg,var(--gd),var(--g));color:#fff;border-radius:24px;padding:32px}
-.gia-to .so{font-size:64px;font-weight:800;line-height:1}
+.gia-to{background:linear-gradient(140deg,var(--gd),var(--g));color:#fff;border-radius:24px;padding:28px 30px}
+.gia-to .hai-gia{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.gia-to .o{background:rgba(255,255,255,.14);border-radius:16px;padding:16px 18px}
+.gia-to .o small{display:block;font-weight:700;opacity:.9;font-size:14px}
+.gia-to .so{font-size:44px;font-weight:800;line-height:1.05}
 .gia-to p{color:#E3F5CF;font-size:15px;margin-top:14px}
 .hop{background:#FFF7E6;border:1px solid #F1D084;border-radius:14px;padding:16px 18px;color:#7A4B00;font-size:15px}
 @endsection
@@ -19,17 +22,19 @@
 <section style="padding-top:16px">
   <div class="wrap luoi l2" style="align-items:start">
     <div class="gia-to">
-      <div style="font-weight:600;opacity:.9">Giá in nhựa PLA</div>
-      <div class="so">{{ number_format($gia, 0, ',', '.') }}đ</div>
-      <div style="font-weight:700;font-size:18px;margin-top:4px">mỗi gram</div>
-      <p>Tính theo tổng số gram trên phần mềm cắt lớp, gồm cả support và nhựa xả khi đổi màu. Giá từng mẫu hiện ngay trong cổng seller khi bạn chọn phân loại.</p>
+      <div style="font-weight:600;opacity:.9">Giá in mỗi gram nhựa</div>
+      <div class="hai-gia">
+        <div class="o"><small>PETG</small><div class="so">{{ number_format($gia['PETG'], 0, ',', '.') }}đ</div></div>
+        <div class="o"><small>PLA</small><div class="so">{{ number_format($gia['PLA'], 0, ',', '.') }}đ</div></div>
+      </div>
+      <p>Tính theo tổng số gram trên phần mềm cắt lớp, gồm cả support và nhựa xả khi đổi màu. Mỗi phân loại ghi rõ in nhựa gì; giá từng mẫu hiện ngay trong cổng seller khi bạn chọn.</p>
     </div>
     <div class="the" style="padding:8px 4px">
       <table class="bang">
-        <thead><tr><th>Ví dụ tham khảo</th><th class="so">Khối lượng</th><th class="so">Giá in</th></tr></thead>
+        <thead><tr><th>Ví dụ tham khảo</th><th class="so">Khối lượng</th><th class="so">PETG</th><th class="so">PLA</th></tr></thead>
         <tbody>
           @foreach($viDu as $r)
-          <tr><td>{{ $r['ten'] }}</td><td class="so" style="font-weight:500">~{{ $r['gram'] }} g</td><td class="so">{{ number_format($r['gia'], 0, ',', '.') }}đ</td></tr>
+          <tr><td>{{ $r['ten'] }}</td><td class="so" style="font-weight:500">~{{ $r['gram'] }} g</td><td class="so">{{ number_format($r['petg'], 0, ',', '.') }}đ</td><td class="so" style="font-weight:500">{{ number_format($r['pla'], 0, ',', '.') }}đ</td></tr>
           @endforeach
         </tbody>
       </table>

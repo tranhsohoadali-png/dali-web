@@ -1,6 +1,6 @@
 @extends('pod.site._khung', ['tab' => 'chu'])
 @section('tieu_de', 'Xưởng in 3D theo đơn cho seller POD')
-@section('mo_ta', 'DALI in 3D theo đơn cho seller bán Etsy, Amazon, TikTok Shop: giá in PLA ' . number_format($giaGram, 0, ',', '.') . 'đ/gram, ví nạp trước, giao tới kho gom trong nước, mẫu độc quyền giữ kín cho riêng từng seller.')
+@section('mo_ta', 'DALI in 3D theo đơn cho seller bán Etsy, Amazon, TikTok Shop: giá in PETG ' . number_format($gia['PETG'], 0, ',', '.') . 'đ/gram, PLA ' . number_format($gia['PLA'], 0, ',', '.') . 'đ/gram, ví nạp trước, giao tới kho gom trong nước, mẫu độc quyền giữ kín cho riêng từng seller.')
 @section('css')
 .hero{padding:64px 0 56px;background:radial-gradient(1200px 500px at 85% -10%,#E3F5CF 0%,transparent 60%),var(--bg)}
 .hero .wrap{display:grid;gap:40px;align-items:center}
@@ -52,9 +52,9 @@
       </div>
     @else
       <div class="hero-gia">
-        <div class="mu" style="color:var(--mu);font-weight:600">Giá in nhựa PLA</div>
-        <div class="so">{{ number_format($giaGram, 0, ',', '.') }}đ</div>
-        <div style="font-weight:700;margin-top:4px">mỗi gram</div>
+        <div class="mu" style="color:var(--mu);font-weight:600">Giá in nhựa PETG</div>
+        <div class="so">{{ number_format($gia['PETG'], 0, ',', '.') }}đ</div>
+        <div style="font-weight:700;margin-top:4px">mỗi gram · PLA {{ number_format($gia['PLA'], 0, ',', '.') }}đ</div>
         <p style="color:var(--mu);font-size:15px;margin-top:14px">Tính theo tổng gram trên phần mềm cắt lớp, gồm cả support và nhựa xả khi đổi màu. Không phí ẩn.</p>
         <a href="/bang-gia" class="nut nut-vien nut-nho" style="margin-top:18px">Xem bảng giá đầy đủ</a>
       </div>
@@ -64,7 +64,7 @@
 
 <div class="dai">
   <div class="wrap luoi l3">
-    <div><b>{{ number_format($giaGram, 0, ',', '.') }}đ / gram</b><small>Giá in PLA, gồm support và nhựa xả</small></div>
+    <div><b>Từ {{ number_format(min($gia), 0, ',', '.') }}đ / gram</b><small>PETG {{ number_format($gia['PETG'], 0, ',', '.') }}đ, PLA {{ number_format($gia['PLA'], 0, ',', '.') }}đ, gồm support và nhựa xả</small></div>
     <div><b>Mẫu độc quyền</b><small>Seller khác không thấy, xưởng không in cho ai khác</small></div>
     <div><b>Ví nạp trước</b><small>Đủ tiền là đơn vào hàng đợi in ngay</small></div>
   </div>

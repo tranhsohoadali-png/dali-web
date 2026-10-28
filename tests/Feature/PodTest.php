@@ -51,14 +51,37 @@ class PodTest extends TestCase
         ]);
     }
 
-    private function taoMau(string $ten, ?int $chu, float $gram): PodMau
+    /** Mặc định PLA (1.300đ/g) để các con số tiền trong phép thử cũ giữ nguyên. */
+    private function taoMau(string $ten, ?int $chu, float $gram, string $chatLieu = 'PLA'): PodMau
     {
         $ma = PodMau::taoMa();
         $rel = "pod/anh/$ma-1.png";
         Storage::disk('local')->put($rel, 'png');
         $m = PodMau::create(['ma' => $ma, 'ten' => $ten, 'chu_seller_id' => $chu, 'hien' => true, 'anh' => [$rel], 'phi_ca_nhan' => 5000]);
-        PodBienThe::create(['mau_id' => $m->id, 'ten' => 'Cỡ gốc', 'gram' => $gram]);
+        PodBienThe::create(['mau_id' => $m->id, 'ten' => 'Cỡ gốc', 'gram' => $gram, 'chat_lieu' => $chatLieu]);
         return $m;
+    }
+
+    public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
+    {
+        $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');
+        $don = PodSo::datDon($this->a, [
+            ['bien_the_id' => $this->bt($petg), 'so_luong' => 2],          // 10 g × 2 × 900 = 18.000
+            ['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1],   // 18,8 g × 1.300 = 24.440
+        ], null, null, null, null);
+        $this->assertSame(18000 + 24440, (int) $don->tong_tien);
+        $dong = $don->dong()->get();
+        $this->assertSame(['PETG', 'PLA'], $dong->pluck('chat_lieu')->all());
+        $this->assertSame([900, 1300], $dong->pluck('don_gia_gram')->map(fn ($x) => (int) $x)->all());
+        $bt = collect($this->getJson('/api/pod/mau/' . $petg->ma, $this->token($this->a))->json('mau.bien_the'))->first();
+        $this->assertSame(['PETG', 9000], [$bt['chat_lieu'], $bt['gia']]);
+        // Phân loại mới không ghi chất liệu -> PETG (nhựa chính của xưởng)
+        $this->assertSame('PETG', PodBienThe::create(['mau_id' => $petg->id, 'ten' => 'Cỡ to', 'gram' => 20])->fresh()->chat_lieu);
+        // Admin đổi giá PETG: đơn mới theo giá mới, đơn cũ giữ nguyên
+        $this->withSession(['admin_logged_in' => true])->post('/admin/3d/pod/gia-gram', ['gia_petg' => 950, 'gia_pla' => 1300])->assertSessionHasNoErrors();
+        $this->assertSame(950, PodSo::giaGram('PETG'));
+        $this->assertSame(42440, (int) $don->fresh()->tong_tien);
+        $this->get('http://' . config('pod.domain') . '/bang-gia')->assertOk()->assertSee('950đ')->assertSee('1.300đ');
     }
 
     private function token(PodSeller $s): array

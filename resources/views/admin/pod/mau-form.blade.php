@@ -1,7 +1,8 @@
 @include('admin.pod._dau', ['tieuDe' => $mau->exists ? 'Sửa mẫu: ' . $mau->ten : 'Thêm mẫu POD'])
 @php
-  $rows = old('bt', $bienThe->map(fn ($b) => ['id' => $b->id, 'ten' => $b->ten, 'gram' => $b->gram, 'mau_sac' => $b->mau_sac, 'file_in' => $b->file_in])->all());
-  for ($i = 0; $i < 3; $i++) $rows[] = ['id' => '', 'ten' => '', 'gram' => '', 'mau_sac' => '', 'file_in' => ''];
+  $rows = old('bt', $bienThe->map(fn ($b) => ['id' => $b->id, 'ten' => $b->ten, 'gram' => $b->gram, 'chat_lieu' => $b->chat_lieu, 'mau_sac' => $b->mau_sac, 'file_in' => $b->file_in])->all());
+  for ($i = 0; $i < 3; $i++) $rows[] = ['id' => '', 'ten' => '', 'gram' => '', 'chat_lieu' => 'PETG', 'mau_sac' => '', 'file_in' => ''];
+  $bangGia = \App\Services\PodSo::bangGia();
   $chuHienTai = old('chu_seller_id', $mau->chu_seller_id);
 @endphp
 <form method="POST" enctype="multipart/form-data" action="{{ $mau->exists ? route('admin.pod.mau.update', $mau) : route('admin.pod.mau.store') }}">
@@ -36,11 +37,12 @@
   <div class="card">
     <div class="card-h"><div class="card-t">Phân loại</div><div class="card-hint">Gram lấy từ slicer, gồm support và nhựa xả. Giá in = gram × đơn giá. Bỏ trống tên một dòng cũ để xoá dòng đó.</div></div>
     <table>
-      <tr><th>Tên phân loại</th><th style="width:110px">Gram</th><th>Màu cho phép (phẩy ngăn cách)</th><th>File in trên máy xưởng (chỉ admin thấy)</th></tr>
+      <tr><th>Tên phân loại</th><th style="width:110px">Gram</th><th style="width:150px">Chất liệu</th><th>Màu cho phép (phẩy ngăn cách)</th><th>File in trên máy xưởng (chỉ admin thấy)</th></tr>
       @foreach($rows as $i => $b)
       <tr>
         <td><input type="hidden" name="bt[{{ $i }}][id]" value="{{ $b['id'] }}"><input name="bt[{{ $i }}][ten]" value="{{ $b['ten'] }}" maxlength="120" placeholder="vd: Tem + khuôn cắt · 3 inch"></td>
         <td><input name="bt[{{ $i }}][gram]" value="{{ $b['gram'] }}" type="number" step="0.1" min="0.1"></td>
+        <td><select name="bt[{{ $i }}][chat_lieu]">@foreach($bangGia as $cl => $g)<option value="{{ $cl }}" @selected(\App\Services\PodSo::chatLieu($b['chat_lieu'] ?? null) === $cl)>{{ $cl }} · {{ number_format($g, 0, ',', '.') }}đ/g</option>@endforeach</select></td>
         <td><input name="bt[{{ $i }}][mau_sac]" value="{{ $b['mau_sac'] }}" maxlength="300" placeholder="Trắng, Hồng, Xanh"></td>
         <td><input name="bt[{{ $i }}][file_in]" value="{{ $b['file_in'] }}" maxlength="300" placeholder="E:\POD\..."></td>
       </tr>
