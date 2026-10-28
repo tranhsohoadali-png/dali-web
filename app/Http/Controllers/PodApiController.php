@@ -142,11 +142,14 @@ class PodApiController extends Controller
         $s = $this->seller($request);
         $m = PodMau::hienCho($s->id)->with('bienThe')->where('ma', $ma)->first();
         if (!$m) return response()->json(['ok' => false, 'error' => 'Không tìm thấy mẫu.'], 404);
-        return response()->json(['ok' => true, 'mau' => $this->mauJson($m, $s, PodSo::bangGia())]);
+        return response()->json(['ok' => true, 'mau' => $this->mauJson($m, $s, PodSo::bangGia(), true)]);
     }
 
-    /** @param array<string,int> $gia đ/gram theo chất liệu (PodSo::bangGia()) */
-    private function mauJson(PodMau $m, PodSeller $s, array $gia): array
+    /**
+     * @param array<string,int> $gia đ/gram theo chất liệu (PodSo::bangGia())
+     * @param bool $chiTiet kèm dữ liệu ảnh xem trước (khung SVG khá nặng nên danh sách chỉ báo co_xem_truoc)
+     */
+    private function mauJson(PodMau $m, PodSeller $s, array $gia, bool $chiTiet = false): array
     {
         $anh = [];
         foreach (array_values((array) ($m->anh ?: [])) as $i => $rel) {
@@ -160,6 +163,9 @@ class PodApiController extends Controller
             'rieng'       => $m->laRieng(),
             'anh'         => $anh,
             'phi_ca_nhan' => (int) $m->phi_ca_nhan,
+            'ten_toi_da'  => $m->tenToiDa(),          // >0 = mẫu khắc tên, bắt buộc nhập tên
+            'co_xem_truoc'=> !empty($m->xem_truoc),
+            'xem_truoc'   => $chiTiet ? $m->xem_truoc : null,
             'bien_the'    => $m->bienThe->map(fn ($b) => [
                 'id'        => $b->id,
                 'ten'       => $b->ten,

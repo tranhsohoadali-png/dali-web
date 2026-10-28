@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Cổng seller | DALI POD</title>
 <link rel="icon" href="/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
 <style>
 :root{--g:#6BBF1F;--gd:#2F6B05;--gdd:#14320A;--ink:#16300A;--mu:#5B6B52;--bg:#F7FBF2;--gl:#EEF8E2;--gll:#F6FCEE;--bd:#DCEFC6;--pk:#B4235A;--pkl:#FDE6EE;--r:14px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -136,6 +136,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
 <div id="vao"></div>
 <div class="modal hide" id="modal" onclick="if(event.target===this)dongModal()"><div class="mbox" id="mbox"></div></div>
 
+@include('pod._ve_ten')
 <script>
 (function () {
   'use strict';
@@ -311,37 +312,62 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     });
   }
 
-  function moMau(m) {
-    var chon = m.bien_the[0] ? m.bien_the[0].id : null;
+  async function moMau(m) {
+    // Mẫu khắc tên: lấy dữ liệu khung xem trước (không có trong danh sách vì nặng)
+    if (m.co_xem_truoc && !m.xem_truoc) {
+      try { m.xem_truoc = (await api('mau/' + encodeURIComponent(m.ma))).mau.xem_truoc; } catch (e) { baoLoi(e); return; }
+    }
+    var xt = m.xem_truoc, toiDa = m.ten_toi_da || 0;
+    var chon = m.bien_the[0] ? m.bien_the[0].id : null, tenGo = '', mauChon = '';
     function bt() { return m.bien_the.find(function (b) { return b.id === chon; }); }
+    function veXemTruoc() {
+      var cv = $('mCv'); if (!cv || !xt) return;
+      var ten = ($('mChu') && $('mChu').value.trim()) || 'Tên của bạn';
+      PodVeTen.choFont().then(function () { PodVeTen.ve(cv, xt, ten, $('mMau') ? $('mMau').value : ''); });
+    }
     function veM() {
       var b = bt();
-      var h = '<button class="mx" onclick="dongModal()" aria-label="Đóng">×</button><div class="two"><div class="gal">' +
-        (m.anh[0] ? '<img class="main" id="mMain" src="' + esc(m.anh[0]) + '" alt="">' : '<div class="main" style="display:flex;align-items:center;justify-content:center;color:var(--mu)">Chưa có ảnh</div>') +
-        (m.anh.length > 1 ? '<div class="thumbs">' + m.anh.map(function (u, i) { return '<img src="' + esc(u) + '" data-u="' + esc(u) + '" class="' + (i ? '' : 'on') + '">'; }).join('') + '</div>' : '') +
-        (m.anh.length ? '<p class="mu" style="margin-top:8px">Bấm giữ hoặc chuột phải vào ảnh để lưu. ' + (m.rieng ? 'Chỉ bạn thấy ảnh này.' : 'Ảnh được dùng để đăng bán.') + '</p>' : '') +
+      var anhChinh = xt
+        ? '<canvas class="main" id="mCv" width="900" height="' + Math.round(900 * xt.h / xt.w) + '" style="background:#F4EFE6;aspect-ratio:auto;height:auto"></canvas>' +
+          '<button class="btn2" id="mTai" style="margin-top:8px;width:100%">Tải ảnh xem trước (PNG)</button>'
+        : (m.anh[0] ? '<img class="main" id="mMain" src="' + esc(m.anh[0]) + '" alt="">' : '<div class="main" style="display:flex;align-items:center;justify-content:center;color:var(--mu)">Chưa có ảnh</div>');
+      var h = '<button class="mx" onclick="dongModal()" aria-label="Đóng">×</button><div class="two"><div class="gal">' + anhChinh +
+        (!xt && m.anh.length > 1 ? '<div class="thumbs">' + m.anh.map(function (u, i) { return '<img src="' + esc(u) + '" data-u="' + esc(u) + '" class="' + (i ? '' : 'on') + '">'; }).join('') + '</div>' : '') +
+        (xt ? '<p class="mu" style="margin-top:8px">Ảnh vẽ từ file in thật, gõ tên và đổi màu là thấy ngay. Gửi ảnh này cho khách duyệt hoặc đăng bán.</p>'
+            : (m.anh.length ? '<p class="mu" style="margin-top:8px">Bấm giữ hoặc chuột phải vào ảnh để lưu. ' + (m.rieng ? 'Chỉ bạn thấy ảnh này.' : 'Ảnh được dùng để đăng bán.') + '</p>' : '')) +
         '</div><div>' + (m.rieng ? '<span class="tag t-rieng">' + IC_KHOA + ' Mẫu độc quyền</span>' : '<span class="tag t-chung">Kho chung</span>') + '<h2 style="margin-top:8px">' + esc(m.ten) + '</h2>' +
         (m.mo_ta ? '<p class="sub" style="white-space:pre-line">' + esc(m.mo_ta) + '</p>' : '') +
         (m.bien_the.length ? '<div style="margin:12px 0 6px;font-weight:700">Phân loại</div>' + m.bien_the.map(function (x) {
           return '<div class="opt' + (x.id === chon ? ' on' : '') + '" data-id="' + x.id + '"><span>' + esc(x.ten) + ' <span class="mu">· <b>' + esc(x.chat_lieu) + '</b> · ' + gram(x.gram) + '</span></span><span class="gia">' + tien(x.gia) + '</span></div>';
         }).join('') : '<p class="msg err">Mẫu chưa có phân loại, chưa đặt được.</p>');
       if (b) {
-        h += (b.mau_sac.length ? '<label class="f" style="margin-top:10px">Màu<select id="mMau">' + b.mau_sac.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select></label>' : '') +
-          '<div class="row" style="margin-top:10px"><label class="f">Số lượng<input id="mSl" type="number" min="1" max="500" value="1"></label>' +
-          '<label class="f">Chữ cá nhân hoá' + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') + '<input id="mChu" maxlength="300" placeholder="Bỏ trống nếu không"></label></div>' +
+        var nhanChu = toiDa ? 'Tên in trên mẫu (tối đa ' + toiDa + ' ký tự)' : 'Chữ cá nhân hoá';
+        h += (b.mau_sac.length ? '<label class="f" style="margin-top:10px">Màu nhựa<select id="mMau">' + b.mau_sac.map(function (c) { return '<option' + (c === mauChon ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></label>' : '') +
+          '<label class="f" style="margin-top:10px">' + nhanChu + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
+          '<input id="mChu" maxlength="' + (toiDa || 300) + '" value="' + esc(tenGo) + '" placeholder="' + (toiDa ? 'Vd: Emma' : 'Bỏ trống nếu không') + '"></label>' +
+          '<div class="row" style="margin-top:10px"><label class="f">Số lượng<input id="mSl" type="number" min="1" max="500" value="1"></label></div>' +
+          '<div class="msg err hide" id="mLoi" style="margin:10px 0 0"></div>' +
           '<button class="btn" id="mThem" style="margin-top:14px;width:100%">Thêm vào đơn đang soạn</button>';
       }
       h += '</div></div>';
       $('mbox').innerHTML = h;
-      $('mbox').querySelectorAll('.opt').forEach(function (o) { o.onclick = function () { chon = +o.dataset.id; veM(); }; });
+      $('mbox').querySelectorAll('.opt').forEach(function (o) { o.onclick = function () { tenGo = $('mChu') ? $('mChu').value : tenGo; mauChon = $('mMau') ? $('mMau').value : mauChon; chon = +o.dataset.id; veM(); }; });
       $('mbox').querySelectorAll('.thumbs img').forEach(function (t) { t.onclick = function () { $('mMain').src = t.dataset.u; $('mbox').querySelectorAll('.thumbs img').forEach(function (x) { x.classList.toggle('on', x === t); }); }; });
+      if ($('mChu')) $('mChu').oninput = function () { if ($('mLoi')) $('mLoi').classList.add('hide'); veXemTruoc(); };
+      if ($('mMau')) $('mMau').onchange = veXemTruoc;
+      if ($('mTai')) $('mTai').onclick = function () {
+        var ten = ($('mChu') && $('mChu').value.trim()) || 'mau';
+        PodVeTen.tai($('mCv'), (m.ten + '-' + ten + ($('mMau') ? '-' + $('mMau').value : '')).replace(/[\\/:*?"<>|]+/g, '') + '.png');
+      };
+      veXemTruoc();
       var nut = $('mThem');
       if (nut) nut.onclick = function () {
         var sl = Math.max(1, Math.min(500, parseInt($('mSl').value, 10) || 1));
         var chu = ($('mChu').value || '').trim();
+        if (toiDa && !chu) { $('mLoi').textContent = 'Nhập tên cần in trên mẫu.'; $('mLoi').classList.remove('hide'); $('mChu').focus(); return; }
         st.gio.push({ bien_the_id: b.id, ten_mau: m.ten, ten_bt: b.ten, chat_lieu: b.chat_lieu, gia: b.gia, phi_ca_nhan: m.phi_ca_nhan, mau_sac: $('mMau') ? $('mMau').value : '', chu: chu, so_luong: sl });
         luuGio(); dongModal();
-        st.msg = { ok: 'Đã thêm "' + esc(m.ten) + '" vào đơn đang soạn. <a href="#gio">Xem đơn</a>' }; ve();
+        st.msg = { ok: 'Đã thêm "' + esc(m.ten) + '"' + (chu ? ' tên "' + esc(chu) + '"' : '') + ' vào đơn đang soạn. <a href="#gio">Xem đơn</a>' }; ve();
       };
     }
     veM();

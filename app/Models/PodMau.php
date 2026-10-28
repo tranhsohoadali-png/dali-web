@@ -13,8 +13,9 @@ class PodMau extends Model
     protected $table = 'pod_mau';
     protected $guarded = [];
     protected $casts = [
-        'anh'  => 'array',
-        'hien' => 'boolean',
+        'anh'       => 'array',
+        'hien'      => 'boolean',
+        'xem_truoc' => 'array',
     ];
 
     /** Mẫu seller này được thấy: Kho chung + Kho riêng của chính seller, chỉ mẫu đang hiện. */
@@ -38,6 +39,13 @@ class PodMau extends Model
     public function laRieng(): bool
     {
         return $this->chu_seller_id !== null;
+    }
+
+    /** Mẫu khắc tên (có ảnh xem trước theo tên): đặt đơn bắt buộc có tên. Trả số ký tự tối đa, hoặc 0 nếu không phải. */
+    public function tenToiDa(): int
+    {
+        $x = $this->xem_truoc;
+        return is_array($x) && ($x['loai'] ?? '') === 'ten' ? max(1, (int) ($x['toi_da'] ?? 12)) : 0;
     }
 
     /** Mã 10 ký tự ngẫu nhiên. */

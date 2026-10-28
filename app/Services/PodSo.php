@@ -94,6 +94,10 @@ class PodSo
                 throw ValidationException::withMessages(["dong.$i" => "Dòng $so: chọn một màu có sẵn."]);
             }
             $chu = mb_substr(trim((string) ($d['chu'] ?? '')), 0, 300);
+            if ($toiDa = $mau->tenToiDa()) { // mẫu khắc tên: bắt buộc có tên, không quá số ký tự ô tên chứa được
+                if ($chu === '') throw ValidationException::withMessages(["dong.$i" => "Dòng $so: nhập tên cần in."]);
+                if (mb_strlen($chu) > $toiDa) throw ValidationException::withMessages(["dong.$i" => "Dòng $so: tên tối đa $toiDa ký tự."]);
+            }
             $phi = (int) $mau->phi_ca_nhan;
             $chatLieu = self::chatLieu($bt->chat_lieu);
             $donGia = $bangGia[$chatLieu];

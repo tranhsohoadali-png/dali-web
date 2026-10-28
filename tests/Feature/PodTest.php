@@ -62,6 +62,33 @@ class PodTest extends TestCase
         return $m;
     }
 
+    public function test_mau_khac_ten_bat_buoc_ten_va_co_xem_truoc(): void
+    {
+        $orn = $this->taoMau('Ornament khắc tên', null, 9.0, 'PETG');
+        $orn->update(['xem_truoc' => ['loai' => 'ten', 'font' => 'Pacifico', 'toi_da' => 8, 'w' => 90, 'h' => 104,
+            'khung' => 'M0 0 L90 0 L90 104 L0 104Z', 'o_ten' => ['cx' => 45, 'cy' => 55, 'w' => 70, 'h' => 20, 'goc' => -10]]]);
+        $bt = $this->bt($orn);
+        foreach ([['', 'nhập tên'], ['Alexandria', 'tối đa 8']] as [$chu, $loi]) {
+            try {
+                PodSo::datDon($this->a, [['bien_the_id' => $bt, 'so_luong' => 1, 'chu' => $chu]], null, null, null, null);
+                $this->fail('Phải báo lỗi tên: ' . $loi);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $this->assertStringContainsString($loi, collect($e->errors())->flatten()->first());
+            }
+        }
+        $don = PodSo::datDon($this->a, [['bien_the_id' => $bt, 'so_luong' => 1, 'chu' => 'Emma']], null, null, null, null);
+        $this->assertSame('Emma', $don->dong()->first()->chu_ca_nhan);
+        $h = $this->token($this->a);
+        $ds = collect($this->getJson('/api/pod/mau', $h)->json('mau'))->firstWhere('ma', $orn->ma);
+        $this->assertTrue($ds['co_xem_truoc']);
+        $this->assertNull($ds['xem_truoc'], 'Danh sách không kèm khung SVG (nặng)');
+        $this->assertSame(8, $ds['ten_toi_da']);
+        $this->assertSame('M0 0 L90 0 L90 104 L0 104Z', $this->getJson('/api/pod/mau/' . $orn->ma, $h)->json('mau.xem_truoc.khung'));
+        // Trang công khai: có ô thử tên + canvas, vẫn không lộ giá (9 g × 900 = 8.100đ)
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $orn->ma)->assertOk()
+            ->assertSee('cvXt')->assertSee('Thử tên của bạn')->assertDontSee('8.100');
+    }
+
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
     {
         $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');
