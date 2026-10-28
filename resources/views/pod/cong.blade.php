@@ -339,7 +339,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     function toiDa() { var k = khungNay(); return (k && k.toi_da) || (xt && xt.toi_da) || m.ten_toi_da || 0; }
     function veXemTruoc() {
       var cv = $('mCv'), k = khungNay(); if (!cv || !k) return;
-      cv.height = Math.round(cv.width * k.h / k.w);
+      PodVeTen.datCao(cv, k);
       PodVeTen.choFont(sel.font).then(function () { PodVeTen.ve(cv, k, sel.chu || 'Tên của bạn', sel.mau, sel.font); });
     }
     function nhom(tieuDe, khoa, ds, nhan) {
@@ -370,7 +370,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       h += nhom('Kiểu', 'kieu', kieuDs, function (v) { return esc((xt && xt.kieu && xt.kieu[v] && xt.kieu[v].ten) || v); }) +
         nhom('Kích thước', 'ten', coDs, esc) +
         nhom('Nhựa', 'cl', clDs, function (v) { return esc(v) + giaCl(v); }) +
-        nhom('Màu nhựa', 'mau', b ? b.mau_sac : [], function (v) { return '<i class="cham" style="background:' + PodVeTen.mauHex(v) + '"></i>' + esc(v); }) +
+        nhom('Màu nhựa', 'mau', b ? b.mau_sac : [], function (v) { return '<i class="cham" style="background:' + PodVeTen.nenChip(v) + '"></i>' + esc(v); }) +
         nhom('Font chữ', 'font', fonts, function (v) { return '<span style="font:' + PodVeTen.css(v, 18).replace(/"/g, "'") + '">' + esc(sel.chu || 'Emma') + '</span><small class="mu"> ' + esc(v) + '</small>'; });
       if (b) {
         h += '<label class="f" style="margin-top:12px">' + (td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +

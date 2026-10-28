@@ -123,6 +123,29 @@ class PodTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/<table class="bang gia-co" data-kieu="la"\s+hidden/', $html);
     }
 
+    public function test_moc_khoa_ten_khong_khung_co_dinh_phoi_mau_hai_mau(): void
+    {
+        $m = PodMau::create(['ma' => 'mockhoa001', 'ten' => 'Móc khoá tên', 'chu_seller_id' => null, 'hien' => true, 'anh' => [],
+            'xem_truoc' => ['loai' => 'ten', 've' => 'moc_khoa', 'font' => 'Pacifico', 'fonts' => ['Pacifico', 'Lobster'], 'toi_da' => 10,
+                'cao_hoa' => 16, 'vien' => 2.45, 'lo_r' => 2.25, 'vanh' => 2.4, 'khe_lo' => 2,
+                'mu' => ['ti_le' => 0.9448, 'than' => 'M0 0 L5 0 L5 5Z', 'vien' => 'M0 5 L5 5 L5 6Z', 'khung' => [0, 0, 5, 6]]]]);
+        $bt = PodBienThe::create(['mau_id' => $m->id, 'ten' => 'Thường', 'gram' => 6.6, 'chat_lieu' => 'PETG',
+            'mau_sac' => 'Đỏ + chữ trắng, Trắng + chữ đỏ'])->id;
+        $this->assertSame(10, $m->tenToiDa());
+        try {
+            PodSo::datDon($this->a, [['bien_the_id' => $bt, 'so_luong' => 1, 'chu' => 'Wilhelmina1', 'mau_sac' => 'Đỏ + chữ trắng']], null, null, null, null);
+            $this->fail('Tên 11 ký tự phải bị chặn');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('tối đa 10', collect($e->errors())->flatten()->first());
+        }
+        $dong = PodSo::datDon($this->a, [['bien_the_id' => $bt, 'so_luong' => 2, 'chu' => 'Sofia', 'mau_sac' => 'Trắng + chữ đỏ']],
+            null, null, null, null)->dong()->first();
+        $this->assertSame(['Trắng + chữ đỏ', 'Pacifico', 11880], [$dong->mau_sac, $dong->font, (int) $dong->thanh_tien]); // 6,6 g × 2 × 900
+        // Trang công khai: không có khung w/h -> canvas cao mặc định, móc khoá tự đặt chiều cao khi vẽ
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()
+            ->assertSee('height="520"', false)->assertSee('data-mau="Trắng + chữ đỏ"', false)->assertSee('5.940đ');
+    }
+
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
     {
         $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');

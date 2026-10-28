@@ -43,7 +43,7 @@
     @endphp
     <div>
       @if($xt)
-      <div class="anh-chinh" style="aspect-ratio:auto"><canvas id="cvXt" width="900" height="{{ (int) round(900 * $khung0['h'] / $khung0['w']) }}" style="width:100%;height:auto;display:block" aria-label="Ảnh xem trước {{ $m->ten }} theo tên"></canvas></div>
+      <div class="anh-chinh" style="aspect-ratio:auto"><canvas id="cvXt" width="900" height="{{ !empty($khung0['w']) ? (int) round(900 * $khung0['h'] / $khung0['w']) : 520 }}" style="width:100%;height:auto;display:block" aria-label="Ảnh xem trước {{ $m->ten }} theo tên"></canvas></div>
       <button type="button" class="nut nut-vien nut-nho" id="taiXt" style="margin-top:12px">Tải ảnh xem trước</button>
       @else
       <div class="anh-chinh">@if(!empty($m->anh))<img id="anhChinh" src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}">@endif</div>
@@ -127,7 +127,7 @@
   }
   var chips = chon('#mauXt .chip-mau', function (c) { mau = c.dataset.mau; });
   if (chips.length) mau = chips[0].dataset.mau;
-  chips.forEach(function (c) { c.querySelector('i').style.background = PodVeTen.mauHex(c.dataset.mau); });
+  chips.forEach(function (c) { c.querySelector('i').style.background = PodVeTen.nenChip(c.dataset.mau); });
   chon('#kieuXt .chip-kieu', function (c) {
     kieu = c.dataset.kieu;
     var k = PodVeTen.khung(d, kieu), td = k.toi_da || d.toi_da || 12;
@@ -139,7 +139,7 @@
     .forEach(function (c) { c.querySelector('.ten-font').style.font = PodVeTen.css(c.dataset.font, 19); });
   function ve() {
     var k = PodVeTen.khung(d, kieu), ten = ip.value.trim();
-    cv.height = Math.round(cv.width * k.h / k.w);
+    PodVeTen.datCao(cv, k);
     document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
     PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font); });
   }
