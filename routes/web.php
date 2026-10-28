@@ -67,6 +67,9 @@ Route::post('/danh-gia',               [WebsiteController::class, 'submitReview'
 Route::get('/sitemap.xml',             [WebsiteController::class, 'sitemap'])->name('sitemap');
 Route::post('/dat-hang/confirm',  [WebsiteController::class, 'confirmPayment'])->name('place-order.confirm');
 
+// ─── CỔNG SELLER POD (một trang, gọi /api/pod/*; không cho máy tìm kiếm lập chỉ mục) ───
+Route::get('/pod', fn () => response()->view('pod.cong')->header('X-Robots-Tag', 'noindex, nofollow'))->name('pod.cong');
+
 // ─── CỔNG CỘNG TÁC VIÊN (CTV) ───────────────────
 Route::prefix('ctv')->name('ctv.')->group(function () {
     Route::get('dang-nhap',  [CtvController::class, 'showLogin'])->name('login');
@@ -120,6 +123,29 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
 
     // Sản phẩm
     Route::resource('products', ProductController::class)->except(['show']);
+
+    // ─── Cổng seller POD (bảng pod_*, KHÔNG dùng sp_3d) ───
+    Route::prefix('3d/pod')->name('pod.')->group(function () {
+        Route::get('seller',                 [\App\Http\Controllers\Admin\PodSellerController::class, 'index'])->name('seller.index');
+        Route::post('seller',                [\App\Http\Controllers\Admin\PodSellerController::class, 'store'])->name('seller.store');
+        Route::put('seller/{seller}',        [\App\Http\Controllers\Admin\PodSellerController::class, 'update'])->name('seller.update');
+        Route::post('seller/{seller}/khoa',  [\App\Http\Controllers\Admin\PodSellerController::class, 'khoa'])->name('seller.khoa');
+        Route::post('seller/{seller}/nap',   [\App\Http\Controllers\Admin\PodSellerController::class, 'nap'])->name('seller.nap');
+        Route::get('seller/{seller}/vi',     [\App\Http\Controllers\Admin\PodSellerController::class, 'vi'])->name('seller.vi');
+        Route::get('mau',                    [\App\Http\Controllers\Admin\PodMauController::class, 'index'])->name('mau.index');
+        Route::get('mau/them',               [\App\Http\Controllers\Admin\PodMauController::class, 'create'])->name('mau.create');
+        Route::post('mau',                   [\App\Http\Controllers\Admin\PodMauController::class, 'store'])->name('mau.store');
+        Route::get('mau/{mau}/sua',          [\App\Http\Controllers\Admin\PodMauController::class, 'edit'])->name('mau.edit');
+        Route::put('mau/{mau}',              [\App\Http\Controllers\Admin\PodMauController::class, 'update'])->name('mau.update');
+        Route::get('mau/{mau}/anh/{i}',      [\App\Http\Controllers\Admin\PodMauController::class, 'anh'])->whereNumber('i')->name('mau.anh');
+        Route::post('gia-gram',              [\App\Http\Controllers\Admin\PodMauController::class, 'giaGram'])->name('giagram');
+        Route::get('nhat-ky',                [\App\Http\Controllers\Admin\PodMauController::class, 'nhatKy'])->name('nhatky');
+        Route::get('don',                    [\App\Http\Controllers\Admin\PodDonController::class, 'index'])->name('don.index');
+        Route::get('don/{don}',              [\App\Http\Controllers\Admin\PodDonController::class, 'show'])->name('don.show');
+        Route::post('don/{don}/trang-thai',  [\App\Http\Controllers\Admin\PodDonController::class, 'trangThai'])->name('don.status');
+        Route::post('don/{don}/huy',         [\App\Http\Controllers\Admin\PodDonController::class, 'huy'])->name('don.huy');
+        Route::get('don/{don}/nhan',         [\App\Http\Controllers\Admin\PodDonController::class, 'nhan'])->name('don.nhan');
+    });
 
     // ─── Xưởng in 3D (khu riêng, bảng sp_3d) ───
     Route::prefix('3d')->group(function () {

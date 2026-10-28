@@ -49,3 +49,25 @@ Route::prefix('3d')->group(function () {
     Route::post('dai-ly/danh-dau-gui', [\App\Http\Controllers\Api3dController::class, 'dealerDanhDauGui']); // ĐL đánh dấu Đã gửi
     Route::post('dai-ly/xoa-don',     [\App\Http\Controllers\Api3dController::class, 'dealerXoaDon']);   // ĐL tự xoá đơn (chỉ khi tt=moi)
 });
+
+/*
+ * Cổng seller POD (/api/pod/*). Trang cổng ở /pod cùng tên miền. Token header X-Pod-Token.
+ * Mẫu riêng của seller khác luôn trả 404 (PodMau::hienCho).
+ */
+Route::prefix('pod')->middleware('throttle:120,1')->group(function () {
+    Route::post('dang-nhap',       [\App\Http\Controllers\PodApiController::class, 'dangNhap']);
+    Route::get('toi',              [\App\Http\Controllers\PodApiController::class, 'toi']);
+    Route::post('dong-y',          [\App\Http\Controllers\PodApiController::class, 'dongY']);
+    Route::post('dang-xuat',       [\App\Http\Controllers\PodApiController::class, 'dangXuat']);
+    Route::get('mau',              [\App\Http\Controllers\PodApiController::class, 'mau']);
+    Route::get('mau/{ma}',         [\App\Http\Controllers\PodApiController::class, 'mauChiTiet']);
+    Route::get('anh/{ma}/{i}',     [\App\Http\Controllers\PodApiController::class, 'anh'])
+        ->whereNumber('i')->middleware('signed:relative')->name('pod.anh');   // link ảnh có chữ ký, 10 phút
+    Route::get('noi-giao',         [\App\Http\Controllers\PodApiController::class, 'noiGiao']);
+    Route::post('noi-giao',        [\App\Http\Controllers\PodApiController::class, 'noiGiaoLuu']);
+    Route::delete('noi-giao/{id}', [\App\Http\Controllers\PodApiController::class, 'noiGiaoXoa'])->whereNumber('id');
+    Route::get('don',              [\App\Http\Controllers\PodApiController::class, 'don']);
+    Route::post('don',             [\App\Http\Controllers\PodApiController::class, 'donTao'])->middleware('throttle:30,1');
+    Route::post('don/{ma}/huy',    [\App\Http\Controllers\PodApiController::class, 'donHuy']);
+    Route::get('vi',               [\App\Http\Controllers\PodApiController::class, 'vi']);
+});
