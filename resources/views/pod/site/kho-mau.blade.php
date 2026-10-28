@@ -1,11 +1,11 @@
 @extends('pod.site._khung', ['tab' => 'kho'])
 @section('tieu_de', $nhom !== '' ? 'Kho mẫu ' . $nhom : 'Kho mẫu in 3D cho seller POD')
-@section('mo_ta', 'Kho mẫu chung của xưởng DALI: mẫu in 3D làm sẵn cho seller POD, có ảnh mockup để đăng bán. Đăng nhập để xem giá và đặt in.')
+@section('mo_ta', 'Kho mẫu chung của xưởng DALI: mẫu in 3D làm sẵn cho seller POD, có ảnh mockup để đăng bán và giá in từng cỡ.')
 @section('noi_dung')
 <div class="wrap" style="padding:56px 20px 8px">
   <span class="nhan">Kho chung</span>
   <h1 style="font-size:clamp(30px,4.4vw,44px)">Kho mẫu in 3D</h1>
-  <p class="phu" style="margin-top:12px">Mẫu xưởng làm sẵn, mọi seller dùng được. Giá và đặt in nằm trong cổng seller sau khi đăng nhập. Mẫu độc quyền của từng seller không hiện ở đây.</p>
+  <p class="phu" style="margin-top:12px">Mẫu xưởng làm sẵn, mọi seller dùng được. Giá in 1 chiếc ghi trên từng mẫu, đặt in trong cổng seller. Mẫu độc quyền của từng seller không hiện ở đây.</p>
   @if($cacNhom->isNotEmpty())
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:22px">
     <a class="chip {{ $nhom === '' ? 'on' : '' }}" href="/kho-mau">Tất cả</a>
@@ -22,7 +22,7 @@
         @foreach($ds as $m)
           <a class="mau-the" href="/kho-mau/{{ $m->ma }}">
             <div class="anh">@if(!empty($m->anh))<img src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}" loading="lazy">@else Chưa có ảnh @endif</div>
-            <div class="chu"><b>{{ $m->ten }}</b><small>{{ $m->nhom }}@if($m->bienThe->count() > 1){{ $m->nhom ? ' · ' : '' }}{{ $m->bienThe->count() }} phân loại @endif</small></div>
+            <div class="chu"><b>{{ $m->ten }}</b><small>{{ $m->nhom }}@php $soCo = $m->bienThe->pluck('ten')->unique()->count(); @endphp @if($soCo > 1){{ $m->nhom ? ' · ' : '' }}{{ $soCo }} cỡ @endif</small>@php $gt = \App\Services\PodSo::giaTu($m); @endphp @if($gt)<span class="gia-tu">từ {{ number_format($gt, 0, ',', '.') }}đ</span>@endif</div>
           </a>
         @endforeach
       </div>

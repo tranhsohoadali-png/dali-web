@@ -59,6 +59,14 @@ class PodSo
         );
     }
 
+    /** Giá in 1 chiếc rẻ nhất của mẫu (theo đơn giá nhựa hiện hành), null nếu chưa có phân loại. Dùng cho chữ "từ …đ" trên thẻ. */
+    public static function giaTu(PodMau $m, ?array $bangGia = null): ?int
+    {
+        $bangGia ??= self::bangGia();
+        $ds = $m->bienThe->map(fn ($b) => self::giaDong((float) $b->gram, 1, $bangGia[self::chatLieu($b->chat_lieu)], 0, false));
+        return $ds->isEmpty() ? null : (int) $ds->min();
+    }
+
     /** Giá 1 dòng: gram × SL × đơn giá, cộng phí cá nhân hoá MỘT lần cho dòng có chữ riêng. */
     public static function giaDong(float $gram, int $soLuong, int $donGia, int $phiCaNhan, bool $coChu): int
     {

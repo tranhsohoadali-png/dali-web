@@ -62,6 +62,7 @@ h3{font-size:19px;font-weight:700;margin-bottom:6px}
 .mau-the .chu{padding:12px 14px}
 .mau-the b{display:block;font-size:15px;line-height:1.35}
 .mau-the small{color:var(--mu);font-size:13px}
+.mau-the .gia-tu{display:block;margin-top:4px;font-weight:800;color:var(--gd);font-size:14px}
 .chip{display:inline-block;padding:7px 14px;border-radius:20px;border:1px solid var(--bd);background:#fff;text-decoration:none;color:var(--ink);font-weight:600;font-size:14px}
 .chip.on{background:var(--gd);border-color:var(--gd);color:#fff}
 table.bang{width:100%;border-collapse:collapse}

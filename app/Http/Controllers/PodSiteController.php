@@ -26,7 +26,7 @@ class PodSiteController extends Controller
 
     public function trangChu()
     {
-        $noiBat = $this->khoChung()->orderByDesc('id')->limit(8)->get()->filter(fn ($m) => !empty($m->anh))->values();
+        $noiBat = $this->khoChung()->with('bienThe')->orderByDesc('id')->limit(8)->get()->filter(fn ($m) => !empty($m->anh))->values();
         return view('pod.site.trang-chu', ['noiBat' => $noiBat, 'gia' => PodSo::bangGia(), 'soMau' => $this->khoChung()->count()]);
     }
 
@@ -55,7 +55,7 @@ class PodSiteController extends Controller
     {
         $m = $this->khoChung()->with('bienThe')->where('ma', $ma)->first();
         if (!$m) abort(404);
-        $lienQuan = $this->khoChung()->where('id', '!=', $m->id)->when($m->nhom, fn ($q) => $q->where('nhom', $m->nhom))
+        $lienQuan = $this->khoChung()->with('bienThe')->where('id', '!=', $m->id)->when($m->nhom, fn ($q) => $q->where('nhom', $m->nhom))
             ->orderByDesc('id')->limit(4)->get()->filter(fn ($x) => !empty($x->anh))->values();
         return view('pod.site.mau', compact('m', 'lienQuan'));
     }

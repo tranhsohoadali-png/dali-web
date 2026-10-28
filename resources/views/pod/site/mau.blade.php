@@ -14,6 +14,9 @@
 .pl span{border:1px solid var(--bd);background:#fff;border-radius:10px;padding:7px 12px;font-size:14px;font-weight:600}
 .khoa{background:var(--gll);border:1px dashed var(--g);border-radius:16px;padding:20px;margin-top:22px}
 .thu-ten{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:18px;margin-top:20px}
+.gia-co{margin-top:20px;background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.gia-co th{background:var(--gll)}
+.gia-co td.so{color:var(--gd);font-size:16px}
 .thu-ten label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}
 .thu-ten input{font:inherit;font-size:18px;border:1.5px solid var(--bd);border-radius:12px;padding:12px 14px;background:var(--gll);outline:none}
 .thu-ten input:focus{border-color:var(--g);background:#fff}
@@ -46,9 +49,26 @@
       <span class="nhan">Kho chung</span>
       <h1 style="font-size:clamp(28px,3.6vw,40px)">{{ $m->ten }}</h1>
       @if($m->mo_ta)<p style="color:var(--mu);margin-top:12px;white-space:pre-line">{{ $m->mo_ta }}</p>@endif
+      @php
+        $bg = \App\Services\PodSo::bangGia();
+        $cls = $m->bienThe->map(fn ($b) => \App\Services\PodSo::chatLieu($b->chat_lieu))->unique()->values();
+        $theoCo = $m->bienThe->groupBy('ten');
+      @endphp
       @if($m->bienThe->isNotEmpty())
-        <div style="margin-top:20px;font-weight:700">Phân loại</div>
-        <div class="pl">@foreach($m->bienThe as $b)<span>{{ $b->ten }} · {{ \App\Services\PodSo::chatLieu($b->chat_lieu) }}</span>@endforeach</div>
+        <table class="bang gia-co">
+          <thead><tr><th>Kích thước</th>@foreach($cls as $cl)<th class="so">{{ $cl }}</th>@endforeach</tr></thead>
+          <tbody>
+            @foreach($theoCo as $tenCo => $ds)
+            <tr><td><b>{{ $tenCo }}</b></td>
+              @foreach($cls as $cl)
+                @php $b = $ds->first(fn ($x) => \App\Services\PodSo::chatLieu($x->chat_lieu) === $cl); @endphp
+                <td class="so">{{ $b ? number_format(\App\Services\PodSo::giaDong((float) $b->gram, 1, $bg[$cl], 0, false), 0, ',', '.') . 'đ' : '—' }}</td>
+              @endforeach
+            </tr>
+            @endforeach
+          </tbody>
+        </table>
+        <p style="color:var(--mu);font-size:13px;margin-top:6px">Giá in 1 chiếc, chưa gồm phí vận chuyển.@if($xt) Kích thước đo theo bề ngang.@endif</p>
       @endif
       @if($xt)
         <div class="thu-ten">
@@ -61,8 +81,8 @@
         </div>
       @elseif($m->phi_ca_nhan > 0)<p style="margin-top:14px;font-size:15px">Có nhận chữ cá nhân hoá theo từng đơn.</p>@endif
       <div class="khoa">
-        <b>Giá và đặt in nằm trong cổng seller</b>
-        <p style="color:var(--mu);font-size:15px;margin:6px 0 14px">@php $bg = \App\Services\PodSo::bangGia(); @endphp Giá tính theo gram × đơn giá nhựa (PETG {{ number_format($bg['PETG'], 0, ',', '.') }}đ, PLA {{ number_format($bg['PLA'], 0, ',', '.') }}đ), hiện ngay khi bạn chọn phân loại. Ảnh mockup tải trong cổng để đăng bán.</p>
+        <b>Đặt in trong cổng seller</b>
+        <p style="color:var(--mu);font-size:15px;margin:6px 0 14px">Chọn cỡ, nhựa, màu và tên ngay trong cổng; đơn trừ thẳng vào ví nạp trước. Ảnh mockup tải trong cổng để đăng bán.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap"><a href="/cong" class="nut nut-chinh nut-nho">Đăng nhập để đặt</a><a href="/dang-ky" class="nut nut-vien nut-nho">Chưa có tài khoản? Đăng ký</a></div>
       </div>
     </div>
@@ -71,7 +91,7 @@
   <section style="padding-top:24px">
     <h2 style="font-size:24px">Mẫu cùng nhóm</h2>
     <div class="luoi l4" style="margin-top:16px">
-      @foreach($lienQuan as $x)<a class="mau-the" href="/kho-mau/{{ $x->ma }}"><div class="anh"><img src="/anh-mau/{{ $x->ma }}/0" alt="{{ $x->ten }}" loading="lazy"></div><div class="chu"><b>{{ $x->ten }}</b><small>{{ $x->nhom }}</small></div></a>@endforeach
+      @foreach($lienQuan as $x)<a class="mau-the" href="/kho-mau/{{ $x->ma }}"><div class="anh"><img src="/anh-mau/{{ $x->ma }}/0" alt="{{ $x->ten }}" loading="lazy"></div><div class="chu"><b>{{ $x->ten }}</b><small>{{ $x->nhom }}</small>@php $gt = \App\Services\PodSo::giaTu($x); @endphp @if($gt)<span class="gia-tu">từ {{ number_format($gt, 0, ',', '.') }}đ</span>@endif</div></a>@endforeach
     </div>
   </section>
   @endif

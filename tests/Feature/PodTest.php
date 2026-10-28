@@ -84,9 +84,9 @@ class PodTest extends TestCase
         $this->assertNull($ds['xem_truoc'], 'Danh sách không kèm khung SVG (nặng)');
         $this->assertSame(8, $ds['ten_toi_da']);
         $this->assertSame('M0 0 L90 0 L90 104 L0 104Z', $this->getJson('/api/pod/mau/' . $orn->ma, $h)->json('mau.xem_truoc.khung'));
-        // Trang công khai: có ô thử tên + canvas, vẫn không lộ giá (9 g × 900 = 8.100đ)
+        // Trang công khai: có ô thử tên + canvas + giá in từng cỡ (9 g × 900 = 8.100đ)
         $this->get('http://' . config('pod.domain') . '/kho-mau/' . $orn->ma)->assertOk()
-            ->assertSee('cvXt')->assertSee('Thử tên của bạn')->assertDontSee('8.100');
+            ->assertSee('cvXt')->assertSee('Thử tên của bạn')->assertSee('8.100đ');
     }
 
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
@@ -198,8 +198,9 @@ class PodTest extends TestCase
         $this->get($goc . '/kho-mau/' . $this->riengA->ma)->assertNotFound();
         $this->get($goc . '/anh-mau/' . $this->riengA->ma . '/0')->assertNotFound();
         $this->get($goc . '/anh-mau/' . $this->chung->ma . '/0')->assertOk();
-        // Giá từng mẫu chỉ hiện sau đăng nhập: 18,8 g × 1.300 = 24.440đ không được lộ ở trang công khai
-        $this->get($goc . '/kho-mau/' . $this->chung->ma)->assertOk()->assertSee('Khuôn bánh Eid')->assertDontSee('24.440');
+        // Mẫu Kho chung hiện giá in 1 chiếc theo cỡ: 18,8 g × 1.300 = 24.440đ (trang chi tiết + thẻ "từ …đ")
+        $this->get($goc . '/kho-mau/' . $this->chung->ma)->assertOk()->assertSee('Khuôn bánh Eid')->assertSee('24.440đ');
+        $this->get($goc . '/kho-mau')->assertOk()->assertSee('từ 24.440đ');
     }
 
     public function test_dang_ky_seller_cho_duyet_roi_moi_dang_nhap(): void
