@@ -60,7 +60,7 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
       <a href="{{ route('admin.pod.seller.index') }}" class="{{ request()->routeIs('admin.pod.seller*') ? 'on' : '' }}">Seller & ví</a>
       <a href="{{ route('admin.pod.thoin.index') }}" class="{{ request()->routeIs('admin.pod.thoin*') ? 'on' : '' }}">Thợ in</a>
       <a href="{{ route('admin.pod.nhatky') }}" class="{{ request()->routeIs('admin.pod.nhatky') ? 'on' : '' }}">Nhật ký mẫu riêng</a>
-      <a href="{{ route('pod.cong') }}" target="_blank">Cổng seller ↗</a>
+      <a href="{{ config('pod.url') }}" target="_blank">Cổng seller ↗</a>
     </nav>
   </div>
   <div class="cnt">

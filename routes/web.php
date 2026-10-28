@@ -20,6 +20,12 @@ use App\Http\Controllers\WebhookController;
 // ─── WEBHOOK (ngoài, không CSRF) ────────────────
 Route::post('/webhook/viettelpost', [WebhookController::class, 'viettelpost'])->name('webhook.vtp');
 
+// ─── TÊN MIỀN CỔNG POD: trang gốc là cổng seller (gọi /api/pod/*, không cho máy tìm kiếm lập chỉ mục).
+//     Phải đăng ký TRƯỚC route "/" của web tranh để thắng khi Host là tên miền cổng.
+Route::domain(config('pod.domain'))->group(function () {
+    Route::get('/', fn () => response()->view('pod.cong')->header('X-Robots-Tag', 'noindex, nofollow'))->name('pod.trang-chu');
+});
+
 // ─── FRONTEND ───────────────────────────────────
 Route::get('/',                  [WebsiteController::class, 'index'])->name('home');
 Route::get('/trang-chu-moi',     [WebsiteController::class, 'indexV2'])->name('home.v2');  // xem thu giao dien trang chu moi
@@ -67,8 +73,8 @@ Route::post('/danh-gia',               [WebsiteController::class, 'submitReview'
 Route::get('/sitemap.xml',             [WebsiteController::class, 'sitemap'])->name('sitemap');
 Route::post('/dat-hang/confirm',  [WebsiteController::class, 'confirmPayment'])->name('place-order.confirm');
 
-// ─── CỔNG SELLER POD (một trang, gọi /api/pod/*; không cho máy tìm kiếm lập chỉ mục) ───
-Route::get('/pod', fn () => response()->view('pod.cong')->header('X-Robots-Tag', 'noindex, nofollow'))->name('pod.cong');
+// ─── CỔNG SELLER POD: chạy ở tên miền riêng (config/pod.php); link cũ tranhdali.vn/pod chuyển 301 sang đó ───
+Route::get('/pod', fn () => redirect()->away(config('pod.url'), 301))->name('pod.cong');
 
 // ─── THỢ IN: chỉ hàng đợi in POD; tài khoản riêng, KHÔNG vào được admin ───
 Route::prefix('tho-in')->name('tho-in.')->group(function () {

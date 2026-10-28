@@ -27,7 +27,7 @@ class PodThoInController extends Controller
             return back()->withErrors(['sdt' => 'Số điện thoại này đã có thợ in.'])->withInput();
         }
         PodThoIn::create(['ten' => $v['ten'], 'sdt' => $sdt, 'matkhau' => Hash::make($v['matkhau']), 'hien' => true]);
-        return back()->with('ok', 'Đã tạo tài khoản thợ in "' . $v['ten'] . '". Gửi thợ link ' . url('/tho-in') . ', số điện thoại và mật khẩu.');
+        return back()->with('ok', 'Đã tạo tài khoản thợ in "' . $v['ten'] . '". Gửi thợ link ' . config('pod.url') . '/tho-in, số điện thoại và mật khẩu.');
     }
 
     public function update(Request $request, PodThoIn $tho)

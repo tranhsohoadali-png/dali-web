@@ -136,9 +136,16 @@ class PodTest extends TestCase
         $this->assertStringNotContainsString('Mẫu độc quyền của A', $body);
     }
 
-    public function test_trang_cong_gan_noindex(): void
+    public function test_cong_o_ten_mien_rieng_gan_noindex_link_cu_chuyen_huong(): void
     {
-        $this->get('/pod')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $goc = 'http://' . config('pod.domain');
+        $this->get($goc . '/')->assertOk()->assertSee('Cổng seller POD')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $this->get('/pod')->assertStatus(301)->assertRedirect(config('pod.url'));
+        $this->get($goc . '/tho-in')->assertRedirectContains('/tho-in/dang-nhap');
+        $this->getJson($goc . '/api/pod/mau', $this->token($this->a))->assertOk();
+        $khop = fn ($u) => app('router')->getRoutes()->match(\Illuminate\Http\Request::create($u))->getName();
+        $this->assertSame('home', $khop('http://tranhdali.vn/'));
+        $this->assertSame('pod.trang-chu', $khop($goc . '/'));
     }
 
     /* ---------------- Đăng nhập + điều khoản ---------------- */

@@ -1,6 +1,6 @@
 @include('admin.pod._dau', ['tieuDe' => 'Thợ in'])
 <div class="card">
-  <div class="card-h"><div class="card-t">Cấp tài khoản thợ in</div><div class="card-hint">Thợ in đăng nhập ở {{ url('/tho-in') }}: chỉ thấy hàng đợi in, file in, nhãn, nơi giao. Không thấy tiền, ví seller, kho mẫu, không huỷ được đơn, không vào được admin.</div></div>
+  <div class="card-h"><div class="card-t">Cấp tài khoản thợ in</div><div class="card-hint">Thợ in đăng nhập ở {{ config('pod.url') }}/tho-in: chỉ thấy hàng đợi in, file in, nhãn, nơi giao. Không thấy tiền, ví seller, kho mẫu, không huỷ được đơn, không vào được admin.</div></div>
   <form method="POST" action="{{ route('admin.pod.thoin.store') }}" class="pad">
     @csrf
     <div class="grid">

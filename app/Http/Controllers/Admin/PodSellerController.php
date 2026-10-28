@@ -38,7 +38,7 @@ class PodSellerController extends Controller
             'ma' => PodSeller::taoMa(), 'ten' => $v['ten'], 'sdt' => $sdt,
             'matkhau' => Hash::make($v['matkhau']), 'ghi_chu' => $v['ghi_chu'] ?? null, 'hien' => true,
         ]);
-        return back()->with('ok', 'Đã tạo seller "' . $s->ten . '" — mã ' . $s->ma . '. Gửi seller link /pod, số điện thoại và mật khẩu.');
+        return back()->with('ok', 'Đã tạo seller "' . $s->ten . '" — mã ' . $s->ma . '. Gửi seller link ' . config('pod.url') . ', số điện thoại và mật khẩu.');
     }
 
     public function update(Request $request, PodSeller $seller)

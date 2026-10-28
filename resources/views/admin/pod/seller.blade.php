@@ -1,6 +1,6 @@
 @include('admin.pod._dau', ['tieuDe' => 'Seller & ví'])
 <div class="card">
-  <div class="card-h"><div class="card-t">Cấp tài khoản seller</div><div class="card-hint">Xưởng cấp, seller không tự đăng ký. Gửi seller link {{ url('/pod') }}, số điện thoại và mật khẩu.</div></div>
+  <div class="card-h"><div class="card-t">Cấp tài khoản seller</div><div class="card-hint">Xưởng cấp, seller không tự đăng ký. Gửi seller link {{ config('pod.url') }}, số điện thoại và mật khẩu.</div></div>
   <form method="POST" action="{{ route('admin.pod.seller.store') }}" class="pad">
     @csrf
     <div class="grid">
