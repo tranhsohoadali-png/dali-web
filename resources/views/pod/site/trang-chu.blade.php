@@ -48,7 +48,7 @@
     </div>
     @if($noiBat->count() >= 4)
       <div class="hero-anh" aria-hidden="true">
-        @foreach($noiBat->take(4) as $m)<div class="o"><img src="/anh-mau/{{ $m->ma }}/0" alt="" loading="lazy"></div>@endforeach
+        @foreach($noiBat->take(4) as $m)<div class="o"><img src="{{ $m->urlAnh() }}" alt="" loading="lazy"></div>@endforeach
       </div>
     @else
       <div class="hero-gia">
@@ -114,7 +114,7 @@
     </div>
     <div class="luoi l4" style="margin-top:24px">
       @foreach($noiBat as $m)
-        <a class="mau-the" href="/kho-mau/{{ $m->ma }}"><div class="anh"><img src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}" loading="lazy"></div><div class="chu"><b>{{ $m->ten }}</b><small>{{ $m->nhom }}</small>@php $gt = \App\Services\PodSo::giaTu($m); @endphp @if($gt)<span class="gia-tu">từ {{ number_format($gt, 0, ',', '.') }}đ</span>@endif</div></a>
+        <a class="mau-the" href="/kho-mau/{{ $m->ma }}"><div class="anh"><img src="{{ $m->urlAnh() }}" alt="{{ $m->ten }}" loading="lazy"></div><div class="chu"><b>{{ $m->ten }}</b><small>{{ $m->nhom }}</small>@php $gt = \App\Services\PodSo::giaTu($m); @endphp @if($gt)<span class="gia-tu">từ {{ number_format($gt, 0, ',', '.') }}đ</span>@endif</div></a>
       @endforeach
     </div>
   </div>

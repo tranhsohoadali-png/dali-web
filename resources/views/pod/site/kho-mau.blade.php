@@ -21,7 +21,7 @@
       <div class="luoi l4">
         @foreach($ds as $m)
           <a class="mau-the" href="/kho-mau/{{ $m->ma }}">
-            <div class="anh">@if(!empty($m->anh))<img src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}" loading="lazy">@else Chưa có ảnh @endif</div>
+            <div class="anh">@if(!empty($m->anh))<img src="{{ $m->urlAnh() }}" alt="{{ $m->ten }}" loading="lazy">@else Chưa có ảnh @endif</div>
             <div class="chu"><b>{{ $m->ten }}</b><small>{{ $m->nhom }}@php $soCo = $m->bienThe->pluck('ten')->unique()->count(); @endphp @if($soCo > 1){{ $m->nhom ? ' · ' : '' }}{{ $soCo }} cỡ @endif</small>@php $gt = \App\Services\PodSo::giaTu($m); @endphp @if($gt)<span class="gia-tu">từ {{ number_format($gt, 0, ',', '.') }}đ</span>@endif</div>
           </a>
         @endforeach

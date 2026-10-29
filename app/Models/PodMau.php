@@ -95,6 +95,12 @@ class PodMau extends Model
         return false;
     }
 
+    /** Link công khai ảnh thứ $i (mẫu Kho chung) kèm ?v= thời điểm sửa: đổi ảnh là đổi link, trình duyệt khỏi giữ ảnh cũ 24 giờ. */
+    public function urlAnh(int $i = 0): string
+    {
+        return "/anh-mau/{$this->ma}/$i?v=" . ($this->updated_at?->timestamp ?? 0);
+    }
+
     /** Mã 10 ký tự ngẫu nhiên. */
     public static function taoMa(): string
     {

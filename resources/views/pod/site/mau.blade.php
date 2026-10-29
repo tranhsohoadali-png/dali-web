@@ -1,7 +1,7 @@
 @extends('pod.site._khung', ['tab' => 'kho'])
 @section('tieu_de', $m->ten)
 @section('mo_ta', \Illuminate\Support\Str::limit(trim(($m->mo_ta ?: $m->ten) . ' · Mẫu in 3D Kho chung DALI cho seller POD, có ảnh mockup để đăng bán.'), 155))
-@if(!empty($m->anh))@section('og_anh', rtrim(config('pod.url'), '/') . '/anh-mau/' . $m->ma . '/0')@endif
+@if(!empty($m->anh))@section('og_anh', rtrim(config('pod.url'), '/') . $m->urlAnh())@endif
 @section('css')
 .mau-chi-tiet{display:grid;gap:36px;padding:44px 0 24px}
 @media(min-width:880px){.mau-chi-tiet{grid-template-columns:1.05fr .95fr}}
@@ -48,7 +48,8 @@
       $dsCo = $m->bienThe->filter(fn ($b) => !empty($b->kich_thuoc))->unique(fn ($b) => $b->kieu . '|' . $b->ten)
           ->map(fn ($b) => ['kieu' => $b->kieu, 'ten' => $b->ten, 'kt' => $b->kich_thuoc])->values();
       $linkKt = fn (?string $k) => array_filter(array_combine(['truoc', 'ben', 'bia'], array_map(
-          fn ($mat) => $m->anhHinhChieu($mat, $k) ? "/anh-kt/{$m->ma}/$mat" . ($k !== null ? "/$k" : '') : null, ['truoc', 'ben', 'bia'])));
+          fn ($mat) => $m->anhHinhChieu($mat, $k) ? "/anh-kt/{$m->ma}/$mat" . ($k !== null ? "/$k" : '') . '?v=' . ($m->updated_at?->timestamp ?? 0) : null,
+          ['truoc', 'ben', 'bia'])));
       $kieuAnh = $m->kieuCoAnh();   // mẫu khối nhiều kiểu: mỗi kiểu một ảnh bìa + hình chiếu
       $hinhKt = $kieuAnh ? ['kieu' => collect($kieuAnh)->mapWithKeys(fn ($k) => [$k => $linkKt($k)])->all()] : $linkKt(null);
       $biaKieu0 = $kieuAnh && $kieu0 !== '' ? ($hinhKt['kieu'][$kieu0]['bia'] ?? null) : null;
@@ -58,11 +59,11 @@
       <div class="anh-chinh" style="aspect-ratio:auto"><canvas id="cvXt" width="900" height="{{ !empty($khung0['w']) ? (int) round(900 * $khung0['h'] / $khung0['w']) : 520 }}" style="width:100%;height:auto;display:block" aria-label="Ảnh xem trước {{ $m->ten }} theo tên"></canvas></div>
       <button type="button" class="nut nut-vien nut-nho" id="taiXt" style="margin-top:12px">Tải ảnh xem trước</button>
       @else
-      <div class="anh-chinh">@if($biaKieu0)<img id="anhChinh" src="{{ $biaKieu0 }}" alt="{{ $m->ten }} · {{ $m->tenKieu($kieu0) }}">@elseif(!empty($m->anh))<img id="anhChinh" src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}">@endif</div>
+      <div class="anh-chinh">@if($biaKieu0)<img id="anhChinh" src="{{ $biaKieu0 }}" alt="{{ $m->ten }} · {{ $m->tenKieu($kieu0) }}">@elseif(!empty($m->anh))<img id="anhChinh" src="{{ $m->urlAnh() }}" alt="{{ $m->ten }}">@endif</div>
       @endif
       @if(!$xt && count($m->anh ?: []) > 1)
       <div class="anh-phu">
-        @foreach(array_values($m->anh) as $i => $x)<a href="/anh-mau/{{ $m->ma }}/{{ $i }}" onclick="document.getElementById('anhChinh').src=this.href;return false"><img src="/anh-mau/{{ $m->ma }}/{{ $i }}" alt="{{ $m->ten }} ảnh {{ $i + 1 }}" loading="lazy"></a>@endforeach
+        @foreach(array_values($m->anh) as $i => $x)<a href="{{ $m->urlAnh($i) }}" onclick="document.getElementById('anhChinh').src=this.href;return false"><img src="{{ $m->urlAnh($i) }}" alt="{{ $m->ten }} ảnh {{ $i + 1 }}" loading="lazy"></a>@endforeach
       </div>
       @endif
       @if($coKt)
@@ -136,7 +137,7 @@
   <section style="padding-top:24px">
     <h2 style="font-size:24px">Mẫu cùng nhóm</h2>
     <div class="luoi l4" style="margin-top:16px">
-      @foreach($lienQuan as $x)<a class="mau-the" href="/kho-mau/{{ $x->ma }}"><div class="anh"><img src="/anh-mau/{{ $x->ma }}/0" alt="{{ $x->ten }}" loading="lazy"></div><div class="chu"><b>{{ $x->ten }}</b><small>{{ $x->nhom }}</small>@php $gt = \App\Services\PodSo::giaTu($x); @endphp @if($gt)<span class="gia-tu">từ {{ number_format($gt, 0, ',', '.') }}đ</span>@endif</div></a>@endforeach
+      @foreach($lienQuan as $x)<a class="mau-the" href="/kho-mau/{{ $x->ma }}"><div class="anh"><img src="{{ $x->urlAnh() }}" alt="{{ $x->ten }}" loading="lazy"></div><div class="chu"><b>{{ $x->ten }}</b><small>{{ $x->nhom }}</small>@php $gt = \App\Services\PodSo::giaTu($x); @endphp @if($gt)<span class="gia-tu">từ {{ number_format($gt, 0, ',', '.') }}đ</span>@endif</div></a>@endforeach
     </div>
   </section>
   @endif

@@ -167,6 +167,9 @@ class PodTest extends TestCase
         $this->get($dom . '/anh-kt/' . $m->ma . '/truoc')->assertOk();
         $this->get($dom . '/kho-mau/' . $m->ma)->assertOk()->assertSee('id="cvKt"', false)->assertSee('data-co="6 inch"', false)
             ->assertDontSee('Số có dấu ~');
+        // link ảnh kèm ?v= thời điểm sửa mẫu: đổi ảnh bìa thì trình duyệt tải ảnh mới, không giữ ảnh cũ 24 giờ
+        $this->get($dom . '/kho-mau')->assertOk()->assertSee($m->fresh()->urlAnh(), false);
+        $this->assertStringStartsWith('/anh-mau/' . $m->ma . '/0?v=', $m->urlAnh());
 
         // mẫu riêng của A: seller B và khách vãng lai không lấy được hình chiếu, kể cả cầm link có chữ ký của A
         $this->riengA->bienThe()->first()->update(['kich_thuoc' => ['rong' => 50, 'cao' => 60, 'day' => 40]]);
