@@ -323,7 +323,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     // Mẫu khắc tên: lấy dữ liệu khung xem trước (không có trong danh sách vì nặng)
     // + ảnh hình chiếu cho ảnh kích thước (link có chữ ký, chỉ có ở chi tiết)
     if ((m.co_xem_truoc && !m.xem_truoc) || (m.co_kich_thuoc && m.hinh_chieu == null)) {
-      try { var ct = (await api('mau/' + encodeURIComponent(m.ma))).mau; m.xem_truoc = ct.xem_truoc; m.hinh_chieu = ct.hinh_chieu; } catch (e) { baoLoi(e); return; }
+      try { var ct = (await api('mau/' + encodeURIComponent(m.ma))).mau; m.xem_truoc = ct.xem_truoc; m.hinh_chieu = ct.hinh_chieu; m.anh = ct.anh; } catch (e) { baoLoi(e); return; }
     }
     var xt = m.xem_truoc, bt0 = m.bien_the[0] || {};
     var fonts = (xt && xt.fonts) || [];
@@ -337,6 +337,8 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       var b = bt(); if (b && b.mau_sac.length && b.mau_sac.indexOf(sel.mau) < 0) sel.mau = b.mau_sac[0];
     }
     function khungNay() { return xt ? PodVeTen.khung(xt, sel.kieu) : null; }
+    function tenKieu(v) { return (xt && xt.kieu && xt.kieu[v] && xt.kieu[v].ten) || (m.ten_kieu && m.ten_kieu[v]) || v; }
+    function biaKieu() { var h = m.hinh_chieu && m.hinh_chieu.kieu && m.hinh_chieu.kieu[sel.kieu]; return (h && h.bia) || ''; } // mẫu khối nhiều kiểu
     function toiDa() { var k = khungNay(); return (k && k.toi_da) || (xt && xt.toi_da) || m.ten_toi_da || 0; }
     function ktNay() { var b = bt(); return (b && b.kich_thuoc) || null; }
     function veXemTruoc() {
@@ -363,9 +365,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       var anhChinh = xt
         ? '<canvas class="main" id="mCv" width="900" height="1000" style="background:#F4EFE6;aspect-ratio:auto;height:auto"></canvas>' +
           '<button class="btn2" id="mTai" style="margin-top:8px;width:100%">Tải ảnh xem trước (PNG)</button>'
-        : (m.anh[0] ? '<img class="main" id="mMain" src="' + esc(m.anh[0]) + '" alt="">' : '<div class="main" style="display:flex;align-items:center;justify-content:center;color:var(--mu)">Chưa có ảnh</div>');
+        : ((biaKieu() || m.anh[0]) ? '<img class="main" id="mMain" src="' + esc(biaKieu() || m.anh[0]) + '" alt="">' : '<div class="main" style="display:flex;align-items:center;justify-content:center;color:var(--mu)">Chưa có ảnh</div>');
       var h = '<button class="mx" onclick="dongModal()" aria-label="Đóng">×</button><div class="two"><div class="gal">' + anhChinh +
-        (!xt && m.anh.length > 1 ? '<div class="thumbs">' + m.anh.map(function (u, i) { return '<img src="' + esc(u) + '" data-u="' + esc(u) + '" class="' + (i ? '' : 'on') + '">'; }).join('') + '</div>' : '') +
+        (!xt && (m.anh.length > 1 || biaKieu()) ? '<div class="thumbs">' + (biaKieu() ? [biaKieu()] : []).concat(m.anh).map(function (u, i) { return '<img src="' + esc(u) + '" data-u="' + esc(u) + '" class="' + (i ? '' : 'on') + '">'; }).join('') + '</div>' : '') +
         (xt ? '<p class="mu" style="margin-top:8px">Ảnh vẽ từ file in thật; đổi kiểu, màu, font, tên là thấy ngay. Gửi ảnh này cho khách duyệt hoặc đăng bán.</p>'
             : (m.anh.length ? '<p class="mu" style="margin-top:8px">Bấm giữ hoặc chuột phải vào ảnh để lưu. ' + (m.rieng ? 'Chỉ bạn thấy ảnh này.' : 'Ảnh được dùng để đăng bán.') + '</p>' : '')) +
         (m.co_kich_thuoc ? '<div class="nhom-chon"><div class="tieu">Ảnh kích thước · ' + esc(sel.ten || '') + '</div>' +
@@ -374,7 +376,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         '</div><div>' + (m.rieng ? '<span class="tag t-rieng">' + IC_KHOA + ' Mẫu độc quyền</span>' : '<span class="tag t-chung">Kho chung</span>') + '<h2 style="margin-top:8px">' + esc(m.ten) + '</h2>' +
         (m.mo_ta ? '<p class="sub" style="white-space:pre-line">' + esc(m.mo_ta) + '</p>' : '');
       if (!m.bien_the.length) { h += '<p class="msg err">Mẫu chưa có phân loại, chưa đặt được.</p></div></div>'; $('mbox').innerHTML = h; return; }
-      h += nhom('Kiểu', 'kieu', kieuDs, function (v) { return esc((xt && xt.kieu && xt.kieu[v] && xt.kieu[v].ten) || v); }) +
+      h += nhom(xt ? 'Kiểu' : 'Mẫu', 'kieu', kieuDs, function (v) { return esc(tenKieu(v)); }) +
         nhom('Kích thước', 'ten', coDs, esc) +
         nhom('Nhựa', 'cl', clDs, function (v) { return esc(v) + giaCl(v); }) +
         nhom('Màu nhựa', 'mau', b ? b.mau_sac : [], function (v) { return '<i class="cham" style="background:' + PodVeTen.nenChip(v) + '"></i>' + esc(v); }) +
@@ -399,7 +401,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         veXemTruoc();
       };
       if ($('mTaiKt')) $('mTaiKt').onclick = function () {
-        PodVeTen.tai($('mKt'), [m.ten, 'kich thuoc', (khungNay() || {}).ten, sel.ten].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
+        PodVeTen.tai($('mKt'), [m.ten, 'kich thuoc', sel.kieu ? tenKieu(sel.kieu) : '', sel.ten].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
       };
       if ($('mTai')) $('mTai').onclick = function () {
         PodVeTen.tai($('mCv'), [m.ten, (khungNay() || {}).ten, sel.chu || 'mau', sel.mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
@@ -409,8 +411,8 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       if (nut) nut.onclick = function () {
         luuO();
         if (td && !sel.chu) { $('mLoi').textContent = 'Nhập tên cần in trên mẫu.'; $('mLoi').classList.remove('hide'); $('mChu').focus(); return; }
-        var k = khungNay(), tenKieu = sel.kieu && k && k.ten ? k.ten + ' · ' : '';
-        st.gio.push({ bien_the_id: b.id, ten_mau: m.ten, ten_bt: tenKieu + b.ten, chat_lieu: b.chat_lieu, gia: b.gia, phi_ca_nhan: m.phi_ca_nhan,
+        var tenK = sel.kieu ? tenKieu(sel.kieu) + ' · ' : '';
+        st.gio.push({ bien_the_id: b.id, ten_mau: m.ten, ten_bt: tenK + b.ten, chat_lieu: b.chat_lieu, gia: b.gia, phi_ca_nhan: m.phi_ca_nhan,
           mau_sac: sel.mau || '', font: fonts.length ? sel.font : '', chu: sel.chu, so_luong: sel.sl });
         luuGio(); dongModal();
         st.msg = { ok: 'Đã thêm "' + esc(m.ten) + '"' + (sel.chu ? ' tên "' + esc(sel.chu) + '"' : '') + ' vào đơn đang soạn. <a href="#gio">Xem đơn</a>' }; ve();

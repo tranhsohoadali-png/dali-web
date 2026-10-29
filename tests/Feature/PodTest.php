@@ -192,6 +192,38 @@ class PodTest extends TestCase
         $this->assertSame(['ti_le' => 1.3, 'day' => 3.6], PodBienThe::find($bt)->kich_thuoc);
     }
 
+    public function test_mau_khoi_nhieu_kieu_moi_kieu_anh_rieng(): void
+    {
+        $dom = 'http://' . config('pod.domain');
+        $m = PodMau::create(['ma' => 'stuffer001', 'ten' => 'Stuffer Buddy', 'chu_seller_id' => null, 'hien' => true, 'anh' => []]);
+        $kt = ['kieu' => []];
+        foreach (['yeti' => 'Yeti', 'elf' => 'Elf'] as $k => $ten) {
+            foreach (['truoc', 'ben', 'bia'] as $mat) Storage::disk('local')->put("pod/anh/stuffer001-$mat-$k.png", 'png');
+            $kt['kieu'][$k] = ['ten' => $ten, 'truoc' => "pod/anh/stuffer001-truoc-$k.png", 'ben' => "pod/anh/stuffer001-ben-$k.png",
+                               'bia' => "pod/anh/stuffer001-bia-$k.png"];
+            PodBienThe::create(['mau_id' => $m->id, 'kieu' => $k, 'ten' => '6 inch', 'gram' => 200, 'chat_lieu' => 'PETG',
+                                'kich_thuoc' => ['rong' => 100, 'cao' => 152.4, 'day' => 140]]);
+        }
+        $m->update(['kich_thuoc' => $kt]);
+        $m = $m->fresh();
+        $this->assertSame(['yeti', 'elf'], $m->kieuCoAnh());
+        $this->assertSame('Elf', $m->tenKieu('elf'));
+        $this->assertTrue($m->coKichThuoc());
+
+        $h = $this->token($this->a);
+        $ct = $this->getJson('/api/pod/mau/' . $m->ma, $h)->json('mau');
+        $this->assertSame(['yeti' => 'Yeti', 'elf' => 'Elf'], $ct['ten_kieu']);
+        $this->get($ct['hinh_chieu']['kieu']['elf']['bia'])->assertOk();
+        $this->get($ct['hinh_chieu']['kieu']['yeti']['truoc'])->assertOk();
+        $this->get($dom . '/anh-kt/' . $m->ma . '/bia/elf')->assertOk();
+        $this->get($dom . '/anh-kt/' . $m->ma . '/bia/khong-co')->assertNotFound();
+        $this->get($dom . '/kho-mau/' . $m->ma)->assertOk()->assertSee('id="kieuXt"', false)->assertSee('/anh-kt/stuffer001/bia/yeti', false);
+        // dòng đơn chụp tên kiểu lấy từ kich_thuoc
+        $dong = PodSo::datDon($this->a, [['bien_the_id' => PodBienThe::where('mau_id', $m->id)->where('kieu', 'elf')->value('id'), 'so_luong' => 1]],
+            null, null, null, null)->dong()->first();
+        $this->assertSame('Elf · 6 inch', $dong->ten_bien_the);
+    }
+
     public function test_tang_gia_rieng_mot_mau(): void
     {
         $m = $this->taoMau('Móc khoá tăng giá', null, 10.0, 'PETG');

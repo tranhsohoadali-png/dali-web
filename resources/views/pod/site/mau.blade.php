@@ -47,15 +47,18 @@
       // mỗi (kiểu, cỡ) một số đo — PETG/PLA cùng hình nên lấy một
       $dsCo = $m->bienThe->filter(fn ($b) => !empty($b->kich_thuoc))->unique(fn ($b) => $b->kieu . '|' . $b->ten)
           ->map(fn ($b) => ['kieu' => $b->kieu, 'ten' => $b->ten, 'kt' => $b->kich_thuoc])->values();
-      $hinhKt = array_filter(['truoc' => $m->anhHinhChieu('truoc') ? "/anh-kt/{$m->ma}/truoc" : null,
-                              'ben' => $m->anhHinhChieu('ben') ? "/anh-kt/{$m->ma}/ben" : null]);
+      $linkKt = fn (?string $k) => array_filter(array_combine(['truoc', 'ben', 'bia'], array_map(
+          fn ($mat) => $m->anhHinhChieu($mat, $k) ? "/anh-kt/{$m->ma}/$mat" . ($k !== null ? "/$k" : '') : null, ['truoc', 'ben', 'bia'])));
+      $kieuAnh = $m->kieuCoAnh();   // mẫu khối nhiều kiểu: mỗi kiểu một ảnh bìa + hình chiếu
+      $hinhKt = $kieuAnh ? ['kieu' => collect($kieuAnh)->mapWithKeys(fn ($k) => [$k => $linkKt($k)])->all()] : $linkKt(null);
+      $biaKieu0 = $kieuAnh && $kieu0 !== '' ? ($hinhKt['kieu'][$kieu0]['bia'] ?? null) : null;
     @endphp
     <div>
       @if($xt)
       <div class="anh-chinh" style="aspect-ratio:auto"><canvas id="cvXt" width="900" height="{{ !empty($khung0['w']) ? (int) round(900 * $khung0['h'] / $khung0['w']) : 520 }}" style="width:100%;height:auto;display:block" aria-label="Ảnh xem trước {{ $m->ten }} theo tên"></canvas></div>
       <button type="button" class="nut nut-vien nut-nho" id="taiXt" style="margin-top:12px">Tải ảnh xem trước</button>
       @else
-      <div class="anh-chinh">@if(!empty($m->anh))<img id="anhChinh" src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}">@endif</div>
+      <div class="anh-chinh">@if($biaKieu0)<img id="anhChinh" src="{{ $biaKieu0 }}" alt="{{ $m->ten }} · {{ $m->tenKieu($kieu0) }}">@elseif(!empty($m->anh))<img id="anhChinh" src="/anh-mau/{{ $m->ma }}/0" alt="{{ $m->ten }}">@endif</div>
       @endif
       @if(!$xt && count($m->anh ?: []) > 1)
       <div class="anh-phu">
@@ -115,6 +118,12 @@
           @endif
           <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.</p>
         </div>
+      @elseif($theoKieu->count() > 1)
+        <div class="thu-ten">
+          <div class="nhom-tieu" style="margin-top:0">Chọn mẫu</div>
+          <div class="pl" id="kieuXt">@foreach($theoKieu->keys() as $i => $k)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-kieu="{{ $k }}">{{ $m->tenKieu($k) }}</button>@endforeach</div>
+          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh tự dựng từ file in thật, màu theo file.</p>
+        </div>
       @elseif($m->phi_ca_nhan > 0)<p style="margin-top:14px;font-size:15px">Có nhận chữ cá nhân hoá theo từng đơn.</p>@endif
       <div class="khoa">
         <b>Đặt in trong cổng seller</b>
@@ -158,7 +167,8 @@
     PodVeTen.veKt(cvKt, { kt: x && x.kt, hinh: hinh, xt: d, kieu: kieu, chu: ip ? ip.value.trim() : '', mau: mau, font: font });
   }
   if (document.getElementById('taiKt')) document.getElementById('taiKt').onclick = function () {
-    PodVeTen.tai(cvKt, [TEN, 'kich thuoc', (d && kieu) ? PodVeTen.khung(d, kieu).ten : '', co].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
+    var ck = document.querySelector('#kieuXt .chip-kieu.on');
+    PodVeTen.tai(cvKt, [TEN, 'kich thuoc', kieu && ck ? ck.textContent : '', co].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
   };
   function chon(sel, ham) {
     var ds = document.querySelectorAll(sel);
@@ -170,9 +180,13 @@
   chips.forEach(function (c) { c.querySelector('i').style.background = PodVeTen.nenChip(c.dataset.mau); });
   chon('#kieuXt .chip-kieu', function (c) {
     kieu = c.dataset.kieu;
-    var k = PodVeTen.khung(d, kieu), td = k.toi_da || d.toi_da || 12;
-    ip.maxLength = td; document.getElementById('toiDaXt').textContent = td;
-    if (ip.value.length > td) ip.value = ip.value.slice(0, td);
+    if (d && ip) {
+      var k = PodVeTen.khung(d, kieu), td = k.toi_da || d.toi_da || 12;
+      ip.maxLength = td; document.getElementById('toiDaXt').textContent = td;
+      if (ip.value.length > td) ip.value = ip.value.slice(0, td);
+    }
+    var bia = hinh.kieu && hinh.kieu[kieu] && hinh.kieu[kieu].bia, anh = document.getElementById('anhChinh');
+    if (bia && anh) { anh.src = bia; anh.alt = TEN + ' · ' + c.textContent; }
     document.querySelectorAll('table.gia-co[data-kieu]').forEach(function (t) { t.hidden = t.dataset.kieu !== kieu; });
     veCo();
   });

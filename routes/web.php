@@ -29,7 +29,8 @@ Route::domain(config('pod.domain'))->group(function () {
     Route::get('kho-mau',        [\App\Http\Controllers\PodSiteController::class, 'khoMau'])->name('pod.site.kho-mau');
     Route::get('kho-mau/{ma}',   [\App\Http\Controllers\PodSiteController::class, 'mau'])->name('pod.site.mau');
     Route::get('anh-mau/{ma}/{i}', [\App\Http\Controllers\PodSiteController::class, 'anh'])->whereNumber('i')->name('pod.site.anh');   // chỉ ảnh mẫu Kho chung
-    Route::get('anh-kt/{ma}/{mat}', [\App\Http\Controllers\PodSiteController::class, 'anhKt'])->whereIn('mat', ['truoc', 'ben'])->name('pod.site.anh-kt'); // hình chiếu cho ảnh kích thước
+    Route::get('anh-kt/{ma}/{mat}/{kieu?}', [\App\Http\Controllers\PodSiteController::class, 'anhKt'])->whereIn('mat', ['truoc', 'ben', 'bia'])
+        ->where('kieu', '[a-z0-9-]+')->name('pod.site.anh-kt'); // hình chiếu ảnh kích thước + ảnh bìa từng kiểu (mẫu khối)
     Route::get('dang-ky',        [\App\Http\Controllers\PodSiteController::class, 'dangKyForm'])->name('pod.site.dang-ky');
     Route::post('dang-ky',       [\App\Http\Controllers\PodSiteController::class, 'dangKy'])->middleware('throttle:10,1')->name('pod.site.dang-ky.post');
     Route::get('robots.txt',     [\App\Http\Controllers\PodSiteController::class, 'robots']);

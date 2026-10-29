@@ -9,7 +9,7 @@ window.PodVeTen = (function () {
     'trắng': '#F4F2EC', 'kem': '#EADBC0', 'be': '#D8C29D', 'đỏ': '#C62D2D', 'đỏ đô': '#8E1F2A', 'hồng': '#E8558B',
     'xanh rêu': '#2F5D3A', 'xanh lá': '#3E8E41', 'xanh lá đậm': '#245C36', 'xanh dương': '#2F6DB3', 'xanh ngọc': '#2AA79B',
     'vàng': '#F2C230', 'vàng đồng': '#C9A24B', 'gold': '#C9A24B', 'cam': '#EE7D2B', 'tím': '#7D4FB0', 'đen': '#2A2A2A',
-    'nâu': '#7A4E2D', 'bạc': '#B9BEC4', 'xám': '#8C9196'
+    'nâu': '#7A4E2D', 'bạc': '#B9BEC4', 'xám': '#8C9196', 'trắng ngọc trai': '#EFEAE0', 'trắng ngọc trai (silk)': '#EFEAE0'
   };
   function mauHex(ten) {
     var k = String(ten || '').trim().toLowerCase();
@@ -247,9 +247,9 @@ window.PodVeTen = (function () {
    * (móc khoá đo theo tên đang gõ). Trả Promise.
    */
   function veKt(cv, n) {
-    var kt = n.kt || {};
-    if (n.hinh && n.hinh.truoc && kt.rong) {
-      return Promise.all([taiAnh(n.hinh.truoc), n.hinh.ben ? taiAnh(n.hinh.ben) : null]).then(function (a) {
+    var kt = n.kt || {}, h = n.hinh && n.hinh.kieu ? (n.hinh.kieu[n.kieu] || {}) : n.hinh; // mẫu khối nhiều kiểu: hình của kiểu đang chọn
+    if (h && h.truoc && kt.rong) {
+      return Promise.all([taiAnh(h.truoc), h.ben ? taiAnh(h.ben) : null]).then(function (a) {
         veKichThuoc(cv, { truoc: { anh: a[0] }, ben: a[1] ? { anh: a[1] } : null, kt: kt });
       });
     }

@@ -54,10 +54,11 @@ class PodMau extends Model
         return max(1, (int) ($k['toi_da'] ?? $x['toi_da'] ?? 12));
     }
 
-    /** Tên hiển thị của một kiểu (mẫu nhiều kiểu), vd "Nơ + hoa"; null nếu mẫu không chia kiểu. */
+    /** Tên hiển thị của một kiểu (mẫu nhiều kiểu), vd "Nơ + hoa"; null nếu mẫu không chia kiểu. Mẫu khối lấy tên ở kich_thuoc.kieu. */
     public function tenKieu(?string $kieu): ?string
     {
-        return $kieu !== null ? ($this->xem_truoc['kieu'][$kieu]['ten'] ?? $kieu) : null;
+        if ($kieu === null) return null;
+        return $this->xem_truoc['kieu'][$kieu]['ten'] ?? $this->kich_thuoc['kieu'][$kieu]['ten'] ?? $kieu;
     }
 
     /** Font seller được chọn cho tên (font đầu = mặc định). Rỗng = không cho chọn. */
@@ -67,18 +68,31 @@ class PodMau extends Model
         return is_array($f) ? array_values(array_filter($f, 'is_string')) : [];
     }
 
-    /** Ảnh hình chiếu cho ảnh kích thước (mẫu dạng khối): 'truoc' | 'ben' -> đường dẫn đĩa private, hoặc null. */
-    public function anhHinhChieu(string $mat): ?string
+    /**
+     * Ảnh riêng của mẫu dạng khối -> đường dẫn đĩa private, hoặc null. $mat: 'truoc' | 'ben' (hình chiếu cho ảnh
+     * kích thước) | 'bia' (ảnh chính của một kiểu). Mẫu nhiều kiểu: kich_thuoc.kieu[<khoá>][$mat], thiếu thì lấy cấp ngoài.
+     */
+    public function anhHinhChieu(string $mat, ?string $kieu = null): ?string
     {
-        $rel = in_array($mat, ['truoc', 'ben'], true) ? ($this->kich_thuoc[$mat] ?? null) : null;
+        if (!in_array($mat, ['truoc', 'ben', 'bia'], true)) return null;
+        $k = (array) ($this->kich_thuoc ?: []);
+        $rel = ($kieu !== null ? ($k['kieu'][$kieu][$mat] ?? null) : null) ?? ($k[$mat] ?? null);
         return is_string($rel) && $rel !== '' ? $rel : null;
+    }
+
+    /** Khoá các kiểu có ảnh riêng (mẫu khối nhiều kiểu), theo thứ tự lưu. */
+    public function kieuCoAnh(): array
+    {
+        return array_keys(array_filter((array) ($this->kich_thuoc['kieu'] ?? []), 'is_array'));
     }
 
     /** Có vẽ được ảnh kích thước: ít nhất một cỡ có số đo, và mẫu có ảnh xem trước theo tên hoặc ảnh hình chiếu. */
     public function coKichThuoc(): bool
     {
         if (!$this->bienThe->contains(fn ($b) => !empty($b->kich_thuoc))) return false;
-        return !empty($this->xem_truoc) || $this->anhHinhChieu('truoc') !== null;
+        if (!empty($this->xem_truoc) || $this->anhHinhChieu('truoc') !== null) return true;
+        foreach ($this->kieuCoAnh() as $k) if ($this->anhHinhChieu('truoc', $k) !== null) return true;
+        return false;
     }
 
     /** Mã 10 ký tự ngẫu nhiên. */

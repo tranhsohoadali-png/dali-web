@@ -167,9 +167,8 @@ class PodApiController extends Controller
             'co_xem_truoc'=> !empty($m->xem_truoc),
             'xem_truoc'   => $chiTiet ? $m->xem_truoc : null,
             'co_kich_thuoc' => $m->coKichThuoc(),
-            'hinh_chieu'  => $chiTiet ? array_filter(array_map(fn ($mat) => $m->anhHinhChieu($mat)
-                ? URL::temporarySignedRoute('pod.anh-kt', now()->addMinutes(10), ['ma' => $m->ma, 'mat' => $mat, 's' => $s->id], absolute: false)
-                : null, ['truoc' => 'truoc', 'ben' => 'ben'])) : null,
+            'ten_kieu'    => (object) $m->bienThe->pluck('kieu')->filter()->unique()->mapWithKeys(fn ($k) => [$k => $m->tenKieu($k)])->all(),
+            'hinh_chieu'  => $chiTiet ? $this->hinhChieu($m, $s) : null,
             'bien_the'    => $m->bienThe->map(fn ($b) => [
                 'id'        => $b->id,
                 'ten'       => $b->ten,
@@ -200,11 +199,33 @@ class PodApiController extends Controller
         ]);
     }
 
-    /** GET /api/pod/anh-kt/{ma}/{truoc|ben}?s=&expires=&signature= — hình chiếu cho ảnh kích thước; kiểm quyền như anh(). */
-    public function anhKt(Request $request, string $ma, string $mat)
+    /**
+     * Link có chữ ký (10 phút) tới ảnh riêng của mẫu khối: {truoc, ben} — hoặc mẫu nhiều kiểu
+     * {kieu: {<khoá>: {truoc, ben, bia}}}. Rỗng nếu mẫu không có ảnh hình chiếu.
+     */
+    private function hinhChieu(PodMau $m, PodSeller $s): array
+    {
+        $link = function (?string $kieu) use ($m, $s) {
+            $kq = [];
+            foreach (['truoc', 'ben', 'bia'] as $mat) {
+                if ($m->anhHinhChieu($mat, $kieu) === null) continue;
+                $kq[$mat] = URL::temporarySignedRoute('pod.anh-kt', now()->addMinutes(10),
+                    array_filter(['ma' => $m->ma, 'mat' => $mat, 'kieu' => $kieu, 's' => $s->id], fn ($v) => $v !== null), absolute: false);
+            }
+            return $kq;
+        };
+        $dsKieu = $m->kieuCoAnh();
+        if (!$dsKieu) return $link(null);
+        $kq = [];
+        foreach ($dsKieu as $k) $kq[$k] = $link($k);
+        return ['kieu' => $kq];
+    }
+
+    /** GET /api/pod/anh-kt/{ma}/{truoc|ben|bia}/{kieu?}?s=&expires=&signature= — ảnh riêng mẫu khối; kiểm quyền như anh(). */
+    public function anhKt(Request $request, string $ma, string $mat, ?string $kieu = null)
     {
         $s = PodSeller::whereKey((int) $request->query('s'))->where('hien', true)->first();
-        $rel = $s ? PodMau::hienCho($s->id)->where('ma', $ma)->first()?->anhHinhChieu($mat) : null;
+        $rel = $s ? PodMau::hienCho($s->id)->where('ma', $ma)->first()?->anhHinhChieu($mat, $kieu) : null;
         if (!$rel || !Storage::disk('local')->exists($rel)) abort(404);
         return response()->file(Storage::disk('local')->path($rel), ['Cache-Control' => 'private, max-age=600', 'X-Robots-Tag' => 'noindex']);
     }
