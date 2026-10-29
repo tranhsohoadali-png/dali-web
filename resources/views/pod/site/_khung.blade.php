@@ -5,12 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>@yield('tieu_de', 'Xưởng in 3D cho seller POD') | DALI POD</title>
 <meta name="description" content="@yield('mo_ta', 'Xưởng DALI in 3D theo đơn cho seller POD bán Etsy, Amazon, TikTok Shop. Giá in PLA theo gram, ví nạp trước, mẫu độc quyền giữ kín cho riêng từng seller.')">
-<link rel="canonical" href="{{ rtrim(config('pod.url'), '/') . '/' . ltrim(request()->path() === '/' ? '' : request()->path(), '/') }}">
+@php
+  $urlTrang = rtrim(config('pod.url'), '/') . '/' . ltrim(request()->path() === '/' ? '' : request()->path(), '/');
+  // ảnh khi gửi link (Zalo, Facebook, Messenger): trang mẫu dùng ảnh mẫu; trang khác dùng ảnh chung 1200×630.
+  // Ảnh chung lấy ở tên miền chính: nginx tên miền POD chỉ mở /images/logo_dali.png, đường khác bị chuyển hướng.
+  $anhRieng = trim($__env->yieldContent('og_anh'));
+  $anhChiaSe = $anhRieng !== '' ? $anhRieng : 'https://tranhdali.vn/images/og-pod.jpg?v=20261029';
+@endphp
+<link rel="canonical" href="{{ $urlTrang }}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DALI POD">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:url" content="{{ $urlTrang }}">
 <meta property="og:title" content="@yield('tieu_de', 'Xưởng in 3D cho seller POD') | DALI POD">
 <meta property="og:description" content="@yield('mo_ta', 'Xưởng DALI in 3D theo đơn cho seller POD. Giá in theo gram, mẫu độc quyền giữ kín.')">
-@hasSection('og_anh')<meta property="og:image" content="@yield('og_anh')">@endif
+<meta property="og:image" content="{{ $anhChiaSe }}">
+<meta property="og:image:secure_url" content="{{ $anhChiaSe }}">
+@if($anhRieng === '')<meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">@endif
+<meta property="og:image:alt" content="@yield('tieu_de', 'Xưởng in 3D cho seller POD') · DALI POD">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ $anhChiaSe }}">
+<meta name="theme-color" content="#2F6B05">
 <link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Pacifico&family=Lobster&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">

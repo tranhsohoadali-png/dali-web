@@ -381,7 +381,14 @@ class PodTest extends TestCase
         foreach (['/', '/bang-gia', '/kho-mau', '/dang-ky', '/kho-mau/' . $this->chung->ma] as $u) {
             $r = $this->get($goc . $u)->assertOk();
             $this->assertNull($r->headers->get('X-Robots-Tag'), "$u phải cho Google lập chỉ mục");
+            $this->assertMatchesRegularExpression('/<meta property="og:image" content="https?:\/\/[^"]+"/', $r->getContent(), "$u: gửi link phải có ảnh");
         }
+        // trang chủ: ảnh chung 1200×630 (file có thật trong public/images); trang mẫu: ảnh của mẫu
+        $this->get($goc . '/')->assertSee('https://tranhdali.vn/images/og-pod.jpg', false)->assertSee('<meta property="og:image:width" content="1200">', false)
+            ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
+        $this->assertFileExists(public_path('images/og-pod.jpg'));
+        $this->get($goc . '/kho-mau/' . $this->chung->ma)->assertSee('/anh-mau/' . $this->chung->ma . '/0?v=', false)
+            ->assertDontSee('og-pod.jpg', false);
         $this->get($goc . '/cong')->assertOk()->assertSee('Cổng seller')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
         $this->get($goc . '/robots.txt')->assertOk()->assertSee('Disallow: /cong');
         $this->get('/pod')->assertStatus(301)->assertRedirect(config('pod.url'));
