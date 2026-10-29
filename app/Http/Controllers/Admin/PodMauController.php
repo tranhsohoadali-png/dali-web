@@ -138,6 +138,7 @@ class PodMauController extends Controller
             'bt.*.chat_lieu' => 'nullable|in:PETG,PLA',
             'bt.*.mau_sac'   => 'nullable|string|max:300',
             'bt.*.file_in'   => 'nullable|string|max:300',
+            'bt.*.kt'        => 'nullable|string|max:60',
             'anh_moi'        => 'nullable|array|max:12',
             'anh_moi.*'      => 'image|mimes:jpg,jpeg,png,webp|max:8192',
             'xoa_anh'        => 'nullable|array',
@@ -146,6 +147,9 @@ class PodMauController extends Controller
         foreach ($v['bt'] ?? [] as $i => $b) {
             if (trim((string) ($b['ten'] ?? '')) !== '' && empty($b['gram'])) {
                 abort(back()->withErrors(["bt.$i.gram" => 'Phân loại "' . $b['ten'] . '" chưa có số gram.'])->withInput());
+            }
+            if (trim((string) ($b['kt'] ?? '')) !== '' && !PodBienThe::docKichThuoc($b['kt'])) {
+                abort(back()->withErrors(["bt.$i.kt" => 'Kích thước "' . $b['kt'] . '" phải dạng rộng × cao × dày (mm), vd 76,2 × 87,7 × 3.'])->withInput());
             }
         }
         return $v;
@@ -167,6 +171,11 @@ class PodMauController extends Controller
                 'thu_tu' => $thuTu++,
             ];
             $bt = !empty($b['id']) ? PodBienThe::where('mau_id', $mau->id)->whereKey((int) $b['id'])->first() : null;
+            if (array_key_exists('kt', $b)) { // ô trống: bỏ số đo cố định, giữ kiểu "đo theo tên" (móc khoá) nếu có
+                $kt = PodBienThe::docKichThuoc($b['kt']);
+                $cu = $bt?->kich_thuoc;
+                $data['kich_thuoc'] = $kt ?? (is_array($cu) && !isset($cu['rong']) ? $cu : null);
+            }
             if ($bt) $bt->update($data);
             else $bt = PodBienThe::create($data + ['mau_id' => $mau->id]);
             $giu[] = $bt->id;

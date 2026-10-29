@@ -166,6 +166,10 @@ class PodApiController extends Controller
             'ten_toi_da'  => $m->tenToiDa(),          // >0 = mẫu khắc tên, bắt buộc nhập tên
             'co_xem_truoc'=> !empty($m->xem_truoc),
             'xem_truoc'   => $chiTiet ? $m->xem_truoc : null,
+            'co_kich_thuoc' => $m->coKichThuoc(),
+            'hinh_chieu'  => $chiTiet ? array_filter(array_map(fn ($mat) => $m->anhHinhChieu($mat)
+                ? URL::temporarySignedRoute('pod.anh-kt', now()->addMinutes(10), ['ma' => $m->ma, 'mat' => $mat, 's' => $s->id], absolute: false)
+                : null, ['truoc' => 'truoc', 'ben' => 'ben'])) : null,
             'bien_the'    => $m->bienThe->map(fn ($b) => [
                 'id'        => $b->id,
                 'ten'       => $b->ten,
@@ -173,6 +177,7 @@ class PodApiController extends Controller
                 'chat_lieu' => PodSo::chatLieu($b->chat_lieu),
                 'gram'      => (float) $b->gram,
                 'mau_sac'   => $b->dsMau(),
+                'kich_thuoc'=> $b->kich_thuoc,
                 'gia'       => PodSo::giaBienThe($m, $b, $gia),
             ])->all(),
         ];
@@ -193,6 +198,15 @@ class PodApiController extends Controller
             'Cache-Control' => 'private, max-age=600',
             'X-Robots-Tag'  => 'noindex',
         ]);
+    }
+
+    /** GET /api/pod/anh-kt/{ma}/{truoc|ben}?s=&expires=&signature= — hình chiếu cho ảnh kích thước; kiểm quyền như anh(). */
+    public function anhKt(Request $request, string $ma, string $mat)
+    {
+        $s = PodSeller::whereKey((int) $request->query('s'))->where('hien', true)->first();
+        $rel = $s ? PodMau::hienCho($s->id)->where('ma', $ma)->first()?->anhHinhChieu($mat) : null;
+        if (!$rel || !Storage::disk('local')->exists($rel)) abort(404);
+        return response()->file(Storage::disk('local')->path($rel), ['Cache-Control' => 'private, max-age=600', 'X-Robots-Tag' => 'noindex']);
     }
 
     /* ============ Nơi giao ============ */

@@ -321,8 +321,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
 
   async function moMau(m) {
     // Mẫu khắc tên: lấy dữ liệu khung xem trước (không có trong danh sách vì nặng)
-    if (m.co_xem_truoc && !m.xem_truoc) {
-      try { m.xem_truoc = (await api('mau/' + encodeURIComponent(m.ma))).mau.xem_truoc; } catch (e) { baoLoi(e); return; }
+    // + ảnh hình chiếu cho ảnh kích thước (link có chữ ký, chỉ có ở chi tiết)
+    if ((m.co_xem_truoc && !m.xem_truoc) || (m.co_kich_thuoc && m.hinh_chieu == null)) {
+      try { var ct = (await api('mau/' + encodeURIComponent(m.ma))).mau; m.xem_truoc = ct.xem_truoc; m.hinh_chieu = ct.hinh_chieu; } catch (e) { baoLoi(e); return; }
     }
     var xt = m.xem_truoc, bt0 = m.bien_the[0] || {};
     var fonts = (xt && xt.fonts) || [];
@@ -337,10 +338,13 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     }
     function khungNay() { return xt ? PodVeTen.khung(xt, sel.kieu) : null; }
     function toiDa() { var k = khungNay(); return (k && k.toi_da) || (xt && xt.toi_da) || m.ten_toi_da || 0; }
+    function ktNay() { var b = bt(); return (b && b.kich_thuoc) || null; }
     function veXemTruoc() {
+      var kt = ktNay();
+      if ($('mKt')) PodVeTen.veKt($('mKt'), { kt: kt, hinh: m.hinh_chieu, xt: xt, kieu: sel.kieu, chu: sel.chu, mau: sel.mau, font: sel.font });
       var cv = $('mCv'), k = khungNay(); if (!cv || !k) return;
       PodVeTen.datCao(cv, k);
-      PodVeTen.choFont(sel.font).then(function () { PodVeTen.ve(cv, k, sel.chu || 'Tên của bạn', sel.mau, sel.font); });
+      PodVeTen.choFont(sel.font).then(function () { PodVeTen.ve(cv, k, sel.chu || 'Tên của bạn', sel.mau, sel.font, { ti: kt && kt.ti_le }); });
     }
     function nhom(tieuDe, khoa, ds, nhan) {
       if (ds.length < 2 && khoa !== 'mau' && khoa !== 'font') return '';
@@ -364,6 +368,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         (!xt && m.anh.length > 1 ? '<div class="thumbs">' + m.anh.map(function (u, i) { return '<img src="' + esc(u) + '" data-u="' + esc(u) + '" class="' + (i ? '' : 'on') + '">'; }).join('') + '</div>' : '') +
         (xt ? '<p class="mu" style="margin-top:8px">Ảnh vẽ từ file in thật; đổi kiểu, màu, font, tên là thấy ngay. Gửi ảnh này cho khách duyệt hoặc đăng bán.</p>'
             : (m.anh.length ? '<p class="mu" style="margin-top:8px">Bấm giữ hoặc chuột phải vào ảnh để lưu. ' + (m.rieng ? 'Chỉ bạn thấy ảnh này.' : 'Ảnh được dùng để đăng bán.') + '</p>' : '')) +
+        (m.co_kich_thuoc ? '<div class="nhom-chon"><div class="tieu">Ảnh kích thước · ' + esc(sel.ten || '') + '</div>' +
+          '<canvas id="mKt" width="900" height="560" style="width:100%;height:auto;display:block;border:1px solid var(--bd);border-radius:12px;background:#fff"></canvas>' +
+          '<button class="btn2" id="mTaiKt" style="margin-top:8px;width:100%">Tải ảnh kích thước (PNG)</button></div>' : '') +
         '</div><div>' + (m.rieng ? '<span class="tag t-rieng">' + IC_KHOA + ' Mẫu độc quyền</span>' : '<span class="tag t-chung">Kho chung</span>') + '<h2 style="margin-top:8px">' + esc(m.ten) + '</h2>' +
         (m.mo_ta ? '<p class="sub" style="white-space:pre-line">' + esc(m.mo_ta) + '</p>' : '');
       if (!m.bien_the.length) { h += '<p class="msg err">Mẫu chưa có phân loại, chưa đặt được.</p></div></div>'; $('mbox').innerHTML = h; return; }
@@ -390,6 +397,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         sel.chu = $('mChu').value.trim(); if ($('mLoi')) $('mLoi').classList.add('hide');
         $('mbox').querySelectorAll('.chon[data-k="font"] span').forEach(function (s) { s.textContent = sel.chu || 'Emma'; });
         veXemTruoc();
+      };
+      if ($('mTaiKt')) $('mTaiKt').onclick = function () {
+        PodVeTen.tai($('mKt'), [m.ten, 'kich thuoc', (khungNay() || {}).ten, sel.ten].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
       };
       if ($('mTai')) $('mTai').onclick = function () {
         PodVeTen.tai($('mCv'), [m.ten, (khungNay() || {}).ten, sel.chu || 'mau', sel.mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');

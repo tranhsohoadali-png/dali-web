@@ -16,6 +16,7 @@ class PodMau extends Model
         'anh'       => 'array',
         'hien'      => 'boolean',
         'xem_truoc' => 'array',
+        'kich_thuoc'=> 'array',
     ];
 
     /** Mẫu seller này được thấy: Kho chung + Kho riêng của chính seller, chỉ mẫu đang hiện. */
@@ -64,6 +65,20 @@ class PodMau extends Model
     {
         $f = $this->xem_truoc['fonts'] ?? null;
         return is_array($f) ? array_values(array_filter($f, 'is_string')) : [];
+    }
+
+    /** Ảnh hình chiếu cho ảnh kích thước (mẫu dạng khối): 'truoc' | 'ben' -> đường dẫn đĩa private, hoặc null. */
+    public function anhHinhChieu(string $mat): ?string
+    {
+        $rel = in_array($mat, ['truoc', 'ben'], true) ? ($this->kich_thuoc[$mat] ?? null) : null;
+        return is_string($rel) && $rel !== '' ? $rel : null;
+    }
+
+    /** Có vẽ được ảnh kích thước: ít nhất một cỡ có số đo, và mẫu có ảnh xem trước theo tên hoặc ảnh hình chiếu. */
+    public function coKichThuoc(): bool
+    {
+        if (!$this->bienThe->contains(fn ($b) => !empty($b->kich_thuoc))) return false;
+        return !empty($this->xem_truoc) || $this->anhHinhChieu('truoc') !== null;
     }
 
     /** Mã 10 ký tự ngẫu nhiên. */

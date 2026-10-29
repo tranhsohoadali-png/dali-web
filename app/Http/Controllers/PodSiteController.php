@@ -69,6 +69,14 @@ class PodSiteController extends Controller
         return response()->file(Storage::disk('local')->path($rel), ['Cache-Control' => 'public, max-age=86400']);
     }
 
+    /** Ảnh hình chiếu (nhìn trước / nhìn bên) cho ảnh kích thước, chỉ mẫu Kho chung đang hiện. */
+    public function anhKt(string $ma, string $mat)
+    {
+        $rel = $this->khoChung()->where('ma', $ma)->first()?->anhHinhChieu($mat);
+        if (!$rel || !Storage::disk('local')->exists($rel)) abort(404);
+        return response()->file(Storage::disk('local')->path($rel), ['Cache-Control' => 'public, max-age=86400']);
+    }
+
     public function dangKyForm()
     {
         return view('pod.site.dang-ky');

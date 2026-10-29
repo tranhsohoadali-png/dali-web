@@ -28,6 +28,9 @@
 .chip-kieu .ten-font{font-size:19px;font-weight:400;line-height:1.2;display:block}
 .chip-kieu small{display:block;color:var(--mu);font-size:11px;font-weight:600}
 .nhom-tieu{margin-top:14px;font-weight:700;font-size:14px}
+.kt-hop{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:16px;margin-top:16px}
+.kt-hop canvas{width:100%;height:auto;display:block;margin:12px 0;border-radius:10px;border:1px solid var(--bd)}
+.gia-co tr.chon td{background:var(--gll)}
 @endsection
 @section('noi_dung')
 <div class="wrap">
@@ -40,6 +43,12 @@
       $kieu0 = (string) $theoKieu->keys()->first();
       $khung0 = ($xt && $kieu0 !== '' && isset($xt['kieu'][$kieu0])) ? $xt['kieu'][$kieu0] : $xt;
       $fonts = $m->dsFont();
+      $coKt = $m->coKichThuoc();
+      // mỗi (kiểu, cỡ) một số đo — PETG/PLA cùng hình nên lấy một
+      $dsCo = $m->bienThe->filter(fn ($b) => !empty($b->kich_thuoc))->unique(fn ($b) => $b->kieu . '|' . $b->ten)
+          ->map(fn ($b) => ['kieu' => $b->kieu, 'ten' => $b->ten, 'kt' => $b->kich_thuoc])->values();
+      $hinhKt = array_filter(['truoc' => $m->anhHinhChieu('truoc') ? "/anh-kt/{$m->ma}/truoc" : null,
+                              'ben' => $m->anhHinhChieu('ben') ? "/anh-kt/{$m->ma}/ben" : null]);
     @endphp
     <div>
       @if($xt)
@@ -51,6 +60,15 @@
       @if(!$xt && count($m->anh ?: []) > 1)
       <div class="anh-phu">
         @foreach(array_values($m->anh) as $i => $x)<a href="/anh-mau/{{ $m->ma }}/{{ $i }}" onclick="document.getElementById('anhChinh').src=this.href;return false"><img src="/anh-mau/{{ $m->ma }}/{{ $i }}" alt="{{ $m->ten }} ảnh {{ $i + 1 }}" loading="lazy"></a>@endforeach
+      </div>
+      @endif
+      @if($coKt)
+      <div class="kt-hop">
+        <div class="nhom-tieu" style="margin-top:0">Kích thước từng cỡ</div>
+        <div class="pl" id="coKt"></div>
+        <canvas id="cvKt" width="900" height="560" aria-label="Ảnh kích thước {{ $m->ten }}"></canvas>
+        <button type="button" class="nut nut-vien nut-nho" id="taiKt">Tải ảnh kích thước</button>
+        <p style="color:var(--mu);font-size:13px;margin-top:8px">Hình nhìn trước và nhìn bên cùng tỉ lệ, số đo theo file in.@if($dsCo->contains(fn ($x) => isset($x['kt']['ti_le']))) Số có dấu ~ đo theo tên đang gõ, lệch bản in khoảng ±0.1 inch.@endif Dùng làm ảnh kích thước khi đăng bán.</p>
       </div>
       @endif
     </div>
@@ -68,7 +86,7 @@
           <thead><tr><th>{{ $k !== '' ? $m->tenKieu($k) . ' · kích thước' : 'Kích thước' }}</th>@foreach($cls as $cl)<th class="so">{{ $cl }}</th>@endforeach</tr></thead>
           <tbody>
             @foreach($dsKieu->groupBy('ten') as $tenCo => $ds)
-            <tr><td><b>{{ $tenCo }}</b></td>
+            <tr data-co="{{ $tenCo }}"><td><b>{{ $tenCo }}</b></td>
               @foreach($cls as $cl)
                 @php $b = $ds->first(fn ($x) => \App\Services\PodSo::chatLieu($x->chat_lieu) === $cl); @endphp
                 <td class="so">{{ $b ? number_format(\App\Services\PodSo::giaBienThe($m, $b, $bg), 0, ',', '.') . 'đ' : '—' }}</td>
@@ -114,12 +132,34 @@
   </section>
   @endif
 </div>
-@if($xt)
+@if($xt || $coKt)
 @include('pod._ve_ten')
 <script>
 (function () {
   var d = @json($xt), cv = document.getElementById('cvXt'), ip = document.getElementById('tenXt');
   var kieu = @json($kieu0 !== '' ? $kieu0 : null), fonts = @json($fonts), font = fonts[0] || '', mau = '';
+  var dsCo = @json($dsCo), hinh = @json((object) $hinhKt), co = null, cvKt = document.getElementById('cvKt');
+  var TEN = {!! json_encode($m->ten, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!};
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function coCuaKieu() { return dsCo.filter(function (x) { return (x.kieu || null) === (kieu || null); }); }
+  function coNay() { return coCuaKieu().find(function (x) { return x.ten === co; }) || null; }
+  function veCo() { // chip cỡ của kiểu đang chọn + tô dòng giá tương ứng
+    var hop = document.getElementById('coKt'), ds = coCuaKieu();
+    if (!ds.some(function (x) { return x.ten === co; })) co = ds.length ? ds[0].ten : null;
+    if (hop) {
+      hop.innerHTML = ds.map(function (x) { return '<button type="button" class="chip-kieu' + (x.ten === co ? ' on' : '') + '" data-co="' + esc(x.ten) + '">' + esc(x.ten) + '</button>'; }).join('');
+      hop.querySelectorAll('button').forEach(function (b) { b.onclick = function () { co = b.dataset.co; veCo(); ve(); }; });
+    }
+    document.querySelectorAll('table.gia-co tr[data-co]').forEach(function (tr) { tr.classList.toggle('chon', !!cvKt && tr.dataset.co === co); });
+  }
+  function veKt() {
+    if (!cvKt) return;
+    var x = coNay();
+    PodVeTen.veKt(cvKt, { kt: x && x.kt, hinh: hinh, xt: d, kieu: kieu, chu: ip ? ip.value.trim() : '', mau: mau, font: font });
+  }
+  if (document.getElementById('taiKt')) document.getElementById('taiKt').onclick = function () {
+    PodVeTen.tai(cvKt, [TEN, 'kich thuoc', (d && kieu) ? PodVeTen.khung(d, kieu).ten : '', co].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
+  };
   function chon(sel, ham) {
     var ds = document.querySelectorAll(sel);
     ds.forEach(function (c) { c.onclick = function () { ds.forEach(function (x) { x.classList.toggle('on', x === c); }); ham(c); ve(); }; });
@@ -134,19 +174,23 @@
     ip.maxLength = td; document.getElementById('toiDaXt').textContent = td;
     if (ip.value.length > td) ip.value = ip.value.slice(0, td);
     document.querySelectorAll('table.gia-co[data-kieu]').forEach(function (t) { t.hidden = t.dataset.kieu !== kieu; });
+    veCo();
   });
   chon('#fontXt .chip-kieu', function (c) { font = c.dataset.font; })
     .forEach(function (c) { c.querySelector('.ten-font').style.font = PodVeTen.css(c.dataset.font, 19); });
   function ve() {
-    var k = PodVeTen.khung(d, kieu), ten = ip.value.trim();
+    veKt();
+    if (!d || !cv) return;
+    var k = PodVeTen.khung(d, kieu), ten = ip.value.trim(), x = coNay();
     PodVeTen.datCao(cv, k);
     document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
-    PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font); });
+    PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font, { ti: x && x.kt && x.kt.ti_le }); });
   }
-  ip.oninput = ve;
-  document.getElementById('taiXt').onclick = function () {
-    PodVeTen.tai(cv, [{!! json_encode($m->ten, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}, PodVeTen.khung(d, kieu).ten, ip.value.trim() || 'mau', mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
+  if (ip) ip.oninput = ve;
+  if (document.getElementById('taiXt')) document.getElementById('taiXt').onclick = function () {
+    PodVeTen.tai(cv, [TEN, PodVeTen.khung(d, kieu).ten, ip.value.trim() || 'mau', mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
   };
+  veCo();
   ve();
 })();
 </script>

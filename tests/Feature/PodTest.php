@@ -146,6 +146,52 @@ class PodTest extends TestCase
             ->assertSee('height="520"', false)->assertSee('data-mau="Trắng + chữ đỏ"', false)->assertSee('5.940đ');
     }
 
+    public function test_anh_kich_thuoc_theo_co_va_hinh_chieu_giu_kin(): void
+    {
+        $dom = 'http://' . config('pod.domain');
+        // mẫu khối Kho chung: số đo từng cỡ + 2 hình chiếu
+        $m = $this->taoMau('Hộp kẹo Noel', null, 150.0, 'PETG');
+        $m->bienThe()->first()->update(['ten' => '6 inch', 'kich_thuoc' => ['rong' => 98.2, 'cao' => 152.4, 'day' => 144.1]]);
+        foreach (['truoc', 'ben'] as $mat) Storage::disk('local')->put("pod/anh/{$m->ma}-kt-$mat.png", 'png');
+        $m->update(['kich_thuoc' => ['truoc' => "pod/anh/{$m->ma}-kt-truoc.png", 'ben' => "pod/anh/{$m->ma}-kt-ben.png"]]);
+        $this->assertTrue($m->fresh()->coKichThuoc());
+        $this->assertFalse($this->chung->fresh()->coKichThuoc());                  // chưa có số đo -> không vẽ
+
+        $h = $this->token($this->a);
+        $ds = collect($this->getJson('/api/pod/mau', $h)->json('mau'))->firstWhere('ma', $m->ma);
+        $this->assertTrue($ds['co_kich_thuoc']);
+        $this->assertNull($ds['hinh_chieu']);                                     // danh sách không kèm link ảnh
+        $ct = $this->getJson('/api/pod/mau/' . $m->ma, $h)->json('mau');
+        $this->assertSame(152.4, $ct['bien_the'][0]['kich_thuoc']['cao']);
+        $this->get($ct['hinh_chieu']['ben'])->assertOk();
+        $this->get($dom . '/anh-kt/' . $m->ma . '/truoc')->assertOk();
+        $this->get($dom . '/kho-mau/' . $m->ma)->assertOk()->assertSee('id="cvKt"', false)->assertSee('data-co="6 inch"', false)
+            ->assertDontSee('Số có dấu ~');
+
+        // mẫu riêng của A: seller B và khách vãng lai không lấy được hình chiếu, kể cả cầm link có chữ ký của A
+        $this->riengA->bienThe()->first()->update(['kich_thuoc' => ['rong' => 50, 'cao' => 60, 'day' => 40]]);
+        Storage::disk('local')->put('pod/anh/rieng-kt.png', 'png');
+        $this->riengA->update(['kich_thuoc' => ['truoc' => 'pod/anh/rieng-kt.png']]);
+        $link = $this->getJson('/api/pod/mau/' . $this->riengA->ma, $h)->json('mau.hinh_chieu.truoc');
+        $this->get($link)->assertOk();
+        $this->get(str_replace('s=' . $this->a->id, 's=' . $this->b->id, $link))->assertForbidden();   // sửa link -> sai chữ ký
+        $this->get($dom . '/anh-kt/' . $this->riengA->ma . '/truoc')->assertNotFound();
+        $this->get($dom . '/anh-kt/' . $m->ma . '/hong')->assertNotFound();
+
+        // admin nhập "R × C × D" mm; sai dạng bị chặn; ô trống giữ kiểu "đo theo tên" của móc khoá
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $bt = $this->bt($m);
+        $form = ['ten' => $m->ten, 'chu_seller_id' => '', 'hien' => '1', 'bt' => [['id' => $bt, 'ten' => '6 inch', 'gram' => 150, 'kt' => '98,2 × 152,4 × 144,1']]];
+        $admin->put('/admin/3d/pod/mau/' . $m->id, $form)->assertSessionHasNoErrors();
+        $this->assertSame(['rong' => 98.2, 'cao' => 152.4, 'day' => 144.1], PodBienThe::find($bt)->kich_thuoc);
+        $form['bt'][0]['kt'] = '98 x 152';
+        $admin->put('/admin/3d/pod/mau/' . $m->id, $form)->assertSessionHasErrors('bt.0.kt');
+        PodBienThe::whereKey($bt)->update(['kich_thuoc' => json_encode(['ti_le' => 1.3, 'day' => 3.6])]);
+        $form['bt'][0]['kt'] = '';
+        $admin->put('/admin/3d/pod/mau/' . $m->id, $form)->assertSessionHasNoErrors();
+        $this->assertSame(['ti_le' => 1.3, 'day' => 3.6], PodBienThe::find($bt)->kich_thuoc);
+    }
+
     public function test_tang_gia_rieng_mot_mau(): void
     {
         $m = $this->taoMau('Móc khoá tăng giá', null, 10.0, 'PETG');
