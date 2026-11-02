@@ -29,7 +29,9 @@ class PodDonController extends Controller
         $don->load(['dong', 'seller']);
         $fileIn = PodBienThe::whereIn('id', $don->dong->pluck('bien_the_id'))->pluck('file_in', 'id');
         $coNhan = (bool) PodSo::duongNhan($don);
-        return view('admin.pod.don-show', compact('don', 'fileIn', 'coNhan'));
+        $mau = \App\Models\PodMau::whereIn('id', $don->dong->pluck('mau_id'))->get()->keyBy('id');
+        $taoFile = $don->dong->mapWithKeys(fn ($x) => [$x->id => $mau->get($x->mau_id)?->thamSoFileIn($x->ten_bien_the, $x->chu_ca_nhan)])->filter()->all();
+        return view('admin.pod.don-show', compact('don', 'fileIn', 'coNhan', 'taoFile'));
     }
 
     /** Chờ in -> Đang in -> Đã giao (kèm mã vận đơn). Không lùi trạng thái; huỷ dùng nút riêng. */

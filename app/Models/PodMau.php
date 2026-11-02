@@ -96,6 +96,20 @@ class PodMau extends Model
         return $nam !== '' ? "$ten / $nam" : $ten;
     }
 
+    /**
+     * Tham số tạo file in ở app Thay tên cho một dòng đơn: {mau, ten, tuy_chon}. Null nếu mẫu chưa nối app, hoặc cỡ của
+     * dòng không có trong bảng (cỡ đã đổi tên sau khi đặt) — khi đó thợ vẫn làm tay theo dòng hướng dẫn file_in.
+     * xem_truoc.thay_ten = {mau: id mẫu app, co: {tên phân loại: giá trị tuỳ chọn kich_thuoc}}.
+     */
+    public function thamSoFileIn(?string $tenCo, ?string $chu): ?array
+    {
+        $tt = $this->xem_truoc['thay_ten'] ?? null;
+        $co = $tt['co'][(string) $tenCo] ?? null;
+        if (empty($tt['mau']) || $co === null || trim((string) $chu) === '') return null;
+        $p = array_map('trim', explode('/', (string) $chu, 2));
+        return ['mau' => $tt['mau'], 'ten' => $p[0], 'tuy_chon' => ['kich_thuoc' => (string) $co, 'nam' => $p[1] ?? '']];
+    }
+
     /** Hệ số nén dọc dòng để $txt vừa đuôi đai (1 = không nén). */
     private function nenDai(string $txt): float
     {

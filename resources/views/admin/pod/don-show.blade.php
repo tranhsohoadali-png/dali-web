@@ -19,7 +19,16 @@
       <td>{{ $x->mau_sac ?: '—' }}</td>
       <td class="num"><b>{{ $x->so_luong }}</b></td>
       <td>{{ $x->chu_ca_nhan ?: '—' }}@if($x->font)<div class="muted">font {{ $x->font }}</div>@endif @if($x->phi_ca_nhan)<div class="muted">+{{ number_format($x->phi_ca_nhan, 0, ',', '.') }}đ</div>@endif</td>
-      <td class="muted" style="word-break:break-all">{{ $fileIn[$x->bien_the_id] ?? '—' }}</td>
+      <td class="muted" style="word-break:break-word">
+        @if(!empty($taoFile[$x->id]))
+        <div class="tao-file" data-tao="{{ json_encode($taoFile[$x->id], JSON_UNESCAPED_UNICODE) }}" style="margin-bottom:6px">
+          <button type="button" class="btn-sm" style="cursor:pointer">Tạo + tải file in</button>
+          <span class="tao-tt" style="margin-left:6px"></span>
+          @if($x->so_luong > 1)<div style="margin-top:4px">File 1 chiếc, đơn cần {{ $x->so_luong }} chiếc.</div>@endif
+        </div>
+        @endif
+        {{ $fileIn[$x->bien_the_id] ?? '—' }}
+      </td>
       <td class="num">{{ number_format($x->thanh_tien, 0, ',', '.') }}đ</td>
     </tr>
     @endforeach
@@ -45,4 +54,45 @@
 </div></div>
 @endif
 <a class="btn-sm" href="{{ route('admin.pod.don.index') }}">Về hàng đợi</a>
+@if($taoFile)
+<script>
+/* Dựng file in theo đúng chữ + cỡ của dòng đơn: gọi app Thay tên cùng tên miền (nginx kiểm phiên admin, gắn khoá).
+   Chữ lấy từ đơn nên chỉ ghi bằng textContent. */
+document.querySelectorAll('.tao-file').forEach(function (hop) {
+  var APP = '/admin/3d/thay-ten/app/', nut = hop.querySelector('button'), tt = hop.querySelector('.tao-tt');
+  function ngu(ms) { return new Promise(function (ok) { setTimeout(ok, ms); }); }
+  async function json(r) {
+    var d = null;
+    try { d = await r.json(); } catch (e) {}
+    if (!r.ok || !d) throw new Error((d && (d.detail || d.loi)) || (r.status === 401 ? 'Phiên admin đã hết, đăng nhập lại rồi bấm lại.' : 'App Thay tên chưa phản hồi (mã ' + r.status + ').'));
+    return d;
+  }
+  function tai(id) {
+    var a = document.createElement('a');
+    a.href = APP + 'api/viec/' + encodeURIComponent(id) + '/tai';
+    a.download = ''; document.body.appendChild(a); a.click(); a.remove();
+  }
+  nut.addEventListener('click', async function () {
+    nut.disabled = true; nut.textContent = 'Đang tạo…'; tt.textContent = ''; tt.style.color = '';
+    try {
+      var r = await fetch(APP + 'api/dung', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: hop.dataset.tao });
+      var id = (await json(r)).id, v = null;
+      for (var i = 0; i < 300; i++) { // tối đa 5 phút, mỗi lần 1 giây
+        v = await json(await fetch(APP + 'api/viec/' + encodeURIComponent(id), { cache: 'no-store' }));
+        if (v.trang_thai === 'xong' || v.trang_thai === 'loi') break;
+        tt.textContent = (v.phan_tram || 0) + '% ' + (v.loi_nhan || '');
+        await ngu(1000);
+      }
+      if (!v || v.trang_thai !== 'xong') throw new Error((v && (v.loi || v.loi_nhan)) || 'Tạo file quá lâu, bấm lại sau.');
+      tai(id);
+      tt.textContent = 'Đã tạo. Nếu trình duyệt chưa tải, bấm lại nút.';
+      tt.style.color = '';
+    } catch (e) {
+      tt.textContent = e.message; tt.style.color = '#B91C1C';
+    }
+    nut.disabled = false; nut.textContent = 'Tạo + tải file in';
+  });
+});
+</script>
+@endif
 @include('admin.pod._cuoi')

@@ -181,6 +181,33 @@ class PodTest extends TestCase
         $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()->assertSee('ten2Xt');
     }
 
+    public function test_trang_don_admin_co_nut_tao_file_in_dung_chu_va_co(): void
+    {
+        $m = $this->taoMau('Móc khóa Karate', null, 20.5);
+        $bt = $m->bienThe()->first();
+        $bt->update(['ten' => 'Dài 8 cm (3.1 inch)']);
+        $glyph = array_fill_keys(array_merge(range('A', 'Z'), range(0, 9)), ['d' => 'M0 0Z', 'w' => 2.0]);
+        $m->update(['xem_truoc' => ['loai' => 'ten', 've' => 'dai', 'toi_da' => 10, 'w' => 900, 'h' => 1200, 'glyph' => $glyph,
+            'so' => ['h' => 3.55, 'no_x' => .05, 'no_y' => .14, 'khe' => .45, 'khoang' => 1.1, 'l_chuan' => 13.2, 'l_max' => 14.5, 'lech_u' => .4, 'nen_min' => .38],
+            'thay_ten' => ['mau' => 'moc_khoa_karate', 'co' => ['Dài 7 cm (2.8 inch)' => '7', 'Dài 8 cm (3.1 inch)' => '8']]]]);
+        $m = $m->fresh();
+        $this->assertSame(['mau' => 'moc_khoa_karate', 'ten' => 'SOPHIA', 'tuy_chon' => ['kich_thuoc' => '8', 'nam' => '2026']],
+            $m->thamSoFileIn('Dài 8 cm (3.1 inch)', 'SOPHIA / 2026'));
+        $this->assertSame('', $m->thamSoFileIn('Dài 7 cm (2.8 inch)', 'MIA')['tuy_chon']['nam'], 'Bỏ trống đuôi trái');
+        $this->assertNull($m->thamSoFileIn('Cỡ đã đổi tên', 'SOPHIA / 2026'), 'Cỡ lạ: không đoán, để thợ làm tay');
+        $this->assertNull($this->chung->thamSoFileIn('Cỡ gốc', 'EMMA'), 'Mẫu chưa nối app');
+        $don = PodSo::datDon($this->a, [
+            ['bien_the_id' => $bt->id, 'so_luong' => 3, 'chu' => 'rabful / 2026'],
+            ['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1],
+        ], null, null, null, null);
+        $trang = $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.show', $don))->assertOk();
+        $trang->assertSee('Tạo + tải file in')->assertSee('File 1 chiếc, đơn cần 3 chiếc.')->assertSee('RABFUL', false);
+        $this->assertSame(1, substr_count($trang->getContent(), 'class="tao-file"'), 'Dòng mẫu chưa nối app không có nút');
+        // đơn không có dòng nào nối app: không chèn script gọi app
+        $don2 = PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null);
+        $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.show', $don2))->assertOk()->assertDontSee('thay-ten/app', false);
+    }
+
     public function test_anh_kich_thuoc_theo_co_va_hinh_chieu_giu_kin(): void
     {
         $dom = 'http://' . config('pod.domain');
