@@ -331,6 +331,84 @@ class PodTest extends TestCase
         $this->assertTrue($maA->contains($this->chung->ma));
     }
 
+    public function test_giu_kin_cap_quyen_chi_seller_duoc_chon_thay_va_dat_duoc(): void
+    {
+        $c = $this->taoSeller('Seller C', '0900000003');
+        $this->riengA->duocCap()->attach($this->b->id);
+        $hb = $this->token($this->b);
+        $hc = $this->token($c);
+        // được cấp: thấy ở tab riêng, mở chi tiết + ảnh, đặt được đơn; cổng biết là mẫu dùng chung, không lộ tên ai
+        $mau = collect($this->getJson('/api/pod/mau?kho=rieng', $hb)->assertOk()->json('mau'));
+        $this->assertSame([$this->riengA->ma], $mau->pluck('ma')->all());
+        $this->assertTrue($mau->first()['chia_se']);
+        $this->assertStringNotContainsString('Seller A', json_encode($mau->first(), JSON_UNESCAPED_UNICODE));
+        $this->assertFalse(collect($this->getJson('/api/pod/mau?kho=chung', $hb)->json('mau'))->pluck('ma')->contains($this->riengA->ma), 'Không lọt sang tab Kho chung');
+        $this->getJson('/api/pod/mau/' . $this->riengA->ma, $hb)->assertOk();
+        $link = $this->getJson('/api/pod/mau/' . $this->riengA->ma, $hb)->json('mau.anh.0');
+        $this->get($link)->assertOk();
+        $don = PodSo::datDon($this->b, [['bien_the_id' => $this->bt($this->riengA), 'so_luong' => 1]], null, null, null, null);
+        $this->assertSame('Mẫu độc quyền của A', $don->dong()->first()->ten_mau);
+        // không được cấp: như mẫu không tồn tại ở mọi đường
+        $this->assertSame([], $this->getJson('/api/pod/mau?kho=rieng', $hc)->assertOk()->json('mau'));
+        $this->getJson('/api/pod/mau/' . $this->riengA->ma, $hc)->assertNotFound();
+        $this->get(URL::temporarySignedRoute('pod.anh', now()->addMinutes(5), ['ma' => $this->riengA->ma, 'i' => 0, 's' => $c->id], absolute: false))->assertNotFound();
+        $this->assertDatLoi($c, $this->riengA);
+        // chủ mẫu không bị ảnh hưởng; trang công khai vẫn không có
+        $this->getJson('/api/pod/mau/' . $this->riengA->ma, $this->token($this->a))->assertOk();
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $this->riengA->ma)->assertNotFound();
+        $this->assertTrue($this->getJson('/api/pod/mau/' . $this->riengA->ma, $this->token($this->a))->json('mau.chia_se'), 'Chủ mẫu cũng phải biết mẫu đã chia sẻ');
+        // gỡ quyền là mất ngay, mẫu về độc quyền; mẫu ẩn thì người được cấp cũng không thấy
+        $this->riengA->duocCap()->detach($this->b->id);
+        $this->getJson('/api/pod/mau/' . $this->riengA->ma, $hb)->assertNotFound();
+        $this->assertDatLoi($this->b, $this->riengA);
+        $this->assertFalse($this->getJson('/api/pod/mau/' . $this->riengA->ma, $this->token($this->a))->json('mau.chia_se'));
+        $this->riengA->duocCap()->attach($this->b->id);
+        $this->riengA->update(['hien' => false]);
+        $this->getJson('/api/pod/mau/' . $this->riengA->ma, $hb)->assertNotFound();
+    }
+
+    private function assertDatLoi(PodSeller $s, PodMau $m): void
+    {
+        try {
+            PodSo::datDon($s, [['bien_the_id' => $this->bt($m), 'so_luong' => 1]], null, null, null, null);
+            $this->fail('Seller không có quyền mà đặt được mẫu riêng');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('không tìm thấy mẫu', collect($e->errors())->flatten()->first());
+        }
+    }
+
+    public function test_admin_cap_quyen_ghi_nhat_ky_va_ve_kho_chung_thi_xoa(): void
+    {
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $url = '/admin/3d/pod/mau/' . $this->riengA->id;
+        $form = ['ten' => $this->riengA->ten, 'chu_seller_id' => $this->a->id, 'hien' => '1',
+                 'bt' => [['id' => $this->bt($this->riengA), 'ten' => 'Cỡ gốc', 'gram' => 12]]];
+        // form có khối cấp quyền: tích ai thì người đó; tích trúng chủ mẫu thì bỏ qua
+        $admin->put($url, $form + ['cap_form' => '1', 'cap_seller' => [$this->b->id, $this->a->id]])->assertSessionHasNoErrors();
+        $this->assertSame([$this->b->id], $this->riengA->duocCap()->pluck('pod_seller.id')->all());
+        $this->assertStringContainsString('Thêm: Seller B', PodNhatKy::where('mau_id', $this->riengA->id)->where('hanh_dong', 'cap_quyen')->latest('id')->value('chi_tiet'));
+        // form cũ không có khối này thì không đụng tới danh sách
+        $admin->put($url, $form)->assertSessionHasNoErrors();
+        $this->assertSame(1, $this->riengA->duocCap()->count());
+        // nick không tồn tại bị từ chối
+        $admin->put($url, $form + ['cap_form' => '1', 'cap_seller' => [999999]])->assertSessionHasErrors('cap_seller.0');
+        // bỏ tích là gỡ, có nhật ký
+        $this->riengA->duocCap()->sync([$this->b->id]);
+        $admin->put($url, $form + ['cap_form' => '1'])->assertSessionHasNoErrors();
+        $this->assertSame(0, $this->riengA->duocCap()->count());
+        $this->assertStringContainsString('Gỡ: Seller B', PodNhatKy::where('mau_id', $this->riengA->id)->where('hanh_dong', 'cap_quyen')->latest('id')->value('chi_tiet'));
+        // về Kho chung thì danh sách cấp bị xoá, kẻo sau này về lại Kho riêng người cũ tự có quyền
+        $this->riengA->duocCap()->sync([$this->b->id]);
+        $admin->put($url, ['chu_seller_id' => '', 'xac_nhan_chung' => '1', 'dong_y_chung' => 'Seller A đồng ý'] + $form)->assertSessionHasNoErrors();
+        $this->assertNull($this->riengA->fresh()->chu_seller_id);
+        $this->assertSame(0, $this->riengA->duocCap()->count());
+        // trang admin hiện đúng ô tích + danh sách
+        $this->riengA->refresh()->update(['chu_seller_id' => $this->a->id]);
+        $this->riengA->duocCap()->sync([$this->b->id]);
+        $admin->get(route('admin.pod.mau.edit', $this->riengA))->assertOk()->assertSee('Seller được xem và đặt mẫu này')->assertSee('cap_seller[]', false);
+        $admin->get(route('admin.pod.mau.index'))->assertOk()->assertSee('+1')->assertDontSee('@else', false);
+    }
+
     public function test_giu_kin_chi_tiet_tra_404_nhu_ma_khong_ton_tai(): void
     {
         $h = $this->token($this->b);

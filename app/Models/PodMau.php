@@ -5,7 +5,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Mẫu POD. chu_seller_id NULL = Kho chung (mọi seller thấy), có id = Kho riêng của seller đó.
+ * Mẫu POD. chu_seller_id NULL = Kho chung (mọi seller thấy), có id = Kho riêng của seller đó,
+ * cộng các seller được cấp thêm ở bảng pod_mau_cap (duocCap).
  * MỌI truy vấn phía seller phải đi qua scopeHienCho() — đó là bộ lọc duy nhất giữ kín mẫu độc quyền.
  */
 class PodMau extends Model
@@ -19,12 +20,26 @@ class PodMau extends Model
         'kich_thuoc'=> 'array',
     ];
 
-    /** Mẫu seller này được thấy: Kho chung + Kho riêng của chính seller, chỉ mẫu đang hiện. */
+    /** Mẫu seller này được thấy: Kho chung + mẫu riêng của chính seller + mẫu riêng được cấp, chỉ mẫu đang hiện. */
     public function scopeHienCho(Builder $q, int $sellerId): Builder
     {
         return $q->where('hien', true)->where(function ($w) use ($sellerId) {
-            $w->whereNull('chu_seller_id')->orWhere('chu_seller_id', $sellerId);
+            $w->whereNull('chu_seller_id')->orWhere(fn ($r) => $r->riengCua($sellerId));
         });
+    }
+
+    /** Mẫu riêng seller này là chủ hoặc được cấp quyền (chưa lọc hien: gọi kèm hienCho ở phía seller). */
+    public function scopeRiengCua(Builder $q, int $sellerId): Builder
+    {
+        return $q->whereNotNull('chu_seller_id')->where(fn ($w) => $w->where('chu_seller_id', $sellerId)
+            ->orWhereExists(fn ($e) => $e->selectRaw('1')->from('pod_mau_cap')
+                ->whereColumn('pod_mau_cap.mau_id', 'pod_mau.id')->where('pod_mau_cap.seller_id', $sellerId)));
+    }
+
+    /** Seller được cấp thêm quyền xem + đặt mẫu riêng này (ngoài chủ mẫu). */
+    public function duocCap()
+    {
+        return $this->belongsToMany(PodSeller::class, 'pod_mau_cap', 'mau_id', 'seller_id')->withTimestamps()->orderBy('ten');
     }
 
     public function bienThe()

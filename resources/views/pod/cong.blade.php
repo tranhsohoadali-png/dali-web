@@ -288,14 +288,17 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
   async function veKho(kho) {
     var rieng = kho === 'rieng';
     var tieuDe = rieng ? 'Mẫu độc quyền của bạn' : 'Kho chung';
-    var mo = rieng ? 'Mẫu xưởng thiết kế riêng cho shop bạn.' : 'Mẫu xưởng làm sẵn, mọi seller dùng được. Ảnh mockup được dùng để đăng bán.';
+    var mo = rieng ? 'Mẫu xưởng thiết kế riêng hoặc cấp riêng cho shop bạn.' : 'Mẫu xưởng làm sẵn, mọi seller dùng được. Ảnh mockup được dùng để đăng bán.';
     var thongBao = veMsg();
     main.innerHTML = thongBao + '<h2>' + tieuDe + '</h2><p class="sub">' + mo + '</p><p class="mu">Đang tải…</p>';
     var ds = await layMau(kho);
     var q = st.tim.trim().toLowerCase();
     var loc = ds.filter(function (m) { return !q || (m.ten + ' ' + (m.nhom || '')).toLowerCase().includes(q); });
     var html = thongBao + '<h2>' + tieuDe + '</h2><p class="sub">' + mo + ' ' + giaNhua() + '.</p>';
-    if (rieng) html += '<div class="bang-rieng"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div><b>Chỉ tài khoản của bạn thấy những mẫu này.</b><div class="mu">Seller khác không biết mẫu tồn tại; xưởng không in mẫu này cho ai khác. Phí thiết kế được hoàn vào ví khi mẫu đạt 20 đơn.</div></div></div>';
+    var coChiaSe = ds.some(function (m) { return m.chia_se; }); // mẫu cấp cho nhiều seller thì không được hứa "chỉ bạn thấy"
+    if (rieng) html += '<div class="bang-rieng"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div>' +
+      (coChiaSe ? '<b>Chỉ tài khoản được xưởng cấp quyền thấy những mẫu này.</b><div class="mu">Mẫu ghi "Mẫu dùng chung" được cấp cho một số seller do xưởng chọn; mẫu ghi "Mẫu độc quyền" chỉ tài khoản của bạn thấy. Seller ngoài danh sách không biết mẫu tồn tại.</div>'
+                : '<b>Chỉ tài khoản của bạn thấy những mẫu này.</b><div class="mu">Seller khác không biết mẫu tồn tại; xưởng không in mẫu này cho ai khác. Phí thiết kế được hoàn vào ví khi mẫu đạt 20 đơn.</div>') + '</div></div>';
     if (ds.length > 6) html += '<div class="timbox">' + IC_TIM + '<input id="tim" placeholder="Tìm mẫu theo tên hoặc nhóm" value="' + esc(st.tim) + '"></div>';
     if (!ds.length) {
       html += rieng
@@ -371,11 +374,11 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       var h = '<button class="mx" onclick="dongModal()" aria-label="Đóng">×</button><div class="two"><div class="gal">' + anhChinh +
         (!xt && (m.anh.length > 1 || biaKieu()) ? '<div class="thumbs">' + (biaKieu() ? [biaKieu()] : []).concat(m.anh).map(function (u, i) { return '<img src="' + esc(u) + '" data-u="' + esc(u) + '" class="' + (i ? '' : 'on') + '">'; }).join('') + '</div>' : '') +
         (xt ? '<p class="mu" style="margin-top:8px">Ảnh vẽ từ file in thật; đổi kiểu, màu, font, tên là thấy ngay. Gửi ảnh này cho khách duyệt hoặc đăng bán.</p>'
-            : (m.anh.length ? '<p class="mu" style="margin-top:8px">Bấm giữ hoặc chuột phải vào ảnh để lưu. ' + (m.rieng ? 'Chỉ bạn thấy ảnh này.' : 'Ảnh được dùng để đăng bán.') + '</p>' : '')) +
+            : (m.anh.length ? '<p class="mu" style="margin-top:8px">Bấm giữ hoặc chuột phải vào ảnh để lưu. ' + (m.chia_se ? 'Mẫu riêng, không đăng công khai.' : m.rieng ? 'Chỉ bạn thấy ảnh này.' : 'Ảnh được dùng để đăng bán.') + '</p>' : '')) +
         (m.co_kich_thuoc ? '<div class="nhom-chon"><div class="tieu">Ảnh kích thước · ' + esc(sel.ten || '') + '</div>' +
           '<canvas id="mKt" width="900" height="560" style="width:100%;height:auto;display:block;border:1px solid var(--bd);border-radius:12px;background:#fff"></canvas>' +
           '<button class="btn2" id="mTaiKt" style="margin-top:8px;width:100%">Tải ảnh kích thước (PNG)</button></div>' : '') +
-        '</div><div>' + (m.rieng ? '<span class="tag t-rieng">' + IC_KHOA + ' Mẫu độc quyền</span>' : '<span class="tag t-chung">Kho chung</span>') + '<h2 style="margin-top:8px">' + esc(m.ten) + '</h2>' +
+        '</div><div>' + (m.rieng ? '<span class="tag t-rieng">' + IC_KHOA + (m.chia_se ? ' Mẫu dùng chung' : ' Mẫu độc quyền') + '</span>' : '<span class="tag t-chung">Kho chung</span>') + '<h2 style="margin-top:8px">' + esc(m.ten) + '</h2>' +
         (m.mo_ta ? '<p class="sub" style="white-space:pre-line">' + esc(m.mo_ta) + '</p>' : '');
       if (!m.bien_the.length) { h += '<p class="msg err">Mẫu chưa có phân loại, chưa đặt được.</p></div></div>'; $('mbox').innerHTML = h; return; }
       h += nhom(xt ? 'Kiểu' : 'Mẫu', 'kieu', kieuDs, function (v) { return esc(tenKieu(v)); }) +

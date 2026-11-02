@@ -20,10 +20,10 @@ class PodMauController extends Controller
     public function index(Request $request)
     {
         $kho = (string) $request->query('kho', '');
-        $q = PodMau::with(['bienThe', 'chu'])->orderByDesc('id');
+        $q = PodMau::with(['bienThe', 'chu', 'duocCap'])->orderByDesc('id');
         if ($kho === 'chung') $q->whereNull('chu_seller_id');
         elseif ($kho === 'rieng') $q->whereNotNull('chu_seller_id');
-        elseif (ctype_digit($kho)) $q->where('chu_seller_id', (int) $kho);
+        elseif (ctype_digit($kho)) $q->riengCua((int) $kho);
         $items = $q->get();
         $sellers = PodSeller::orderBy('ten')->get(['id', 'ten', 'ma']);
         $bangGia = PodSo::bangGia();
@@ -33,7 +33,7 @@ class PodMauController extends Controller
     public function create()
     {
         $mau = new PodMau(['hien' => true]);
-        $sellers = PodSeller::orderBy('ten')->get(['id', 'ten', 'ma']);
+        $sellers = PodSeller::orderBy('ten')->get(['id', 'ten', 'ma', 'hien', 'cho_duyet']);
         return view('admin.pod.mau-form', ['mau' => $mau, 'sellers' => $sellers, 'bienThe' => collect()]);
     }
 
@@ -49,6 +49,7 @@ class PodMauController extends Controller
             ]);
             $this->luuBienThe($mau, $v['bt'] ?? []);
             $this->luuAnh($mau, $request);
+            $this->luuCap($mau, $request);
             return $mau;
         });
         PodNhatKy::ghi($mau->id, 'tao', $mau->laRieng() ? 'Kho riêng của ' . $this->tenSeller($mau->chu_seller_id) : 'Kho chung');
@@ -58,7 +59,7 @@ class PodMauController extends Controller
     public function edit(PodMau $mau)
     {
         if ($mau->laRieng()) PodNhatKy::ghi($mau->id, 'xem', 'Mở trang sửa mẫu riêng');
-        $sellers = PodSeller::orderBy('ten')->get(['id', 'ten', 'ma']);
+        $sellers = PodSeller::orderBy('ten')->get(['id', 'ten', 'ma', 'hien', 'cho_duyet']);
         return view('admin.pod.mau-form', ['mau' => $mau, 'sellers' => $sellers, 'bienThe' => $mau->bienThe()->get()]);
     }
 
@@ -83,6 +84,8 @@ class PodMauController extends Controller
             ]);
             $this->luuBienThe($mau, $v['bt'] ?? []);
             $this->luuAnh($mau, $request);
+            if ($chuMoi === null) $mau->duocCap()->detach(); // Kho chung: mọi seller thấy, danh sách cấp hết nghĩa
+            else $this->luuCap($mau, $request);
         });
         if ($sangChung) {
             PodNhatKy::ghi($mau->id, 'chuyen_kho_chung', 'Từ Kho riêng của ' . $this->tenSeller($chuCu) . '. Đồng ý: ' . trim((string) $request->input('dong_y_chung')));
@@ -121,6 +124,21 @@ class PodMauController extends Controller
         return view('admin.pod.nhatky', compact('dong', 'mau'));
     }
 
+    /** Lưu danh sách seller được cấp thêm (chỉ khi form có khối này) và ghi nhật ký ai được thêm / gỡ. */
+    private function luuCap(PodMau $mau, Request $request): void
+    {
+        if (!$request->boolean('cap_form') || !$mau->laRieng()) return;
+        $moi = collect($request->input('cap_seller', []))->map(fn ($x) => (int) $x)->unique()
+            ->reject(fn ($x) => $x === (int) $mau->chu_seller_id)->values()->all();
+        $cu = $mau->duocCap()->pluck('pod_seller.id')->all();
+        $them = array_diff($moi, $cu);
+        $go = array_diff($cu, $moi);
+        if (!$them && !$go) return;
+        $mau->duocCap()->sync($moi);
+        $ten = fn (array $ids) => PodSeller::whereIn('id', $ids)->orderBy('ten')->pluck('ten')->implode(', ');
+        PodNhatKy::ghi($mau->id, 'cap_quyen', trim(($them ? 'Thêm: ' . $ten($them) . '. ' : '') . ($go ? 'Gỡ: ' . $ten($go) . '.' : '')));
+    }
+
     private function kiem(Request $request): array
     {
         $v = $request->validate([
@@ -128,6 +146,8 @@ class PodMauController extends Controller
             'nhom'           => 'nullable|string|max:60',
             'mo_ta'          => 'nullable|string|max:5000',
             'chu_seller_id'  => 'nullable|integer|exists:pod_seller,id',
+            'cap_seller'     => 'nullable|array|max:500',
+            'cap_seller.*'   => 'integer|exists:pod_seller,id',
             'phi_ca_nhan'    => 'nullable|integer|min:0|max:10000',
             'tang_gia'       => 'nullable|integer|min:0|max:300',
             'phi_thiet_ke'   => 'nullable|integer|min:0|max:100000000',

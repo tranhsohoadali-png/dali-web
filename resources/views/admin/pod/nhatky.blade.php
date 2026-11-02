@@ -11,7 +11,7 @@
     <tr>
       <td class="muted">{{ optional($d->created_at)->format('d/m/Y H:i') }}</td>
       <td>@if($m)<a href="{{ route('admin.pod.mau.edit', $m->id) }}" style="color:var(--gd);font-weight:700">{{ $m->ten }}</a><div class="muted">{{ $m->ma }}</div>@else<span class="muted">—</span>@endif</td>
-      <td><b>{{ ['xem' => 'Mở xem', 'tao' => 'Tạo', 'sua' => 'Sửa', 'doi_chu' => 'Đổi chủ', 'chuyen_kho_chung' => 'Chuyển sang Kho chung'][$d->hanh_dong] ?? $d->hanh_dong }}</b></td>
+      <td><b>{{ ['xem' => 'Mở xem', 'tao' => 'Tạo', 'sua' => 'Sửa', 'doi_chu' => 'Đổi chủ', 'cap_quyen' => 'Cấp quyền seller', 'chuyen_kho_chung' => 'Chuyển sang Kho chung'][$d->hanh_dong] ?? $d->hanh_dong }}</b></td>
       <td>{{ $d->chi_tiet }}</td>
       <td class="muted">{{ $d->ip }}</td>
     </tr>

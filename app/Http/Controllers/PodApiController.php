@@ -131,7 +131,7 @@ class PodApiController extends Controller
         $q = PodMau::hienCho($s->id)->with('bienThe')->orderByDesc('id');
         $kho = $request->query('kho');
         if ($kho === 'chung') $q->whereNull('chu_seller_id');
-        if ($kho === 'rieng') $q->where('chu_seller_id', $s->id);
+        if ($kho === 'rieng') $q->whereNotNull('chu_seller_id');
         $gia = PodSo::bangGia();
         return response()->json(['ok' => true, 'mau' => $q->get()->map(fn ($m) => $this->mauJson($m, $s, $gia))->all()]);
     }
@@ -161,6 +161,7 @@ class PodApiController extends Controller
             'nhom'        => $m->nhom,
             'mo_ta'       => $m->mo_ta,
             'rieng'       => $m->laRieng(),
+            'chia_se'     => $m->laRieng() && $m->duocCap()->exists(), // mẫu riêng cấp cho nhiều seller: cổng không được hứa "chỉ bạn thấy"; không lộ tên ai
             'anh'         => $anh,
             'phi_ca_nhan' => (int) $m->phi_ca_nhan,
             'ten_toi_da'  => $m->tenToiDa(),          // >0 = mẫu khắc tên, bắt buộc nhập tên

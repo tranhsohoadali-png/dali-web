@@ -4,6 +4,7 @@
   for ($i = 0; $i < 3; $i++) $rows[] = ['id' => '', 'ten' => '', 'gram' => '', 'chat_lieu' => 'PETG', 'mau_sac' => '', 'file_in' => '', 'kt' => '', 'kt_ten' => false];
   $bangGia = \App\Services\PodSo::bangGia();
   $chuHienTai = old('chu_seller_id', $mau->chu_seller_id);
+  $capHienTai = array_map('intval', (array) old('cap_seller', $mau->exists ? $mau->duocCap->pluck('id')->all() : []));
 @endphp
 <form method="POST" enctype="multipart/form-data" action="{{ $mau->exists ? route('admin.pod.mau.update', $mau) : route('admin.pod.mau.store') }}">
   @csrf @if($mau->exists) @method('PUT') @endif
@@ -13,7 +14,7 @@
       <label class="f"><span>Tên mẫu</span><input name="ten" value="{{ old('ten', $mau->ten) }}" required maxlength="160"></label>
       <label class="f"><span>Nhóm</span><input name="nhom" value="{{ old('nhom', $mau->nhom) }}" maxlength="60" placeholder="Khuôn bánh, Móc khoá…"></label>
       <label class="f"><span>Thuộc kho</span>
-        <select name="chu_seller_id">
+        <select name="chu_seller_id" id="chonKho">
           <option value="">Kho chung (mọi seller thấy)</option>
           @foreach($sellers as $s)<option value="{{ $s->id }}" @selected((string) $chuHienTai === (string) $s->id)>Kho riêng: {{ $s->ten }} ({{ $s->ma }})</option>@endforeach
         </select>
@@ -24,6 +25,29 @@
       <label class="f" style="flex-direction:row;gap:8px;align-items:center"><input type="checkbox" name="hien" value="1" style="width:auto" @checked(old('hien', $mau->hien))> <span>Hiện cho seller</span></label>
       <label class="f rong"><span>Mô tả cho seller</span><textarea name="mo_ta" rows="3" maxlength="5000">{{ old('mo_ta', $mau->mo_ta) }}</textarea></label>
     </div>
+    <div class="pad" id="khoiCap" style="padding-top:0" @if(!$chuHienTai) hidden @endif>
+      <input type="hidden" name="cap_form" value="1">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">Seller được xem và đặt mẫu này</div>
+      <div class="muted" style="margin-bottom:8px">Chủ mẫu luôn được. Tích thêm nick khác thì nick đó xem, tải ảnh và đặt đơn như chủ mẫu; không tích thì không thấy mẫu. Cổng của họ không ghi tên nhau, nhưng sẽ ghi đây là mẫu dùng chung thay vì độc quyền. Nếu chủ mẫu đã trả phí thiết kế, hãy hỏi họ trước khi cấp.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px 18px">
+        @foreach($sellers as $s)
+        <label class="dong-cap" data-id="{{ $s->id }}" style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" name="cap_seller[]" value="{{ $s->id }}" style="width:auto" @checked(in_array($s->id, $capHienTai, true))> {{ $s->ten }} <span class="muted">{{ $s->ma }}@if($s->cho_duyet) · chờ duyệt @elseif(!$s->hien) · đang khoá @endif</span></label>
+        @endforeach
+      </div>
+    </div>
+    <script>
+    (function () {
+      var chon = document.getElementById('chonKho'), khoi = document.getElementById('khoiCap');
+      function ve() {
+        khoi.hidden = !chon.value;
+        khoi.querySelectorAll('.dong-cap').forEach(function (d) { // chủ mẫu luôn có quyền, ẩn khỏi danh sách
+          var la = d.dataset.id === chon.value; d.style.display = la ? 'none' : 'flex';
+          if (la) d.querySelector('input').checked = false;
+        });
+      }
+      chon.addEventListener('change', ve); ve();
+    })();
+    </script>
     @if($mau->exists && $mau->chu_seller_id)
     <div class="pad" style="padding-top:0">
       <div class="canh">

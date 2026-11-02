@@ -29,7 +29,7 @@
     <tr>
       <td>@if(!empty($m->anh))<img class="thumb" src="{{ route('admin.pod.mau.anh', [$m, 0]) }}" alt="" loading="lazy">@endif</td>
       <td><b>{{ $m->ten }}</b><div class="muted">{{ $m->ma }}@if($m->nhom) · {{ $m->nhom }}@endif</div></td>
-      <td>@if($m->chu)<span class="badge b-rieng">Riêng · {{ $m->chu->ten }}</span>@else<span class="badge b-chung">Kho chung</span>@endif</td>
+      <td>@if($m->chu)<span class="badge b-rieng">Riêng · {{ $m->chu->ten }}@if($m->duocCap->isNotEmpty()) +{{ $m->duocCap->count() }}@endif</span>@if($m->duocCap->isNotEmpty())<div class="muted">{{ $m->duocCap->pluck('ten')->implode(', ') }}</div>@endif @else<span class="badge b-chung">Kho chung</span>@endif</td>
       <td>
         @forelse($m->bienThe as $b)
           @php $cl = \App\Services\PodSo::chatLieu($b->chat_lieu); @endphp
