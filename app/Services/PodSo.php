@@ -117,7 +117,15 @@ class PodSo
             $chu = mb_substr(trim((string) ($d['chu'] ?? '')), 0, 300);
             if ($toiDa = $mau->tenToiDa($bt->kieu)) { // mẫu khắc tên: bắt buộc có tên, không quá số ký tự ô tên chứa được
                 if ($chu === '') throw ValidationException::withMessages(["dong.$i" => "Dòng $so: nhập tên cần in."]);
-                if (mb_strlen($chu) > $toiDa) throw ValidationException::withMessages(["dong.$i" => "Dòng $so: tên tối đa $toiDa ký tự."]);
+                if ($mau->laDai()) { // chữ đuôi đai: chuẩn hoá thành "TÊN / NĂM", kiểm theo bề rộng thật
+                    try {
+                        $chu = $mau->chuanDai($chu);
+                    } catch (\InvalidArgumentException $e) {
+                        throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
+                    }
+                } elseif (mb_strlen($chu) > $toiDa) {
+                    throw ValidationException::withMessages(["dong.$i" => "Dòng $so: tên tối đa $toiDa ký tự."]);
+                }
             }
             $font = null;
             if ($dsFont = $mau->dsFont()) { // mẫu cho chọn font: phải là font trong danh sách, bỏ trống = font mặc định

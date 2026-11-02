@@ -108,7 +108,11 @@
           <div class="nhom-tieu" style="margin-top:0">Kiểu</div>
           <div class="pl" id="kieuXt">@foreach($theoKieu->keys() as $i => $k)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-kieu="{{ $k }}">{{ $m->tenKieu($k) }}</button>@endforeach</div>
           @endif
-          <label style="margin-top:14px"><span>Thử tên của bạn</span><input id="tenXt" maxlength="{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}" placeholder="Vd: Emma" autocomplete="off"></label>
+          <label style="margin-top:14px"><span>{{ $xt['nhan1'] ?? 'Thử tên của bạn' }}</span><input id="tenXt" maxlength="{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}" placeholder="{{ $m->laDai() ? 'Vd: SOPHIA' : 'Vd: Emma' }}" autocomplete="off" @if($m->laDai()) style="text-transform:uppercase" @endif></label>
+          @if($m->laDai())
+          <label style="margin-top:10px"><span>{{ $xt['nhan2'] ?? 'Chữ trên đuôi đai trái' }}</span><input id="ten2Xt" maxlength="{{ $m->tenToiDa() }}" placeholder="Vd: 2026" autocomplete="off" style="text-transform:uppercase"></label>
+          <p id="loiXt" style="color:#B3261E;font-size:14px;margin-top:8px" hidden></p>
+          @endif
           @if($mauSac->isNotEmpty())
           <div class="nhom-tieu">Màu nhựa</div>
           <div class="pl" id="mauXt">@foreach($mauSac as $i => $c)<button type="button" class="chip-mau {{ $i ? '' : 'on' }}" data-mau="{{ $c }}"><i></i>{{ $c }}</button>@endforeach</div>
@@ -117,7 +121,7 @@
           <div class="nhom-tieu">Font chữ</div>
           <div class="pl" id="fontXt">@foreach($fonts as $i => $f)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-font="{{ $f }}"><span class="ten-font">Emma</span><small>{{ $f }}</small></button>@endforeach</div>
           @endif
-          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.</p>
+          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. @if($m->laDai())Chữ in hoa không dấu, mỗi đuôi đai tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự.@else Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.@endif</p>
         </div>
       @elseif($theoKieu->count() > 1)
         <div class="thu-ten">
@@ -146,11 +150,12 @@
 @include('pod._ve_ten')
 <script>
 (function () {
-  var d = @json($xt), cv = document.getElementById('cvXt'), ip = document.getElementById('tenXt');
+  var d = @json($xt), cv = document.getElementById('cvXt'), ip = document.getElementById('tenXt'), ip2 = document.getElementById('ten2Xt'), loiXt = document.getElementById('loiXt');
   var kieu = @json($kieu0 !== '' ? $kieu0 : null), fonts = @json($fonts), font = fonts[0] || '', mau = '';
   var dsCo = @json($dsCo), hinh = @json((object) $hinhKt), co = null, cvKt = document.getElementById('cvKt');
   var TEN = {!! json_encode($m->ten, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!};
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function chuNhap() { if (!ip) return ''; return ip2 ? (ip.value.trim() ? PodVeTen.ghepDai(ip.value, ip2.value) : '') : ip.value.trim(); }
   function coCuaKieu() { return dsCo.filter(function (x) { return (x.kieu || null) === (kieu || null); }); }
   function coNay() { return coCuaKieu().find(function (x) { return x.ten === co; }) || null; }
   function veCo() { // chip cỡ của kiểu đang chọn + tô dòng giá tương ứng
@@ -165,7 +170,7 @@
   function veKt() {
     if (!cvKt) return;
     var x = coNay();
-    PodVeTen.veKt(cvKt, { kt: x && x.kt, hinh: hinh, xt: d, kieu: kieu, chu: ip ? ip.value.trim() : '', mau: mau, font: font });
+    PodVeTen.veKt(cvKt, { kt: x && x.kt, hinh: hinh, xt: d, kieu: kieu, chu: chuNhap(), mau: mau, font: font });
   }
   if (document.getElementById('taiKt')) document.getElementById('taiKt').onclick = function () {
     var ck = document.querySelector('#kieuXt .chip-kieu.on');
@@ -196,12 +201,14 @@
   function ve() {
     veKt();
     if (!d || !cv) return;
-    var k = PodVeTen.khung(d, kieu), ten = ip.value.trim(), x = coNay();
+    var k = PodVeTen.khung(d, kieu), ten = chuNhap(), x = coNay();
+    if (loiXt) { var loi = ten ? PodVeTen.kiemDai(d, ten) : null; loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
     PodVeTen.datCao(cv, k);
     document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
     PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font, { ti: x && x.kt && x.kt.ti_le }); });
   }
   if (ip) ip.oninput = ve;
+  if (ip2) ip2.oninput = ve;
   if (document.getElementById('taiXt')) document.getElementById('taiXt').onclick = function () {
     PodVeTen.tai(cv, [TEN, PodVeTen.khung(d, kieu).ten, ip.value.trim() || 'mau', mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
   };

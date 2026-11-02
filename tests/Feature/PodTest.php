@@ -146,6 +146,41 @@ class PodTest extends TestCase
             ->assertSee('height="520"', false)->assertSee('data-mau="Trắng + chữ đỏ"', false)->assertSee('5.940đ');
     }
 
+    public function test_chu_duoi_dai_chuan_hoa_va_chan_chu_khong_in_duoc(): void
+    {
+        $g = fn (float $w) => ['d' => 'M0 0Z', 'w' => $w];
+        $glyph = array_fill_keys(array_merge(range('A', 'Z'), range(0, 9), ['-']), $g(2.4));
+        $glyph['W'] = $g(3.6);
+        $m = $this->taoMau('Móc khóa Karate', null, 19.8);
+        $m->update(['xem_truoc' => ['loai' => 'ten', 've' => 'dai', 'toi_da' => 10, 'w' => 900, 'h' => 1200, 'glyph' => $glyph,
+            'so' => ['h' => 3.55, 'no_x' => .05, 'no_y' => .14, 'khe' => .45, 'khoang' => 1.1, 'l_chuan' => 13.2, 'l_max' => 14.5, 'lech_u' => .4, 'nen_min' => .38]]]);
+        $m = $m->fresh();
+        $this->assertTrue($m->laDai());
+        $this->assertSame('SOPHIA / 2026', $m->chuanDai('sophia / 2026'));
+        $this->assertSame('JOSE DUC', $m->chuanDai(' josé   đức '));
+        $this->assertSame('ALEXANDER / SENSEI', $m->chuanDai('Alexander/Sensei'));
+        foreach (['', 'AN@', 'ABCDEFGHIJK', 'WWWWWWWWWW', 'AN / 20@6'] as $sai) {
+            try {
+                $m->chuanDai($sai);
+                $this->fail("Phải từ chối: $sai");
+            } catch (\InvalidArgumentException $e) {
+                $this->assertNotSame('', $e->getMessage());
+            }
+        }
+        // đặt đơn: máy chủ lưu chữ đã chuẩn hoá, chữ không in được bị chặn dù trình duyệt lọt
+        $bt = $this->bt($m);
+        try {
+            PodSo::datDon($this->a, [['bien_the_id' => $bt, 'so_luong' => 1, 'chu' => 'AN@']], null, null, null, null);
+            $this->fail('Phải chặn chữ không in được');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('chỉ in được', collect($e->errors())->flatten()->first());
+        }
+        $don = PodSo::datDon($this->a, [['bien_the_id' => $bt, 'so_luong' => 1, 'chu' => 'sophia / 2026']], null, null, null, null);
+        $this->assertSame('SOPHIA / 2026', $don->dong()->first()->chu_ca_nhan);
+        // trang công khai có 2 ô chữ; mẫu khắc tên thường không có ô thứ hai
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()->assertSee('ten2Xt');
+    }
+
     public function test_anh_kich_thuoc_theo_co_va_hinh_chieu_giu_kin(): void
     {
         $dom = 'http://' . config('pod.domain');

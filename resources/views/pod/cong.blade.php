@@ -327,7 +327,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     }
     var xt = m.xem_truoc, bt0 = m.bien_the[0] || {};
     var fonts = (xt && xt.fonts) || [];
-    var sel = { kieu: bt0.kieu || null, ten: bt0.ten, cl: bt0.chat_lieu, mau: '', font: fonts[0] || '', chu: '', sl: 1 };
+    var dai = !!(xt && xt.ve === 'dai');
+    var sel = { kieu: bt0.kieu || null, ten: bt0.ten, cl: bt0.chat_lieu, mau: '', font: fonts[0] || '', chu: '', chu2: dai ? '2026' : '', sl: 1 };
+    function chuGhep() { return dai ? (sel.chu ? PodVeTen.ghepDai(sel.chu, sel.chu2) : '') : sel.chu; } // đuôi đai: "SOPHIA / 2026"
     function giong(b, k) { return (!k.kieu || b.kieu === sel.kieu) && (!k.ten || b.ten === sel.ten) && (!k.cl || b.chat_lieu === sel.cl); }
     function duyNhat(ds) { return ds.filter(function (v, i) { return v !== null && v !== undefined && ds.indexOf(v) === i; }); }
     function bt() { return m.bien_the.find(function (b) { return giong(b, { kieu: 1, ten: 1, cl: 1 }); }); }
@@ -343,10 +345,10 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     function ktNay() { var b = bt(); return (b && b.kich_thuoc) || null; }
     function veXemTruoc() {
       var kt = ktNay();
-      if ($('mKt')) PodVeTen.veKt($('mKt'), { kt: kt, hinh: m.hinh_chieu, xt: xt, kieu: sel.kieu, chu: sel.chu, mau: sel.mau, font: sel.font });
+      if ($('mKt')) PodVeTen.veKt($('mKt'), { kt: kt, hinh: m.hinh_chieu, xt: xt, kieu: sel.kieu, chu: chuGhep(), mau: sel.mau, font: sel.font });
       var cv = $('mCv'), k = khungNay(); if (!cv || !k) return;
       PodVeTen.datCao(cv, k);
-      PodVeTen.choFont(sel.font).then(function () { PodVeTen.ve(cv, k, sel.chu || 'Tên của bạn', sel.mau, sel.font, { ti: kt && kt.ti_le }); });
+      PodVeTen.choFont(sel.font).then(function () { PodVeTen.ve(cv, k, chuGhep() || 'Tên của bạn', sel.mau, sel.font, { ti: kt && kt.ti_le }); });
     }
     function nhom(tieuDe, khoa, ds, nhan) {
       if (ds.length < 2 && khoa !== 'mau' && khoa !== 'font') return '';
@@ -382,8 +384,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         nhom('Màu nhựa', 'mau', b ? b.mau_sac : [], function (v) { return '<i class="cham" style="background:' + PodVeTen.nenChip(v) + '"></i>' + esc(v); }) +
         nhom('Font chữ', 'font', fonts, function (v) { return '<span style="font:' + PodVeTen.css(v, 18).replace(/"/g, "'") + '">' + esc(sel.chu || 'Emma') + '</span><small class="mu"> ' + esc(v) + '</small>'; });
       if (b) {
-        h += '<label class="f" style="margin-top:12px">' + (td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
-          '<input id="mChu" maxlength="' + (td || 300) + '" value="' + esc(sel.chu) + '" placeholder="' + (td ? 'Vd: Emma' : 'Bỏ trống nếu không') + '"></label>' +
+        h += '<label class="f" style="margin-top:12px">' + (dai ? esc(xt.nhan1) + ' (tối đa ' + td + ' ký tự)' : td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
+          '<input id="mChu" maxlength="' + (td || 300) + '" value="' + esc(sel.chu) + '" placeholder="' + (dai ? 'Vd: SOPHIA' : td ? 'Vd: Emma' : 'Bỏ trống nếu không') + '"' + (dai ? ' style="text-transform:uppercase"' : '') + '></label>' +
+          (dai ? '<label class="f" style="margin-top:10px">' + esc(xt.nhan2) + '<input id="mChu2" maxlength="' + td + '" value="' + esc(sel.chu2) + '" placeholder="Vd: 2026" style="text-transform:uppercase"></label>' : '') +
           '<div class="gia-chon"><div><div class="mu">Giá in 1 chiếc · ' + gram(b.gram) + '</div><b>' + tien(b.gia) + '</b></div>' +
           '<label class="f" style="width:110px">Số lượng<input id="mSl" type="number" min="1" max="500" value="' + sel.sl + '"></label></div>' +
           '<div class="msg err hide" id="mLoi" style="margin:10px 0 0"></div>' +
@@ -395,8 +398,15 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         o.onclick = function () { luuO(); sel[o.dataset.k] = o.dataset.v; veM(); };
       });
       $('mbox').querySelectorAll('.thumbs img').forEach(function (t) { t.onclick = function () { $('mMain').src = t.dataset.u; $('mbox').querySelectorAll('.thumbs img').forEach(function (x) { x.classList.toggle('on', x === t); }); }; });
+      if ($('mChu2')) $('mChu2').oninput = function () { sel.chu2 = $('mChu2').value.trim(); baoDai(); veXemTruoc(); };
+      function baoDai() { // chữ đuôi đai: báo ngay khi gõ, chữ không in được thì chưa cho thêm vào đơn
+        if (!dai || !$('mLoi')) return null;
+        var loi = sel.chu ? PodVeTen.kiemDai(xt, chuGhep()) : null;
+        $('mLoi').textContent = loi || ''; $('mLoi').classList.toggle('hide', !loi);
+        return loi;
+      }
       if ($('mChu')) $('mChu').oninput = function () {
-        sel.chu = $('mChu').value.trim(); if ($('mLoi')) $('mLoi').classList.add('hide');
+        sel.chu = $('mChu').value.trim(); if ($('mLoi')) $('mLoi').classList.add('hide'); baoDai();
         $('mbox').querySelectorAll('.chon[data-k="font"] span').forEach(function (s) { s.textContent = sel.chu || 'Emma'; });
         veXemTruoc();
       };
@@ -411,15 +421,17 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       if (nut) nut.onclick = function () {
         luuO();
         if (td && !sel.chu) { $('mLoi').textContent = 'Nhập tên cần in trên mẫu.'; $('mLoi').classList.remove('hide'); $('mChu').focus(); return; }
+        if (baoDai()) { $('mChu').focus(); return; }
         var tenK = sel.kieu ? tenKieu(sel.kieu) + ' · ' : '';
         st.gio.push({ bien_the_id: b.id, ten_mau: m.ten, ten_bt: tenK + b.ten, chat_lieu: b.chat_lieu, gia: b.gia, phi_ca_nhan: m.phi_ca_nhan,
-          mau_sac: sel.mau || '', font: fonts.length ? sel.font : '', chu: sel.chu, so_luong: sel.sl });
+          mau_sac: sel.mau || '', font: fonts.length ? sel.font : '', chu: chuGhep(), so_luong: sel.sl });
         luuGio(); dongModal();
-        st.msg = { ok: 'Đã thêm "' + esc(m.ten) + '"' + (sel.chu ? ' tên "' + esc(sel.chu) + '"' : '') + ' vào đơn đang soạn. <a href="#gio">Xem đơn</a>' }; ve();
+        st.msg = { ok: 'Đã thêm "' + esc(m.ten) + '"' + (sel.chu ? ' tên "' + esc(chuGhep()) + '"' : '') + ' vào đơn đang soạn. <a href="#gio">Xem đơn</a>' }; ve();
       };
     }
     function luuO() { // giữ tên + số lượng khi vẽ lại hộp
       if ($('mChu')) sel.chu = $('mChu').value.trim();
+      if ($('mChu2')) sel.chu2 = $('mChu2').value.trim();
       if ($('mSl')) sel.sl = Math.max(1, Math.min(500, parseInt($('mSl').value, 10) || 1));
     }
     veM();

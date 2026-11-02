@@ -9,7 +9,8 @@ window.PodVeTen = (function () {
     'trắng': '#F4F2EC', 'kem': '#EADBC0', 'be': '#D8C29D', 'đỏ': '#C62D2D', 'đỏ đô': '#8E1F2A', 'hồng': '#E8558B',
     'xanh rêu': '#2F5D3A', 'xanh lá': '#3E8E41', 'xanh lá đậm': '#245C36', 'xanh dương': '#2F6DB3', 'xanh ngọc': '#2AA79B',
     'vàng': '#F2C230', 'vàng đồng': '#C9A24B', 'gold': '#C9A24B', 'cam': '#EE7D2B', 'tím': '#7D4FB0', 'đen': '#2A2A2A',
-    'nâu': '#7A4E2D', 'bạc': '#B9BEC4', 'xám': '#8C9196', 'trắng ngọc trai': '#EFEAE0', 'trắng ngọc trai (silk)': '#EFEAE0'
+    'nâu': '#7A4E2D', 'bạc': '#B9BEC4', 'xám': '#8C9196', 'trắng ngọc trai': '#EFEAE0', 'trắng ngọc trai (silk)': '#EFEAE0',
+    'áo trắng đai đỏ': '#C8102E'
   };
   function mauHex(ten) {
     var k = String(ten || '').trim().toLowerCase();
@@ -126,6 +127,74 @@ window.PodVeTen = (function () {
     ctx.beginPath(); ctx.arc(lo[0], lo[1], r, 0, 7); ctx.stroke(); ctx.restore();
     return { hop: [ox + X0 * s, oy + Y0 * s, ox + X1 * s, oy + Y1 * s], mm: [X1 - X0, Y1 - Y0] };
   }
+  /* ---------- Móc khóa đuôi đai (d.ve = 'dai'): 2 dòng chữ khảm trên 2 đuôi đai, ghi trong đơn dạng "SOPHIA / 2026".
+     Số đo + công thức xếp chữ = mẫu app Thay tên mau_moc_khoa_karate.py (số lấy chung ở d.so). --------- */
+  function chuanDai(s) { // viết hoa, bỏ dấu: José -> JOSE, Đức -> DUC
+    return String(s || '').replace(/đ/g, 'd').replace(/Đ/g, 'D').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+  }
+  function tachDai(chu) {
+    var p = String(chu || '').split('/');
+    return { ten: chuanDai(p[0]), nam: chuanDai(p.slice(1).join(' ')) };
+  }
+  function ghepDai(ten, nam) { ten = chuanDai(ten); nam = chuanDai(nam); return nam ? ten + ' / ' + nam : ten; }
+  function doDong(d, txt) { // -> {sx: nén dọc dòng, L: dài dòng mm}
+    var n = d.so, tong = 0, chu = 0, cach = 0;
+    for (var i = 0; i < txt.length; i++) {
+      if (txt[i] === ' ') { cach++; continue; }
+      chu++; tong += d.glyph[txt[i]] ? d.glyph[txt[i]].w : 0;
+    }
+    var coDinh = n.khe * (chu - 1) + 2 * n.no_x * chu + cach * n.khoang;
+    var sx = tong ? Math.min(1, (n.l_max - coDinh) / tong) : 1;
+    return { sx: sx, L: tong * sx + coDinh };
+  }
+  /** Câu báo lỗi nếu chữ không in được trên đuôi đai, null nếu được. Máy chủ kiểm lại y hệt (PodMau::chuanDai). */
+  function kiemDai(d, chu) {
+    var p = tachDai(chu), ds = [[p.ten, 'Tên'], [p.nam, 'Chữ đuôi trái']];
+    if (!/[A-Z0-9]/.test(p.ten)) return 'Nhập tên cần in.';
+    for (var i = 0; i < 2; i++) {
+      var t = ds[i][0], nhan = ds[i][1];
+      if (!t) continue;
+      if (/[^A-Z0-9 \-]/.test(t)) return nhan + ' chỉ in được chữ A–Z, số 0–9, dấu cách và dấu gạch ngang.';
+      if (t.length > (d.toi_da || 10)) return nhan + ' tối đa ' + (d.toi_da || 10) + ' ký tự.';
+      if (doDong(d, t).sx < d.so.nen_min) return nhan + ' dài quá so với đuôi đai, bớt chữ hoặc viết tắt.';
+    }
+    return null;
+  }
+  var nenDai = {};
+  function veDai(cv, d, chu, tuy) {
+    var im = nenDai[d.nen];
+    if (!im) { im = nenDai[d.nen] = new Image(); im.src = d.nen; }
+    cv._chuDai = chu;
+    if (!im.complete || !im.naturalWidth) {
+      im.addEventListener('load', function () { if (cv._chuDai === chu) veDai(cv, d, chu, tuy); }, { once: true });
+      return { hop: [0, 0, cv.width, cv.height], mm: [d.w, d.h] };
+    }
+    var ctx = cv.getContext('2d'), W = cv.width, H = cv.height, k = W / d.w, s = d.s * k, n = d.so;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H); ctx.drawImage(im, 0, 0, W, H);
+    var p = chu === 'Tên của bạn' ? tachDai(d.mau_chu) : tachDai(chu);
+    ctx.fillStyle = '#F4F2EC';
+    [[p.ten, d.duoi.phai], [p.nam, d.duoi.trai]].forEach(function (dong) {
+      var txt = dong[0], t = dong[1];
+      if (!txt) return;
+      var dd = doDong(d, txt), lui = n.lech_u + Math.max(0, dd.L - n.l_chuan) / 2;
+      var tx = t.o[0] + t.u[0] * lui, tz = t.o[1] + t.u[1] * lui;
+      // (a dọc dòng, b lên đầu chữ) mm -> px ảnh chiếu thẳng
+      ctx.setTransform(s * t.a[0], -s * t.a[1], s * t.b[0], -s * t.b[1], (tx - d.x0) * s, (d.z1 - tz) * s);
+      var x = -dd.L / 2, cao = n.h / 2;
+      for (var i = 0; i < txt.length; i++) {
+        if (txt[i] === ' ') { x += n.khoang - n.khe; continue; }
+        var g = d.glyph[txt[i]];
+        if (!g) continue;
+        g.p = g.p || new Path2D(g.d);
+        for (var ox = -1; ox <= 1; ox++) for (var oy = -2; oy <= 2; oy++) { // nở nét lệch như bản in: ngang đuôi nhiều, dọc dòng ít
+          ctx.save(); ctx.translate(x + n.no_x + ox * n.no_x, -cao + oy * n.no_y / 2); ctx.scale(dd.sx, 1); ctx.fill(g.p, 'evenodd'); ctx.restore();
+        }
+        x += g.w * dd.sx + 2 * n.no_x + n.khe;
+      }
+    });
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    return { hop: [0, 0, W, H], mm: [d.w, d.h] };
+  }
   /**
    * Vẽ lên canvas: d = khung (w, h, khung, o_ten), ten = chữ cần in, mau = tên màu nhựa, font = font chữ tên.
    * tuy = {trong: nền trong suốt + bỏ bóng (ảnh kích thước), ti: hệ số cỡ móc khoá}. Trả { hop (px), mm: [rộng, cao] }.
@@ -133,6 +202,7 @@ window.PodVeTen = (function () {
   function ve(cv, d, ten, mau, font, tuy) {
     tuy = tuy || {};
     if (d && d.ve === 'moc_khoa') return veMocKhoa(cv, d, String(ten || '').trim() || 'Tên', mau, font, tuy);
+    if (d && d.ve === 'dai') return veDai(cv, d, String(ten || '').trim(), tuy);
     var W = cv.width, H = cv.height, ctx = cv.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
@@ -283,6 +353,6 @@ window.PodVeTen = (function () {
     return p.length > 1 ? 'linear-gradient(135deg,' + mauHex(p[0]) + ' 0 58%,' + mauHex(p[1]) + ' 58% 100%)' : mauHex(p[0]);
   }
   return { ve: ve, tai: tai, choFont: choFont, mauHex: mauHex, nenChip: nenChip, khung: khung, datCao: datCao, css: css,
-    veKt: veKt, veKichThuoc: veKichThuoc, chuSo: chuSo };
+    veKt: veKt, veKichThuoc: veKichThuoc, chuSo: chuSo, chuanDai: chuanDai, ghepDai: ghepDai, kiemDai: kiemDai };
 })();
 </script>

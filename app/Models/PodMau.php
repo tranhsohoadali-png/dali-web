@@ -54,6 +54,53 @@ class PodMau extends Model
         return max(1, (int) ($k['toi_da'] ?? $x['toi_da'] ?? 12));
     }
 
+    /** Mẫu chữ trên đuôi đai (móc khóa Karate): đơn ghi "TÊN / NĂM", kiểm theo bề rộng chữ chứ không chỉ số ký tự. */
+    public function laDai(): bool
+    {
+        return ($this->xem_truoc['ve'] ?? '') === 'dai';
+    }
+
+    /**
+     * Chuẩn hoá + kiểm chữ mẫu đuôi đai: viết hoa, bỏ dấu, "TÊN / NĂM". Sai thì ném \InvalidArgumentException câu báo seller.
+     * Công thức bề rộng = veDai (_ve_ten.blade.php) = do_dong (app Thay tên mau_moc_khoa_karate.py); số lấy từ xem_truoc.so.
+     */
+    public function chuanDai(string $chu): string
+    {
+        $x = $this->xem_truoc;
+        $phan = explode('/', $chu);
+        $ten = self::chuHoaKhongDau($phan[0]);
+        $nam = self::chuHoaKhongDau(implode(' ', array_slice($phan, 1)));
+        if (!preg_match('/[A-Z0-9]/', $ten)) throw new \InvalidArgumentException('nhập tên cần in.');
+        $toiDa = (int) ($x['toi_da'] ?? 10);
+        foreach ([[$ten, 'tên'], [$nam, 'chữ đuôi trái']] as [$t, $nhan]) {
+            if ($t === '') continue;
+            if (preg_match('/[^A-Z0-9 \-]/', $t)) throw new \InvalidArgumentException("$nhan chỉ in được chữ A–Z, số 0–9, dấu cách và dấu gạch ngang.");
+            if (strlen($t) > $toiDa) throw new \InvalidArgumentException("$nhan tối đa $toiDa ký tự.");
+            if ($this->nenDai($t) < (float) $x['so']['nen_min']) throw new \InvalidArgumentException("$nhan dài quá so với đuôi đai, bớt chữ hoặc viết tắt.");
+        }
+        return $nam !== '' ? "$ten / $nam" : $ten;
+    }
+
+    /** Hệ số nén dọc dòng để $txt vừa đuôi đai (1 = không nén). */
+    private function nenDai(string $txt): float
+    {
+        $so = $this->xem_truoc['so'];
+        $gl = $this->xem_truoc['glyph'];
+        $tong = 0.0;
+        $n = 0;
+        foreach (str_split(str_replace(' ', '', $txt)) as $c) {
+            $tong += (float) ($gl[$c]['w'] ?? 0);
+            $n++;
+        }
+        $coDinh = $so['khe'] * ($n - 1) + 2 * $so['no_x'] * $n + substr_count($txt, ' ') * $so['khoang'];
+        return $tong > 0 ? min(1.0, ($so['l_max'] - $coDinh) / $tong) : 1.0;
+    }
+
+    private static function chuHoaKhongDau(string $s): string
+    {
+        return trim(preg_replace('/\s+/', ' ', strtoupper(\Illuminate\Support\Str::ascii($s))));
+    }
+
     /** Tên hiển thị của một kiểu (mẫu nhiều kiểu), vd "Nơ + hoa"; null nếu mẫu không chia kiểu. Mẫu khối lấy tên ở kich_thuoc.kieu. */
     public function tenKieu(?string $kieu): ?string
     {
