@@ -30,7 +30,7 @@ class PodDonController extends Controller
         $fileIn = PodBienThe::whereIn('id', $don->dong->pluck('bien_the_id'))->pluck('file_in', 'id');
         $coNhan = (bool) PodSo::duongNhan($don);
         $mau = \App\Models\PodMau::whereIn('id', $don->dong->pluck('mau_id'))->get()->keyBy('id');
-        $taoFile = $don->dong->mapWithKeys(fn ($x) => [$x->id => $mau->get($x->mau_id)?->thamSoFileIn($x->ten_bien_the, $x->chu_ca_nhan)])->filter()->all();
+        $taoFile = $don->dong->mapWithKeys(fn ($x) => [$x->id => $mau->get($x->mau_id)?->thamSoFileIn($x->ten_bien_the, $x->chu_ca_nhan, $x->mau_sac)])->filter()->all();
         return view('admin.pod.don-show', compact('don', 'fileIn', 'coNhan', 'taoFile'));
     }
 

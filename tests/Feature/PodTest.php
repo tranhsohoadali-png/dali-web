@@ -196,8 +196,21 @@ class PodTest extends TestCase
         $this->assertSame('', $m->thamSoFileIn('Dài 7 cm (2.8 inch)', 'MIA')['tuy_chon']['nam'], 'Bỏ trống đuôi trái');
         $this->assertNull($m->thamSoFileIn('Cỡ đã đổi tên', 'SOPHIA / 2026'), 'Cỡ lạ: không đoán, để thợ làm tay');
         $this->assertNull($this->chung->thamSoFileIn('Cỡ gốc', 'EMMA'), 'Mẫu chưa nối app');
+        // màu đai: dòng đơn chọn màu nào thì file in đúng màu đó, màu lạ không đoán
+        $xt = $m->xem_truoc;
+        $xt['thay_ten']['mau_dai'] = ['Áo trắng đai đỏ' => 'do', 'Áo trắng đai đen' => 'den'];
+        $m->update(['xem_truoc' => $xt]);
+        $bt->update(['mau_sac' => 'Áo trắng đai đỏ, Áo trắng đai đen']);
+        $m = $m->fresh();
+        $this->assertSame(['kich_thuoc' => '8', 'nam' => '2026', 'mau_dai' => 'den'],
+            $m->thamSoFileIn('Dài 8 cm (3.1 inch)', 'SOPHIA / 2026', 'Áo trắng đai đen')['tuy_chon']);
+        $this->assertSame('do', $m->thamSoFileIn('Dài 8 cm (3.1 inch)', 'SOPHIA / 2026', 'Áo trắng đai đỏ')['tuy_chon']['mau_dai']);
+        $this->assertNull($m->thamSoFileIn('Dài 8 cm (3.1 inch)', 'SOPHIA / 2026', 'Áo trắng đai xanh'), 'Màu lạ: để thợ làm tay');
+        $this->assertNull($m->thamSoFileIn('Dài 8 cm (3.1 inch)', 'SOPHIA / 2026'), 'Thiếu màu: để thợ làm tay');
+        $donDen = PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => 'mia / 2026', 'mau_sac' => 'Áo trắng đai đen']], null, null, null, null);
+        $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.show', $donDen))->assertOk()->assertSee('&quot;mau_dai&quot;:&quot;den&quot;', false);
         $don = PodSo::datDon($this->a, [
-            ['bien_the_id' => $bt->id, 'so_luong' => 3, 'chu' => 'rabful / 2026'],
+            ['bien_the_id' => $bt->id, 'so_luong' => 3, 'chu' => 'rabful / 2026', 'mau_sac' => 'Áo trắng đai đỏ'],
             ['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1],
         ], null, null, null, null);
         $trang = $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.show', $don))->assertOk();

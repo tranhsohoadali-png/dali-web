@@ -99,15 +99,22 @@ class PodMau extends Model
     /**
      * Tham số tạo file in ở app Thay tên cho một dòng đơn: {mau, ten, tuy_chon}. Null nếu mẫu chưa nối app, hoặc cỡ của
      * dòng không có trong bảng (cỡ đã đổi tên sau khi đặt) — khi đó thợ vẫn làm tay theo dòng hướng dẫn file_in.
-     * xem_truoc.thay_ten = {mau: id mẫu app, co: {tên phân loại: giá trị tuỳ chọn kich_thuoc}}.
+     * xem_truoc.thay_ten = {mau: id mẫu app, co: {tên phân loại: giá trị tuỳ chọn kich_thuoc}, mau_dai?: {màu trong đơn: giá trị
+     * tuỳ chọn mau_dai}}. Có bảng mau_dai mà màu của dòng không có trong bảng: cũng null, in sai màu đai là bỏ cả chiếc.
      */
-    public function thamSoFileIn(?string $tenCo, ?string $chu): ?array
+    public function thamSoFileIn(?string $tenCo, ?string $chu, ?string $mauSac = null): ?array
     {
         $tt = $this->xem_truoc['thay_ten'] ?? null;
         $co = $tt['co'][(string) $tenCo] ?? null;
         if (empty($tt['mau']) || $co === null || trim((string) $chu) === '') return null;
         $p = array_map('trim', explode('/', (string) $chu, 2));
-        return ['mau' => $tt['mau'], 'ten' => $p[0], 'tuy_chon' => ['kich_thuoc' => (string) $co, 'nam' => $p[1] ?? '']];
+        $tc = ['kich_thuoc' => (string) $co, 'nam' => $p[1] ?? ''];
+        if (!empty($tt['mau_dai'])) {
+            $dai = $tt['mau_dai'][(string) $mauSac] ?? null;
+            if ($dai === null) return null;
+            $tc['mau_dai'] = (string) $dai;
+        }
+        return ['mau' => $tt['mau'], 'ten' => $p[0], 'tuy_chon' => $tc];
     }
 
     /** Hệ số nén dọc dòng để $txt vừa đuôi đai (1 = không nén). */

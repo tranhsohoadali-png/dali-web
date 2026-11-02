@@ -10,7 +10,7 @@ window.PodVeTen = (function () {
     'xanh rêu': '#2F5D3A', 'xanh lá': '#3E8E41', 'xanh lá đậm': '#245C36', 'xanh dương': '#2F6DB3', 'xanh ngọc': '#2AA79B',
     'vàng': '#F2C230', 'vàng đồng': '#C9A24B', 'gold': '#C9A24B', 'cam': '#EE7D2B', 'tím': '#7D4FB0', 'đen': '#2A2A2A',
     'nâu': '#7A4E2D', 'bạc': '#B9BEC4', 'xám': '#8C9196', 'trắng ngọc trai': '#EFEAE0', 'trắng ngọc trai (silk)': '#EFEAE0',
-    'áo trắng đai đỏ': '#C8102E'
+    'áo trắng đai đỏ': '#C8102E', 'áo trắng đai đen': '#1A1A1A', 'áo trắng đai tím': '#5B2C9F'
   };
   function mauHex(ten) {
     var k = String(ten || '').trim().toLowerCase();
@@ -161,12 +161,13 @@ window.PodVeTen = (function () {
     return null;
   }
   var nenDai = {};
-  function veDai(cv, d, chu, tuy) {
-    var im = nenDai[d.nen];
-    if (!im) { im = nenDai[d.nen] = new Image(); im.src = d.nen; }
-    cv._chuDai = chu;
+  function veDai(cv, d, chu, mau, tuy) {
+    var url = (d.nen_mau && d.nen_mau[mau]) || d.nen, im = nenDai[url]; // mỗi màu đai một ảnh nền, không có thì dùng ảnh gốc
+    if (!im) { im = nenDai[url] = new Image(); im.src = url; }
+    var dang = chu + '|' + mau;
+    cv._chuDai = dang;
     if (!im.complete || !im.naturalWidth) {
-      im.addEventListener('load', function () { if (cv._chuDai === chu) veDai(cv, d, chu, tuy); }, { once: true });
+      im.addEventListener('load', function () { if (cv._chuDai === dang) veDai(cv, d, chu, mau, tuy); }, { once: true });
       return { hop: [0, 0, cv.width, cv.height], mm: [d.w, d.h] };
     }
     var ctx = cv.getContext('2d'), W = cv.width, H = cv.height, k = W / d.w, s = d.s * k, n = d.so;
@@ -202,7 +203,7 @@ window.PodVeTen = (function () {
   function ve(cv, d, ten, mau, font, tuy) {
     tuy = tuy || {};
     if (d && d.ve === 'moc_khoa') return veMocKhoa(cv, d, String(ten || '').trim() || 'Tên', mau, font, tuy);
-    if (d && d.ve === 'dai') return veDai(cv, d, String(ten || '').trim(), tuy);
+    if (d && d.ve === 'dai') return veDai(cv, d, String(ten || '').trim(), mau, tuy);
     var W = cv.width, H = cv.height, ctx = cv.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
