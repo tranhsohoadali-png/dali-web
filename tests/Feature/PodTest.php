@@ -181,6 +181,50 @@ class PodTest extends TestCase
         $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()->assertSee('ten2Xt');
     }
 
+    public function test_dau_banh_ten_in_hoa_giu_dau_kiem_cung_va_file_in(): void
+    {
+        // bảng bề rộng đều 0,62 em (thật: chép từ dau_banh.scad); số còn lại = xem_truoc mẫu dấu bánh thật
+        $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZĐĂÂÊÔƠƯ0123456789 &'.,-!ÀÁẢÃẠẰẮẲẴẶẦẤẨẪẬÈÉẺẼẸỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌỒỐỔỖỘỜỚỞỠỢÙÚỦŨỤỪỨỬỮỰỲÝỶỸỴ";
+        $m = $this->taoMau('Dấu bánh quy Giáng sinh khắc tên', null, 35.56, 'PETG');
+        $bt = $m->bienThe()->first();
+        $bt->update(['ten' => 'Cả bộ · dấu Ø60 + khuôn']);
+        $m->update(['xem_truoc' => ['loai' => 'ten', 've' => 'dau_banh', 'toi_da' => 24, 'w' => 150, 'h' => 100, 'hoa' => true,
+            'chars' => $chars, 'adv' => array_fill(0, mb_strlen($chars), 0.62),
+            'so' => ['r_ten' => 26.2, 'co' => 5.0, 'co_min' => 4.2, 'cung_max' => 150, 'cap' => 0.617, 'he_so_dan' => 0.98],
+            'thay_ten' => ['mau' => 'dau_banh', 'khoa' => 'in_gi', 'co' => ['Cả bộ · dấu Ø60 + khuôn' => 'bo', 'Con dấu Ø60' => 'dau']]]]);
+        $m = $m->fresh();
+        $this->assertTrue($m->laDauBanh());
+        $this->assertFalse($m->laDai());
+        $this->assertSame('THE SMITHS', $m->chuanDauBanh('  the   smiths '));
+        $this->assertSame('NGUYỄN HOÀNG YẾN', $m->chuanDauBanh('Nguyễn Hoàng Yến'), 'giữ dấu tiếng Việt');
+        $this->assertEqualsWithDelta(100.0, $m->cungDauBanh('THE SMITHS'), 1.0);
+        foreach (['', '...', 'AN@', 'XIN😀', 'NGUYỄN THỊ PHƯƠNG THẢO', str_repeat('A', 25)] as $sai) {
+            try {
+                $m->chuanDauBanh($sai);
+                $this->fail("Phải từ chối: $sai");
+            } catch (\InvalidArgumentException $e) {
+                $this->assertNotSame('', $e->getMessage());
+            }
+        }
+        // đặt đơn: lưu tên đã in hoa, tên dài quá cung bị chặn dù trình duyệt lọt
+        try {
+            PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => 'Nguyễn Thị Phương Thảo']], null, null, null, null);
+            $this->fail('Phải chặn tên dài quá cung');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('cung dưới', collect($e->errors())->flatten()->first());
+        }
+        $dong = PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => 'the smiths']], null, null, null, null)->dong()->first();
+        $this->assertSame('THE SMITHS', $dong->chu_ca_nhan);
+        // file in: tuỳ chọn in_gi theo phân loại, không kèm "nam" của mẫu đuôi đai
+        $this->assertSame(['mau' => 'dau_banh', 'ten' => 'THE SMITHS', 'tuy_chon' => ['in_gi' => 'bo']],
+            $m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan));
+        $this->assertSame(['in_gi' => 'dau'], $m->thamSoFileIn('Con dấu Ø60', 'AN')['tuy_chon']);
+        $this->assertNull($m->thamSoFileIn('Chỉ khuôn', 'AN'), 'Phân loại lạ: để thợ làm tay');
+        // trang công khai: ô tên tự in hoa + chỗ báo lỗi + font Baloo 2
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()
+            ->assertSee('id="loiXt"', false)->assertSee('text-transform:uppercase', false)->assertSee('Baloo+2', false);
+    }
+
     public function test_trang_don_admin_co_nut_tao_file_in_dung_chu_va_co(): void
     {
         $m = $this->taoMau('Móc khóa Karate', null, 20.5);

@@ -108,9 +108,11 @@
           <div class="nhom-tieu" style="margin-top:0">Kiểu</div>
           <div class="pl" id="kieuXt">@foreach($theoKieu->keys() as $i => $k)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-kieu="{{ $k }}">{{ $m->tenKieu($k) }}</button>@endforeach</div>
           @endif
-          <label style="margin-top:14px"><span>{{ $xt['nhan1'] ?? 'Thử tên của bạn' }}</span><input id="tenXt" maxlength="{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}" placeholder="{{ $m->laDai() ? 'Vd: SOPHIA' : 'Vd: Emma' }}" autocomplete="off" @if($m->laDai()) style="text-transform:uppercase" @endif></label>
+          <label style="margin-top:14px"><span>{{ $xt['nhan1'] ?? 'Thử tên của bạn' }}</span><input id="tenXt" maxlength="{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}" placeholder="{{ $m->laDai() ? 'Vd: SOPHIA' : ($xt['goi_y'] ?? 'Vd: Emma') }}" autocomplete="off" @if($m->laDai() || !empty($xt['hoa'])) style="text-transform:uppercase" @endif></label>
           @if($m->laDai())
           <label style="margin-top:10px"><span>{{ $xt['nhan2'] ?? 'Chữ trên đuôi đai trái' }}</span><input id="ten2Xt" maxlength="{{ $m->tenToiDa() }}" placeholder="Vd: 2026" autocomplete="off" style="text-transform:uppercase"></label>
+          @endif
+          @if($m->laDai() || $m->laDauBanh())
           <p id="loiXt" style="color:#B3261E;font-size:14px;margin-top:8px" hidden></p>
           @endif
           @if($mauSac->isNotEmpty())
@@ -121,7 +123,7 @@
           <div class="nhom-tieu">Font chữ</div>
           <div class="pl" id="fontXt">@foreach($fonts as $i => $f)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-font="{{ $f }}"><span class="ten-font">Emma</span><small>{{ $f }}</small></button>@endforeach</div>
           @endif
-          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. @if($m->laDai())Chữ in hoa không dấu, mỗi đuôi đai tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự.@else Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.@endif</p>
+          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. @if($m->laDai())Chữ in hoa không dấu, mỗi đuôi đai tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự.@elseif($m->laDauBanh())Tên tự in hoa, giữ dấu tiếng Việt, tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự; tên dài tự thu nhỏ cho vừa cung dưới.@else Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.@endif</p>
         </div>
       @elseif($theoKieu->count() > 1)
         <div class="thu-ten">
@@ -202,7 +204,7 @@
     veKt();
     if (!d || !cv) return;
     var k = PodVeTen.khung(d, kieu), ten = chuNhap(), x = coNay();
-    if (loiXt) { var loi = ten ? PodVeTen.kiemDai(d, ten) : null; loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
+    if (loiXt) { var loi = ten ? PodVeTen.kiem(d, ten) : null; loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
     PodVeTen.datCao(cv, k);
     document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
     PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font, { ti: x && x.kt && x.kt.ti_le }); });

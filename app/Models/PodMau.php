@@ -99,22 +99,68 @@ class PodMau extends Model
     /**
      * Tham số tạo file in ở app Thay tên cho một dòng đơn: {mau, ten, tuy_chon}. Null nếu mẫu chưa nối app, hoặc cỡ của
      * dòng không có trong bảng (cỡ đã đổi tên sau khi đặt) — khi đó thợ vẫn làm tay theo dòng hướng dẫn file_in.
-     * xem_truoc.thay_ten = {mau: id mẫu app, co: {tên phân loại: giá trị tuỳ chọn kich_thuoc}, mau_dai?: {màu trong đơn: giá trị
-     * tuỳ chọn mau_dai}}. Có bảng mau_dai mà màu của dòng không có trong bảng: cũng null, in sai màu đai là bỏ cả chiếc.
+     * xem_truoc.thay_ten = {mau: id mẫu app, co: {tên phân loại: giá trị tuỳ chọn}, khoa?: tên tuỳ chọn của app nhận giá trị đó
+     * (mặc định kich_thuoc; dấu bánh: in_gi), mau_dai?: {màu trong đơn: giá trị tuỳ chọn mau_dai}}. Có bảng mau_dai mà màu của dòng
+     * không có trong bảng: cũng null, in sai màu đai là bỏ cả chiếc. Chỉ mẫu đuôi đai mới tách "TÊN / NĂM" (tuỳ chọn nam).
      */
     public function thamSoFileIn(?string $tenCo, ?string $chu, ?string $mauSac = null): ?array
     {
         $tt = $this->xem_truoc['thay_ten'] ?? null;
         $co = $tt['co'][(string) $tenCo] ?? null;
         if (empty($tt['mau']) || $co === null || trim((string) $chu) === '') return null;
+        $khoa = (string) ($tt['khoa'] ?? 'kich_thuoc');
+        if (!$this->laDai()) return ['mau' => $tt['mau'], 'ten' => trim((string) $chu), 'tuy_chon' => [$khoa => (string) $co]];
         $p = array_map('trim', explode('/', (string) $chu, 2));
-        $tc = ['kich_thuoc' => (string) $co, 'nam' => $p[1] ?? ''];
+        $tc = [$khoa => (string) $co, 'nam' => $p[1] ?? ''];
         if (!empty($tt['mau_dai'])) {
             $dai = $tt['mau_dai'][(string) $mauSac] ?? null;
             if ($dai === null) return null;
             $tc['mau_dai'] = (string) $dai;
         }
         return ['mau' => $tt['mau'], 'ten' => $p[0], 'tuy_chon' => $tc];
+    }
+
+    /** Mẫu dấu bánh quy (tên chạy cung dưới mặt dấu, app Thay tên mẫu dau_banh). */
+    public function laDauBanh(): bool
+    {
+        return ($this->xem_truoc['ve'] ?? '') === 'dau_banh';
+    }
+
+    /**
+     * Chuẩn hoá + kiểm tên mẫu dấu bánh: in hoa, GIỮ dấu tiếng Việt, chỉ ký tự có trong bảng bề rộng (xem_truoc.chars), cung tên ở
+     * cỡ app sẽ dựng không quá xem_truoc.so.cung_max. Sai thì ném \InvalidArgumentException câu báo seller.
+     * Công thức = kiemDauBanh (_ve_ten.blade.php) = mau/dau_banh/dau_banh.scad của app Thay tên (bảng chars/adv chép từ đó).
+     */
+    public function chuanDauBanh(string $chu): string
+    {
+        $x = $this->xem_truoc;
+        $t = trim(preg_replace('/\s+/u', ' ', $chu));
+        if (class_exists(\Normalizer::class)) $t = \Normalizer::normalize($t, \Normalizer::FORM_C) ?: $t;
+        $t = mb_strtoupper($t, 'UTF-8');
+        if (!preg_match('/[\p{L}\p{N}]/u', $t)) throw new \InvalidArgumentException('nhập tên cần in.');
+        $la = array_values(array_unique(array_filter(mb_str_split($t), fn ($c) => mb_strpos($x['chars'], $c) === false)));
+        if ($la) throw new \InvalidArgumentException('mặt dấu chưa in được ký tự ' . implode(' ', $la) . ". Chỉ nhận chữ cái tiếng Việt / tiếng Anh, số 0–9, dấu cách và & ' . , - !");
+        $toiDa = (int) ($x['toi_da'] ?? 24);
+        if (mb_strlen($t) > $toiDa) throw new \InvalidArgumentException("tên tối đa $toiDa ký tự.");
+        if ($this->cungDauBanh($t) > (float) $x['so']['cung_max'] + 0.01) throw new \InvalidArgumentException('tên dài quá so với cung dưới mặt dấu, bớt chữ hoặc viết tắt.');
+        return $t;
+    }
+
+    /** Độ dài cung (độ) của tên dấu bánh ở cỡ chữ app sẽ dựng: thu nhỏ cho vừa cung_max nhưng không dưới co_min. */
+    public function cungDauBanh(string $t): float
+    {
+        $x = $this->xem_truoc;
+        $so = $x['so'];
+        $tong = 0.0;
+        foreach (mb_str_split($t) as $c) {
+            $i = mb_strpos($x['chars'], $c);
+            $tong += $i === false ? 0.62 : (float) $x['adv'][$i];
+        }
+        $k = (float) $so['he_so_dan'] * max($tong, 0.01) / 0.72;
+        $th = deg2rad((float) $so['cung_max']);
+        $c = (float) $so['cap'] / (2 * 0.72);
+        $co = max((float) $so['co_min'], min((float) $so['co'], $th * $so['r_ten'] / ($k + $th * $c) - 0.001));
+        return rad2deg($k * $co / ($so['r_ten'] - $c * $co));
     }
 
     /** Hệ số nén dọc dòng để $txt vừa đuôi đai (1 = không nén). */

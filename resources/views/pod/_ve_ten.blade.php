@@ -22,7 +22,7 @@ window.PodVeTen = (function () {
     var f = function (v) { return Math.max(0, Math.round(v * (1 - k))); };
     return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
   }
-  var DAM = { 'Dancing Script': '700 ' }; // font cần nét đậm cho đủ dày khi in
+  var DAM = { 'Dancing Script': '700 ', 'Baloo 2': '800 ' }; // font cần nét đậm cho đủ dày khi in
   function css(font, co) { return (DAM[font] || '') + co + 'px "' + font + '"'; }
   var hua = {};
   function choFont(font) {
@@ -196,6 +196,71 @@ window.PodVeTen = (function () {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     return { hop: [0, 0, W, H], mm: [d.w, d.h] };
   }
+  /* ---------- Dấu bánh quy (d.ve = 'dau_banh'): ảnh nền d.nen = con dấu + khuôn + chiếc bánh CHƯA có tên; tên chạy cung dưới
+     mặt dấu, xếp từng chữ y như mau/dau_banh/dau_banh.scad của app Thay tên: bảng bề rộng d.chars/d.adv (em), hằng số d.so,
+     d.banh = {cx, cy: tâm mặt dấu, s: đơn vị khung trên mỗi mm} trong khung d.w × d.h. Máy chủ kiểm lại y hệt (PodMau::chuanDauBanh). */
+  function chuanDauBanh(s) { return String(s || '').normalize('NFC').replace(/\s+/g, ' ').trim().toUpperCase(); }
+  function advDauBanh(d, c) { var i = d.chars.indexOf(c); return i < 0 ? 0.62 : d.adv[i]; }
+  function coDauBanh(d, t) { // -> {co: cỡ chữ OpenSCAD app sẽ dựng, cung: độ dài cung (độ) đo ở giữa chiều cao chữ}
+    var so = d.so, tong = 0;
+    Array.from(t).forEach(function (c) { tong += advDauBanh(d, c); });
+    var k = so.he_so_dan * Math.max(tong, 0.01) / 0.72, th = so.cung_max * Math.PI / 180, c = so.cap / (2 * 0.72);
+    var co = Math.max(so.co_min, Math.min(so.co, th * so.r_ten / (k + th * c) - 0.001));
+    return { co: co, cung: k * co / (so.r_ten - c * co) * 180 / Math.PI };
+  }
+  /** Câu báo lỗi nếu tên không in được lên mặt dấu, null nếu được. */
+  function kiemDauBanh(d, chu) {
+    var t = chuanDauBanh(chu), ds = Array.from(t);
+    if (!/[\p{L}\p{N}]/u.test(t)) return 'Nhập tên cần in.';
+    var la = ds.filter(function (c, i) { return d.chars.indexOf(c) < 0 && ds.indexOf(c) === i; });
+    if (la.length) return 'Mặt dấu chưa in được ký tự ' + la.join(' ') + ". Chỉ nhận chữ cái tiếng Việt / tiếng Anh, số 0–9, dấu cách và & ' . , - !";
+    if (ds.length > (d.toi_da || 24)) return 'Tên tối đa ' + (d.toi_da || 24) + ' ký tự.';
+    if (coDauBanh(d, t).cung > d.so.cung_max + 0.01) return 'Tên dài quá so với cung dưới mặt dấu, bớt chữ hoặc viết tắt.';
+    return null;
+  }
+  var nenDB = {};
+  function veDauBanh(cv, d, chu) {
+    var im = nenDB[d.nen], fnt = d.font || 'Baloo 2';
+    if (!im) { im = nenDB[d.nen] = new Image(); im.src = d.nen; }
+    var t = chuanDauBanh(chu === 'Tên của bạn' ? d.mau_chu : chu);
+    cv._chuDB = t;
+    var lai = function () { if (cv._chuDB === t) veDauBanh(cv, d, chu); };
+    var W = cv.width, H = cv.height;
+    if (!im.complete || !im.naturalWidth) { im.addEventListener('load', lai, { once: true }); return { hop: [0, 0, W, H], mm: [d.w, d.h] }; }
+    if (document.fonts && !document.fonts.check(css(fnt, 20), 'ẮẪ')) choFont(fnt).then(lai); // vẽ tạm, font về thì vẽ lại
+    var ctx = cv.getContext('2d'), k = W / d.w, so = d.so, cx = d.banh.cx * k, cy = d.banh.cy * k, s = d.banh.s * k; // s = px/mm
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H); ctx.drawImage(im, 0, 0, W, H);
+    if (!t) return { hop: [0, 0, W, H], mm: [d.w, d.h] };
+    var em = coDauBanh(d, t).co / 0.72, rTen = so.r_ten, rGiua = rTen - so.cap * em / 2, ds = Array.from(t);
+    var adv = ds.map(function (c) { return advDauBanh(d, c) * em * so.he_so_dan; }), the = adv.reduce(function (a, x) { return a + x; }, 0) / rGiua;
+    ctx.font = css(fnt, em * s);
+    var cao = 0; ds.forEach(function (c) { cao = Math.max(cao, ctx.measureText(c).actualBoundingBoxAscent || 0); });
+    var rGach = Math.min(so.r_gach_max, rTen - cao / s - so.khe_gach - so.net / 2); // dấu chồng thò vào trong -> hạ gạch như app
+    function veLop(mau, lech) { // chữ lõm trên bánh: đáy tối rồi vách sáng lệch xuống phải (như ảnh xem trước của app)
+      ctx.fillStyle = ctx.strokeStyle = mau;
+      if (rGach >= so.r_gach_min) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.lineWidth = so.net * s; ctx.lineCap = 'round';
+        [[so.goc_gach[0], so.goc_gach[1]], [so.goc_gach[2], so.goc_gach[3]]].forEach(function (g) { // góc toán học (ngược chiều kim)
+          ctx.beginPath(); ctx.arc(cx + lech, cy + lech, rGach * s, -g[0] * Math.PI / 180, -g[1] * Math.PI / 180, true); ctx.stroke();
+        });
+      }
+      var a0 = 0;
+      ds.forEach(function (c, i) { // chân chữ ở bán kính r_ten (ngoài), đầu chữ quay vào tâm, đọc trái -> phải
+        var al = (a0 + adv[i] / 2) / rGiua - the / 2, ca = Math.cos(al), sa = Math.sin(al); a0 += adv[i];
+        ctx.setTransform(ca, -sa, sa, ca, cx + s * rTen * sa + lech, cy + s * rTen * ca + lech);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillText(c, 0, 0);
+      });
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    veLop('#8a5a2b', 0); veLop('#b07a40', 0.22 * s);
+    return { hop: [0, 0, W, H], mm: [d.w, d.h] };
+  }
+  /** Kiểm chữ theo kiểu mẫu (đuôi đai / dấu bánh): câu báo lỗi hoặc null. Mẫu khung thường chỉ chặn số ký tự ở ô nhập. */
+  function kiem(d, chu) {
+    if (d && d.ve === 'dai') return kiemDai(d, chu);
+    if (d && d.ve === 'dau_banh') return kiemDauBanh(d, chu);
+    return null;
+  }
   /**
    * Vẽ lên canvas: d = khung (w, h, khung, o_ten), ten = chữ cần in, mau = tên màu nhựa, font = font chữ tên.
    * tuy = {trong: nền trong suốt + bỏ bóng (ảnh kích thước), ti: hệ số cỡ móc khoá}. Trả { hop (px), mm: [rộng, cao] }.
@@ -204,6 +269,7 @@ window.PodVeTen = (function () {
     tuy = tuy || {};
     if (d && d.ve === 'moc_khoa') return veMocKhoa(cv, d, String(ten || '').trim() || 'Tên', mau, font, tuy);
     if (d && d.ve === 'dai') return veDai(cv, d, String(ten || '').trim(), mau, tuy);
+    if (d && d.ve === 'dau_banh') return veDauBanh(cv, d, String(ten || '').trim());
     var W = cv.width, H = cv.height, ctx = cv.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
@@ -354,6 +420,7 @@ window.PodVeTen = (function () {
     return p.length > 1 ? 'linear-gradient(135deg,' + mauHex(p[0]) + ' 0 58%,' + mauHex(p[1]) + ' 58% 100%)' : mauHex(p[0]);
   }
   return { ve: ve, tai: tai, choFont: choFont, mauHex: mauHex, nenChip: nenChip, khung: khung, datCao: datCao, css: css,
-    veKt: veKt, veKichThuoc: veKichThuoc, chuSo: chuSo, chuanDai: chuanDai, ghepDai: ghepDai, kiemDai: kiemDai };
+    veKt: veKt, veKichThuoc: veKichThuoc, chuSo: chuSo, chuanDai: chuanDai, ghepDai: ghepDai, kiemDai: kiemDai,
+    kiem: kiem, chuanDauBanh: chuanDauBanh, coDauBanh: coDauBanh };
 })();
 </script>

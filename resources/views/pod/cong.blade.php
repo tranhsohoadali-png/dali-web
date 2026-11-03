@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Cổng seller | DALI POD</title>
 <link rel="icon" href="/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Pacifico&family=Lobster&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Pacifico&family=Lobster&family=Dancing+Script:wght@700&family=Baloo+2:wght@800&display=swap" rel="stylesheet">
 <style>
 :root{--g:#6BBF1F;--gd:#2F6B05;--gdd:#14320A;--ink:#16300A;--mu:#5B6B52;--bg:#F7FBF2;--gl:#EEF8E2;--gll:#F6FCEE;--bd:#DCEFC6;--pk:#B4235A;--pkl:#FDE6EE;--r:14px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -330,7 +330,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
     }
     var xt = m.xem_truoc, bt0 = m.bien_the[0] || {};
     var fonts = (xt && xt.fonts) || [];
-    var dai = !!(xt && xt.ve === 'dai');
+    var dai = !!(xt && xt.ve === 'dai'), hoa = dai || !!(xt && xt.hoa); // hoa: ô tên tự in hoa (đuôi đai, dấu bánh)
     var sel = { kieu: bt0.kieu || null, ten: bt0.ten, cl: bt0.chat_lieu, mau: '', font: fonts[0] || '', chu: '', chu2: dai ? '2026' : '', sl: 1 };
     function chuGhep() { return dai ? (sel.chu ? PodVeTen.ghepDai(sel.chu, sel.chu2) : '') : sel.chu; } // đuôi đai: "SOPHIA / 2026"
     function giong(b, k) { return (!k.kieu || b.kieu === sel.kieu) && (!k.ten || b.ten === sel.ten) && (!k.cl || b.chat_lieu === sel.cl); }
@@ -387,8 +387,8 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         nhom('Màu nhựa', 'mau', b ? b.mau_sac : [], function (v) { return '<i class="cham" style="background:' + PodVeTen.nenChip(v) + '"></i>' + esc(v); }) +
         nhom('Font chữ', 'font', fonts, function (v) { return '<span style="font:' + PodVeTen.css(v, 18).replace(/"/g, "'") + '">' + esc(sel.chu || 'Emma') + '</span><small class="mu"> ' + esc(v) + '</small>'; });
       if (b) {
-        h += '<label class="f" style="margin-top:12px">' + (dai ? esc(xt.nhan1) + ' (tối đa ' + td + ' ký tự)' : td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
-          '<input id="mChu" maxlength="' + (td || 300) + '" value="' + esc(sel.chu) + '" placeholder="' + (dai ? 'Vd: SOPHIA' : td ? 'Vd: Emma' : 'Bỏ trống nếu không') + '"' + (dai ? ' style="text-transform:uppercase"' : '') + '></label>' +
+        h += '<label class="f" style="margin-top:12px">' + (td && xt && xt.nhan1 ? esc(xt.nhan1) + ' (tối đa ' + td + ' ký tự)' : td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
+          '<input id="mChu" maxlength="' + (td || 300) + '" value="' + esc(sel.chu) + '" placeholder="' + esc(dai ? 'Vd: SOPHIA' : (xt && xt.goi_y) || (td ? 'Vd: Emma' : 'Bỏ trống nếu không')) + '"' + (hoa ? ' style="text-transform:uppercase"' : '') + '></label>' +
           (dai ? '<label class="f" style="margin-top:10px">' + esc(xt.nhan2) + '<input id="mChu2" maxlength="' + td + '" value="' + esc(sel.chu2) + '" placeholder="Vd: 2026" style="text-transform:uppercase"></label>' : '') +
           '<div class="gia-chon"><div><div class="mu">Giá in 1 chiếc · ' + gram(b.gram) + '</div><b>' + tien(b.gia) + '</b></div>' +
           '<label class="f" style="width:110px">Số lượng<input id="mSl" type="number" min="1" max="500" value="' + sel.sl + '"></label></div>' +
@@ -402,9 +402,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       });
       $('mbox').querySelectorAll('.thumbs img').forEach(function (t) { t.onclick = function () { $('mMain').src = t.dataset.u; $('mbox').querySelectorAll('.thumbs img').forEach(function (x) { x.classList.toggle('on', x === t); }); }; });
       if ($('mChu2')) $('mChu2').oninput = function () { sel.chu2 = $('mChu2').value.trim(); baoDai(); veXemTruoc(); };
-      function baoDai() { // chữ đuôi đai: báo ngay khi gõ, chữ không in được thì chưa cho thêm vào đơn
-        if (!dai || !$('mLoi')) return null;
-        var loi = sel.chu ? PodVeTen.kiemDai(xt, chuGhep()) : null;
+      function baoDai() { // chữ đuôi đai / dấu bánh: báo ngay khi gõ, chữ không in được thì chưa cho thêm vào đơn
+        if (!$('mLoi')) return null;
+        var loi = sel.chu ? PodVeTen.kiem(xt, chuGhep()) : null;
         $('mLoi').textContent = loi || ''; $('mLoi').classList.toggle('hide', !loi);
         return loi;
       }

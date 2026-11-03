@@ -123,6 +123,12 @@ class PodSo
                     } catch (\InvalidArgumentException $e) {
                         throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
                     }
+                } elseif ($mau->laDauBanh()) { // dấu bánh: in hoa giữ dấu, kiểm bộ ký tự + độ dài cung như app Thay tên
+                    try {
+                        $chu = $mau->chuanDauBanh($chu);
+                    } catch (\InvalidArgumentException $e) {
+                        throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
+                    }
                 } elseif (mb_strlen($chu) > $toiDa) {
                     throw ValidationException::withMessages(["dong.$i" => "Dòng $so: tên tối đa $toiDa ký tự."]);
                 }
