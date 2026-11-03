@@ -410,8 +410,12 @@ window.PodVeTen = (function () {
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
     }, 'image/png');
   }
-  /** Khung của một kiểu: mẫu nhiều kiểu lấy xem_truoc.kieu[k], mẫu một kiểu dùng chính xem_truoc. */
-  function khung(xt, kieu) { return (xt && xt.kieu && kieu && xt.kieu[kieu]) ? xt.kieu[kieu] : xt; }
+  /** Khung của một kiểu: mẫu nhiều kiểu lấy xem_truoc.kieu[k], mẫu một kiểu dùng chính xem_truoc. Dấu bánh: kiểu chỉ mang
+      phần riêng (ảnh nền, tên mẫu) — gộp vào dữ liệu chung (bảng bề rộng chữ, hằng số cung, tâm mặt bánh). */
+  function khung(xt, kieu) {
+    if (!(xt && xt.kieu && kieu && xt.kieu[kieu])) return xt;
+    return xt.ve === 'dau_banh' ? Object.assign({}, xt, { kieu: null }, xt.kieu[kieu]) : xt.kieu[kieu];
+  }
   /** Đặt chiều cao canvas theo tỉ lệ khung (mẫu khung cố định); móc khoá tự đặt khi vẽ. */
   function datCao(cv, k) { if (k && k.w && k.h) cv.height = Math.round(cv.width * k.h / k.w); }
   /** Nền chấm màu ở chip: một màu, hoặc phối "Đỏ + chữ trắng" -> chấm hai nửa (đế / chữ). */

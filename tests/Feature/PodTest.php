@@ -220,6 +220,12 @@ class PodTest extends TestCase
             $m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan));
         $this->assertSame(['in_gi' => 'dau'], $m->thamSoFileIn('Con dấu Ø60', 'AN')['tuy_chon']);
         $this->assertNull($m->thamSoFileIn('Chỉ khuôn', 'AN'), 'Phân loại lạ: để thợ làm tay');
+        // nhiều kiểu: phân loại "Kiểu · cỡ" -> bộ tuỳ chọn {kieu, in_gi}
+        $xt = $m->xem_truoc;
+        $xt['thay_ten']['co']['Happy Birthday · Con dấu Ø60'] = ['kieu' => 'sinh_nhat', 'in_gi' => 'dau'];
+        $m->update(['xem_truoc' => $xt]);
+        $this->assertSame(['mau' => 'dau_banh', 'ten' => 'EMMA', 'tuy_chon' => ['kieu' => 'sinh_nhat', 'in_gi' => 'dau']],
+            $m->fresh()->thamSoFileIn('Happy Birthday · Con dấu Ø60', 'EMMA'));
         // trang công khai: ô tên tự in hoa + chỗ báo lỗi + font Baloo 2
         $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()
             ->assertSee('id="loiXt"', false)->assertSee('text-transform:uppercase', false)->assertSee('Baloo+2', false);
