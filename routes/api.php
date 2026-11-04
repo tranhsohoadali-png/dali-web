@@ -64,7 +64,7 @@ Route::prefix('pod')->middleware('throttle:120,1')->group(function () {
     Route::get('anh/{ma}/{i}',     [\App\Http\Controllers\PodApiController::class, 'anh'])
         ->whereNumber('i')->middleware('signed:relative')->name('pod.anh');   // link ảnh có chữ ký, 10 phút
     Route::get('anh-kt/{ma}/{mat}/{kieu?}', [\App\Http\Controllers\PodApiController::class, 'anhKt'])
-        ->whereIn('mat', ['truoc', 'ben', 'bia'])->where('kieu', '[a-z0-9-]+')->middleware('signed:relative')->name('pod.anh-kt'); // hình chiếu + bìa từng kiểu
+        ->whereIn('mat', ['truoc', 'ben', 'bia'])->where('kieu', '[a-z0-9_-]+')->middleware('signed:relative')->name('pod.anh-kt'); // hình chiếu + bìa từng kiểu
     Route::get('noi-giao',         [\App\Http\Controllers\PodApiController::class, 'noiGiao']);
     Route::post('noi-giao',        [\App\Http\Controllers\PodApiController::class, 'noiGiaoLuu']);
     Route::delete('noi-giao/{id}', [\App\Http\Controllers\PodApiController::class, 'noiGiaoXoa'])->whereNumber('id');

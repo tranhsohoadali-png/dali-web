@@ -405,6 +405,13 @@ class PodTest extends TestCase
         $this->get($ct['hinh_chieu']['kieu']['yeti']['truoc'])->assertOk();
         $this->get($dom . '/anh-kt/' . $m->ma . '/bia/elf')->assertOk();
         $this->get($dom . '/anh-kt/' . $m->ma . '/bia/khong-co')->assertNotFound();
+        // khoá kiểu có gạch dưới (lót ly: cay_thong, nguoi_tuyet) — route từng chỉ nhận [a-z0-9-] nên ảnh 404
+        Storage::disk('local')->put('pod/anh/stuffer001-truoc-nguoi_tuyet.png', 'png');
+        $kt2 = $m->kich_thuoc; $kt2['kieu']['nguoi_tuyet'] = ['truoc' => 'pod/anh/stuffer001-truoc-nguoi_tuyet.png'];
+        $m->update(['kich_thuoc' => $kt2]);
+        $this->get($dom . '/anh-kt/' . $m->ma . '/truoc/nguoi_tuyet')->assertOk();
+        $this->get($dom . '/anh-kt/' . $m->ma . '/ben/nguoi_tuyet')->assertNotFound();   // kiểu không có 'ben', cấp ngoài cũng không
+        $m->update(['kich_thuoc' => $kt]);
         $this->get($dom . '/kho-mau/' . $m->ma)->assertOk()->assertSee('id="kieuXt"', false)->assertSee('/anh-kt/stuffer001/bia/yeti', false);
         // dòng đơn chụp tên kiểu lấy từ kich_thuoc
         $dong = PodSo::datDon($this->a, [['bien_the_id' => PodBienThe::where('mau_id', $m->id)->where('kieu', 'elf')->value('id'), 'so_luong' => 1]],
