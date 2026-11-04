@@ -220,7 +220,7 @@
     veKt();
     if (!d || !cv) return;
     var k = PodVeTen.khung(d, kieu), ten = chuNhap(), x = coNay();
-    if (loiXt) { var loi = ten ? PodVeTen.kiem(k, ten) : null;   // số xếp tên của kiểu đang chọn loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
+    if (loiXt) { var loi = ten ? PodVeTen.kiem(k, ten) : null; /* số xếp tên của kiểu đang chọn */ loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
     PodVeTen.datCao(cv, k);
     document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
     PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font, { ti: x && x.kt && x.kt.ti_le }); });
