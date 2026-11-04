@@ -133,9 +133,9 @@ class PodMau extends Model
      * cỡ app sẽ dựng không quá xem_truoc.so.cung_max. Sai thì ném \InvalidArgumentException câu báo seller.
      * Công thức = kiemDauBanh (_ve_ten.blade.php) = mau/dau_banh/dau_banh.scad của app Thay tên (bảng chars/adv chép từ đó).
      */
-    public function chuanDauBanh(string $chu): string
+    public function chuanDauBanh(string $chu, ?string $kieu = null): string
     {
-        $x = $this->xem_truoc;
+        $x = $this->xemTruocKieu($kieu);
         $t = trim(preg_replace('/\s+/u', ' ', $chu));
         if (class_exists(\Normalizer::class)) $t = \Normalizer::normalize($t, \Normalizer::FORM_C) ?: $t;
         $t = mb_strtoupper($t, 'UTF-8');
@@ -145,14 +145,14 @@ class PodMau extends Model
         if ($la) throw new \InvalidArgumentException("$mat chưa in được ký tự " . implode(' ', $la) . ". Chỉ nhận chữ cái tiếng Việt / tiếng Anh, số 0–9, dấu cách và & ' . , - !");
         $toiDa = (int) ($x['toi_da'] ?? 24);
         if (mb_strlen($t) > $toiDa) throw new \InvalidArgumentException("tên tối đa $toiDa ký tự.");
-        if ($this->cungDauBanh($t) > (float) $x['so']['cung_max'] + 0.01) throw new \InvalidArgumentException("tên dài quá so với cung dưới $mat, bớt chữ hoặc viết tắt.");
+        if ($this->cungDauBanh($t, $kieu) > (float) $x['so']['cung_max'] + 0.01) throw new \InvalidArgumentException("tên dài quá so với cung dưới $mat, bớt chữ hoặc viết tắt.");
         return $t;
     }
 
     /** Độ dài cung (độ) của tên dấu bánh ở cỡ chữ app sẽ dựng: thu nhỏ cho vừa cung_max nhưng không dưới co_min. */
-    public function cungDauBanh(string $t): float
+    public function cungDauBanh(string $t, ?string $kieu = null): float
     {
-        $x = $this->xem_truoc;
+        $x = $this->xemTruocKieu($kieu);
         $so = $x['so'];
         $tong = 0.0;
         foreach (mb_str_split($t) as $c) {
@@ -164,6 +164,17 @@ class PodMau extends Model
         $c = (float) $so['cap'] / (2 * 0.72);
         $co = max((float) $so['co_min'], min((float) $so['co'], $th * $so['r_ten'] / ($k + $th * $c) - 0.001));
         return rad2deg($k * $co / ($so['r_ten'] - $c * $co));
+    }
+
+    /**
+     * xem_truoc của một kiểu: cấp ngoài gộp xem_truoc.kieu[$kieu] đè lên (như khung() của _ve_ten.blade.php với ve=dau_banh) —
+     * lót ly nhiều kiểu có số xếp tên (so) riêng từng kiểu, vd Santa tên nằm trên băng rôn ngắn hơn.
+     */
+    private function xemTruocKieu(?string $kieu): array
+    {
+        $x = (array) $this->xem_truoc;
+        $k = $kieu !== null ? ($x['kieu'][$kieu] ?? null) : null;
+        return is_array($k) ? array_merge($x, $k) : $x;
     }
 
     /** Hệ số nén dọc dòng để $txt vừa đuôi đai (1 = không nén). */

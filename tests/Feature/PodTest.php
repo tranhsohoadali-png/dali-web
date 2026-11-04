@@ -260,6 +260,31 @@ class PodTest extends TestCase
         $dong = PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 2, 'chu' => 'the smiths']], null, null, null, null)->dong()->first();
         $this->assertSame(['mau' => 'lot_ly', 'ten' => 'THE SMITHS', 'tuy_chon' => []], $m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan));
         $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()->assertSee('lop_ten', false);
+        // nhiều kiểu: Santa tên nằm trên băng rôn ngắn — số xếp tên riêng ở xem_truoc.kieu.santa, máy chủ kiểm theo kiểu phân loại
+        $xt = $m->xem_truoc;
+        $xt['kieu'] = ['santa' => ['ten' => 'Santa và tuần lộc',
+            'so' => array_merge($xt['so'], ['r_ten' => 41.6, 'co' => 5.07, 'co_min' => 3.92, 'cung_max' => 86])]];
+        $xt['thay_ten']['co']['Santa và tuần lộc · Ø90 mm'] = ['kieu' => 'santa'];
+        $m->update(['xem_truoc' => $xt]);
+        $m = $m->fresh();
+        $dai = str_repeat('A', 18);   // 10,8 em: vừa đúng cung 140° của cây thông, dài quá băng Santa (86°)
+        $this->assertSame($dai, $m->chuanDauBanh($dai));
+        try {
+            $m->chuanDauBanh($dai, 'santa');
+            $this->fail('Phải từ chối tên dài quá băng Santa');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('cung dưới lót ly', $e->getMessage());
+        }
+        $this->assertSame('AN', $m->chuanDauBanh('an', 'khong_co'), 'kiểu lạ: dùng số cấp ngoài');
+        $bs = PodBienThe::create(['mau_id' => $m->id, 'kieu' => 'santa', 'ten' => 'Santa và tuần lộc · Ø90 mm', 'chat_lieu' => 'PETG', 'gram' => 26.5]);
+        try {
+            PodSo::datDon($this->a, [['bien_the_id' => $bs->id, 'so_luong' => 1, 'chu' => $dai]], null, null, null, null);
+            $this->fail('Phải chặn tên dài quá băng Santa khi đặt đơn');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('cung dưới lót ly', collect($e->errors())->flatten()->first());
+        }
+        PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => $dai]], null, null, null, null);
+        $this->assertSame(['mau' => 'lot_ly', 'ten' => 'AN', 'tuy_chon' => ['kieu' => 'santa']], $m->thamSoFileIn('Santa và tuần lộc · Ø90 mm', 'AN'));
     }
 
     public function test_trang_don_admin_co_nut_tao_file_in_dung_chu_va_co(): void

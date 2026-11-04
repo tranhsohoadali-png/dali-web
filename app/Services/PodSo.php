@@ -123,9 +123,9 @@ class PodSo
                     } catch (\InvalidArgumentException $e) {
                         throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
                     }
-                } elseif ($mau->laDauBanh()) { // dấu bánh: in hoa giữ dấu, kiểm bộ ký tự + độ dài cung như app Thay tên
+                } elseif ($mau->laDauBanh()) { // dấu bánh / lót ly: in hoa giữ dấu, kiểm bộ ký tự + độ dài cung (số của kiểu) như app Thay tên
                     try {
-                        $chu = $mau->chuanDauBanh($chu);
+                        $chu = $mau->chuanDauBanh($chu, $bt->kieu);
                     } catch (\InvalidArgumentException $e) {
                         throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
                     }
