@@ -39,6 +39,9 @@
     @php
       $xt = $m->tenToiDa() ? $m->xem_truoc : null;
       $mauSac = $m->bienThe->flatMap(fn ($b) => $b->dsMau())->unique()->values();
+      // màu -> các kiểu có màu đó (lót ly: màu theo hình từng kiểu) — đổi kiểu chỉ hiện màu của kiểu
+      $mauKieu = $m->bienThe->flatMap(fn ($b) => array_map(fn ($c) => [$c, (string) $b->kieu], $b->dsMau()))
+          ->groupBy(0)->map(fn ($g) => $g->pluck(1)->unique()->implode(' '));
       $theoKieu = $m->bienThe->groupBy(fn ($b) => (string) $b->kieu);   // '' = mẫu không chia kiểu
       $kieu0 = (string) $theoKieu->keys()->first();
       $khung0 = ($xt && $kieu0 !== '' && isset($xt['kieu'][$kieu0])) ? $xt['kieu'][$kieu0] : $xt;
@@ -117,7 +120,7 @@
           @endif
           @if($mauSac->isNotEmpty())
           <div class="nhom-tieu">Màu nhựa</div>
-          <div class="pl" id="mauXt">@foreach($mauSac as $i => $c)<button type="button" class="chip-mau {{ $i ? '' : 'on' }}" data-mau="{{ $c }}"><i></i>{{ $c }}</button>@endforeach</div>
+          <div class="pl" id="mauXt">@foreach($mauSac as $i => $c)<button type="button" class="chip-mau {{ $i ? '' : 'on' }}" data-mau="{{ $c }}" data-kieu="{{ $mauKieu[$c] ?? '' }}"><i></i>{{ $c }}</button>@endforeach</div>
           @endif
           @if(count($fonts) > 1)
           <div class="nhom-tieu">Font chữ</div>
@@ -186,8 +189,21 @@
   var chips = chon('#mauXt .chip-mau', function (c) { mau = c.dataset.mau; });
   if (chips.length) mau = chips[0].dataset.mau;
   chips.forEach(function (c) { c.querySelector('i').style.background = PodVeTen.nenChip(c.dataset.mau); });
+  function locMau() { // chỉ hiện màu nhựa có ở kiểu đang chọn; màu đang chọn không có thì nhảy sang màu đầu của kiểu
+    var hien = Array.prototype.filter.call(chips, function (c) {
+      var ok = !kieu || !c.dataset.kieu || (' ' + c.dataset.kieu + ' ').indexOf(' ' + kieu + ' ') >= 0;
+      c.style.display = ok ? '' : 'none';
+      return ok;
+    });
+    if (hien.length && !hien.some(function (c) { return c.dataset.mau === mau; })) {
+      chips.forEach(function (c) { c.classList.toggle('on', c === hien[0]); });
+      mau = hien[0].dataset.mau;
+    }
+  }
+  locMau();
   chon('#kieuXt .chip-kieu', function (c) {
     kieu = c.dataset.kieu;
+    locMau();
     if (d && ip) {
       var k = PodVeTen.khung(d, kieu), td = k.toi_da || d.toi_da || 12;
       ip.maxLength = td; document.getElementById('toiDaXt').textContent = td;
@@ -204,7 +220,7 @@
     veKt();
     if (!d || !cv) return;
     var k = PodVeTen.khung(d, kieu), ten = chuNhap(), x = coNay();
-    if (loiXt) { var loi = ten ? PodVeTen.kiem(d, ten) : null; loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
+    if (loiXt) { var loi = ten ? PodVeTen.kiem(k, ten) : null;   // số xếp tên của kiểu đang chọn loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
     PodVeTen.datCao(cv, k);
     document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
     PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font, { ti: x && x.kt && x.kt.ti_le }); });

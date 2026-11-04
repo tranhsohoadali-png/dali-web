@@ -404,7 +404,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       if ($('mChu2')) $('mChu2').oninput = function () { sel.chu2 = $('mChu2').value.trim(); baoDai(); veXemTruoc(); };
       function baoDai() { // chữ đuôi đai / dấu bánh: báo ngay khi gõ, chữ không in được thì chưa cho thêm vào đơn
         if (!$('mLoi')) return null;
-        var loi = sel.chu ? PodVeTen.kiem(xt, chuGhep()) : null;
+        var loi = sel.chu ? PodVeTen.kiem(khungNay() || xt, chuGhep()) : null;   // số xếp tên của kiểu đang chọn
         $('mLoi').textContent = loi || ''; $('mLoi').classList.toggle('hide', !loi);
         return loi;
       }
