@@ -231,6 +231,37 @@ class PodTest extends TestCase
             ->assertSee('id="loiXt"', false)->assertSee('text-transform:uppercase', false)->assertSee('Baloo+2', false);
     }
 
+    public function test_lot_ly_dung_bo_ten_cung_duoi_cua_dau_banh_voi_ten_mat_rieng(): void
+    {
+        // lót ly Giáng sinh: cùng bộ tên cung dưới (ve=dau_banh) nhưng câu báo gọi "lót ly", một phân loại không tuỳ chọn
+        $chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 &'.,-!ĐẤ";
+        $m = $this->taoMau('Lót ly Giáng sinh khắc tên', null, 24.5, 'PETG');
+        $bt = $m->bienThe()->first();
+        $bt->update(['ten' => 'Ø90 · 4 màu']);
+        $m->update(['xem_truoc' => ['loai' => 'ten', 've' => 'dau_banh', 'ten_mat' => 'lót ly', 'toi_da' => 24, 'w' => 100, 'h' => 100,
+            'chars' => $chars, 'adv' => array_fill(0, mb_strlen($chars), 0.6), 'lop_ten' => [['#6e1010', 0.22], ['#f7f5f0', 0]],
+            'so' => ['r_ten' => 37.4, 'co' => 5.76, 'co_min' => 4.61, 'cung_max' => 140, 'cap' => 0.625, 'he_so_dan' => 1.04,
+                     'r_gach_max' => 0, 'r_gach_min' => 999],
+            'thay_ten' => ['mau' => 'lot_ly', 'co' => ['Ø90 · 4 màu' => []]]]]);
+        $m = $m->fresh();
+        $this->assertSame('THE SMITHS', $m->chuanDauBanh('the smiths'));
+        try {
+            $m->chuanDauBanh('AN@');
+            $this->fail('Phải từ chối ký tự lạ');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringStartsWith('lót ly chưa in được ký tự @', $e->getMessage());
+        }
+        try {
+            $m->chuanDauBanh(str_repeat('W', 24));
+            $this->fail('Phải từ chối tên dài quá cung');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('cung dưới lót ly', $e->getMessage());
+        }
+        $dong = PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 2, 'chu' => 'the smiths']], null, null, null, null)->dong()->first();
+        $this->assertSame(['mau' => 'lot_ly', 'ten' => 'THE SMITHS', 'tuy_chon' => []], $m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan));
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()->assertSee('lop_ten', false);
+    }
+
     public function test_trang_don_admin_co_nut_tao_file_in_dung_chu_va_co(): void
     {
         $m = $this->taoMau('Móc khóa Karate', null, 20.5);

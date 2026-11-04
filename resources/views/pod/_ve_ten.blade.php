@@ -198,7 +198,9 @@ window.PodVeTen = (function () {
   }
   /* ---------- Dấu bánh quy (d.ve = 'dau_banh'): ảnh nền d.nen = con dấu + khuôn + chiếc bánh CHƯA có tên; tên chạy cung dưới
      mặt dấu, xếp từng chữ y như mau/dau_banh/dau_banh.scad của app Thay tên: bảng bề rộng d.chars/d.adv (em), hằng số d.so,
-     d.banh = {cx, cy: tâm mặt dấu, s: đơn vị khung trên mỗi mm} trong khung d.w × d.h. Máy chủ kiểm lại y hệt (PodMau::chuanDauBanh). */
+     d.banh = {cx, cy: tâm mặt dấu, s: đơn vị khung trên mỗi mm} trong khung d.w × d.h. Máy chủ kiểm lại y hệt (PodMau::chuanDauBanh).
+     Dùng chung cho mẫu khác có tên chạy cung dưới (lót ly): d.ten_mat = tên mặt in trong câu báo, d.lop_ten = [[màu, lệch mm], ...]
+     vẽ lần lượt (mặc định chữ lõm nâu của dấu bánh); gạch cung tắt bằng so.r_gach_min > so.r_gach_max. */
   function chuanDauBanh(s) { return String(s || '').normalize('NFC').replace(/\s+/g, ' ').trim().toUpperCase(); }
   function advDauBanh(d, c) { var i = d.chars.indexOf(c); return i < 0 ? 0.62 : d.adv[i]; }
   function coDauBanh(d, t) { // -> {co: cỡ chữ OpenSCAD app sẽ dựng, cung: độ dài cung (độ) đo ở giữa chiều cao chữ}
@@ -213,9 +215,10 @@ window.PodVeTen = (function () {
     var t = chuanDauBanh(chu), ds = Array.from(t);
     if (!/[\p{L}\p{N}]/u.test(t)) return 'Nhập tên cần in.';
     var la = ds.filter(function (c, i) { return d.chars.indexOf(c) < 0 && ds.indexOf(c) === i; });
-    if (la.length) return 'Mặt dấu chưa in được ký tự ' + la.join(' ') + ". Chỉ nhận chữ cái tiếng Việt / tiếng Anh, số 0–9, dấu cách và & ' . , - !";
+    var mat = d.ten_mat || 'mặt dấu', Mat = mat.charAt(0).toUpperCase() + mat.slice(1);
+    if (la.length) return Mat + ' chưa in được ký tự ' + la.join(' ') + ". Chỉ nhận chữ cái tiếng Việt / tiếng Anh, số 0–9, dấu cách và & ' . , - !";
     if (ds.length > (d.toi_da || 24)) return 'Tên tối đa ' + (d.toi_da || 24) + ' ký tự.';
-    if (coDauBanh(d, t).cung > d.so.cung_max + 0.01) return 'Tên dài quá so với cung dưới mặt dấu, bớt chữ hoặc viết tắt.';
+    if (coDauBanh(d, t).cung > d.so.cung_max + 0.01) return 'Tên dài quá so với cung dưới ' + mat + ', bớt chữ hoặc viết tắt.';
     return null;
   }
   var nenDB = {};
@@ -252,7 +255,7 @@ window.PodVeTen = (function () {
       });
       ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
-    veLop('#8a5a2b', 0); veLop('#b07a40', 0.22 * s);
+    (d.lop_ten || [['#8a5a2b', 0], ['#b07a40', 0.22]]).forEach(function (l) { veLop(l[0], l[1] * s); });
     return { hop: [0, 0, W, H], mm: [d.w, d.h] };
   }
   /** Kiểm chữ theo kiểu mẫu (đuôi đai / dấu bánh): câu báo lỗi hoặc null. Mẫu khung thường chỉ chặn số ký tự ở ô nhập. */

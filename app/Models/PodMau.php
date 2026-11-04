@@ -141,10 +141,11 @@ class PodMau extends Model
         $t = mb_strtoupper($t, 'UTF-8');
         if (!preg_match('/[\p{L}\p{N}]/u', $t)) throw new \InvalidArgumentException('nhập tên cần in.');
         $la = array_values(array_unique(array_filter(mb_str_split($t), fn ($c) => mb_strpos($x['chars'], $c) === false)));
-        if ($la) throw new \InvalidArgumentException('mặt dấu chưa in được ký tự ' . implode(' ', $la) . ". Chỉ nhận chữ cái tiếng Việt / tiếng Anh, số 0–9, dấu cách và & ' . , - !");
+        $mat = (string) ($x['ten_mat'] ?? 'mặt dấu');   // mẫu khác dùng chung bộ tên cung dưới (lót ly) ghi tên mặt in riêng
+        if ($la) throw new \InvalidArgumentException("$mat chưa in được ký tự " . implode(' ', $la) . ". Chỉ nhận chữ cái tiếng Việt / tiếng Anh, số 0–9, dấu cách và & ' . , - !");
         $toiDa = (int) ($x['toi_da'] ?? 24);
         if (mb_strlen($t) > $toiDa) throw new \InvalidArgumentException("tên tối đa $toiDa ký tự.");
-        if ($this->cungDauBanh($t) > (float) $x['so']['cung_max'] + 0.01) throw new \InvalidArgumentException('tên dài quá so với cung dưới mặt dấu, bớt chữ hoặc viết tắt.');
+        if ($this->cungDauBanh($t) > (float) $x['so']['cung_max'] + 0.01) throw new \InvalidArgumentException("tên dài quá so với cung dưới $mat, bớt chữ hoặc viết tắt.");
         return $t;
     }
 
