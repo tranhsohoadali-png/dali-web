@@ -91,7 +91,7 @@ class PodMau extends Model
             if ($t === '') continue;
             if (preg_match('/[^A-Z0-9 \-]/', $t)) throw new \InvalidArgumentException("$nhan chỉ in được chữ A–Z, số 0–9, dấu cách và dấu gạch ngang.");
             if (strlen($t) > $toiDa) throw new \InvalidArgumentException("$nhan tối đa $toiDa ký tự.");
-            if ($this->nenDai($t) < (float) $x['so']['nen_min']) throw new \InvalidArgumentException("$nhan dài quá so với đuôi đai, bớt chữ hoặc viết tắt.");
+            if ($this->nenDai($t) < (float) $x['so']['nen_min'] || !$this->vuaDai($t)) throw new \InvalidArgumentException("$nhan dài quá so với đuôi đai, bớt chữ hoặc viết tắt.");
         }
         return $nam !== '' ? "$ten / $nam" : $ten;
     }
@@ -175,6 +175,20 @@ class PodMau extends Model
         $x = (array) $this->xem_truoc;
         $k = $kieu !== null ? ($x['kieu'][$kieu] ?? null) : null;
         return is_array($k) ? array_merge($x, $k) : $x;
+    }
+
+    /** Chữ vẽ tay co được tới glyph.wmin (thân 3 lớp in): tổng bề rộng tối thiểu + khe vẫn phải vừa đuôi. Bản sao vuaDai (JS) + vua_dong (app). */
+    private function vuaDai(string $txt): bool
+    {
+        $so = $this->xem_truoc['so'];
+        $gl = $this->xem_truoc['glyph'];
+        $tong = 0.0;
+        $n = 0;
+        foreach (str_split(str_replace(' ', '', $txt)) as $c) {
+            $tong += (float) ($gl[$c]['wmin'] ?? 0);
+            $n++;
+        }
+        return $tong + $so['khe'] * ($n - 1) + 2 * $so['no_x'] * $n + substr_count($txt, ' ') * $so['khoang'] <= $so['l_max'] + 1e-9;
     }
 
     /** Hệ số nén dọc dòng để $txt vừa đuôi đai (1 = không nén). */

@@ -147,6 +147,15 @@ window.PodVeTen = (function () {
     var sx = tong ? Math.min(1, (n.l_max - coDinh) / tong) : 1;
     return { sx: sx, L: tong * sx + coDinh };
   }
+  // chữ vẽ tay co được tới bề rộng tối thiểu glyph.wmin (thân 3 lớp in); tổng tối thiểu vẫn dài quá đuôi thì không in được
+  function vuaDai(d, txt) {
+    var n = d.so, tong = 0, chu = 0, cach = 0;
+    for (var i = 0; i < txt.length; i++) {
+      if (txt[i] === ' ') { cach++; continue; }
+      chu++; tong += (d.glyph[txt[i]] && d.glyph[txt[i]].wmin) || 0;
+    }
+    return tong + n.khe * (chu - 1) + 2 * n.no_x * chu + cach * n.khoang <= n.l_max + 1e-9;
+  }
   /** Câu báo lỗi nếu chữ không in được trên đuôi đai, null nếu được. Máy chủ kiểm lại y hệt (PodMau::chuanDai). */
   function kiemDai(d, chu) {
     var p = tachDai(chu), ds = [[p.ten, 'Tên'], [p.nam, 'Chữ đuôi trái']];
@@ -156,7 +165,7 @@ window.PodVeTen = (function () {
       if (!t) continue;
       if (/[^A-Z0-9 \-]/.test(t)) return nhan + ' chỉ in được chữ A–Z, số 0–9, dấu cách và dấu gạch ngang.';
       if (t.length > (d.toi_da || 10)) return nhan + ' tối đa ' + (d.toi_da || 10) + ' ký tự.';
-      if (doDong(d, t).sx < d.so.nen_min) return nhan + ' dài quá so với đuôi đai, bớt chữ hoặc viết tắt.';
+      if (doDong(d, t).sx < d.so.nen_min || !vuaDai(d, t)) return nhan + ' dài quá so với đuôi đai, bớt chữ hoặc viết tắt.';
     }
     return null;
   }

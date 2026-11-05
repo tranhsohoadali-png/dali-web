@@ -167,6 +167,18 @@ class PodTest extends TestCase
                 $this->assertNotSame('', $e->getMessage());
             }
         }
+        // chữ vẽ tay: chữ M co không quá wmin 1,4 -> 8 chữ M lọt công thức nén (sx 0,55) nhưng tổng tối thiểu dài quá đuôi
+        $xt = $m->xem_truoc;
+        $xt['glyph']['M']['wmin'] = 1.4;
+        $m->update(['xem_truoc' => $xt]);
+        $m = $m->fresh();
+        $this->assertSame('MMMMMM', $m->chuanDai('mmmmmm'));
+        try {
+            $m->chuanDai('MMMMMMMM');
+            $this->fail('Phải từ chối 8 chữ M');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('dài quá', $e->getMessage());
+        }
         // đặt đơn: máy chủ lưu chữ đã chuẩn hoá, chữ không in được bị chặn dù trình duyệt lọt
         $bt = $this->bt($m);
         try {
