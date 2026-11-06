@@ -448,6 +448,28 @@ class PodTest extends TestCase
         $this->assertSame(1300, PodSo::donGia($this->chung, 'PLA'));
     }
 
+    public function test_don_gia_rieng_mot_mau_500d_gram(): void
+    {
+        $m = $this->taoMau('Book nook Gothic', null, 100.0, 'PETG');
+        $m->update(['gia_gram' => 500]);
+        PodBienThe::create(['mau_id' => $m->id, 'ten' => 'PLA', 'gram' => 100.0, 'chat_lieu' => 'PLA']);
+        $m->load('bienThe');
+        $this->assertSame([500, 500], [PodSo::donGia($m, 'PETG'), PodSo::donGia($m, 'PLA')]);   // thay giá nhựa, mọi nhựa
+        $dong = PodSo::datDon($this->a, [['bien_the_id' => $this->bt($m), 'so_luong' => 3]], null, null, null, null)->dong()->first();
+        $this->assertSame([500, 150000], [(int) $dong->don_gia_gram, (int) $dong->thanh_tien]);
+        $this->assertSame([50000, 50000], collect($this->getJson('/api/pod/mau/' . $m->ma, $this->token($this->a))->json('mau.bien_the'))->pluck('gia')->all());
+        $m->update(['tang_gia' => 20]);                                                          // tăng giá cộng trên đơn giá riêng
+        $this->assertSame(600, PodSo::donGia($m->fresh(), 'PLA'));
+        // admin nhập / xoá đơn giá riêng
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $form = ['ten' => $m->ten, 'chu_seller_id' => '', 'hien' => '1', 'gia_gram' => '450', 'bt' => [['id' => $this->bt($m), 'ten' => 'Cỡ gốc', 'gram' => 100]]];
+        $admin->put('/admin/3d/pod/mau/' . $m->id, $form)->assertSessionHasNoErrors();
+        $this->assertSame(450, (int) $m->fresh()->gia_gram);
+        $admin->put('/admin/3d/pod/mau/' . $m->id, ['gia_gram' => ''] + $form)->assertSessionHasNoErrors();
+        $this->assertNull($m->fresh()->gia_gram);
+        $this->assertSame(900, PodSo::donGia($m->fresh(), 'PETG'));
+    }
+
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
     {
         $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');

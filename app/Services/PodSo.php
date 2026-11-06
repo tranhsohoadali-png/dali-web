@@ -62,8 +62,9 @@ class PodSo
     /** Đơn giá mỗi gram của MỘT mẫu: đơn giá chung của nhựa, cộng phần tăng giá riêng của mẫu (pod_mau.tang_gia, %). */
     public static function donGia(PodMau $m, ?string $chatLieu, ?array $bangGia = null): int
     {
-        $bangGia ??= self::bangGia();
-        return (int) round($bangGia[self::chatLieu($chatLieu)] * (100 + (int) $m->tang_gia) / 100);
+        // đơn giá riêng của mẫu (pod_mau.gia_gram, mọi nhựa) thay đơn giá chung, rồi cộng tăng giá %
+        $goc = (int) $m->gia_gram > 0 ? (int) $m->gia_gram : ($bangGia ?? self::bangGia())[self::chatLieu($chatLieu)];
+        return (int) round($goc * (100 + (int) $m->tang_gia) / 100);
     }
 
     /** Giá in 1 chiếc của một phân loại (chưa gồm phí cá nhân hoá). */

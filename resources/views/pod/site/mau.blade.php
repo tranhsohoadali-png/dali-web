@@ -90,7 +90,7 @@
       @if($m->bienThe->isNotEmpty())
         @foreach($theoKieu as $k => $dsKieu)
         <table class="bang gia-co" data-kieu="{{ $k }}" @if($k !== $kieu0) hidden @endif>
-          <thead><tr><th>{{ $k !== '' ? $m->tenKieu($k) . ' · kích thước' : 'Kích thước' }}</th>@foreach($cls as $cl)<th class="so">{{ $cl }}</th>@endforeach</tr></thead>
+          <thead><tr><th>{{ $k !== '' ? $m->tenKieu($k) . ' · kích thước' : 'Kích thước' }}</th>@foreach($cls as $cl)<th class="so">{{ $m->gia_gram && $cls->count() === 1 ? 'Giá in' : $cl }}</th>@endforeach</tr></thead>
           <tbody>
             @foreach($dsKieu->groupBy('ten') as $tenCo => $ds)
             <tr data-co="{{ $tenCo }}"><td><b>{{ $tenCo }}</b></td>
