@@ -760,6 +760,49 @@ class PodTest extends TestCase
         $this->assertGreaterThanOrEqual(0, $this->a->soDu());
     }
 
+    public function test_vi_tra_sau_no_toi_han_muc_roi_cho_nap_tra_no_thi_chay_tiep(): void
+    {
+        $don = fn () => PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null); // 24.440
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $d0 = $don();
+        $this->assertSame('cho_nap', $d0->trang_thai); // chưa có trả sau: như cũ
+
+        // xưởng cấp hạn mức 50.000 -> đơn đang chờ chạy ngay, ví âm thành nợ
+        $admin->post("/admin/3d/pod/seller/{$this->a->id}/han-muc", ['han_muc' => 50000])
+            ->assertSessionHasNoErrors()->assertSessionHas('ok', fn ($m) => str_contains($m, '1 đơn chờ nạp tiền'));
+        $this->assertSame('cho_in', $d0->fresh()->trang_thai);
+        $this->assertSame(-24440, $this->a->soDu());
+
+        $d1 = $don();
+        $d2 = $don();
+        $this->assertSame('cho_in', $d1->trang_thai);  // −48.880 ≥ −50.000
+        $this->assertSame('cho_nap', $d2->trang_thai); // −73.320 vượt hạn mức
+        $this->assertSame(-48880, $this->a->soDu());
+
+        $v = $this->getJson('/api/pod/vi', $this->token($this->a))->assertOk();
+        $this->assertSame(50000, $v->json('han_muc'));
+        $this->assertSame(1120, $v->json('kha_dung'));
+        $this->assertSame(24440 - 1120, $v->json('can_them'));
+        $this->assertSame(50000, $this->getJson('/api/pod/toi', $this->token($this->a))->json('han_muc'));
+        $admin->get('/admin/3d/pod/seller')->assertOk()->assertSee('Đang nợ 48.880đ')->assertSee('Trả sau 50.000đ');
+
+        // seller trả nợ -> đơn chờ tự chạy
+        PodSo::napTien($this->a, 48880, 'nap', 'CK trả nợ');
+        $this->assertSame('cho_in', $d2->fresh()->trang_thai);
+        $this->assertSame(-24440, $this->a->soDu());
+
+        // tắt trả sau khi đang nợ: đơn mới chờ nạp; huỷ đơn chưa in vẫn hoàn tiền
+        $admin->post("/admin/3d/pod/seller/{$this->a->id}/han-muc", ['han_muc' => 0])
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'vượt hạn mức'));
+        $this->assertSame('cho_nap', $don()->trang_thai);
+        $this->postJson("/api/pod/don/{$d2->ma}/huy", [], $this->token($this->a))->assertOk();
+        $this->assertSame(0, $this->a->soDu());
+
+        // seller khác không có trả sau
+        $this->assertSame('cho_nap', PodSo::datDon($this->b, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null)->trang_thai);
+        $admin->post("/admin/3d/pod/seller/{$this->a->id}/han-muc", ['han_muc' => -5])->assertSessionHasErrors('han_muc');
+    }
+
     public function test_huy_don_hoan_tien_va_khong_huy_khi_dang_in(): void
     {
         PodSo::napTien($this->a, 100000, 'nap', null);

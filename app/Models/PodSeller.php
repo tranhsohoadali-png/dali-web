@@ -23,6 +23,12 @@ class PodSeller extends Model
         return (int) DB::table('pod_vi')->where('seller_id', $this->id)->sum('so_tien');
     }
 
+    /** Còn dùng được = số dư + hạn mức trả sau (pod_seller.han_muc, 0 = trả trước). Âm khi xưởng hạ hạn mức dưới số nợ. */
+    public function khaDung(): int
+    {
+        return $this->soDu() + (int) $this->han_muc;
+    }
+
     /** Mã seller 6 ký tự, bỏ chữ dễ nhầm (0/O, 1/I/L) vì seller gõ tay vào nội dung chuyển khoản. */
     public static function taoMa(): string
     {

@@ -223,7 +223,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       '<li>File chỉ được lưu lại để in lại cho chính seller. Cam kết giữ nguyên sau khi ngừng hợp tác.</li></ol>' +
       '<b>Seller đồng ý</b><ol class="cam" style="margin:8px 0 14px">' +
       '<li>Không cho người khác dùng chung tài khoản.</li>' +
-      '<li>Giá in tính theo gram tại thời điểm đặt đơn, trừ thẳng vào ví nạp trước.</li>' +
+      '<li>Giá in tính theo gram tại thời điểm đặt đơn, trừ thẳng vào ví (nạp trước, hoặc trả sau trong hạn mức xưởng cấp).</li>' +
       '<li>Đơn đã lên máy in thì không huỷ được.</li></ol>' +
       '<label style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><input type="checkbox" id="cbDy"> Tôi đã đọc và đồng ý</label>' +
       '<button class="btn" id="bDy" disabled>Đồng ý và vào cổng</button> <button class="btn2" onclick="dangXuat()">Đăng xuất</button></div></div>';
@@ -459,7 +459,9 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
       '<label class="f">Mã đơn Etsy / Amazon (để đối chiếu)<input id="gSan" maxlength="60"></label></div>' +
       '<div class="row" style="margin-top:12px"><label class="f">Ghi chú cho xưởng<textarea id="gGc" rows="2" maxlength="1000"></textarea></label>' +
       '<label class="f">Nhãn line bay (nếu line yêu cầu dán từng kiện)<input id="gNhan" type="file" accept="image/*,application/pdf"></label></div>' +
-      '<p class="mu" style="margin-top:12px">Ví hiện có ' + tien(st.me.so_du) + '. ' + (st.me.so_du >= tong ? 'Đủ tiền: đơn vào hàng đợi in ngay khi gửi.' : 'Chưa đủ: đơn sẽ chờ nạp tiền, tự vào sản xuất khi nạp đủ.') + '</p>' +
+      '<p class="mu" style="margin-top:12px">Ví hiện có ' + tien(st.me.so_du) + '. ' +
+        (st.me.han_muc > 0 ? 'Trả sau còn dùng được ' + tien(Math.max(0, st.me.so_du + st.me.han_muc)) + ' (hạn mức ' + tien(st.me.han_muc) + '). ' : '') +
+        (st.me.so_du + (st.me.han_muc || 0) >= tong ? (st.me.so_du >= tong ? 'Đủ tiền: đơn vào hàng đợi in ngay khi gửi.' : 'Trong hạn mức trả sau: đơn vào hàng đợi in ngay, ví âm thành nợ — chuyển khoản sau để trả.') : 'Chưa đủ: đơn sẽ chờ nạp tiền, tự vào sản xuất khi nạp đủ.') + '</p>' +
       '<button class="btn" id="gGui" style="margin-top:12px"' + (st.noiGiao.length ? '' : ' disabled') + '>Gửi đơn · ' + tien(tong) + '</button></div>';
     main.innerHTML = h;
     main.querySelectorAll('[data-sl]').forEach(function (inp) { inp.onchange = function () { st.gio[+inp.dataset.sl].so_luong = Math.max(1, Math.min(500, parseInt(inp.value, 10) || 1)); luuGio(); veGio(); }; });
@@ -477,7 +479,7 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
         var j = await api('don', { body: fd });
         st.gio = []; luuGio(); capNhatDu(j.so_du);
         st.msg = { ok: j.don.trang_thai === 'cho_in'
-          ? 'Đơn <b>' + esc(j.don.ma) + '</b> đã vào hàng đợi in, đã trừ ' + tien(j.don.tong_tien) + '.'
+          ? 'Đơn <b>' + esc(j.don.ma) + '</b> đã vào hàng đợi in, đã trừ ' + tien(j.don.tong_tien) + '.' + (j.so_du < 0 ? ' Trả sau: đang nợ xưởng ' + tien(-j.so_du) + '.' : '')
           : 'Đơn <b>' + esc(j.don.ma) + '</b> đang chờ nạp tiền (' + tien(j.don.tong_tien) + '). <a href="#vi">Nạp tiền</a> — đơn tự vào sản xuất khi đủ.' };
         go('don');
       } catch (e) { gui.disabled = false; gui.textContent = 'Gửi đơn'; baoLoi(e); }
@@ -509,11 +511,12 @@ ol.cam{padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14
 
   /* ---------- Ví ---------- */
   async function veVi() {
-    var v = await api('vi'); capNhatDu(v.so_du);
-    var n = v.nap;
-    var h = veMsg() + '<h2>Ví</h2><p class="sub">Nạp trước, mỗi đơn trừ thẳng theo gram. ' + giaNhua() + '.</p>' +
-      '<div class="du"><div style="opacity:.85;font-weight:600">Số dư</div><div class="so">' + tien(v.so_du) + '</div>' +
-      (v.can_them > 0 ? '<div style="margin-top:8px;background:rgba(255,255,255,.18);border-radius:10px;padding:8px 12px;font-size:14px">Cần nạp thêm <b>' + tien(v.can_them) + '</b> để chạy các đơn đang chờ nạp tiền.</div>' : '') + '</div>' +
+    var v = await api('vi'); st.me.han_muc = v.han_muc; capNhatDu(v.so_du);
+    var n = v.nap, oNho = '<div style="margin-top:8px;background:rgba(255,255,255,.18);border-radius:10px;padding:8px 12px;font-size:14px">';
+    var h = veMsg() + '<h2>Ví</h2><p class="sub">' + (v.han_muc > 0 ? 'Ví trả sau: đơn vẫn vào máy in khi ví âm, tới hạn mức xưởng cấp; chuyển khoản sau để trả nợ.' : 'Nạp trước, mỗi đơn trừ thẳng theo gram.') + ' ' + giaNhua() + '.</p>' +
+      '<div class="du"><div style="opacity:.85;font-weight:600">' + (v.so_du < 0 ? 'Đang nợ xưởng' : 'Số dư') + '</div><div class="so">' + tien(v.so_du < 0 ? -v.so_du : v.so_du) + '</div>' +
+      (v.han_muc > 0 ? oNho + 'Hạn mức trả sau <b>' + tien(v.han_muc) + '</b> · còn dùng được <b>' + tien(Math.max(0, v.kha_dung)) + '</b>' + (v.so_du < 0 ? '. Chuyển khoản <b>' + tien(-v.so_du) + '</b> để hết nợ.' : '') + '</div>' : '') +
+      (v.can_them > 0 ? oNho + 'Cần nạp thêm <b>' + tien(v.can_them) + '</b> để chạy các đơn đang chờ nạp tiền.</div>' : '') + '</div>' +
       '<div class="box"><b>Nạp tiền bằng chuyển khoản</b><div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;align-items:flex-start">' +
       '<img class="qr" src="' + esc(n.qr) + '" alt="Mã QR chuyển khoản">' +
       '<div style="flex:1;min-width:220px">' + [['Ngân hàng', n.ngan_hang], ['Số tài khoản', n.stk], ['Chủ tài khoản', n.chu_tk], ['Nội dung (bắt buộc)', n.noi_dung]].map(function (r) {

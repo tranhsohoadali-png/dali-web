@@ -164,6 +164,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('seller/{seller}/duyet', [\App\Http\Controllers\Admin\PodSellerController::class, 'duyet'])->name('seller.duyet');
         Route::post('seller/{seller}/tu-choi', [\App\Http\Controllers\Admin\PodSellerController::class, 'tuChoi'])->name('seller.tuchoi');
         Route::post('seller/{seller}/nap',   [\App\Http\Controllers\Admin\PodSellerController::class, 'nap'])->name('seller.nap');
+        Route::post('seller/{seller}/han-muc', [\App\Http\Controllers\Admin\PodSellerController::class, 'hanMuc'])->name('seller.hanmuc');
         Route::get('seller/{seller}/vi',     [\App\Http\Controllers\Admin\PodSellerController::class, 'vi'])->name('seller.vi');
         Route::get('mau',                    [\App\Http\Controllers\Admin\PodMauController::class, 'index'])->name('mau.index');
         Route::get('mau/them',               [\App\Http\Controllers\Admin\PodMauController::class, 'create'])->name('mau.create');

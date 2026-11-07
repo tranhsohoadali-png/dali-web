@@ -1,6 +1,6 @@
 @include('admin.pod._dau', ['tieuDe' => 'Sổ ví ' . $seller->ten])
 <div class="card">
-  <div class="card-h"><div class="card-t">{{ $seller->ten }} ({{ $seller->ma }}) — số dư {{ number_format($soDu, 0, ',', '.') }}đ</div><div class="card-hint">Sổ chỉ thêm dòng, không sửa. Sai thì dùng Điều chỉnh ở trang Seller & ví.</div></div>
+  <div class="card-h"><div class="card-t">{{ $seller->ten }} ({{ $seller->ma }}) — số dư {{ number_format($soDu, 0, ',', '.') }}đ@if($soDu < 0) <span style="color:#B91C1C">(đang nợ {{ number_format(-$soDu, 0, ',', '.') }}đ)</span>@endif @if($seller->han_muc > 0)<span class="muted" style="font-weight:600"> · trả sau hạn mức {{ number_format($seller->han_muc, 0, ',', '.') }}đ</span>@endif</div><div class="card-hint">Sổ chỉ thêm dòng, không sửa. Sai thì dùng Điều chỉnh ở trang Seller & ví.</div></div>
   @if($dong->isEmpty())
     <div class="empty">Chưa có giao dịch.</div>
   @else

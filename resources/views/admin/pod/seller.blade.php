@@ -14,7 +14,8 @@
 </div>
 
 <div class="card">
-  <div class="card-h"><div class="card-t">{{ $items->count() }} seller</div><div class="card-hint">Seller chuyển khoản với nội dung "NAP &lt;mã&gt;". Thấy tiền về thì bấm Nạp — đơn Chờ nạp tiền tự vào hàng đợi in.</div></div>
+  @php $tongNo = $soDu->filter(fn ($t) => $t < 0)->sum(); @endphp
+  <div class="card-h"><div class="card-t">{{ $items->count() }} seller @if($tongNo < 0)<span class="muted" style="font-weight:600"> · seller đang nợ tổng <b style="color:#B91C1C">{{ number_format(-$tongNo, 0, ',', '.') }}đ</b></span>@endif</div><div class="card-hint">Seller chuyển khoản với nội dung "NAP &lt;mã&gt;". Thấy tiền về thì bấm Nạp — đơn Chờ nạp tiền tự vào hàng đợi in. Seller được "Trả sau" thì đơn vẫn chạy khi ví âm, tới hạn mức.</div></div>
   @if($items->isEmpty())
     <div class="empty">Chưa có seller nào.</div>
   @else
@@ -28,7 +29,10 @@
         @if($s->san_ban || $s->link_shop)<div class="muted">Bán trên: {{ $s->san_ban ?: '—' }}@if($s->link_shop) · <a href="{{ $s->link_shop }}" target="_blank" rel="noopener nofollow" style="color:var(--gd)">link shop</a>@endif</div>@endif
         @if($s->loi_nhan)<div class="muted" style="max-width:340px">"{{ $s->loi_nhan }}"</div>@endif
       </td>
-      <td class="num"><b>{{ number_format($du, 0, ',', '.') }}đ</b></td>
+      <td class="num"><b style="{{ $du < 0 ? 'color:#B91C1C' : '' }}">{{ number_format($du, 0, ',', '.') }}đ</b>
+        @if($s->han_muc > 0 || $du < 0)<div class="muted" style="white-space:nowrap">@if($du < 0)Đang nợ {{ number_format(-$du, 0, ',', '.') }}đ<br>@endif
+          @if($s->han_muc > 0)Trả sau {{ number_format($s->han_muc, 0, ',', '.') }}đ · còn {{ number_format(max(0, $du + $s->han_muc), 0, ',', '.') }}đ@endif</div>@endif
+      </td>
       <td>@if($cn)<span class="badge b-cho_nap">{{ $cn->n }} đơn · {{ number_format($cn->t, 0, ',', '.') }}đ</span>@else<span class="muted">—</span>@endif</td>
       <td>@if($s->dong_y_luc)<span class="muted">Đồng ý {{ $s->dong_y_luc->format('d/m/Y') }}</span>@else<span class="muted">Chưa đăng nhập</span>@endif</td>
       <td>@if($s->cho_duyet)<span class="badge b-cho_nap">Chờ duyệt · {{ $s->created_at->format('d/m H:i') }}</span>@elseif($s->hien)<span class="badge b-on">Đang mở</span>@else<span class="badge b-off">Đã khoá</span>@endif</td>
@@ -50,6 +54,14 @@
               <label class="f" style="margin-top:8px"><span>Loại</span><select name="loai"><option value="nap">Nạp tiền (đã thấy tiền về)</option><option value="dieu_chinh">Điều chỉnh (+/−, ghi lý do)</option></select></label>
               <label class="f" style="margin-top:8px"><span>Ghi chú</span><input name="ghi_chu" maxlength="300" placeholder="vd: CK MSB 28/10 lúc 9:15"></label>
               <button class="btn" style="margin-top:10px">Ghi vào ví</button>
+            </form>
+          </details>
+          <details class="edit"><summary class="btn-sm">Trả sau</summary>
+            <form method="POST" action="{{ route('admin.pod.seller.hanmuc', $s) }}" class="edit-box">
+              @csrf
+              <label class="f"><span>Hạn mức trả sau (đ, 0 = nạp trước)</span><input name="han_muc" type="number" min="0" step="10000" value="{{ (int) $s->han_muc }}" required></label>
+              <div class="muted" style="margin-top:6px;max-width:260px">Đơn vẫn vào máy in khi ví âm, tới đúng mức này. Seller chuyển khoản "NAP {{ $s->ma }}" để trả nợ, bấm Nạp tiền như thường.</div>
+              <button class="btn" style="margin-top:10px">Lưu hạn mức</button>
             </form>
           </details>
           <a class="btn-sm" href="{{ route('admin.pod.seller.vi', $s) }}">Sổ ví</a>

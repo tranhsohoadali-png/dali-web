@@ -188,7 +188,7 @@ class PodSo
         return $don->fresh();
     }
 
-    /** Thử trừ ví cho một đơn Chờ nạp tiền. Trả true nếu đã trừ. */
+    /** Thử trừ ví cho một đơn Chờ nạp tiền. Trả true nếu đã trừ. Ví trả sau: số dư được âm tới −hạn mức. */
     public static function thuTru(PodDon $don): bool
     {
         if ($don->da_tru || $don->trang_thai !== 'cho_nap') return false;
@@ -199,7 +199,8 @@ class PodSo
                     'don_id' => $don->id, 'ghi_chu' => 'Đơn ' . $don->ma, 'nguoi_tao' => 'he_thong',
                 ]);
                 $soDu = (int) DB::table('pod_vi')->where('seller_id', $don->seller_id)->sum('so_tien');
-                if ($soDu < 0) throw new ThieuTien();
+                $hanMuc = (int) DB::table('pod_seller')->where('id', $don->seller_id)->value('han_muc');
+                if ($soDu < -$hanMuc) throw new ThieuTien();
                 $don->update(['da_tru' => true]);
             });
             return true;

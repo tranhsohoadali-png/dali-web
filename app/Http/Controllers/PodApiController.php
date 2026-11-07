@@ -101,6 +101,7 @@ class PodApiController extends Controller
             'ma'       => $s->ma,
             'dong_y'   => (bool) $s->dong_y_luc,
             'so_du'    => $s->soDu(),
+            'han_muc'  => (int) $s->han_muc,  // ví trả sau: được nợ tới mức này (0 = trả trước)
             'gia'      => PodSo::bangGia(),   // đ/gram theo chất liệu, vd {"PETG":900,"PLA":1300}
         ]);
     }
@@ -353,7 +354,10 @@ class PodApiController extends Controller
         return response()->json([
             'ok'        => true,
             'so_du'     => $s->soDu(),
-            'can_them'  => max(0, $soChoNap - max(0, $s->soDu())),
+            'han_muc'   => (int) $s->han_muc,
+            'kha_dung'  => $s->khaDung(),
+            // nạp thêm bao nhiêu thì mọi đơn Chờ nạp tiền chạy hết (tính cả hạn mức trả sau)
+            'can_them'  => $soChoNap > 0 ? max(0, $soChoNap - $s->khaDung()) : 0,
             'nap'       => [
                 'ngan_hang' => $bin, 'stk' => $stk, 'chu_tk' => $ten, 'noi_dung' => $noiDung,
                 'qr' => 'https://img.vietqr.io/image/' . rawurlencode($bin) . '-' . rawurlencode($stk) . '-qr_only.png?addInfo=' . rawurlencode($noiDung) . '&accountName=' . rawurlencode($ten),

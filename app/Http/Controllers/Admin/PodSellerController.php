@@ -79,6 +79,24 @@ class PodSellerController extends Controller
         return back()->with('ok', 'Đã cập nhật seller.' . ($doiMk ? ' Đã đăng xuất mọi thiết bị (đổi mật khẩu).' : ''));
     }
 
+    /**
+     * Ví trả sau: đặt hạn mức nợ (đ). Đơn vẫn vào hàng đợi in khi ví âm, miễn không vượt −hạn mức;
+     * seller chuyển khoản "NAP <mã>" sau để trả. 0 = trả trước. Nới hạn mức thì đơn Chờ nạp tiền chạy ngay.
+     */
+    public function hanMuc(Request $request, PodSeller $seller)
+    {
+        $v = $request->validate(['han_muc' => 'required|integer|min:0|max:1000000000']);
+        $cu = (int) $seller->han_muc;
+        $seller->update(['han_muc' => (int) $v['han_muc']]);
+        $n = PodSo::xuLyChoNap($seller);
+        $tien = fn ($x) => number_format($x, 0, ',', '.') . 'đ';
+        return back()->with('ok', ($seller->han_muc > 0
+                ? 'Đã đặt ví trả sau cho ' . $seller->ten . ': hạn mức ' . $tien($seller->han_muc) . ' (cũ ' . $tien($cu) . ').'
+                : 'Đã tắt trả sau của ' . $seller->ten . ' — từ giờ phải nạp trước.')
+            . ($seller->soDu() < -$seller->han_muc ? ' Seller đang nợ ' . $tien(-$seller->soDu()) . ', vượt hạn mức: đơn mới chờ nạp tiền.' : '')
+            . ($n > 0 ? " $n đơn chờ nạp tiền đã vào hàng đợi in." : ''));
+    }
+
     /** Khoá / mở. Khoá thì đăng xuất mọi thiết bị ngay; mẫu riêng vẫn giữ, không chuyển cho ai. */
     public function khoa(PodSeller $seller)
     {
