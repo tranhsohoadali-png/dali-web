@@ -81,6 +81,52 @@ class PodSo
         return $ds->isEmpty() ? null : (int) $ds->min();
     }
 
+    /**
+     * Bảng phân loại gọn cho danh sách mẫu ở admin: gộp theo phân loại × nhựa (khoảng giá giữa các kiểu)
+     * + chi tiết theo kiểu. Phân loại cũ (thu_tu 999) tách riêng, không tính vào khoảng giá.
+     * @return array{so:int, so_kieu:int, chua_kieu:bool, trung:int, nhua:array<string,int>, gop:array, chi_tiet:array, gia:?array, cu:array}
+     */
+    public static function bangPhanLoai(PodMau $m, ?array $bangGia = null): array
+    {
+        $bangGia ??= self::bangGia();
+        [$cu, $ban] = $m->bienThe->partition(fn ($b) => $b->laCu());
+        $cl = fn ($b) => self::chatLieu($b->chat_lieu);
+        $gia = fn ($b) => self::giaBienThe($m, $b, $bangGia);
+        $kieu = fn ($b) => (string) $b->kieu;
+        $nhua = array_values(array_intersect(array_keys(self::CHAT_LIEU), $ban->map($cl)->unique()->all())); // PETG trước
+
+        $gop = [];
+        foreach ($ban->groupBy('ten') as $ten => $g) {
+            $o = [];
+            foreach ($g->groupBy($cl) as $c => $x) {
+                $gg = $x->map($gia);
+                $o[$c] = ['min' => (int) $gg->min(), 'max' => (int) $gg->max(), 'so_kieu' => $x->map($kieu)->unique()->count()];
+            }
+            $gop[(string) $ten] = ['gram' => [(float) $g->min('gram'), (float) $g->max('gram')], 'o' => $o];
+        }
+        $chiTiet = [];
+        foreach ($ban->groupBy($kieu) as $k => $ds) {
+            $hang = [];
+            foreach ($ds as $b) $hang[(string) $b->ten][$cl($b)] = ['gia' => $gia($b), 'gram' => (float) $b->gram];
+            $chiTiet[(string) $k] = ['ten' => (string) $k === '' ? null : $m->tenKieu((string) $k), 'hang' => $hang];
+        }
+        $tatCa = $ban->map($gia);
+        return [
+            'so'        => $ban->count(),
+            'so_kieu'   => count(array_filter(array_keys($chiTiet), fn ($k) => $k !== '')),
+            'chua_kieu' => isset($chiTiet['']) && count($chiTiet) > 1,
+            'trung'     => $ban->count() - $ban->unique(fn ($b) => $kieu($b) . '|' . $b->ten . '|' . $cl($b))->count(),
+            'nhua'      => array_combine($nhua, array_map(fn ($c) => self::donGia($m, $c, $bangGia), $nhua)),
+            'gop'       => $gop,
+            'chi_tiet'  => $chiTiet,
+            'gia'       => $tatCa->isEmpty() ? null : [(int) $tatCa->min(), (int) $tatCa->max()],
+            'cu'        => $cu->map(fn ($b) => [
+                'ten' => (($t = $m->tenKieu($b->kieu)) ? $t . ' · ' : '') . $b->ten, 'nhua' => $cl($b),
+                'gram' => (float) $b->gram, 'gia' => $gia($b),
+            ])->values()->all(),
+        ];
+    }
+
     /** Giá 1 dòng: gram × SL × đơn giá, cộng phí cá nhân hoá MỘT lần cho dòng có chữ riêng. */
     public static function giaDong(float $gram, int $soLuong, int $donGia, int $phiCaNhan, bool $coChu): int
     {

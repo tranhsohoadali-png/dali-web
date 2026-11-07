@@ -85,6 +85,7 @@ class PodSellerController extends Controller
      */
     public function hanMuc(Request $request, PodSeller $seller)
     {
+        $request->merge(['han_muc' => self::boCham($request->input('han_muc'))]);
         $v = $request->validate(['han_muc' => 'required|integer|min:0|max:1000000000']);
         $cu = (int) $seller->han_muc;
         $seller->update(['han_muc' => (int) $v['han_muc']]);
@@ -108,6 +109,7 @@ class PodSellerController extends Controller
     /** Nạp tiền (đã thấy tiền về) hoặc điều chỉnh (+/−). Nạp xong tự đẩy đơn Chờ nạp tiền vào sản xuất. */
     public function nap(Request $request, PodSeller $seller)
     {
+        $request->merge(['so_tien' => self::boCham($request->input('so_tien'))]);
         $v = $request->validate([
             'so_tien' => 'required|integer|not_in:0|min:-100000000|max:100000000',
             'loai'    => 'required|in:nap,dieu_chinh',
@@ -122,6 +124,15 @@ class PodSellerController extends Controller
         $n = PodSo::napTien($seller, (int) $v['so_tien'], $v['loai'], $v['ghi_chu'] ?? null);
         return back()->with('ok', 'Đã ghi ' . number_format($v['so_tien'], 0, ',', '.') . 'đ vào ví ' . $seller->ten . '.'
             . ($n > 0 ? " $n đơn chờ nạp tiền đã vào hàng đợi in." : ''));
+    }
+
+    /** Ô tiền gõ có dấu chấm nghìn ("10.000.000", "-50.000") -> chuỗi số cho validate. Không có chữ số thì để nguyên (validate báo lỗi). */
+    private static function boCham($x): ?string
+    {
+        $x = trim((string) $x);
+        if ($x === '') return null;
+        $so = preg_replace('/\D/', '', $x);
+        return $so === '' ? $x : (preg_match('/^[-\x{2212}]/u', $x) ? '-' : '') . $so;
     }
 
     public function vi(PodSeller $seller)

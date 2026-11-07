@@ -11,6 +11,14 @@ class PodBienThe extends Model
     protected $hidden = ['file_in']; // đường dẫn file in chỉ admin thấy
     protected $casts = ['gram' => 'float', 'kich_thuoc' => 'array'];
 
+    /** Script đăng mẫu không xoá phân loại còn đơn tham chiếu mà đặt thu_tu = 999 ("phân loại cũ"). */
+    public const THU_TU_CU = 999;
+
+    public function laCu(): bool
+    {
+        return (int) $this->thu_tu >= self::THU_TU_CU;
+    }
+
     public function mau()
     {
         return $this->belongsTo(PodMau::class, 'mau_id');

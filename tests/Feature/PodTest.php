@@ -470,6 +470,43 @@ class PodTest extends TestCase
         $this->assertSame(900, PodSo::donGia($m->fresh(), 'PETG'));
     }
 
+    public function test_admin_danh_sach_mau_gop_kieu_phan_loai_nhua(): void
+    {
+        $ma = PodMau::taoMa();
+        $m = PodMau::create(['ma' => $ma, 'ten' => 'Dấu nhiều kiểu', 'hien' => true, 'anh' => [], 'tang_gia' => 20,
+            'kich_thuoc' => ['kieu' => ['a' => ['ten' => 'Kiểu Một'], 'b' => ['ten' => 'Kiểu Hai'], 'c' => ['ten' => 'Kiểu Ba']]]]);
+        $tt = 0;
+        foreach (['a' => 35.4, 'b' => 35.6, 'c' => 35.5] as $k => $g) {
+            foreach (['Cả bộ' => $g, 'Con dấu' => $g - 9] as $ten => $gram) {
+                foreach (['PLA', 'PETG'] as $cl) { // PLA tạo trước: cột vẫn phải PETG trước
+                    PodBienThe::create(['mau_id' => $m->id, 'kieu' => $k, 'ten' => $ten, 'gram' => $gram, 'chat_lieu' => $cl, 'thu_tu' => $tt++]);
+                }
+            }
+        }
+        PodBienThe::create(['mau_id' => $m->id, 'ten' => 'Cỡ cũ', 'gram' => 500, 'chat_lieu' => 'PETG', 'thu_tu' => PodBienThe::THU_TU_CU]);
+        PodMau::create(['ma' => PodMau::taoMa(), 'ten' => 'Mẫu trống', 'hien' => false, 'anh' => []]);
+
+        $bp = PodSo::bangPhanLoai($m->fresh('bienThe'));
+        $this->assertSame([12, 3, false, 0], [$bp['so'], $bp['so_kieu'], $bp['chua_kieu'], $bp['trung']]);
+        $this->assertSame(['PETG' => 1080, 'PLA' => 1560], $bp['nhua']);
+        $this->assertSame(['Cả bộ', 'Con dấu'], array_keys($bp['gop']));
+        $this->assertSame([38232, 38448, 3], [$bp['gop']['Cả bộ']['o']['PETG']['min'], $bp['gop']['Cả bộ']['o']['PETG']['max'], $bp['gop']['Cả bộ']['o']['PETG']['so_kieu']]);
+        $this->assertSame(['Kiểu Một', 'Kiểu Hai', 'Kiểu Ba'], array_column($bp['chi_tiet'], 'ten'));
+        $this->assertSame([28512, 55536], $bp['gia']);                // phân loại cũ 500 g không lọt vào khoảng giá
+        $this->assertCount(1, $bp['cu']);
+        $this->assertSame(540000, $bp['cu'][0]['gia']);
+
+        $html = $this->withSession(['admin_logged_in' => true])->get('/admin/3d/pod/mau')->assertOk()
+            ->assertSeeInOrder(['3 kiểu', '2 phân loại', 'PETG, PLA', '28.512–55.536đ', '+20 %', 'Kiểu Một', 'Kiểu Hai', 'Kiểu Ba',
+                'PETG · 1.080đ/g', 'PLA · 1.560đ/g', '38.232–38.448đ', 'Giá từng kiểu (12)', '1 phân loại cũ', 'Cỡ cũ'])
+            ->assertSee('rowspan="2"', false)->assertSee('Chưa có phân loại')
+            ->assertSee('Cỡ gốc · 18,8 g · PLA 1.300đ/g')                 // mẫu 1 phân loại: một dòng gọn
+            ->assertDontSee('@endif', false)->assertDontSee('@else', false)->assertDontSee('@isset', false)
+            ->getContent();
+        $this->assertSame(4, substr_count($html, '<td>Cả bộ</td>'));      // 1 dòng gộp + 3 dòng từng kiểu, không lặp theo nhựa
+        $this->assertSame(1, substr_count($html, 'Giá từng kiểu'));      // mẫu một kiểu không có phần mở rộng
+    }
+
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
     {
         $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');
@@ -801,6 +838,15 @@ class PodTest extends TestCase
         // seller khác không có trả sau
         $this->assertSame('cho_nap', PodSo::datDon($this->b, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null)->trang_thai);
         $admin->post("/admin/3d/pod/seller/{$this->a->id}/han-muc", ['han_muc' => -5])->assertSessionHasErrors('han_muc');
+        $admin->post("/admin/3d/pod/seller/{$this->a->id}/han-muc", ['han_muc' => 'abc'])->assertSessionHasErrors('han_muc');
+
+        // ô tiền gõ có dấu chấm nghìn
+        $admin->post("/admin/3d/pod/seller/{$this->a->id}/han-muc", ['han_muc' => '10.000.000'])->assertSessionHasNoErrors();
+        $this->assertSame(10000000, (int) $this->a->fresh()->han_muc);
+        $admin->post("/admin/3d/pod/seller/{$this->b->id}/nap", ['so_tien' => '1.250.000', 'loai' => 'nap'])->assertSessionHasNoErrors();
+        $admin->post("/admin/3d/pod/seller/{$this->b->id}/nap", ['so_tien' => '-50.000', 'loai' => 'dieu_chinh', 'ghi_chu' => 'thử'])->assertSessionHasNoErrors();
+        $this->assertSame(1250000 - 50000 - 24440, $this->b->soDu()); // đơn chờ của B chạy khi nạp
+        $admin->get('/admin/3d/pod/seller')->assertSee('value="10.000.000"', false);
     }
 
     public function test_huy_don_hoan_tien_va_khong_huy_khi_dang_in(): void

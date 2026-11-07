@@ -23,26 +23,19 @@
   @if($items->isEmpty())
     <div class="empty">Chưa có mẫu nào ở đây.</div>
   @else
-  <table>
+  <div class="pl-cuon"><table>
     <tr><th></th><th>Mẫu</th><th>Kho</th><th>Phân loại · giá in 1 cái</th><th>Hiện</th><th></th></tr>
     @foreach($items as $m)
     <tr>
       <td>@if(!empty($m->anh))<img class="thumb" src="{{ route('admin.pod.mau.anh', [$m, 0]) }}" alt="" loading="lazy">@endif</td>
       <td><b>{{ $m->ten }}</b><div class="muted">{{ $m->ma }}@if($m->nhom) · {{ $m->nhom }}@endif</div></td>
       <td>@if($m->chu)<span class="badge b-rieng">Riêng · {{ $m->chu->ten }}@if($m->duocCap->isNotEmpty()) +{{ $m->duocCap->count() }}@endif</span>@if($m->duocCap->isNotEmpty())<div class="muted">{{ $m->duocCap->pluck('ten')->implode(', ') }}</div>@endif @else<span class="badge b-chung">Kho chung</span>@endif</td>
-      <td>
-        @forelse($m->bienThe as $b)
-          @php $cl = \App\Services\PodSo::chatLieu($b->chat_lieu); @endphp
-          <div>{{ $b->ten }} · <b>{{ $cl }}</b> — {{ rtrim(rtrim(number_format($b->gram, 1, ',', '.'), '0'), ',') }} g = <b>{{ number_format(\App\Services\PodSo::giaBienThe($m, $b, $bangGia), 0, ',', '.') }}đ</b></div>
-        @empty
-          <span class="muted">Chưa có phân loại, seller chưa đặt được</span>
-        @endforelse
-      </td>
+      <td>@include('admin.pod._phan_loai')</td>
       <td>@if($m->hien)<span class="badge b-on">Hiện</span>@else<span class="badge b-off">Ẩn</span>@endif</td>
       <td><a class="btn-sm" href="{{ route('admin.pod.mau.edit', $m) }}">Sửa</a></td>
     </tr>
     @endforeach
-  </table>
+  </table></div>
   @endif
 </div>
 @include('admin.pod._cuoi')

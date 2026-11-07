@@ -50,7 +50,7 @@
           <details class="edit"><summary class="btn-sm">Nạp tiền</summary>
             <form method="POST" action="{{ route('admin.pod.seller.nap', $s) }}" class="edit-box">
               @csrf
-              <label class="f"><span>Số tiền (đ)</span><input name="so_tien" type="number" step="1000" required></label>
+              <label class="f"><span>Số tiền (đ)</span><input name="so_tien" type="text" inputmode="numeric" data-tien data-am autocomplete="off" placeholder="vd 500.000" required></label>
               <label class="f" style="margin-top:8px"><span>Loại</span><select name="loai"><option value="nap">Nạp tiền (đã thấy tiền về)</option><option value="dieu_chinh">Điều chỉnh (+/−, ghi lý do)</option></select></label>
               <label class="f" style="margin-top:8px"><span>Ghi chú</span><input name="ghi_chu" maxlength="300" placeholder="vd: CK MSB 28/10 lúc 9:15"></label>
               <button class="btn" style="margin-top:10px">Ghi vào ví</button>
@@ -59,7 +59,7 @@
           <details class="edit"><summary class="btn-sm">Trả sau</summary>
             <form method="POST" action="{{ route('admin.pod.seller.hanmuc', $s) }}" class="edit-box">
               @csrf
-              <label class="f"><span>Hạn mức trả sau (đ, 0 = nạp trước)</span><input name="han_muc" type="number" min="0" step="10000" value="{{ (int) $s->han_muc }}" required></label>
+              <label class="f"><span>Hạn mức trả sau (đ, 0 = nạp trước)</span><input name="han_muc" type="text" inputmode="numeric" data-tien autocomplete="off" value="{{ number_format((int) $s->han_muc, 0, ',', '.') }}" required></label>
               <div class="muted" style="margin-top:6px;max-width:260px">Đơn vẫn vào máy in khi ví âm, tới đúng mức này. Seller chuyển khoản "NAP {{ $s->ma }}" để trả nợ, bấm Nạp tiền như thường.</div>
               <button class="btn" style="margin-top:10px">Lưu hạn mức</button>
             </form>
@@ -84,4 +84,24 @@
   </table>
   @endif
 </div>
+<script>
+/* Ô tiền: gõ tới đâu chấm nghìn tới đó (10.000.000), giữ vị trí con trỏ; máy chủ bỏ dấu chấm trước khi kiểm. */
+(function () {
+  function dinh(inp) {
+    var v = inp.value, c = inp.selectionStart == null ? v.length : inp.selectionStart;
+    var am = inp.hasAttribute('data-am') && /^\s*[-−]/.test(v);
+    var soTruoc = v.slice(0, c).replace(/\D/g, '').length;
+    var so = v.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+    var ra = (am ? '-' : '') + so.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    inp.value = ra;
+    var p = am ? 1 : 0, dem = 0;
+    while (p < ra.length && dem < soTruoc) { if (/\d/.test(ra[p])) dem++; p++; }
+    if (document.activeElement === inp) inp.setSelectionRange(p, p);
+  }
+  document.querySelectorAll('input[data-tien]').forEach(function (inp) {
+    inp.addEventListener('input', function () { dinh(inp); });
+    dinh(inp);
+  });
+})();
+</script>
 @include('admin.pod._cuoi')

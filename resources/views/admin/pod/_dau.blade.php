@@ -46,6 +46,18 @@ details.edit summary{list-style:none;cursor:pointer}details.edit summary::-webki
 .empty{text-align:center;padding:34px;color:var(--tx3);font-size:13px}
 .canh{background:#FFF7E6;border:1px solid #F1D084;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400E}
 .thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--bd);background:#fff}
+/* ô phân loại ở danh sách mẫu (_phan_loai) */
+.b-gia{background:#FEF3C7;color:#B45309}.b-loi{background:#FFF0F0;color:#B91C1C}
+.pl-tom{font-size:12.5px;line-height:1.7}.pl-tom .badge{margin-left:3px}
+.pl-kieu{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 6px}
+.chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid var(--bd);background:var(--gll);color:var(--gd);white-space:nowrap}
+.pl-cuon{max-width:100%;overflow-x:auto}table.pl-bang{width:auto;margin-top:2px}
+.pl-bang th,.pl-bang td{padding:3px 14px 3px 0;font-size:12px;border-bottom:1px solid var(--gl);vertical-align:top}
+.pl-bang th{font-size:9.5px;letter-spacing:.4px;background:none;border-bottom-color:var(--bd)}
+.pl-bang td:first-child{min-width:110px;max-width:240px}.pl-bang tr.dau-kieu td{border-top:1.5px solid var(--bd)}
+.pl-mot{font-size:12px;color:#6B7280}
+details.pl-ct{margin-top:5px}details.pl-ct summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--gd)}
+.pl-cu{margin-top:6px;font-size:12px;color:#6B7280}
 </style>
 </head>
 <body>
