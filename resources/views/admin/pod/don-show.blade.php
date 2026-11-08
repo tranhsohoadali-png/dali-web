@@ -27,6 +27,13 @@
           @if($x->so_luong > 1)<div style="margin-top:4px">File 1 chiếc, đơn cần {{ $x->so_luong }} chiếc.</div>@endif
         </div>
         @endif
+        @if(!empty($tepIn[$x->id]))
+        @php $ds = $tepIn[$x->id]; $kb = array_sum(array_column($ds, 'kb')); @endphp
+        <div class="tai-file" style="margin-bottom:6px">
+          <a class="btn-sm" href="{{ route('admin.pod.don.filein', [$don, $x->id]) }}" download>{{ count($ds) > 1 ? 'Tải ' . count($ds) . ' file in (.zip)' : 'Tải file in' }} · {{ $kb >= 1024 ? number_format($kb / 1024, 1, ',', '.') . ' MB' : $kb . ' KB' }}</a>
+          <div style="margin-top:4px">{{ implode(' · ', array_column($ds, 'ten')) }}@if($x->so_luong > 1) — file 1 chiếc, đơn cần {{ $x->so_luong }} chiếc @endif</div>
+        </div>
+        @endif
         {{ $fileIn[$x->bien_the_id] ?? '—' }}
       </td>
       <td class="num">{{ number_format($x->thanh_tien, 0, ',', '.') }}đ</td>

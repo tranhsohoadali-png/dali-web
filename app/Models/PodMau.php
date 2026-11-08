@@ -57,6 +57,46 @@ class PodMau extends Model
         return $this->chu_seller_id !== null;
     }
 
+    /* ---------- File in tải về (chỉ admin; đĩa private pod/file_in/<mã mẫu>/) ---------- */
+
+    public const DUOI_FILE_IN = ['3mf', 'stl', 'obj', 'step', 'stp', 'gcode', 'zip'];
+
+    public function thuMucFileIn(): string
+    {
+        return 'pod/file_in/' . $this->ma;
+    }
+
+    /** File in đã đưa lên: [['ten', 'rel', 'kb', 'luc' (unix)]] xếp theo tên tự nhiên. */
+    public function tepIn(): array
+    {
+        $d = \Illuminate\Support\Facades\Storage::disk('local');
+        $ds = array_map(fn ($rel) => ['ten' => basename($rel), 'rel' => $rel, 'kb' => (int) ceil($d->size($rel) / 1024), 'luc' => $d->lastModified($rel)],
+            $d->files($this->thuMucFileIn()));
+        usort($ds, fn ($a, $b) => strnatcasecmp($a['ten'], $b['ten']));
+        return $ds;
+    }
+
+    /**
+     * File in của MỘT phân loại, tự khớp: file có tên (bỏ đuôi) được nhắc trong ô "File in" của phân loại đó,
+     * cộng file chung (không phân loại nào nhắc tới, vd tấm phụ kiện dùng cho mọi phân loại).
+     */
+    public function tepInCho(?string $fileIn, ?array $tep = null): array
+    {
+        $tep ??= $this->tepIn();
+        $nhac = fn (array $t, ?string $s) => $s !== null && $s !== '' && mb_stripos($s, pathinfo($t['ten'], PATHINFO_FILENAME)) !== false;
+        $moiGhi = $this->bienThe->pluck('file_in')->filter()->all();
+        return array_values(array_filter($tep, fn ($t) => $nhac($t, $fileIn) || !array_filter($moiGhi, fn ($s) => $nhac($t, $s))));
+    }
+
+    /** Tên file an toàn để lưu (giữ chữ Việt, số, khoảng trắng, . - _ ( ) +); null nếu đuôi không cho phép. */
+    public static function tenFileIn(string $goc): ?string
+    {
+        $ten = trim(preg_replace('/[^\p{L}\p{N} ._()+\-]+/u', '_', basename(str_replace('\\', '/', $goc))), ' .');
+        $duoi = strtolower(pathinfo($ten, PATHINFO_EXTENSION));
+        if ($ten === '' || !in_array($duoi, self::DUOI_FILE_IN, true)) return null;
+        return mb_strlen($ten) > 150 ? mb_substr(pathinfo($ten, PATHINFO_FILENAME), 0, 140) . '.' . $duoi : $ten;
+    }
+
     /**
      * Mẫu khắc tên (có ảnh xem trước theo tên): đặt đơn bắt buộc có tên. Trả số ký tự tối đa, hoặc 0 nếu không phải.
      * Mẫu nhiều kiểu: kiểu có toi_da riêng (vd chân thú cưng ô tên hẹp hơn) thì dùng số đó.

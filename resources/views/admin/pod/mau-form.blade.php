@@ -77,6 +77,35 @@
     </table>
   </div>
 
+  @php
+    $tepIn = $mau->exists ? $mau->tepIn() : [];
+    $byte = function ($v) { $v = trim((string) $v); $n = (float) $v; $u = strtolower(substr($v, -1)); return (int) ($n * ($u === 'g' ? 1073741824 : ($u === 'm' ? 1048576 : ($u === 'k' ? 1024 : 1)))); };
+    $gioiHan = min(\Symfony\Component\HttpFoundation\File\UploadedFile::getMaxFilesize(), $byte(ini_get('post_max_size')) ?: PHP_INT_MAX);
+    $nhan = fn ($b) => trim(($mau->tenKieu($b->kieu) ? $mau->tenKieu($b->kieu) . ' · ' : '') . $b->ten . ' · ' . \App\Services\PodSo::chatLieu($b->chat_lieu));
+  @endphp
+  <div class="card">
+    <div class="card-h"><div class="card-t">File in tải về ({{ count($tepIn) }})</div><div class="card-hint">Admin bấm tải ở trang đơn: hệ thống tự chọn file có tên được ghi trong ô "File in" của phân loại khách đặt, cộng file chung (không phân loại nào ghi tên). Trùng tên thì thay bản cũ. Mỗi lần lưu gửi tối đa {{ number_format($gioiHan / 1048576, 0) }} MB.</div></div>
+    <div class="pad">
+      @if($tepIn)
+      <table class="pl-bang" style="margin-bottom:12px">
+        <tr><th>File</th><th class="num">Cỡ</th><th>Đưa lên</th><th>Dùng cho</th><th>Xoá</th></tr>
+        @foreach($tepIn as $t)
+        @php $goc = pathinfo($t['ten'], PATHINFO_FILENAME); $dung = $bienThe->filter(fn ($b) => $b->file_in && mb_stripos($b->file_in, $goc) !== false); @endphp
+        <tr>
+          <td><a href="{{ route('admin.pod.mau.filein', [$mau, $t['ten']]) }}" download style="color:var(--gd);font-weight:700">{{ $t['ten'] }}</a></td>
+          <td class="num">{{ $t['kb'] >= 1024 ? number_format($t['kb'] / 1024, 1, ',', '.') . ' MB' : $t['kb'] . ' KB' }}</td>
+          <td class="muted">{{ date('d/m/Y H:i', $t['luc']) }}</td>
+          <td class="muted">@if($dung->isEmpty())File chung — mọi phân loại @elseif($dung->count() === $bienThe->count())Mọi phân loại ({{ $dung->count() }}) @else{{ $dung->take(6)->map($nhan)->implode('; ') }}@if($dung->count() > 6) … ({{ $dung->count() }} phân loại)@endif @endif</td>
+          <td><label style="font-size:11px;white-space:nowrap;display:flex;gap:4px;align-items:center"><input type="checkbox" name="xoa_file_in[]" value="{{ $t['ten'] }}" style="width:auto"> xoá</label></td>
+        </tr>
+        @endforeach
+      </table>
+      @endif
+      <input type="file" name="file_in_moi[]" multiple accept=".{{ implode(',.', \App\Models\PodMau::DUOI_FILE_IN) }}" data-gioi-han="{{ $gioiHan }}">
+      <div class="muted" id="fileInBao" style="margin-top:6px">.{{ implode(', .', \App\Models\PodMau::DUOI_FILE_IN) }} — đặt tên file đúng như ghi ở ô "File in" của phân loại để tự khớp.</div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-h"><div class="card-t">Ảnh mockup</div><div class="card-hint">Lưu ở đĩa riêng tư; seller chỉ xem qua link có chữ ký 10 phút. Ảnh đầu tiên là ảnh đại diện.</div></div>
     <div class="pad">
@@ -92,4 +121,22 @@
   </div>
   <div class="acts"><button class="btn">{{ $mau->exists ? 'Lưu mẫu' : 'Tạo mẫu' }}</button><a class="btn-sm" href="{{ route('admin.pod.mau.index') }}">Về danh sách</a></div>
 </form>
+<script>
+/* Chặn gửi khi tổng file (ảnh + file in) vượt giới hạn máy chủ — vượt thì máy chủ trả trang lỗi 413, mất cả phần đã sửa. */
+(function () {
+  var o = document.querySelector('input[name="file_in_moi[]"]'), bao = document.getElementById('fileInBao');
+  if (!o) return;
+  var gh = +o.dataset.gioiHan, mb = function (b) { return (b / 1048576).toFixed(1).replace('.', ',') + ' MB'; };
+  o.form.addEventListener('submit', function (e) {
+    var tong = 0;
+    o.form.querySelectorAll('input[type=file]').forEach(function (i) { Array.prototype.forEach.call(i.files, function (f) { tong += f.size; }); });
+    if (gh && tong > gh) {
+      e.preventDefault();
+      bao.style.color = '#B91C1C';
+      bao.textContent = 'Các file chọn nặng ' + mb(tong) + ', vượt ' + mb(gh) + ' mỗi lần lưu. Lưu từng file một, hoặc nhờ chép thẳng file lớn lên máy chủ.';
+      bao.scrollIntoView({ block: 'center' });
+    }
+  });
+})();
+</script>
 @include('admin.pod._cuoi')

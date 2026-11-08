@@ -50,6 +50,7 @@ class PodMauController extends Controller
             ]);
             $this->luuBienThe($mau, $v['bt'] ?? []);
             $this->luuAnh($mau, $request);
+            $this->luuFileIn($mau, $request);
             $this->luuCap($mau, $request);
             return $mau;
         });
@@ -86,6 +87,7 @@ class PodMauController extends Controller
             ]);
             $this->luuBienThe($mau, $v['bt'] ?? []);
             $this->luuAnh($mau, $request);
+            $this->luuFileIn($mau, $request);
             if ($chuMoi === null) $mau->duocCap()->detach(); // Kho chung: mọi seller thấy, danh sách cấp hết nghĩa
             else $this->luuCap($mau, $request);
         });
@@ -97,6 +99,15 @@ class PodMauController extends Controller
             PodNhatKy::ghi($mau->id, 'sua', 'Sửa mẫu riêng');
         }
         return back()->with('ok', 'Đã lưu mẫu.');
+    }
+
+    /** Tải một file in của mẫu (đĩa private, chỉ admin). Tên phải đúng một file đã đưa lên — không nhận đường dẫn. */
+    public function fileIn(PodMau $mau, string $ten)
+    {
+        $t = collect($mau->tepIn())->firstWhere('ten', $ten);
+        if (!$t) abort(404);
+        if ($mau->laRieng()) PodNhatKy::ghi($mau->id, 'tai_file_in', 'Tải file in "' . $t['ten'] . '"');
+        return Storage::disk('local')->download($t['rel'], $t['ten']);
     }
 
     /** Ảnh mẫu cho admin (đĩa private). */
@@ -165,7 +176,16 @@ class PodMauController extends Controller
             'anh_moi'        => 'nullable|array|max:12',
             'anh_moi.*'      => 'image|mimes:jpg,jpeg,png,webp|max:8192',
             'xoa_anh'        => 'nullable|array',
+            'file_in_moi'    => 'nullable|array|max:20',
+            'file_in_moi.*'  => 'file|max:61440',
+            'xoa_file_in'    => 'nullable|array',
+            'xoa_file_in.*'  => 'string|max:200',
         ]);
+        foreach ((array) $request->file('file_in_moi', []) as $f) {
+            if (!PodMau::tenFileIn($f->getClientOriginalName())) {
+                abort(back()->withErrors(['file_in_moi' => 'File in "' . $f->getClientOriginalName() . '" phải là .' . implode(', .', PodMau::DUOI_FILE_IN) . '.'])->withInput());
+            }
+        }
         $v['chu_seller_id'] = isset($v['chu_seller_id']) && $v['chu_seller_id'] !== '' ? (int) $v['chu_seller_id'] : null;
         foreach ($v['bt'] ?? [] as $i => $b) {
             if (trim((string) ($b['ten'] ?? '')) !== '' && empty($b['gram'])) {
@@ -219,6 +239,19 @@ class PodMauController extends Controller
             $anh[] = $f->storeAs('pod/anh', $mau->ma . '-' . bin2hex(random_bytes(4)) . '.' . $ext, 'local');
         }
         $mau->update(['anh' => $anh]);
+    }
+
+    /** Xoá file in được tích, rồi lưu file mới (trùng tên thì thay bản cũ). */
+    private function luuFileIn(PodMau $mau, Request $request): void
+    {
+        $co = collect($mau->tepIn())->keyBy('ten');
+        foreach ((array) $request->input('xoa_file_in', []) as $ten) {
+            if ($t = $co->get((string) $ten)) Storage::disk('local')->delete($t['rel']);
+        }
+        foreach ((array) $request->file('file_in_moi', []) as $f) {
+            $ten = PodMau::tenFileIn($f->getClientOriginalName());
+            if ($ten) Storage::disk('local')->putFileAs($mau->thuMucFileIn(), $f, $ten);
+        }
     }
 
     private function tenSeller(?int $id): string

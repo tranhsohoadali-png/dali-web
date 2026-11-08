@@ -29,9 +29,35 @@ class PodDonController extends Controller
         $don->load(['dong', 'seller']);
         $fileIn = PodBienThe::whereIn('id', $don->dong->pluck('bien_the_id'))->pluck('file_in', 'id');
         $coNhan = (bool) PodSo::duongNhan($don);
-        $mau = \App\Models\PodMau::whereIn('id', $don->dong->pluck('mau_id'))->get()->keyBy('id');
+        $mau = \App\Models\PodMau::with('bienThe')->whereIn('id', $don->dong->pluck('mau_id'))->get()->keyBy('id');
         $taoFile = $don->dong->mapWithKeys(fn ($x) => [$x->id => $mau->get($x->mau_id)?->thamSoFileIn($x->ten_bien_the, $x->chu_ca_nhan, $x->mau_sac)])->filter()->all();
-        return view('admin.pod.don-show', compact('don', 'fileIn', 'coNhan', 'taoFile'));
+        $tepIn = $don->dong->mapWithKeys(fn ($x) => [$x->id => $mau->get($x->mau_id)?->tepInCho($fileIn[$x->bien_the_id] ?? null) ?? []])->filter()->all();
+        return view('admin.pod.don-show', compact('don', 'fileIn', 'coNhan', 'taoFile', 'tepIn'));
+    }
+
+    /**
+     * Tải file in của một dòng đơn, tự chọn đúng file theo phân loại (PodMau::tepInCho):
+     * 1 file -> tải thẳng; nhiều file (vd thân + đế) -> gói .zip một lần bấm.
+     */
+    public function taiFileIn(PodDon $don, int $dong)
+    {
+        $x = $don->dong()->whereKey($dong)->firstOrFail();
+        $m = \App\Models\PodMau::with('bienThe')->find($x->mau_id);
+        $tep = $m ? $m->tepInCho(PodBienThe::whereKey($x->bien_the_id)->value('file_in')) : [];
+        if (!$tep) abort(404);
+        if ($m->laRieng()) \App\Models\PodNhatKy::ghi($m->id, 'tai_file_in', 'Đơn ' . $don->ma . ': ' . implode(', ', array_column($tep, 'ten')));
+        $d = Storage::disk('local');
+        if (count($tep) === 1) return $d->download($tep[0]['rel'], $tep[0]['ten']);
+        $ten = trim(preg_replace('/[^\p{L}\p{N} ._()+\-]+/u', '_', $don->ma . ' - ' . $x->ten_mau . ' - ' . $x->ten_bien_the), ' .') . '.zip';
+        $tam = tempnam(sys_get_temp_dir(), 'podin');
+        $zip = new \ZipArchive();
+        $zip->open($tam, \ZipArchive::OVERWRITE);
+        foreach ($tep as $t) {
+            $zip->addFile($d->path($t['rel']), $t['ten']);
+            $zip->setCompressionName($t['ten'], \ZipArchive::CM_STORE); // 3MF đã nén sẵn
+        }
+        $zip->close();
+        return response()->download($tam, $ten, ['Content-Type' => 'application/zip'])->deleteFileAfterSend();
     }
 
     /** Chờ in -> Đang in -> Đã giao (kèm mã vận đơn). Không lùi trạng thái; huỷ dùng nút riêng. */

@@ -172,6 +172,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('mau/{mau}/sua',          [\App\Http\Controllers\Admin\PodMauController::class, 'edit'])->name('mau.edit');
         Route::put('mau/{mau}',              [\App\Http\Controllers\Admin\PodMauController::class, 'update'])->name('mau.update');
         Route::get('mau/{mau}/anh/{i}',      [\App\Http\Controllers\Admin\PodMauController::class, 'anh'])->whereNumber('i')->name('mau.anh');
+        Route::get('mau/{mau}/file-in/{ten}', [\App\Http\Controllers\Admin\PodMauController::class, 'fileIn'])->name('mau.filein');
         Route::post('gia-gram',              [\App\Http\Controllers\Admin\PodMauController::class, 'giaGram'])->name('giagram');
         Route::get('nhat-ky',                [\App\Http\Controllers\Admin\PodMauController::class, 'nhatKy'])->name('nhatky');
         Route::get('don',                    [\App\Http\Controllers\Admin\PodDonController::class, 'index'])->name('don.index');
@@ -179,6 +180,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('don/{don}/trang-thai',  [\App\Http\Controllers\Admin\PodDonController::class, 'trangThai'])->name('don.status');
         Route::post('don/{don}/huy',         [\App\Http\Controllers\Admin\PodDonController::class, 'huy'])->name('don.huy');
         Route::get('don/{don}/nhan',         [\App\Http\Controllers\Admin\PodDonController::class, 'nhan'])->name('don.nhan');
+        Route::get('don/{don}/file-in/{dong}', [\App\Http\Controllers\Admin\PodDonController::class, 'taiFileIn'])->whereNumber('dong')->name('don.filein');
         Route::get('tho-in',                 [\App\Http\Controllers\Admin\PodThoInController::class, 'index'])->name('thoin.index');
         Route::post('tho-in',                [\App\Http\Controllers\Admin\PodThoInController::class, 'store'])->name('thoin.store');
         Route::put('tho-in/{tho}',           [\App\Http\Controllers\Admin\PodThoInController::class, 'update'])->name('thoin.update');

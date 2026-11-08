@@ -28,7 +28,9 @@
     @foreach($items as $m)
     <tr>
       <td>@if(!empty($m->anh))<img class="thumb" src="{{ route('admin.pod.mau.anh', [$m, 0]) }}" alt="" loading="lazy">@endif</td>
-      <td><b>{{ $m->ten }}</b><div class="muted">{{ $m->ma }}@if($m->nhom) · {{ $m->nhom }}@endif</div></td>
+      <td><b>{{ $m->ten }}</b><div class="muted">{{ $m->ma }}@if($m->nhom) · {{ $m->nhom }}@endif</div>
+        @php $soTep = count($m->tepIn()); @endphp
+        <div class="muted">@if($soTep)<a href="{{ route('admin.pod.mau.edit', $m) }}" style="color:var(--gd)">{{ $soTep }} file in tải được</a>@else Chưa có file in tải được @endif</div></td>
       <td>@if($m->chu)<span class="badge b-rieng">Riêng · {{ $m->chu->ten }}@if($m->duocCap->isNotEmpty()) +{{ $m->duocCap->count() }}@endif</span>@if($m->duocCap->isNotEmpty())<div class="muted">{{ $m->duocCap->pluck('ten')->implode(', ') }}</div>@endif @else<span class="badge b-chung">Kho chung</span>@endif</td>
       <td>@include('admin.pod._phan_loai')</td>
       <td>@if($m->hien)<span class="badge b-on">Hiện</span>@else<span class="badge b-off">Ẩn</span>@endif</td>

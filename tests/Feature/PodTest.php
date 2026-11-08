@@ -508,6 +508,67 @@ class PodTest extends TestCase
         $this->assertSame(1, substr_count($html, 'Giá từng kiểu'));      // mẫu một kiểu không có phần mở rộng
     }
 
+    public function test_admin_tai_file_in_tu_khop_phan_loai_mot_file_hoac_zip(): void
+    {
+        $m = $this->taoMau('Khay vỏ sò', null, 48.2, 'PETG');
+        $b5 = $m->bienThe()->first();
+        $b5->update(['ten' => '5 inch', 'file_in' => 'A1 · E:\\POD\\Khay · file "Khay - A1 5 in.3mf" · ~2.5 giờ']);
+        $b8 = PodBienThe::create(['mau_id' => $m->id, 'ten' => '8 inch', 'gram' => 135.6, 'chat_lieu' => 'PETG', 'file_in' => 'A1 · file "Khay - A1 8 in.3mf"', 'thu_tu' => 1]);
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $form = ['ten' => $m->ten, 'chu_seller_id' => '', 'hien' => '1', 'bt' => [
+            ['id' => $b5->id, 'ten' => '5 inch', 'gram' => 48.2, 'chat_lieu' => 'PETG', 'file_in' => $b5->file_in],
+            ['id' => $b8->id, 'ten' => '8 inch', 'gram' => 135.6, 'chat_lieu' => 'PETG', 'file_in' => $b8->file_in]]];
+
+        $admin->put("/admin/3d/pod/mau/{$m->id}", $form + ['file_in_moi' => [UploadedFile::fake()->createWithContent('virus.exe', 'x')]])
+            ->assertSessionHasErrors('file_in_moi');
+        $admin->put("/admin/3d/pod/mau/{$m->id}", $form + ['file_in_moi' => [
+            UploadedFile::fake()->createWithContent('Khay - A1 5 in.3mf', 'NAM'),
+            UploadedFile::fake()->createWithContent('Khay - A1 8 in.3mf', 'TAM'),
+            UploadedFile::fake()->createWithContent('De chung (phu kien).3mf', 'DE'),
+        ]])->assertSessionHasNoErrors();
+
+        $m = $m->fresh('bienThe');
+        $this->assertSame(['De chung (phu kien).3mf', 'Khay - A1 5 in.3mf', 'Khay - A1 8 in.3mf'], array_column($m->tepIn(), 'ten'));
+        $this->assertSame(['De chung (phu kien).3mf', 'Khay - A1 5 in.3mf'], array_column($m->tepInCho($b5->file_in), 'ten')); // đúng cỡ + file chung
+        $this->assertSame(['De chung (phu kien).3mf', 'Khay - A1 8 in.3mf'], array_column($m->tepInCho($b8->file_in), 'ten'));
+        $admin->get("/admin/3d/pod/mau/{$m->id}/sua")->assertOk()->assertSee('File in tải về (3)')->assertSee('File chung — mọi phân loại');
+        $admin->get('/admin/3d/pod/mau')->assertOk()->assertSee('3 file in tải được');
+        $admin->get(route('admin.pod.mau.filein', [$m, 'Khay - A1 8 in.3mf']))->assertOk()->assertDownload('Khay - A1 8 in.3mf');
+        $admin->get(route('admin.pod.mau.filein', [$m, 'khong-co.3mf']))->assertNotFound();
+        $admin->get("/admin/3d/pod/mau/{$m->id}/file-in/..")->assertNotFound();
+
+        // trang đơn: dòng 5 inch có 2 file -> một nút tải .zip đủ cả hai
+        $d = PodSo::datDon($this->a, [['bien_the_id' => $b5->id, 'so_luong' => 2]], null, null, null, null);
+        $dong = $d->dong()->first();
+        $admin->get("/admin/3d/pod/don/{$d->id}")->assertOk()->assertSee('Tải 2 file in (.zip)')->assertSee('De chung (phu kien).3mf · Khay - A1 5 in.3mf');
+        $r = $admin->get(route('admin.pod.don.filein', [$d, $dong->id]))->assertOk();
+        $this->assertStringContainsString('.zip', $r->headers->get('content-disposition'));
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($r->baseResponse->getFile()->getPathname()));
+        $this->assertSame(['DE', 'NAM'], [$zip->getFromName('De chung (phu kien).3mf'), $zip->getFromName('Khay - A1 5 in.3mf')]);
+        $this->assertSame(2, $zip->numFiles);
+        $zip->close();
+
+        // bỏ file chung -> còn 1 file: tải thẳng, không zip
+        $admin->put("/admin/3d/pod/mau/{$m->id}", $form + ['xoa_file_in' => ['De chung (phu kien).3mf']])->assertSessionHasNoErrors();
+        $admin->get(route('admin.pod.don.filein', [$d, $dong->id]))->assertOk()->assertDownload('Khay - A1 5 in.3mf');
+        $admin->get("/admin/3d/pod/don/{$d->id}")->assertSee('Tải file in');
+
+        // mẫu không có file: không nút, link 404; chưa đăng nhập admin thì không tải được
+        $d2 = PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null);
+        $this->withSession(['admin_logged_in' => true])->get("/admin/3d/pod/don/{$d2->id}")->assertOk()->assertDontSee('Tải file in');
+        $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.filein', [$d2, $d2->dong()->first()->id]))->assertNotFound();
+        $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.filein', [$d2, $dong->id]))->assertNotFound(); // dòng của đơn khác
+        $this->flushSession();
+        $this->get(route('admin.pod.don.filein', [$d, $dong->id]))->assertRedirect();
+        $this->get(route('admin.pod.mau.filein', [$m, 'Khay - A1 8 in.3mf']))->assertRedirect();
+
+        // mẫu riêng: tải file in ghi nhật ký
+        Storage::disk('local')->put("pod/file_in/{$this->riengA->ma}/Rieng.3mf", 'R');
+        $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.mau.filein', [$this->riengA, 'Rieng.3mf']))->assertDownload('Rieng.3mf');
+        $this->assertTrue(PodNhatKy::where('mau_id', $this->riengA->id)->where('hanh_dong', 'tai_file_in')->exists());
+    }
+
     public function test_gia_theo_chat_lieu_petg_900_pla_1300(): void
     {
         $petg = $this->taoMau('Móc khoá PETG', null, 10.0, 'PETG');
