@@ -54,6 +54,14 @@ Route::prefix('3d')->group(function () {
  * Cổng seller POD (/api/pod/*). Trang cổng ở /pod cùng tên miền. Token header X-Pod-Token.
  * Mẫu riêng của seller khác luôn trả 404 (PodMau::hienCho).
  */
+// Ảnh mẫu (link có chữ ký): bộ đếm RIÊNG, rộng — một trang kho tải hàng chục ảnh; đếm chung với API thì nhiều
+// nhân viên ngồi chung mạng (cùng IP) lướt kho là chạm 120/phút và bị chặn luôn cả gửi đơn.
+Route::prefix('pod')->middleware('throttle:900,1,pod-anh')->group(function () {
+    Route::get('anh/{ma}/{i}',     [\App\Http\Controllers\PodApiController::class, 'anh'])
+        ->whereNumber('i')->middleware('signed:relative')->name('pod.anh');   // link ảnh có chữ ký, 10 phút
+    Route::get('anh-kt/{ma}/{mat}/{kieu?}', [\App\Http\Controllers\PodApiController::class, 'anhKt'])
+        ->whereIn('mat', ['truoc', 'ben', 'bia'])->where('kieu', '[a-z0-9_-]+')->middleware('signed:relative')->name('pod.anh-kt'); // hình chiếu + bìa từng kiểu
+});
 Route::prefix('pod')->middleware('throttle:120,1')->group(function () {
     Route::post('dang-nhap',       [\App\Http\Controllers\PodApiController::class, 'dangNhap']);
     Route::get('toi',              [\App\Http\Controllers\PodApiController::class, 'toi']);
@@ -61,15 +69,24 @@ Route::prefix('pod')->middleware('throttle:120,1')->group(function () {
     Route::post('dang-xuat',       [\App\Http\Controllers\PodApiController::class, 'dangXuat']);
     Route::get('mau',              [\App\Http\Controllers\PodApiController::class, 'mau']);
     Route::get('mau/{ma}',         [\App\Http\Controllers\PodApiController::class, 'mauChiTiet']);
-    Route::get('anh/{ma}/{i}',     [\App\Http\Controllers\PodApiController::class, 'anh'])
-        ->whereNumber('i')->middleware('signed:relative')->name('pod.anh');   // link ảnh có chữ ký, 10 phút
-    Route::get('anh-kt/{ma}/{mat}/{kieu?}', [\App\Http\Controllers\PodApiController::class, 'anhKt'])
-        ->whereIn('mat', ['truoc', 'ben', 'bia'])->where('kieu', '[a-z0-9_-]+')->middleware('signed:relative')->name('pod.anh-kt'); // hình chiếu + bìa từng kiểu
     Route::get('noi-giao',         [\App\Http\Controllers\PodApiController::class, 'noiGiao']);
     Route::post('noi-giao',        [\App\Http\Controllers\PodApiController::class, 'noiGiaoLuu']);
     Route::delete('noi-giao/{id}', [\App\Http\Controllers\PodApiController::class, 'noiGiaoXoa'])->whereNumber('id');
+    Route::post('noi-giao/{id}',   [\App\Http\Controllers\PodApiController::class, 'noiGiaoSua'])->whereNumber('id');
+    Route::post('noi-giao/{id}/mac-dinh', [\App\Http\Controllers\PodApiController::class, 'noiGiaoMacDinh'])->whereNumber('id');
     Route::get('don',              [\App\Http\Controllers\PodApiController::class, 'don']);
-    Route::post('don',             [\App\Http\Controllers\PodApiController::class, 'donTao'])->middleware('throttle:30,1');
+    Route::post('don',             [\App\Http\Controllers\PodApiController::class, 'donTao'])->middleware('throttle:30,1,pod-don');   // tham số 3 = bộ đếm riêng; thiếu nó thì dùng CHUNG bộ đếm IP với throttle:120 của nhóm -> chặn nhầm gửi đơn
     Route::post('don/{ma}/huy',    [\App\Http\Controllers\PodApiController::class, 'donHuy']);
     Route::get('vi',               [\App\Http\Controllers\PodApiController::class, 'vi']);
+    // Tài khoản: hồ sơ, đổi mật khẩu, thiết bị đăng nhập, nhân viên (2026-11-08)
+    Route::get('ho-so',            [\App\Http\Controllers\PodApiController::class, 'hoSo']);
+    Route::post('ho-so',           [\App\Http\Controllers\PodApiController::class, 'hoSoLuu']);
+    Route::post('doi-mat-khau',    [\App\Http\Controllers\PodApiController::class, 'doiMatKhau'])->middleware('throttle:10,1,pod-doimk');
+    Route::get('phien',            [\App\Http\Controllers\PodApiController::class, 'phien']);
+    Route::post('phien/dang-xuat-khac', [\App\Http\Controllers\PodApiController::class, 'phienDangXuatKhac']);
+    Route::delete('phien/{id}',    [\App\Http\Controllers\PodApiController::class, 'phienXoa'])->whereNumber('id');
+    Route::get('nhan-vien',        [\App\Http\Controllers\PodApiController::class, 'nhanVien']);
+    Route::post('nhan-vien',       [\App\Http\Controllers\PodApiController::class, 'nhanVienTao'])->middleware('throttle:20,1,pod-nv');
+    Route::post('nhan-vien/{id}',  [\App\Http\Controllers\PodApiController::class, 'nhanVienSua'])->whereNumber('id');
+    Route::delete('nhan-vien/{id}', [\App\Http\Controllers\PodApiController::class, 'nhanVienXoa'])->whereNumber('id');
 });

@@ -17,7 +17,7 @@ class PodSellerController extends Controller
     public function index()
     {
         // Đơn đăng ký chờ duyệt lên đầu
-        $items = PodSeller::orderByDesc('cho_duyet')->orderByDesc('created_at')->get();
+        $items = PodSeller::with('nhanVien')->orderByDesc('cho_duyet')->orderByDesc('created_at')->get();
         $soDu = DB::table('pod_vi')->selectRaw('seller_id, sum(so_tien) t')->groupBy('seller_id')->pluck('t', 'seller_id');
         $choNap = PodDon::where('trang_thai', 'cho_nap')->selectRaw('seller_id, count(*) n, sum(tong_tien) t')->groupBy('seller_id')->get()->keyBy('seller_id');
         return view('admin.pod.seller', compact('items', 'soDu', 'choNap'));
@@ -32,8 +32,8 @@ class PodSellerController extends Controller
             'ghi_chu' => 'nullable|string|max:500',
         ]);
         $sdt = preg_replace('/[^0-9+]/', '', $v['sdt']);
-        if (PodSeller::where('sdt', $sdt)->exists()) {
-            return back()->withErrors(['sdt' => 'Số điện thoại này đã có seller.'])->withInput();
+        if (PodSeller::sdtDaDung($sdt)) {
+            return back()->withErrors(['sdt' => 'Số điện thoại này đã có seller hoặc là tài khoản nhân viên của seller.'])->withInput();
         }
         $s = PodSeller::create([
             'ma' => PodSeller::taoMa(), 'ten' => $v['ten'], 'sdt' => $sdt,
@@ -68,15 +68,15 @@ class PodSellerController extends Controller
             'ghi_chu' => 'nullable|string|max:500',
         ]);
         $sdt = preg_replace('/[^0-9+]/', '', $v['sdt']);
-        if (PodSeller::where('sdt', $sdt)->where('id', '!=', $seller->id)->exists()) {
-            return back()->withErrors(['sdt' => 'Số điện thoại này đã có seller khác.'])->withInput();
+        if (PodSeller::sdtDaDung($sdt, $seller->id)) {
+            return back()->withErrors(['sdt' => 'Số điện thoại này đã có seller khác hoặc là tài khoản nhân viên.'])->withInput();
         }
         $data = ['ten' => $v['ten'], 'sdt' => $sdt, 'ghi_chu' => $v['ghi_chu'] ?? null];
         $doiMk = !empty($v['matkhau']);
         if ($doiMk) $data['matkhau'] = Hash::make($v['matkhau']);
         $seller->update($data);
-        if ($doiMk) PodPhien::where('seller_id', $seller->id)->delete();
-        return back()->with('ok', 'Đã cập nhật seller.' . ($doiMk ? ' Đã đăng xuất mọi thiết bị (đổi mật khẩu).' : ''));
+        if ($doiMk) PodPhien::where('seller_id', $seller->id)->whereNull('nhan_vien_id')->delete();   // chỉ máy của chủ shop; nhân viên giữ phiên
+        return back()->with('ok', 'Đã cập nhật seller.' . ($doiMk ? ' Đã đăng xuất mọi máy của chủ shop (đổi mật khẩu). Tài khoản nhân viên của shop vẫn đăng nhập — chủ shop khoá ở mục Nhân viên nếu cần.' : ''));
     }
 
     /**

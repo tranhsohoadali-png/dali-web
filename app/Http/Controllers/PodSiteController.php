@@ -111,7 +111,7 @@ class PodSiteController extends Controller
         ]);
         $sdt = preg_replace('/[^0-9+]/', '', $v['sdt']);
         if (strlen($sdt) < 9) return back()->withErrors(['sdt' => 'Số điện thoại chưa đúng.'])->withInput();
-        if (PodSeller::where('sdt', $sdt)->exists()) {
+        if (PodSeller::sdtDaDung($sdt)) {   // cả số của nhân viên seller (cùng màn đăng nhập)
             return back()->withErrors(['sdt' => 'Số điện thoại này đã đăng ký. Đăng nhập, hoặc nhắn Zalo cho xưởng nếu quên mật khẩu.'])->withInput();
         }
         PodSeller::create([

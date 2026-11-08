@@ -208,14 +208,15 @@ class PodSo
         return $kq;
     }
 
-    /** Tạo đơn rồi thử trừ ví ngay. Đủ tiền -> Chờ in; thiếu -> Chờ nạp tiền. */
-    public static function datDon(PodSeller $s, array $dongIn, ?array $noiGiao, ?string $maDonSan, ?string $ghiChu, ?UploadedFile $nhan): PodDon
+    /** Tạo đơn rồi thử trừ ví ngay. Đủ tiền -> Chờ in; thiếu -> Chờ nạp tiền. $nhanVienId = nhân viên đặt (null = chủ shop). */
+    public static function datDon(PodSeller $s, array $dongIn, ?array $noiGiao, ?string $maDonSan, ?string $ghiChu, ?UploadedFile $nhan, ?int $nhanVienId = null): PodDon
     {
         $dong = self::tinhDong($s, $dongIn);
-        $don = DB::transaction(function () use ($s, $dong, $noiGiao, $maDonSan, $ghiChu) {
+        $don = DB::transaction(function () use ($s, $dong, $noiGiao, $maDonSan, $ghiChu, $nhanVienId) {
             $don = PodDon::create([
-                'ma'         => PodDon::taoMa(),
-                'seller_id'  => $s->id,
+                'ma'           => PodDon::taoMa(),
+                'seller_id'    => $s->id,
+                'nhan_vien_id' => $nhanVienId,
                 'noi_giao'   => $noiGiao,
                 'ma_don_san' => $maDonSan,
                 'ghi_chu'    => $ghiChu,

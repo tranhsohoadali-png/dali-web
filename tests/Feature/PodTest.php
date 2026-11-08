@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\PodBienThe;
 use App\Models\PodDon;
 use App\Models\PodMau;
+use App\Models\PodNhanVien;
 use App\Models\PodNhatKy;
 use App\Models\PodNoiGiao;
 use App\Models\PodPhien;
@@ -989,5 +990,269 @@ class PodTest extends TestCase
         $admin->post('/admin/3d/pod/don/' . $d->id . '/trang-thai', ['trang_thai' => 'da_giao', 'ma_van_don' => 'VN123'])->assertSessionHasNoErrors();
         $this->assertSame('da_giao', $d->fresh()->trang_thai);
         $this->assertTrue(PodNhatKy::where('mau_id', $this->riengA->id)->where('hanh_dong', 'xem')->exists());
+    }
+
+    /* ---------------- Tài khoản: hồ sơ, mật khẩu, thiết bị, nhân viên, nơi giao, sổ ví ---------------- */
+
+    private function taoNv(PodSeller $s, string $sdt = '0911222333', string $mk = 'nhanvien1'): PodNhanVien
+    {
+        return PodNhanVien::create(['seller_id' => $s->id, 'ten' => 'NV Lan', 'sdt' => $sdt, 'matkhau' => Hash::make($mk), 'hien' => true, 'dong_y_luc' => now()]);
+    }
+
+    private function dangNhap(string $sdt, string $mk): array
+    {
+        $tok = $this->postJson('/api/pod/dang-nhap', ['sdt' => $sdt, 'matkhau' => $mk])->assertOk()->json('token');
+        return ['X-Pod-Token' => $tok, 'Accept' => 'application/json'];
+    }
+
+    public function test_ho_so_chu_shop_sua_duoc_nhan_vien_chi_xem(): void
+    {
+        $h = $this->token($this->a);
+        $this->getJson('/api/pod/ho-so', $h)->assertOk()->assertJson(['ma' => $this->a->ma, 'vai_tro' => 'chu', 'sdt' => '0900000001']);
+        $this->postJson('/api/pod/ho-so', ['ten' => 'Shop A mới', 'san_ban' => 'Etsy', 'link_shop' => 'https://etsy.com/shop/a'], $h)->assertOk();
+        $this->assertSame('Shop A mới', $this->a->fresh()->ten);
+        $this->postJson('/api/pod/ho-so', ['ten' => 'X', 'link_shop' => 'javascript:alert(1)'], $h)->assertStatus(422);
+        $this->assertSame('https://etsy.com/shop/a', $this->a->fresh()->link_shop);
+        $this->taoNv($this->a);
+        $hn = $this->dangNhap('0911222333', 'nhanvien1');
+        $this->getJson('/api/pod/ho-so', $hn)->assertOk()->assertJson(['vai_tro' => 'nhan_vien', 'ten' => 'Shop A mới', 'nhan_vien' => ['ten' => 'NV Lan']]);
+        $this->postJson('/api/pod/ho-so', ['ten' => 'Bị đổi'], $hn)->assertStatus(403);
+        $this->assertSame('Shop A mới', $this->a->fresh()->ten);
+    }
+
+    public function test_doi_mat_khau_sai_bao_loi_dung_thi_dang_xuat_may_khac_giu_may_nay(): void
+    {
+        $h1 = $this->dangNhap('0900000001', 'matkhau1');
+        $h2 = $this->dangNhap('0900000001', 'matkhau1');
+        $hB = $this->token($this->b);
+        $this->postJson('/api/pod/doi-mat-khau', ['cu' => 'sai', 'moi' => 'moi12345', 'moi_confirmation' => 'moi12345'], $h1)->assertStatus(422);
+        $this->postJson('/api/pod/doi-mat-khau', ['cu' => 'matkhau1', 'moi' => 'moi12345', 'moi_confirmation' => 'khac'], $h1)->assertStatus(422);
+        $this->postJson('/api/pod/doi-mat-khau', ['cu' => 'matkhau1', 'moi' => 'moi12345', 'moi_confirmation' => 'moi12345'], $h1)->assertOk()->assertJson(['dang_xuat' => 1]);
+        $this->getJson('/api/pod/toi', $h1)->assertOk();
+        $this->getJson('/api/pod/toi', $h2)->assertStatus(401);
+        $this->getJson('/api/pod/toi', $hB)->assertOk();
+        $this->assertNotNull($this->a->fresh()->doi_mk_luc);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0900000001', 'matkhau' => 'matkhau1'])->assertStatus(401);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0900000001', 'matkhau' => 'moi12345'])->assertOk();
+    }
+
+    public function test_thiet_bi_chi_thay_va_dang_xuat_may_cua_chinh_minh(): void
+    {
+        $h1 = $this->dangNhap('0900000001', 'matkhau1');
+        $h2 = $this->dangNhap('0900000001', 'matkhau1');
+        $this->taoNv($this->a);
+        $hn = $this->dangNhap('0911222333', 'nhanvien1');
+        $hB = $this->token($this->b);
+        $ds = $this->getJson('/api/pod/phien', $h1)->assertOk()->json('phien');
+        $this->assertCount(2, $ds);                                   // không thấy máy của nhân viên
+        $this->assertSame(1, collect($ds)->where('hien_tai', true)->count());
+        $this->assertCount(1, $this->getJson('/api/pod/phien', $hn)->json('phien'));
+        $idNv = PodPhien::whereNotNull('nhan_vien_id')->value('id');
+        $idB = PodPhien::where('seller_id', $this->b->id)->value('id');
+        $this->deleteJson('/api/pod/phien/' . $idNv, [], $h1)->assertOk();
+        $this->deleteJson('/api/pod/phien/' . $idB, [], $h1)->assertOk();
+        $this->getJson('/api/pod/toi', $hn)->assertOk();              // không đăng xuất được máy người khác
+        $this->getJson('/api/pod/toi', $hB)->assertOk();
+        $this->postJson('/api/pod/phien/dang-xuat-khac', [], $h1)->assertOk()->assertJson(['dang_xuat' => 1]);
+        $this->getJson('/api/pod/toi', $h2)->assertStatus(401);
+        $this->getJson('/api/pod/toi', $h1)->assertOk();
+        $this->getJson('/api/pod/toi', $hn)->assertOk();              // nhân viên vẫn đăng nhập
+        $this->assertSame('Chrome · Windows', PodPhien::nhanThietBi('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0 Safari/537.36'));
+        $this->assertSame('Safari · iPhone', PodPhien::nhanThietBi('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'));
+    }
+
+    public function test_nhan_vien_dat_don_tru_vi_shop_khong_xem_vi_va_khong_quan_ly(): void
+    {
+        PodSo::napTien($this->a, 100000, 'nap', null);
+        $h = $this->token($this->a);
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Lan', 'sdt' => '0911 222 333', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $h)->assertOk();
+        $hn = $this->dangNhap('0911222333', 'nhanvien1');
+        $this->postJson('/api/pod/dong-y', [], $hn)->assertOk();
+        $toi = $this->getJson('/api/pod/toi', $hn)->assertOk()->assertJson(['vai_tro' => 'nhan_vien', 'ma' => $this->a->ma, 'nhan_vien' => ['ten' => 'Lan']]);
+        $this->assertNull($toi->json('so_du'));
+        $this->assertNull($toi->json('han_muc'));
+        $r = $this->postJson('/api/pod/don', ['dong' => [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], 'noi_giao_id' => $this->noiGiao($this->a)], $hn)->assertOk();
+        $this->assertNull($r->json('so_du'));
+        $this->assertSame('cho_in', $r->json('don.trang_thai'));
+        $this->assertSame(100000 - 24440, $this->a->soDu());        // trừ ví của shop
+        $don = PodDon::where('ma', $r->json('don.ma'))->first();
+        $this->assertNotNull($don->nhan_vien_id);
+        $dsChu = $this->getJson('/api/pod/don', $h)->assertOk();
+        $this->assertTrue($dsChu->json('co_nhan_vien'));
+        $this->assertSame('Lan', collect($dsChu->json('don'))->firstWhere('ma', $don->ma)['nguoi_dat']);
+        $this->assertNull($this->postJson("/api/pod/don/{$don->ma}/huy", [], $hn)->assertOk()->json('so_du'));
+        $this->assertSame(100000, $this->a->soDu());
+        // mẫu độc quyền của shop: nhân viên thấy; nhân viên không vào ví / nhân viên / sửa hồ sơ / xoá nơi giao
+        $this->getJson('/api/pod/mau/' . $this->riengA->ma, $hn)->assertOk();
+        foreach ([['GET', '/api/pod/vi'], ['GET', '/api/pod/nhan-vien'], ['POST', '/api/pod/nhan-vien'], ['POST', '/api/pod/ho-so']] as [$m, $u]) {
+            $this->json($m, $u, ['ten' => 'x', 'sdt' => '0911999888', 'matkhau' => 'abcdef'], $hn)->assertStatus(403);
+        }
+        $this->assertFalse(PodNhanVien::where('sdt', '0911999888')->exists());
+        $ngA = PodNoiGiao::where('seller_id', $this->a->id)->value('id');
+        $this->deleteJson('/api/pod/noi-giao/' . $ngA, [], $hn)->assertStatus(403);
+        $this->postJson('/api/pod/noi-giao/' . $ngA, ['ten' => 'Nhà NV', 'dia_chi' => 'Nhà riêng'], $hn)->assertStatus(403);
+        $this->postJson('/api/pod/noi-giao/' . $ngA . '/mac-dinh', [], $hn)->assertStatus(403);
+        $this->assertSame('Hà Nội', PodNoiGiao::find($ngA)->dia_chi);
+        $this->postJson('/api/pod/noi-giao', ['ten' => 'Line NV thêm', 'dia_chi' => 'HCM'], $hn)->assertOk();   // thêm thì được
+        $donChu = PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null);
+        $this->postJson("/api/pod/don/{$donChu->ma}/huy", [], $hn)->assertStatus(403);
+        $this->assertNotSame('da_huy', $donChu->fresh()->trang_thai);
+        $this->assertFalse(collect($this->getJson('/api/pod/don', $hn)->json('don'))->firstWhere('ma', $donChu->ma)['cua_toi']);
+        // nhân viên của B: không thấy mẫu riêng, đơn, nơi giao của A
+        $hb = $this->token($this->b);
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Minh', 'sdt' => '0911444555', 'matkhau' => 'nhanvien2', 'mk_chu' => 'matkhau1'], $hb)->assertOk();
+        $hbn = $this->dangNhap('0911444555', 'nhanvien2');
+        $this->postJson('/api/pod/dong-y', [], $hbn)->assertOk();
+        $this->getJson('/api/pod/mau/' . $this->riengA->ma, $hbn)->assertNotFound();
+        $this->assertCount(0, $this->getJson('/api/pod/don', $hbn)->json('don'));
+        $this->assertCount(0, $this->getJson('/api/pod/noi-giao', $hbn)->json('noi_giao'));
+        // admin thấy nhân viên và người đặt
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $admin->get('/admin/3d/pod/seller')->assertOk()->assertSee('Lan')->assertSee('0911222333');
+        $admin->get('/admin/3d/pod/don/' . $don->id)->assertOk()->assertSee('Người đặt: nhân viên Lan');
+    }
+
+    public function test_nhan_vien_sdt_khong_trung_khoa_thi_mat_phien_xoa_khi_co_don_thi_khoa(): void
+    {
+        $h = $this->token($this->a);
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'X', 'sdt' => '0900000002', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $h)->assertStatus(422);   // số của seller B
+        $id = $this->postJson('/api/pod/nhan-vien', ['ten' => 'Lan', 'sdt' => '0911222333', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $h)->assertOk()->json('id');
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Y', 'sdt' => '0911222333', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $this->token($this->b))->assertStatus(422);
+        $goc = 'http://' . config('pod.domain');
+        $this->post($goc . '/dang-ky', ['ten' => 'Shop', 'sdt' => '0911222333', 'matkhau' => 'matkhau7', 'matkhau_confirmation' => 'matkhau7', 'dong_y' => '1'])->assertSessionHasErrors('sdt');
+        $this->assertSame(0, PodSeller::where('sdt', '0911222333')->count());
+        $hn = $this->dangNhap('0911222333', 'nhanvien1');
+        $this->postJson('/api/pod/nhan-vien/' . $id, ['hien' => false], $this->token($this->b))->assertNotFound();
+        $this->deleteJson('/api/pod/nhan-vien/' . $id, [], $this->token($this->b))->assertNotFound();
+        $this->getJson('/api/pod/toi', $hn)->assertOk();
+        // chủ shop khoá -> mất phiên, đăng nhập báo bị khoá
+        $this->postJson('/api/pod/nhan-vien/' . $id, ['hien' => false], $h)->assertOk();
+        $this->getJson('/api/pod/toi', $hn)->assertStatus(401);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0911222333', 'matkhau' => 'nhanvien1'])->assertStatus(403);
+        // mở + đặt lại mật khẩu
+        $this->postJson('/api/pod/nhan-vien/' . $id, ['hien' => true, 'matkhau' => 'moimoi1', 'mk_chu' => 'matkhau1'], $h)->assertOk();
+        $hn = $this->dangNhap('0911222333', 'moimoi1');
+        // xưởng khoá shop -> nhân viên cũng mất phiên
+        $this->a->update(['hien' => false]);
+        $this->getJson('/api/pod/toi', $hn)->assertStatus(401);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0911222333', 'matkhau' => 'moimoi1'])->assertStatus(403);
+        $this->a->update(['hien' => true]);
+        $hn = $this->dangNhap('0911222333', 'moimoi1');
+        // xưởng đổi mật khẩu chủ shop: chỉ máy của chủ shop bị đăng xuất
+        $this->withSession(['admin_logged_in' => true])->put('/admin/3d/pod/seller/' . $this->a->id, ['ten' => $this->a->ten, 'sdt' => $this->a->sdt, 'matkhau' => 'xuongdat1'])->assertSessionHasNoErrors();
+        $this->getJson('/api/pod/toi', $h)->assertStatus(401);
+        $this->getJson('/api/pod/toi', $hn)->assertOk();
+        // đã có đơn -> xoá thành khoá, giữ tên
+        PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null)->update(['nhan_vien_id' => $id]);
+        $h = $this->token($this->a);
+        $this->deleteJson('/api/pod/nhan-vien/' . $id, [], $h)->assertOk()->assertJson(['da_xoa' => true, 'giu_ten' => true]);
+        $this->assertFalse(PodNhanVien::find($id)->hien);
+        $this->assertSame('#' . $id, PodNhanVien::find($id)->sdt);           // số được giải phóng
+        $this->getJson('/api/pod/toi', $hn)->assertStatus(401);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0911222333', 'matkhau' => 'moimoi1'])->assertStatus(401);
+        $this->assertSame('Lan', collect($this->getJson('/api/pod/don', $h)->json('don'))->first()['nguoi_dat']);   // tên vẫn trên đơn
+        $this->assertCount(0, $this->getJson('/api/pod/nhan-vien', $h)->json('nhan_vien'));                         // không còn trong danh sách
+        $this->deleteJson('/api/pod/nhan-vien/' . $id, [], $h)->assertNotFound();
+        // shop khác dùng lại được số đó
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Lan B', 'sdt' => '0911222333', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $this->token($this->b))->assertOk();
+        // chưa có đơn -> xoá hẳn
+        $id2 = $this->postJson('/api/pod/nhan-vien', ['ten' => 'Tạm', 'sdt' => '0911777888', 'matkhau' => 'nhanvien3', 'mk_chu' => 'xuongdat1'], $h)->assertOk()->json('id');
+        $this->deleteJson('/api/pod/nhan-vien/' . $id2, [], $h)->assertOk()->assertJson(['da_xoa' => true]);
+        $this->assertNull(PodNhanVien::find($id2));
+    }
+
+    public function test_nhan_vien_dong_y_dieu_khoan_rieng(): void
+    {
+        $nv = PodNhanVien::create(['seller_id' => $this->a->id, 'ten' => 'Lan', 'sdt' => '0911222333', 'matkhau' => Hash::make('nhanvien1'), 'hien' => true]);
+        $hn = $this->dangNhap('0911222333', 'nhanvien1');
+        $this->getJson('/api/pod/toi', $hn)->assertOk()->assertJson(['dong_y' => false]);
+        $this->getJson('/api/pod/mau', $hn)->assertStatus(403)->assertJson(['can_dong_y' => true]);
+        $this->postJson('/api/pod/dong-y', [], $hn)->assertOk();
+        $this->getJson('/api/pod/mau', $hn)->assertOk();
+        $this->assertNotNull($nv->fresh()->dong_y_luc);
+    }
+
+    public function test_noi_giao_sua_mac_dinh_va_giu_kin(): void
+    {
+        $h = $this->token($this->a);
+        $id1 = $this->postJson('/api/pod/noi-giao', ['ten' => 'Line 1', 'dia_chi' => 'HCM'], $h)->assertOk()->json('id');
+        $id2 = $this->postJson('/api/pod/noi-giao', ['ten' => 'Line 2', 'dia_chi' => 'HN'], $h)->assertOk()->json('id');
+        $this->assertSame($id1, $this->getJson('/api/pod/noi-giao', $h)->json('mac_dinh'));   // nơi đầu tiên thành mặc định
+        $this->postJson("/api/pod/noi-giao/$id2/mac-dinh", [], $h)->assertOk();
+        $this->assertSame($id2, $this->getJson('/api/pod/noi-giao', $h)->json('mac_dinh'));
+        $this->postJson("/api/pod/noi-giao/$id1", ['ten' => 'Line 1 mới', 'dia_chi' => 'Q.Tân Bình'], $h)->assertOk();
+        $this->assertSame('Line 1 mới', PodNoiGiao::find($id1)->ten);
+        $hb = $this->token($this->b);
+        $this->postJson("/api/pod/noi-giao/$id1", ['ten' => 'Hack', 'dia_chi' => 'x'], $hb)->assertNotFound();
+        $this->postJson("/api/pod/noi-giao/$id1/mac-dinh", [], $hb)->assertNotFound();
+        $this->deleteJson("/api/pod/noi-giao/$id1", [], $hb)->assertOk();             // không xoá được của người khác
+        $this->assertSame('Line 1 mới', PodNoiGiao::find($id1)->ten);
+        $this->assertNull($this->getJson('/api/pod/noi-giao', $hb)->json('mac_dinh'));
+        $this->deleteJson("/api/pod/noi-giao/$id2", [], $h)->assertOk();
+        $this->assertNull($this->getJson('/api/pod/noi-giao', $h)->json('mac_dinh'));
+    }
+
+    public function test_vi_loc_theo_thang_tong_vao_ra_va_so_du_sau(): void
+    {
+        $this->travelTo(\Illuminate\Support\Carbon::create(2026, 10, 15, 10));
+        PodSo::napTien($this->a, 100000, 'nap', 'T10');
+        PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null);   // −24.440
+        $this->travelTo(\Illuminate\Support\Carbon::create(2026, 11, 3, 9));
+        PodSo::napTien($this->a, 50000, 'nap', 'T11');
+        $h = $this->token($this->a);
+        $all = $this->getJson('/api/pod/vi', $h)->assertOk();
+        $this->assertSame(125560, $all->json('so_du'));
+        $this->assertSame(125560, $all->json('lich_su.0.so_du_sau'));   // dòng mới nhất = số dư hiện tại
+        $this->assertSame(100000, $all->json('lich_su.2.so_du_sau'));
+        $this->assertSame(['2026-11', '2026-10'], $all->json('cac_thang'));
+        $t10 = $this->getJson('/api/pod/vi?thang=2026-10', $h)->assertOk();
+        $this->assertSame(['thang' => '2026-10', 'dau_ky' => 0, 'cuoi_ky' => 75560, 'tong_vao' => 100000, 'tong_ra' => 24440, 'so_dong' => 2], $t10->json('thong_ke'));
+        $this->assertSame(75560, $t10->json('lich_su.0.so_du_sau'));
+        $t11 = $this->getJson('/api/pod/vi?thang=2026-11', $h)->assertOk();
+        $this->assertSame(75560, $t11->json('thong_ke.dau_ky'));
+        $this->assertSame(125560, $t11->json('thong_ke.cuoi_ky'));
+        $this->assertNull($this->getJson('/api/pod/vi?thang=2026-13', $h)->assertOk()->json('thong_ke'));   // tháng sai -> như không lọc
+        $this->getJson('/api/pod/vi?thang[]=2026-10', $h)->assertOk();                                            // trước đây lỗi 500
+        $this->travelBack();
+    }
+
+    public function test_gui_don_khong_bi_chan_vi_da_goi_nhieu_api_khac(): void
+    {
+        // throttle:30,1 thiếu tham số bộ đếm riêng thì đếm CHUNG với throttle:120 của nhóm -> lần gọi thứ 31 bất kỳ chặn gửi đơn
+        $h = $this->token($this->a);
+        for ($i = 0; $i < 35; $i++) $this->getJson('/api/pod/toi', $h)->assertOk();
+        $this->postJson('/api/pod/don', ['dong' => [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], 'noi_giao_id' => $this->noiGiao($this->a)], $h)->assertOk();
+    }
+
+    public function test_tao_va_dat_lai_mat_khau_nhan_vien_phai_nhap_mat_khau_chu_shop(): void
+    {
+        $h = $this->token($this->a);   // chỉ cầm phiên (máy dùng chung), không biết mật khẩu chủ
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Cửa hậu', 'sdt' => '0911222333', 'matkhau' => 'nhanvien1'], $h)->assertStatus(422);
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Cửa hậu', 'sdt' => '0911222333', 'matkhau' => 'nhanvien1', 'mk_chu' => 'doan-sai'], $h)->assertStatus(422);
+        $this->assertSame(0, PodNhanVien::count());
+        $id = $this->postJson('/api/pod/nhan-vien', ['ten' => 'Lan', 'sdt' => '0911222333', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $h)->assertOk()->json('id');
+        $this->postJson('/api/pod/nhan-vien/' . $id, ['matkhau' => 'chiemquyen'], $h)->assertStatus(422);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0911222333', 'matkhau' => 'nhanvien1'])->assertOk();
+        $this->postJson('/api/pod/nhan-vien/' . $id, ['hien' => false], $h)->assertOk();   // khoá thì không cần
+        // đã xoá không tính vào giới hạn
+        for ($i = 0; $i < PodNhanVien::TOI_DA; $i++) {
+            PodNhanVien::create(['seller_id' => $this->a->id, 'ten' => 'Cũ ' . $i, 'sdt' => '#x' . $i, 'matkhau' => 'x', 'hien' => false]);
+        }
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Mới', 'sdt' => '0911333444', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $h)->assertOk();
+    }
+
+    public function test_dang_nhap_dung_tai_khoan_khac_khong_xoa_bo_dem_sai_cua_so_bi_do(): void
+    {
+        $this->taoNv($this->a);
+        for ($i = 0; $i < 8; $i++) $this->postJson('/api/pod/dang-nhap', ['sdt' => '0900000002', 'matkhau' => 'doan' . $i])->assertStatus(401);
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0911222333', 'matkhau' => 'nhanvien1'])->assertOk();   // đăng nhập đúng tài khoản của mình
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0900000002', 'matkhau' => 'matkhau1'])->assertStatus(429);   // số bị dò vẫn bị chặn
+        $this->postJson('/api/pod/dang-nhap', ['sdt' => '0900000001', 'matkhau' => 'matkhau1'])->assertOk();       // người khác không bị vạ lây
+    }
+
+    public function test_trang_cong_co_muc_tai_khoan_moi(): void
+    {
+        $this->get('http://' . config('pod.domain') . '/cong')->assertOk()
+            ->assertSee('data-t="hoso"', false)->assertSee('data-t="nhanvien"', false)->assertSee('Quên mật khẩu? Nhắn xưởng qua Zalo');
     }
 }

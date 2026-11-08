@@ -18,4 +18,32 @@ class PodPhien extends Model
     {
         return hash('sha256', $token);
     }
+
+    /** Nhãn dễ đọc cho chuỗi trình duyệt: "Chrome · Windows", "Zalo · iPhone"… (trang Thiết bị đăng nhập). */
+    public static function nhanThietBi(?string $ua): string
+    {
+        $ua = (string) $ua;
+        if ($ua === '') return 'Không rõ thiết bị';
+        $tb = match (true) {
+            str_contains($ua, 'Zalo')                                   => 'Zalo',
+            (bool) preg_match('/FBAN|FBAV|FB_IAB/', $ua)                => 'Facebook',
+            str_contains($ua, 'Edg/')                                   => 'Edge',
+            str_contains($ua, 'OPR/') || str_contains($ua, 'Opera')     => 'Opera',
+            str_contains($ua, 'CocCoc') || str_contains($ua, 'coc_coc') => 'Cốc Cốc',
+            str_contains($ua, 'Firefox/')                               => 'Firefox',
+            str_contains($ua, 'Chrome/') || str_contains($ua, 'CriOS') => 'Chrome',
+            str_contains($ua, 'Safari/')                                => 'Safari',
+            default                                                     => 'Trình duyệt',
+        };
+        $hdh = match (true) {
+            str_contains($ua, 'iPhone')                                     => 'iPhone',
+            str_contains($ua, 'iPad')                                       => 'iPad',
+            str_contains($ua, 'Android')                                    => 'Android',
+            str_contains($ua, 'Windows')                                    => 'Windows',
+            str_contains($ua, 'Mac OS X') || str_contains($ua, 'Macintosh') => 'Mac',
+            str_contains($ua, 'Linux')                                      => 'Linux',
+            default                                                         => '',
+        };
+        return $tb . ($hdh !== '' ? ' · ' . $hdh : '');
+    }
 }

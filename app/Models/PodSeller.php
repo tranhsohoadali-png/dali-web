@@ -15,7 +15,23 @@ class PodSeller extends Model
         'cho_duyet'     => 'boolean',
         'dong_y_luc'    => 'datetime',
         'dang_nhap_luc' => 'datetime',
+        'doi_mk_luc'    => 'datetime',
     ];
+
+    public function nhanVien()
+    {
+        return $this->hasMany(PodNhanVien::class, 'seller_id');
+    }
+
+    /**
+     * Số điện thoại đã là tên đăng nhập của ai chưa — seller HOẶC nhân viên (cùng một màn đăng nhập nên không được trùng).
+     * $boSeller / $boNv: bỏ qua chính tài khoản đang sửa.
+     */
+    public static function sdtDaDung(string $sdt, ?int $boSeller = null, ?int $boNv = null): bool
+    {
+        return static::where('sdt', $sdt)->when($boSeller, fn ($q) => $q->where('id', '!=', $boSeller))->exists()
+            || PodNhanVien::where('sdt', $sdt)->when($boNv, fn ($q) => $q->where('id', '!=', $boNv))->exists();
+    }
 
     /** Số dư ví = tổng mọi dòng sổ ví. */
     public function soDu(): int

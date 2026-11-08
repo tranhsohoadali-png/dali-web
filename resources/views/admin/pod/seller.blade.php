@@ -28,6 +28,12 @@
       <td><b>{{ $s->ten }}</b><div class="muted">{{ $s->sdt }}@if($s->ghi_chu) · {{ $s->ghi_chu }}@endif</div>
         @if($s->san_ban || $s->link_shop)<div class="muted">Bán trên: {{ $s->san_ban ?: '—' }}@if($s->link_shop) · <a href="{{ $s->link_shop }}" target="_blank" rel="noopener nofollow" style="color:var(--gd)">link shop</a>@endif</div>@endif
         @if($s->loi_nhan)<div class="muted" style="max-width:340px">"{{ $s->loi_nhan }}"</div>@endif
+        @php $dsNv = $s->nhanVien->reject(fn ($n) => $n->daXoa()); @endphp
+        @if($dsNv->isNotEmpty())
+          <div class="muted" style="max-width:340px">Nhân viên ({{ $dsNv->count() }}):
+            @foreach($dsNv as $nv) {{ $nv->ten }} {{ $nv->sdt }} @if(!$nv->hien) (khoá) @endif @if(!$loop->last) · @endif @endforeach
+          </div>
+        @endif
       </td>
       <td class="num"><b style="{{ $du < 0 ? 'color:#B91C1C' : '' }}">{{ number_format($du, 0, ',', '.') }}đ</b>
         @if($s->han_muc > 0 || $du < 0)<div class="muted" style="white-space:nowrap">@if($du < 0)Đang nợ {{ number_format(-$du, 0, ',', '.') }}đ<br>@endif
