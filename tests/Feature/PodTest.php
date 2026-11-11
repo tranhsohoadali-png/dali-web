@@ -244,6 +244,46 @@ class PodTest extends TestCase
             ->assertSee('id="loiXt"', false)->assertSee('text-transform:uppercase', false)->assertSee('Baloo+2', false);
     }
 
+    public function test_thanh_ten_in_hoa_tieng_anh_dem_khong_tinh_cach_va_file_in(): void
+    {
+        // ornament cô gái Pilates: tên chữ thẳng trên thanh khung, app Thay tên mau_ornament_pilates (không tuỳ chọn)
+        $m = $this->taoMau('Ornament cô gái Pilates khắc tên', null, 56.5, 'PLA');
+        $bt = $m->bienThe()->first();
+        $bt->update(['ten' => '4.7 in · trọn bộ']);
+        $m->update(['xem_truoc' => ['loai' => 'ten', 've' => 'thanh', 'toi_da' => 14, 'toi_ky_tu' => 10, 'hoa' => true,
+            'w' => 1049, 'h' => 910, 'nen' => 'data:image/jpeg;base64,AA==', 'mau_chu' => 'EMILIA',
+            'o_ten' => ['cx' => 515, 'cy' => 758, 'cap' => 52.2, 'rong_max' => 850, 'vien' => 7.65, 'ty_doc' => 0.99],
+            'thay_ten' => ['mau' => 'ornament_pilates', 'co' => ['4.7 in · trọn bộ' => []]]]]);
+        $m = $m->fresh();
+        $this->assertTrue($m->laThanh());
+        $this->assertFalse($m->laDauBanh());
+        $this->assertSame('MAI ANH', $m->chuanThanh('  mai   anh '));
+        $this->assertSame("O'NEIL & CO", $m->chuanThanh("o'neil & co"));
+        $this->assertSame('ANNE MARIE X', $m->chuanThanh('Anne Marie X'), '10 chữ + 2 dấu cách vẫn nhận');
+        foreach (['', '...', 'NGỌC', 'EMMA@', 'ABCDEFGHIJK', 'XIN😀'] as $sai) {
+            try {
+                $m->chuanThanh($sai);
+                $this->fail("Phải từ chối: $sai");
+            } catch (\InvalidArgumentException $e) {
+                $this->assertNotSame('', $e->getMessage());
+            }
+        }
+        // đặt đơn: chặn tên có dấu dù trình duyệt lọt, lưu tên đã in hoa
+        try {
+            PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => 'Ngọc']], null, null, null, null);
+            $this->fail('Phải chặn tên có dấu');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('chưa in được', collect($e->errors())->flatten()->first());
+        }
+        $dong = PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => 'emilia']], null, null, null, null)->dong()->first();
+        $this->assertSame('EMILIA', $dong->chu_ca_nhan);
+        $this->assertSame(['mau' => 'ornament_pilates', 'ten' => 'EMILIA', 'tuy_chon' => []],
+            $m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan));
+        // trang công khai: ô tên tự in hoa + chỗ báo lỗi + câu luật tên
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()
+            ->assertSee('id="loiXt"', false)->assertSee('text-transform:uppercase', false)->assertSee('chỉ chữ tiếng Anh', false);
+    }
+
     public function test_lot_ly_dung_bo_ten_cung_duoi_cua_dau_banh_voi_ten_mat_rieng(): void
     {
         // lót ly Giáng sinh: cùng bộ tên cung dưới (ve=dau_banh) nhưng câu báo gọi "lót ly", một phân loại không tuỳ chọn

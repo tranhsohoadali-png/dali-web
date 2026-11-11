@@ -115,7 +115,7 @@
           @if($m->laDai())
           <label style="margin-top:10px"><span>{{ $xt['nhan2'] ?? 'Chữ trên đuôi đai trái' }}</span><input id="ten2Xt" maxlength="{{ $m->tenToiDa() }}" placeholder="Vd: 2026" autocomplete="off" style="text-transform:uppercase"></label>
           @endif
-          @if($m->laDai() || $m->laDauBanh())
+          @if($m->laDai() || $m->laDauBanh() || $m->laThanh())
           <p id="loiXt" style="color:#B3261E;font-size:14px;margin-top:8px" hidden></p>
           @endif
           @if($mauSac->isNotEmpty())
@@ -126,7 +126,7 @@
           <div class="nhom-tieu">Font chữ</div>
           <div class="pl" id="fontXt">@foreach($fonts as $i => $f)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-font="{{ $f }}"><span class="ten-font">Emma</span><small>{{ $f }}</small></button>@endforeach</div>
           @endif
-          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. @if($m->laDai())Chữ in hoa không dấu, mỗi đuôi đai tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự.@elseif($m->laDauBanh())Tên tự in hoa, giữ dấu tiếng Việt, tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự; tên dài tự thu nhỏ cho vừa cung dưới.@else Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.@endif</p>
+          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. @if($m->laDai())Chữ in hoa không dấu, mỗi đuôi đai tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự.@elseif($m->laDauBanh())Tên tự in hoa, giữ dấu tiếng Việt, tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự; tên dài tự thu nhỏ cho vừa cung dưới.@elseif($m->laThanh())Tên tự in hoa, chỉ chữ tiếng Anh A–Z, số 0–9, dấu cách và ' - . &amp;, tối đa {{ (int) ($xt['toi_ky_tu'] ?? 10) }} ký tự (không tính dấu cách).@else Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.@endif</p>
         </div>
       @elseif($theoKieu->count() > 1)
         <div class="thu-ten">

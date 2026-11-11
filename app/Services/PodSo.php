@@ -176,6 +176,12 @@ class PodSo
                     } catch (\InvalidArgumentException $e) {
                         throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
                     }
+                } elseif ($mau->laThanh()) { // tên trên thanh (ornament Pilates): in hoa, chỉ chữ Anh/số, đếm không tính dấu cách như app
+                    try {
+                        $chu = $mau->chuanThanh($chu);
+                    } catch (\InvalidArgumentException $e) {
+                        throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
+                    }
                 } elseif (mb_strlen($chu) > $toiDa) {
                     throw ValidationException::withMessages(["dong.$i" => "Dòng $so: tên tối đa $toiDa ký tự."]);
                 }

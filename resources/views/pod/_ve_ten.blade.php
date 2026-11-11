@@ -267,10 +267,57 @@ window.PodVeTen = (function () {
     (d.lop_ten || [['#8a5a2b', 0], ['#b07a40', 0.22]]).forEach(function (l) { veLop(l[0], l[1] * s); });
     return { hop: [0, 0, W, H], mm: [d.w, d.h] };
   }
-  /** Kiểm chữ theo kiểu mẫu (đuôi đai / dấu bánh): câu báo lỗi hoặc null. Mẫu khung thường chỉ chặn số ký tự ở ô nhập. */
+  /* ---------- Tên chữ thẳng trên thanh (d.ve = 'thanh'), vd ornament cô gái Pilates: ảnh nền d.nen = vật CHƯA có tên
+     (d.w × d.h px), tên in hoa vẽ ở d.o_ten = {cx, cy: tâm chữ hoa (px ảnh nền), cap: cao chữ hoa (px), rong_max: bề ngang tối đa
+     kể cả viền (px), vien: viền (px), ty_doc: co dọc do nhìn hơi chếch}. Chữ màu d.mau_chu_hex viền d.mau_vien, font d.font (Baloo 2 800);
+     d.mau_chu = chữ mẫu vẽ khi ô tên trống (như dấu bánh)
+     — y như miếng tên của app Thay tên (mau_ornament_pilates / ten.py: chữ hoa 6,2 mm, viền 0,9, tên rộng quá 100 mm thì co).
+     Ký tự cho phép d.ky_tu (lớp ký tự regex), tối đa d.toi_ky_tu ký tự không tính dấu cách. Máy chủ kiểm lại y hệt (PodMau::chuanThanh). */
+  function chuanThanh(s) { return String(s || '').normalize('NFC').replace(/\s+/g, ' ').trim().toUpperCase(); }
+  function kiemThanh(d, chu) {
+    var t = chuanThanh(chu), re = new RegExp('^[' + (d.ky_tu || "A-Z0-9 '\\-.&") + ']$');
+    if (!/[A-Z0-9]/.test(t)) return 'Nhập tên cần in.';
+    var la = Array.from(t).filter(function (c, i, a) { return !re.test(c) && a.indexOf(c) === i; });
+    if (la.length) return 'Chưa in được ký tự ' + la.join(' ') + '. ' + (d.ghi_ky_tu || "Chỉ nhận chữ tiếng Anh A–Z, số 0–9, dấu cách và ' - . &");
+    var td = d.toi_ky_tu || 10;
+    if (t.replace(/ /g, '').length > td) return 'Tên tối đa ' + td + ' ký tự (không tính dấu cách).';
+    return null;
+  }
+  var nenTh = {};
+  function veThanh(cv, d, chu) {
+    var im = nenTh[d.nen], fnt = d.font || 'Baloo 2', o = d.o_ten;
+    if (!im) { im = nenTh[d.nen] = new Image(); im.src = d.nen; }
+    var t = chuanThanh(chu === 'Tên của bạn' ? d.mau_chu : chu);
+    cv._chuTh = t;
+    var lai = function () { if (cv._chuTh === t) veThanh(cv, d, chu); };
+    var W = cv.width, H = cv.height, kq = { hop: [0, 0, W, H], mm: [d.w_mm || d.w, d.h_mm || d.h] };
+    if (!im.complete || !im.naturalWidth) { im.addEventListener('load', lai, { once: true }); return kq; }
+    if (document.fonts && !document.fonts.check(css(fnt, 20), 'EMILIA')) choFont(fnt).then(lai); // vẽ tạm, font về thì vẽ lại
+    var ctx = cv.getContext('2d'), k = W / d.w;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H); ctx.drawImage(im, 0, 0, W, H);
+    if (!t) return kq;
+    ctx.font = css(fnt, 100);
+    var capChuan = ctx.measureText('H').actualBoundingBoxAscent || 66, co = 100 * o.cap * k / capChuan, vien = o.vien * k;
+    ctx.font = css(fnt, co);
+    var rong = ctx.measureText(t).width + 2 * vien;
+    if (rong > o.rong_max * k) { co *= o.rong_max * k / rong; ctx.font = css(fnt, co); } // như app: tên rộng quá thì co chữ
+    var y = co * capChuan / 100 / 2;
+    ctx.save(); ctx.translate(o.cx * k, o.cy * k); ctx.scale(1, o.ty_doc || 1);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(40,25,10,.35)'; ctx.shadowBlur = 2.5 * k; ctx.shadowOffsetX = 1.2 * k; ctx.shadowOffsetY = 1.6 * k;
+    ctx.strokeStyle = ctx.fillStyle = d.mau_vien || '#7A4A2B'; ctx.lineWidth = 2 * vien; ctx.strokeText(t, 0, y); ctx.fillText(t, 0, y);
+    ctx.shadowColor = 'transparent';
+    var cChu = /^#[0-9a-f]{6}$/i.test(d.mau_chu_hex || '') ? d.mau_chu_hex : '#F2EBDC';
+    ctx.fillStyle = toi(cChu, 0.18); ctx.fillText(t, 0.5 * k, y + 0.8 * k);   // thành bên chữ nổi
+    ctx.fillStyle = cChu; ctx.fillText(t, 0, y);
+    ctx.restore();
+    return kq;
+  }
+  /** Kiểm chữ theo kiểu mẫu (đuôi đai / dấu bánh / thanh): câu báo lỗi hoặc null. Mẫu khung thường chỉ chặn số ký tự ở ô nhập. */
   function kiem(d, chu) {
     if (d && d.ve === 'dai') return kiemDai(d, chu);
     if (d && d.ve === 'dau_banh') return kiemDauBanh(d, chu);
+    if (d && d.ve === 'thanh') return kiemThanh(d, chu);
     return null;
   }
   /**
@@ -282,6 +329,7 @@ window.PodVeTen = (function () {
     if (d && d.ve === 'moc_khoa') return veMocKhoa(cv, d, String(ten || '').trim() || 'Tên', mau, font, tuy);
     if (d && d.ve === 'dai') return veDai(cv, d, String(ten || '').trim(), mau, tuy);
     if (d && d.ve === 'dau_banh') return veDauBanh(cv, d, String(ten || '').trim());
+    if (d && d.ve === 'thanh') return veThanh(cv, d, String(ten || '').trim());
     var W = cv.width, H = cv.height, ctx = cv.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, W, H);
@@ -437,6 +485,6 @@ window.PodVeTen = (function () {
   }
   return { ve: ve, tai: tai, choFont: choFont, mauHex: mauHex, nenChip: nenChip, khung: khung, datCao: datCao, css: css,
     veKt: veKt, veKichThuoc: veKichThuoc, chuSo: chuSo, chuanDai: chuanDai, ghepDai: ghepDai, kiemDai: kiemDai,
-    kiem: kiem, chuanDauBanh: chuanDauBanh, coDauBanh: coDauBanh };
+    kiem: kiem, chuanDauBanh: chuanDauBanh, coDauBanh: coDauBanh, chuanThanh: chuanThanh, kiemThanh: kiemThanh };
 })();
 </script>

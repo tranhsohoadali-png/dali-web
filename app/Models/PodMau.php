@@ -162,6 +162,33 @@ class PodMau extends Model
         return ['mau' => $tt['mau'], 'ten' => $p[0], 'tuy_chon' => $tc];
     }
 
+    /** Mẫu tên chữ thẳng trên thanh (ornament cô gái Pilates, app Thay tên mau_ornament_pilates). */
+    public function laThanh(): bool
+    {
+        return ($this->xem_truoc['ve'] ?? '') === 'thanh';
+    }
+
+    /**
+     * Chuẩn hoá + kiểm tên mẫu thanh: in hoa, chỉ ký tự trong lớp xem_truoc.ky_tu (mặc định chữ Anh, số, cách ' - . &), tối đa
+     * xem_truoc.toi_ky_tu ký tự KHÔNG tính dấu cách. Sai thì ném \InvalidArgumentException câu báo seller.
+     * = kiemThanh (_ve_ten.blade.php) = ten.chuan_ten của app Thay tên (tên rộng quá thì app tự co chữ, không từ chối).
+     */
+    public function chuanThanh(string $chu): string
+    {
+        $x = (array) $this->xem_truoc;
+        $t = trim(preg_replace('/\s+/u', ' ', $chu));
+        if (class_exists(\Normalizer::class)) $t = \Normalizer::normalize($t, \Normalizer::FORM_C) ?: $t;
+        $t = mb_strtoupper($t, 'UTF-8');
+        if (!preg_match('/[A-Z0-9]/', $t)) throw new \InvalidArgumentException('nhập tên cần in.');
+        $lop = (string) ($x['ky_tu'] ?? "A-Z0-9 '\\-.&");
+        $la = array_values(array_unique(array_filter(mb_str_split($t), fn ($c) => !preg_match('/^[' . $lop . ']$/u', $c))));
+        if ($la) throw new \InvalidArgumentException('chưa in được ký tự ' . implode(' ', $la) . '. '
+            . ($x['ghi_ky_tu'] ?? "Chỉ nhận chữ tiếng Anh A–Z, số 0–9, dấu cách và ' - . &"));
+        $td = (int) ($x['toi_ky_tu'] ?? 10);
+        if (mb_strlen(str_replace(' ', '', $t)) > $td) throw new \InvalidArgumentException("tên tối đa $td ký tự (không tính dấu cách).");
+        return $t;
+    }
+
     /** Mẫu dấu bánh quy (tên chạy cung dưới mặt dấu, app Thay tên mẫu dau_banh). */
     public function laDauBanh(): bool
     {
