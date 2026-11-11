@@ -275,8 +275,12 @@ class PodTest extends TestCase
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->assertStringContainsString('chưa in được', collect($e->errors())->flatten()->first());
         }
-        $dong = PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => 'emilia']], null, null, null, null)->dong()->first();
+        $donTh = PodSo::datDon($this->a, [['bien_the_id' => $bt->id, 'so_luong' => 1, 'chu' => 'emilia']], null, null, null, null);
+        $dong = $donTh->dong()->first();
         $this->assertSame('EMILIA', $dong->chu_ca_nhan);
+        // nút "Tạo + tải file in": mẫu KHÔNG tuỳ chọn phải gửi tuy_chon là object {} — list [] bị app từ chối (dict_type, lỗi 11-11)
+        $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.show', $donTh))->assertOk()
+            ->assertSee('&quot;tuy_chon&quot;:{}', false)->assertDontSee('&quot;tuy_chon&quot;:[]', false);
         $this->assertSame(['mau' => 'ornament_pilates', 'ten' => 'EMILIA', 'tuy_chon' => []],
             $m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan));
         // trang công khai: ô tên tự in hoa + chỗ báo lỗi + câu luật tên

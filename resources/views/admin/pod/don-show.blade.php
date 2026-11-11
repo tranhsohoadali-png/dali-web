@@ -21,7 +21,9 @@
       <td>{{ $x->chu_ca_nhan ?: '—' }}@if($x->font)<div class="muted">font {{ $x->font }}</div>@endif @if($x->phi_ca_nhan)<div class="muted">+{{ number_format($x->phi_ca_nhan, 0, ',', '.') }}đ</div>@endif</td>
       <td class="muted" style="word-break:break-word">
         @if(!empty($taoFile[$x->id]))
-        <div class="tao-file" data-tao="{{ json_encode($taoFile[$x->id], JSON_UNESCAPED_UNICODE) }}" style="margin-bottom:6px">
+        {{-- JSON_FORCE_OBJECT: mẫu không tuỳ chọn có tuy_chon = [] -> PHP mã hoá thành list "[]", app Thay tên từ chối
+             (dict_type, lỗi thật 11-11 ở ornament Pilates). Gói tham số chỉ có khoá chữ nên ép object không hại gì. --}}
+        <div class="tao-file" data-tao="{{ json_encode($taoFile[$x->id], JSON_UNESCAPED_UNICODE | JSON_FORCE_OBJECT) }}" style="margin-bottom:6px">
           <button type="button" class="btn-sm" style="cursor:pointer">Tạo + tải file in</button>
           <span class="tao-tt" style="margin-left:6px"></span>
           @if($x->so_luong > 1)<div style="margin-top:4px">File 1 chiếc, đơn cần {{ $x->so_luong }} chiếc.</div>@endif
