@@ -111,11 +111,18 @@
           <div class="nhom-tieu" style="margin-top:0">Kiểu</div>
           <div class="pl" id="kieuXt">@foreach($theoKieu->keys() as $i => $k)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-kieu="{{ $k }}">{{ $m->tenKieu($k) }}</button>@endforeach</div>
           @endif
+          @if($m->laGiaDinh())
+          @if(!empty($xt['nhan1']))<p style="color:var(--mu);font-size:14px;margin-top:14px">{{ $xt['nhan1'] }}</p>@endif
+          @foreach(($xt['o_nhap'] ?? []) as $o)
+          <label style="margin-top:10px"><span>{{ $o['nhan'] }}</span><input data-gd="{{ $o['k'] }}" maxlength="{{ $o['toi'] ?? 22 }}" placeholder="Vd: {{ $o['goi_y'] ?? '' }}" value="{{ $o['mac_dinh'] ?? '' }}" autocomplete="off"></label>
+          @endforeach
+          @else
           <label style="margin-top:14px"><span>{{ $xt['nhan1'] ?? 'Thử tên của bạn' }}</span><input id="tenXt" maxlength="{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}" placeholder="{{ $m->laDai() ? 'Vd: SOPHIA' : ($xt['goi_y'] ?? 'Vd: Emma') }}" autocomplete="off" @if($m->laDai() || !empty($xt['hoa'])) style="text-transform:uppercase" @endif></label>
+          @endif
           @if($m->laDai())
           <label style="margin-top:10px"><span>{{ $xt['nhan2'] ?? 'Chữ trên đuôi đai trái' }}</span><input id="ten2Xt" maxlength="{{ $m->tenToiDa() }}" placeholder="Vd: 2026" autocomplete="off" style="text-transform:uppercase"></label>
           @endif
-          @if($m->laDai() || $m->laDauBanh() || $m->laThanh())
+          @if($m->laDai() || $m->laDauBanh() || $m->laThanh() || $m->laGiaDinh())
           <p id="loiXt" style="color:#B3261E;font-size:14px;margin-top:8px" hidden></p>
           @endif
           @if($mauSac->isNotEmpty())
@@ -126,7 +133,7 @@
           <div class="nhom-tieu">Font chữ</div>
           <div class="pl" id="fontXt">@foreach($fonts as $i => $f)<button type="button" class="chip-kieu {{ $i ? '' : 'on' }}" data-font="{{ $f }}"><span class="ten-font">Emma</span><small>{{ $f }}</small></button>@endforeach</div>
           @endif
-          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. @if($m->laDai())Chữ in hoa không dấu, mỗi đuôi đai tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự.@elseif($m->laDauBanh())Tên tự in hoa, giữ dấu tiếng Việt, tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự; tên dài tự thu nhỏ cho vừa cung dưới.@elseif($m->laThanh())Tên tự in hoa, chỉ chữ tiếng Anh A–Z, số 0–9, dấu cách và ' - . &amp;, tối đa {{ (int) ($xt['toi_ky_tu'] ?? 10) }} ký tự (không tính dấu cách).@else Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.@endif</p>
+          <p style="color:var(--mu);font-size:14px;margin-top:10px">Ảnh vẽ từ file in thật, gần giống bản in. @if($m->laDai())Chữ in hoa không dấu, mỗi đuôi đai tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự.@elseif($m->laDauBanh())Tên tự in hoa, giữ dấu tiếng Việt, tối đa <span id="toiDaXt">{{ $m->tenToiDa() }}</span> ký tự; tên dài tự thu nhỏ cho vừa cung dưới.@elseif($m->laThanh())Tên tự in hoa, chỉ chữ tiếng Anh A–Z, số 0–9, dấu cách và ' - . &amp;, tối đa {{ (int) ($xt['toi_ky_tu'] ?? 10) }} ký tự (không tính dấu cách).@elseif($m->laGiaDinh()){{ $xt['ghi_luat'] ?? 'Chỉ chữ tiếng Anh A–Z, số 0–9, dấu cách và \' - . &.' }}@else Tên tối đa <span id="toiDaXt">{{ $m->tenToiDa($kieu0 !== '' ? $kieu0 : null) }}</span> ký tự.@endif</p>
         </div>
       @elseif($theoKieu->count() > 1)
         <div class="thu-ten">
@@ -160,7 +167,15 @@
   var dsCo = @json($dsCo), hinh = @json((object) $hinhKt), co = null, cvKt = document.getElementById('cvKt');
   var TEN = {!! json_encode($m->ten, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!};
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function chuNhap() { if (!ip) return ''; return ip2 ? (ip.value.trim() ? PodVeTen.ghepDai(ip.value, ip2.value) : '') : ip.value.trim(); }
+  var ipGd = document.querySelectorAll('[data-gd]'); // mẫu gia đình: nhiều ô, ghép "A / B / ..." như đơn
+  function chuNhap() {
+    if (ipGd.length) {
+      var gt = {}, co = false;
+      ipGd.forEach(function (i) { gt[i.dataset.gd] = i.value; if (i.value.trim() && !i.defaultValue) co = true; });
+      return co ? PodVeTen.ghepGiaDinh(d, gt) : '';
+    }
+    if (!ip) return ''; return ip2 ? (ip.value.trim() ? PodVeTen.ghepDai(ip.value, ip2.value) : '') : ip.value.trim();
+  }
   function coCuaKieu() { return dsCo.filter(function (x) { return (x.kieu || null) === (kieu || null); }); }
   function coNay() { return coCuaKieu().find(function (x) { return x.ten === co; }) || null; }
   function veCo() { // chip cỡ của kiểu đang chọn + tô dòng giá tương ứng
@@ -220,15 +235,17 @@
     veKt();
     if (!d || !cv) return;
     var k = PodVeTen.khung(d, kieu), ten = chuNhap(), x = coNay();
-    if (loiXt) { var loi = ten ? PodVeTen.kiem(k, ten) : null; /* số xếp tên của kiểu đang chọn */ loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
+    if (loiXt) { var loi = ten ? PodVeTen.kiem(k, ten, co) : null; /* số xếp tên của kiểu + cỡ đang chọn */ loiXt.textContent = loi || ''; loiXt.hidden = !loi; }
     PodVeTen.datCao(cv, k);
     document.querySelectorAll('#fontXt .ten-font').forEach(function (s) { s.textContent = ten || 'Emma'; });
     PodVeTen.choFont(font).then(function () { PodVeTen.ve(cv, k, ten || 'Tên của bạn', mau, font, { ti: x && x.kt && x.kt.ti_le }); });
   }
   if (ip) ip.oninput = ve;
   if (ip2) ip2.oninput = ve;
+  ipGd.forEach(function (i) { i.oninput = ve; });
   if (document.getElementById('taiXt')) document.getElementById('taiXt').onclick = function () {
-    PodVeTen.tai(cv, [TEN, PodVeTen.khung(d, kieu).ten, ip.value.trim() || 'mau', mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
+    var tenTep = ip ? ip.value.trim() : (ipGd.length ? PodVeTen.tachGiaDinh(d, chuNhap()).ho : '');
+    PodVeTen.tai(cv, [TEN, PodVeTen.khung(d, kieu).ten, tenTep || 'mau', mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
   };
   veCo();
   ve();

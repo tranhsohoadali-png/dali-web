@@ -345,7 +345,7 @@ class PodTest extends TestCase
         $this->assertSame(['mau' => 'lot_ly', 'ten' => 'AN', 'tuy_chon' => ['kieu' => 'santa']], $m->thamSoFileIn('Santa và tuần lộc · Ø90 mm', 'AN'));
         // trang công khai: màu nhựa gắn kiểu (đổi kiểu chỉ hiện màu của kiểu), ô báo lỗi kiểm theo số của kiểu đang chọn
         $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()
-            ->assertSee('data-mau="Đen + Santa đỏ trắng" data-kieu="santa"', false)->assertSee('PodVeTen.kiem(k, ten)', false);
+            ->assertSee('data-mau="Đen + Santa đỏ trắng" data-kieu="santa"', false)->assertSee('PodVeTen.kiem(k, ten, co)', false);
     }
 
     public function test_trang_don_admin_co_nut_tao_file_in_dung_chu_va_co(): void
@@ -1359,5 +1359,70 @@ class PodTest extends TestCase
     {
         $this->get('http://' . config('pod.domain') . '/cong')->assertOk()
             ->assertSee('data-t="hoso"', false)->assertSee('data-t="nhanvien"', false)->assertSee('Quên mật khẩu? Nhắn xưởng qua Zalo');
+    }
+
+    public function test_gia_dinh_nhieu_o_kiem_be_ngang_theo_co_va_file_in(): void
+    {
+        // ornament gia đình tuần lộc: 7 ô "Bố / Mẹ / Con / Con / Con / Họ / Năm", tên dài ở cỡ nhỏ bị từ chối như app Thay tên
+        $m = $this->taoMau('Ornament gia đình tuần lộc', null, 29.9, 'PLA');
+        $btS = $m->bienThe()->first();
+        $btS->update(['ten' => 'S · 3.9 in']);
+        $btL = PodBienThe::create(['mau_id' => $m->id, 'ten' => 'L · 5.0 in', 'gram' => 47.8, 'chat_lieu' => 'PETG']);
+        $g = [];
+        foreach (str_split("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'-.&") as $c) $g[$c] = ['a' => 5, 'l' => 0.3, 'r' => 4.7];
+        $g[' '] = ['a' => 2.5];
+        $o = fn ($rong) => ['rong' => $rong, 'cap_max' => 4.0, 'min' => 3.4];
+        $coS = ['bo' => $o(16), 'me' => $o(16), 'con1' => $o(14), 'con2' => $o(14), 'con3' => $o(14), 'nam' => ['rong' => 40, 'cap_max' => 5.6, 'min' => 3.6]];
+        $coL = array_map(fn ($s) => ['rong' => $s['rong'] * 1.6] + $s, $coS);
+        $onhap = [];
+        foreach (['bo' => 'Tên bố', 'me' => 'Tên mẹ', 'con1' => 'Tên con 1', 'con2' => 'Tên con 2', 'con3' => 'Tên con 3', 'ho' => 'Dòng họ', 'nam' => 'Năm'] as $k => $n)
+            $onhap[] = ['k' => $k, 'nhan' => $n, 'goi_y' => 'X'];
+        $m->update(['xem_truoc' => ['loai' => 'ten', 've' => 'gia_dinh', 'toi_da' => 120, 'w' => 800, 'h' => 820, 'nen' => 'data:image/jpeg;base64,AA==',
+            'o_nhap' => $onhap, 'o' => [], 'bang' => ['cap10' => 7.0, 'g' => $g, 'kern' => ['AV' => -0.8], 'co' => ['S · 3.9 in' => $coS, 'L · 5.0 in' => $coL],
+                'toi_ky_tu' => ['bo' => 9, 'me' => 9, 'con1' => 9, 'con2' => 9, 'con3' => 9, 'ho' => 22, 'nam' => 6]],
+            'thay_ten' => ['mau' => 'ornament_tuan_loc', 'o_ten' => 'ho', 'theo_nhua' => true,
+                'co' => ['S · 3.9 in' => ['co' => 'S'], 'L · 5.0 in' => ['co' => 'L']]]]]);
+        $m = $m->fresh();
+        $this->assertTrue($m->laGiaDinh());
+        $this->assertFalse($m->laThanh());
+        $chuan = 'Dad / Mom / Liam / Emma / Noah / The Smith Family / 2026';
+        $this->assertSame($chuan, $m->chuanGiaDinh(' Dad /Mom/ Liam  / Emma/Noah / The   Smith Family /2026', 'S · 3.9 in'));
+        $this->assertSame('Grandpa / Mom / Liam / Emma / Noah / The Smith Family / 2026',
+            $m->chuanGiaDinh('Grandpa / Mom / Liam / Emma / Noah / The Smith Family / 2026', 'L · 5.0 in'), 'Cỡ L đủ chỗ cho 7 chữ');
+        foreach ([
+            ['Grandpa / Mom / Liam / Emma / Noah / The Smith Family / 2026', 'dài quá ở cỡ S'],     // 7 chữ: chữ hoa 16·7/34,4 = 3,26 < 3,4
+            ['Dad / Mom / Liam / Emma / / The Smith Family / 2026', 'chưa nhập Tên con 3'],
+            ['Dad / Mom / Liam / Emma / Noah / The Smith Family', 'chưa nhập Năm'],
+            ['Dad / Mom / Ngọc / Emma / Noah / The Smith Family / 2026', 'chỉ nhận chữ tiếng Anh'],
+            ['Dad / Mom / Bartholomew / Emma / Noah / The Smith Family / 2026', 'tối đa 9'],
+            ['Dad / Mom / Liam / Emma / Noah / The Smith Family / 2026 / Thêm', 'dấu /'],
+        ] as [$sai, $loi]) {
+            try {
+                $m->chuanGiaDinh($sai, 'S · 3.9 in');
+                $this->fail("Phải từ chối: $sai");
+            } catch (\InvalidArgumentException $e) {
+                $this->assertStringContainsString($loi, $e->getMessage(), $sai);
+            }
+        }
+        // đặt đơn: chặn theo CỠ của phân loại (trình duyệt lọt vẫn chặn), lưu chuỗi đã chuẩn
+        try {
+            PodSo::datDon($this->a, [['bien_the_id' => $btS->id, 'so_luong' => 1, 'chu' => 'Grandpa / Mom / Liam / Emma / Noah / The Smith Family / 2026']], null, null, null, null);
+            $this->fail('Phải chặn tên dài ở cỡ S');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('dài quá ở cỡ S', collect($e->errors())->flatten()->first());
+        }
+        $don = PodSo::datDon($this->a, [['bien_the_id' => $btL->id, 'so_luong' => 1, 'chu' => 'Grandpa/Mom/Liam/Emma/Noah/The Smith Family/2026']], null, null, null, null);
+        $dong = $don->dong()->first();
+        $this->assertSame('Grandpa / Mom / Liam / Emma / Noah / The Smith Family / 2026', $dong->chu_ca_nhan);
+        // tham số app: họ -> ten, các ô còn lại -> tuỳ chọn, nhựa theo chất liệu của dòng
+        $this->assertSame(['mau' => 'ornament_tuan_loc', 'ten' => 'The Smith Family',
+            'tuy_chon' => ['co' => 'L', 'bo' => 'Grandpa', 'me' => 'Mom', 'con1' => 'Liam', 'con2' => 'Emma', 'con3' => 'Noah', 'nam' => '2026', 'nhua' => 'PETG']],
+            $m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan, null, $dong->chat_lieu));
+        $this->assertNull($m->thamSoFileIn($dong->ten_bien_the, $dong->chu_ca_nhan), 'Thiếu chất liệu: không đoán nhựa');
+        $this->withSession(['admin_logged_in' => true])->get(route('admin.pod.don.show', $don))->assertOk()
+            ->assertSee('&quot;nhua&quot;:&quot;PETG&quot;', false)->assertSee('&quot;con3&quot;:&quot;Noah&quot;', false);
+        // trang công khai: 7 ô nhập + chỗ báo lỗi
+        $this->get('http://' . config('pod.domain') . '/kho-mau/' . $m->ma)->assertOk()
+            ->assertSee('data-gd="con3"', false)->assertSee('id="loiXt"', false)->assertDontSee('id="tenXt"', false);
     }
 }

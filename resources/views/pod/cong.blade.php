@@ -352,8 +352,13 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
     var xt = m.xem_truoc, bt0 = m.bien_the[0] || {};
     var fonts = (xt && xt.fonts) || [];
     var dai = !!(xt && xt.ve === 'dai'), hoa = dai || !!(xt && xt.hoa); // hoa: ô tên tự in hoa (đuôi đai, dấu bánh)
-    var sel = { kieu: bt0.kieu || null, ten: bt0.ten, cl: bt0.chat_lieu, mau: '', font: fonts[0] || '', chu: '', chu2: dai ? '2026' : '', sl: 1 };
-    function chuGhep() { return dai ? (sel.chu ? PodVeTen.ghepDai(sel.chu, sel.chu2) : '') : sel.chu; } // đuôi đai: "SOPHIA / 2026"
+    var gd = !!(xt && xt.ve === 'gia_dinh'); // ornament gia đình: nhiều ô chữ, đơn ghi "A / B / ..." theo xt.o_nhap
+    var sel = { kieu: bt0.kieu || null, ten: bt0.ten, cl: bt0.chat_lieu, mau: '', font: fonts[0] || '', chu: '', chu2: dai ? '2026' : '', sl: 1, gd: {} };
+    if (gd) xt.o_nhap.forEach(function (o) { sel.gd[o.k] = o.mac_dinh || ''; });
+    function chuGhep() {
+      if (gd) { var s = PodVeTen.ghepGiaDinh(xt, sel.gd); return xt.o_nhap.some(function (o) { return sel.gd[o.k] && !o.mac_dinh; }) ? s : ''; }
+      return dai ? (sel.chu ? PodVeTen.ghepDai(sel.chu, sel.chu2) : '') : sel.chu; // đuôi đai: "SOPHIA / 2026"
+    }
     function giong(b, k) { return (!k.kieu || b.kieu === sel.kieu) && (!k.ten || b.ten === sel.ten) && (!k.cl || b.chat_lieu === sel.cl); }
     function duyNhat(ds) { return ds.filter(function (v, i) { return v !== null && v !== undefined && ds.indexOf(v) === i; }); }
     function bt() { return m.bien_the.find(function (b) { return giong(b, { kieu: 1, ten: 1, cl: 1 }); }); }
@@ -408,8 +413,13 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
         nhom('Màu nhựa', 'mau', b ? b.mau_sac : [], function (v) { return '<i class="cham" style="background:' + PodVeTen.nenChip(v) + '"></i>' + esc(v); }) +
         nhom('Font chữ', 'font', fonts, function (v) { return '<span style="font:' + PodVeTen.css(v, 18).replace(/"/g, "'") + '">' + esc(sel.chu || 'Emma') + '</span><small class="mu"> ' + esc(v) + '</small>'; });
       if (b) {
-        h += '<label class="f" style="margin-top:12px">' + (td && xt && xt.nhan1 ? esc(xt.nhan1) + ' (tối đa ' + td + ' ký tự)' : td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
-          '<input id="mChu" maxlength="' + (td || 300) + '" value="' + esc(sel.chu) + '" placeholder="' + esc(dai ? 'Vd: SOPHIA' : (xt && xt.goi_y) || (td ? 'Vd: Emma' : 'Bỏ trống nếu không')) + '"' + (hoa ? ' style="text-transform:uppercase"' : '') + '></label>' +
+        h += (gd
+          ? (xt.nhan1 ? '<p class="mu" style="margin-top:12px">' + esc(xt.nhan1) + '</p>' : '') + xt.o_nhap.map(function (o) {
+              return '<label class="f" style="margin-top:10px">' + esc(o.nhan) + (o.ghi ? ' <small class="mu">' + esc(o.ghi) + '</small>' : '') +
+                '<input data-gd="' + esc(o.k) + '" maxlength="' + (o.toi || 22) + '" value="' + esc(sel.gd[o.k] || '') + '" placeholder="Vd: ' + esc(o.goi_y || '') + '" autocomplete="off"></label>';
+            }).join('')
+          : '<label class="f" style="margin-top:12px">' + (td && xt && xt.nhan1 ? esc(xt.nhan1) + ' (tối đa ' + td + ' ký tự)' : td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
+          '<input id="mChu" maxlength="' + (td || 300) + '" value="' + esc(sel.chu) + '" placeholder="' + esc(dai ? 'Vd: SOPHIA' : (xt && xt.goi_y) || (td ? 'Vd: Emma' : 'Bỏ trống nếu không')) + '"' + (hoa ? ' style="text-transform:uppercase"' : '') + '></label>') +
           (dai ? '<label class="f" style="margin-top:10px">' + esc(xt.nhan2) + '<input id="mChu2" maxlength="' + td + '" value="' + esc(sel.chu2) + '" placeholder="Vd: 2026" style="text-transform:uppercase"></label>' : '') +
           '<div class="gia-chon"><div><div class="mu">Giá in 1 chiếc · ' + gram(b.gram) + '</div><b>' + tien(b.gia) + '</b></div>' +
           '<label class="f" style="width:110px">Số lượng<input id="mSl" type="number" min="1" max="500" value="' + sel.sl + '"></label></div>' +
@@ -425,7 +435,7 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
       if ($('mChu2')) $('mChu2').oninput = function () { sel.chu2 = $('mChu2').value.trim(); baoDai(); veXemTruoc(); };
       function baoDai() { // chữ đuôi đai / dấu bánh: báo ngay khi gõ, chữ không in được thì chưa cho thêm vào đơn
         if (!$('mLoi')) return null;
-        var loi = sel.chu ? PodVeTen.kiem(khungNay() || xt, chuGhep()) : null;   // số xếp tên của kiểu đang chọn
+        var loi = sel.chu ? PodVeTen.kiem(khungNay() || xt, chuGhep(), sel.ten) : null;   // số xếp tên của kiểu + cỡ đang chọn
         $('mLoi').textContent = loi || ''; $('mLoi').classList.toggle('hide', !loi);
         return loi;
       }
@@ -434,6 +444,13 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
         $('mbox').querySelectorAll('.chon[data-k="font"] span').forEach(function (s) { s.textContent = sel.chu || 'Emma'; });
         veXemTruoc();
       };
+      $('mbox').querySelectorAll('[data-gd]').forEach(function (ip) {
+        ip.oninput = function () {
+          sel.gd[ip.dataset.gd] = ip.value; sel.chu = chuGhep();
+          if ($('mLoi')) $('mLoi').classList.add('hide');
+          baoDai(); veXemTruoc();
+        };
+      });
       if ($('mTaiKt')) $('mTaiKt').onclick = function () {
         PodVeTen.tai($('mKt'), [m.ten, 'kich thuoc', sel.kieu ? tenKieu(sel.kieu) : '', sel.ten].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
       };
@@ -441,11 +458,13 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
         PodVeTen.tai($('mCv'), [m.ten, (khungNay() || {}).ten, sel.chu || 'mau', sel.mau].filter(Boolean).join('-').replace(/[\\/:*?"<>|]+/g, '') + '.png');
       };
       veXemTruoc();
+      if (gd && sel.chu) baoDai(); // đổi cỡ: tên dài có thể không còn vừa cỡ nhỏ
       var nut = $('mThem');
       if (nut) nut.onclick = function () {
         luuO();
-        if (td && !sel.chu) { $('mLoi').textContent = 'Nhập tên cần in trên mẫu.'; $('mLoi').classList.remove('hide'); $('mChu').focus(); return; }
-        if (baoDai()) { $('mChu').focus(); return; }
+        var oDau = $('mChu') || $('mbox').querySelector('[data-gd]');
+        if (td && !sel.chu) { $('mLoi').textContent = 'Nhập tên cần in trên mẫu.'; $('mLoi').classList.remove('hide'); oDau.focus(); return; }
+        if (baoDai()) { oDau.focus(); return; }
         var tenK = sel.kieu ? tenKieu(sel.kieu) + ' · ' : '';
         st.gio.push({ bien_the_id: b.id, ten_mau: m.ten, ten_bt: tenK + b.ten, chat_lieu: b.chat_lieu, gia: b.gia, phi_ca_nhan: m.phi_ca_nhan,
           mau_sac: sel.mau || '', font: fonts.length ? sel.font : '', chu: chuGhep(), so_luong: sel.sl });
@@ -456,6 +475,7 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
     function luuO() { // giữ tên + số lượng khi vẽ lại hộp
       if ($('mChu')) sel.chu = $('mChu').value.trim();
       if ($('mChu2')) sel.chu2 = $('mChu2').value.trim();
+      if (gd) { $('mbox').querySelectorAll('[data-gd]').forEach(function (ip) { sel.gd[ip.dataset.gd] = ip.value; }); sel.chu = chuGhep(); }
       if ($('mSl')) sel.sl = Math.max(1, Math.min(500, parseInt($('mSl').value, 10) || 1));
     }
     veM();

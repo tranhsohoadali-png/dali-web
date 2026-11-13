@@ -143,14 +143,28 @@ class PodMau extends Model
      * {"kieu": .., "in_gi": ..} theo "Kiểu · phân loại")}, khoa?: tên tuỳ chọn của app nhận giá trị đơn (mặc định kich_thuoc;
      * dấu bánh: in_gi), mau_dai?: {màu trong đơn: giá trị tuỳ chọn mau_dai}}. Có bảng mau_dai mà màu của dòng
      * không có trong bảng: cũng null, in sai màu đai là bỏ cả chiếc. Chỉ mẫu đuôi đai mới tách "TÊN / NĂM" (tuỳ chọn nam).
+     * Mẫu gia đình (ve=gia_dinh): tách "A / B / ..." theo xem_truoc.o_nhap — ô thay_ten.o_ten (mặc định 'ho') thành 'ten' của
+     * app, các ô còn lại thành tuỳ chọn cùng khoá; thay_ten.theo_nhua = true thì thêm tuỳ chọn nhua = chất liệu của dòng đơn.
      */
-    public function thamSoFileIn(?string $tenCo, ?string $chu, ?string $mauSac = null): ?array
+    public function thamSoFileIn(?string $tenCo, ?string $chu, ?string $mauSac = null, ?string $chatLieu = null): ?array
     {
         $tt = $this->xem_truoc['thay_ten'] ?? null;
         $co = $tt['co'][(string) $tenCo] ?? null;
         if (empty($tt['mau']) || $co === null || trim((string) $chu) === '') return null;
         $khoa = (string) ($tt['khoa'] ?? 'kich_thuoc');
         $tc0 = is_array($co) ? array_map('strval', $co) : [$khoa => (string) $co];
+        if ($this->laGiaDinh()) {
+            $o = $this->tachGiaDinh((string) $chu);
+            $kTen = (string) ($tt['o_ten'] ?? 'ho');
+            $ten = $o[$kTen] ?? '';
+            unset($o[$kTen]);
+            $tc = $tc0 + $o;
+            if (!empty($tt['theo_nhua'])) {
+                if (!$chatLieu) return null;
+                $tc['nhua'] = (string) $chatLieu;
+            }
+            return ['mau' => $tt['mau'], 'ten' => $ten, 'tuy_chon' => $tc];
+        }
         if (!$this->laDai()) return ['mau' => $tt['mau'], 'ten' => trim((string) $chu), 'tuy_chon' => $tc0];
         $p = array_map('trim', explode('/', (string) $chu, 2));
         $tc = $tc0 + ['nam' => $p[1] ?? ''];
@@ -187,6 +201,79 @@ class PodMau extends Model
         $td = (int) ($x['toi_ky_tu'] ?? 10);
         if (mb_strlen(str_replace(' ', '', $t)) > $td) throw new \InvalidArgumentException("tên tối đa $td ký tự (không tính dấu cách).");
         return $t;
+    }
+
+    /**
+     * Mẫu GIA ĐÌNH nhiều ô chữ (ornament gia đình tuần lộc, app Thay tên mau_ornament_tuan_loc): đơn ghi các ô theo thứ tự
+     * xem_truoc.o_nhap, ngăn bằng " / " — vd "Dad / Mom / Liam / Emma / Noah / The Smith Family / 2026".
+     */
+    public function laGiaDinh(): bool
+    {
+        return ($this->xem_truoc['ve'] ?? '') === 'gia_dinh';
+    }
+
+    /** "A / B / ..." -> [khoá ô => chữ] theo xem_truoc.o_nhap (ô thiếu = ''). */
+    public function tachGiaDinh(string $chu): array
+    {
+        $p = array_map(fn ($s) => trim(preg_replace('/\s+/u', ' ', $s)), explode('/', $chu));
+        $kq = [];
+        foreach (array_values((array) ($this->xem_truoc['o_nhap'] ?? [])) as $i => $o) $kq[(string) $o['k']] = $p[$i] ?? '';
+        return $kq;
+    }
+
+    /**
+     * Chuẩn hoá + kiểm đơn mẫu gia đình, CÙNG LUẬT app Thay tên (tl_chu.chuan_ten + tl_chu.vua_o của mau_ornament_tuan_loc):
+     * mỗi ô bắt buộc, chỉ chữ tiếng Anh A–Z a–z, số, dấu cách và ' - . &, tối đa bang.toi_ky_tu[ô] ký tự KHÔNG tính dấu cách;
+     * ô có số ở bang.co[$tenCo][ô] (tên trên mũ, năm): chữ hoa = min(cap_max, rong × cap10 / mực10) phải ≥ min (mm) — tên dài ở
+     * cỡ nhỏ bị từ chối như app. bang = xem_truoc.bang (ornament-tuan-loc/bang_do.py, đã đối chiếu 100 % với app).
+     * Trả "A / B / ..."; sai thì ném \InvalidArgumentException câu báo seller.
+     */
+    public function chuanGiaDinh(string $chu, ?string $tenCo = null): string
+    {
+        $x = (array) $this->xem_truoc;
+        $b = (array) ($x['bang'] ?? []);
+        $o = array_values((array) ($x['o_nhap'] ?? []));
+        if (count(explode('/', $chu)) > count($o)) throw new \InvalidArgumentException('dấu / chỉ dùng để ngăn các ô, không in được trong tên.');
+        $kq = [];
+        foreach ($this->tachGiaDinh($chu) as $k => $t) {
+            $oo = collect($o)->firstWhere('k', $k);
+            $nhan = (string) ($oo['nhan'] ?? $k);
+            if ($t === '') throw new \InvalidArgumentException("chưa nhập $nhan.");
+            if (!preg_match("/^[A-Za-z0-9 '\\-.&]+$/", $t)) throw new \InvalidArgumentException("$nhan chỉ nhận chữ tiếng Anh A–Z, số 0–9, dấu cách và ' - . &");
+            $td = (int) ($b['toi_ky_tu'][$k] ?? 9);
+            if (strlen(str_replace(' ', '', $t)) > $td) throw new \InvalidArgumentException("$nhan tối đa $td ký tự (không tính dấu cách).");
+            $s = $tenCo !== null ? ($b['co'][$tenCo][$k] ?? null) : null;
+            if ($s && !$this->vuaGiaDinh($t, (array) $s)) {
+                throw new \InvalidArgumentException("$nhan “{$t}” dài quá ở cỡ $tenCo (chữ sẽ nhỏ hơn " . str_replace('.', ',', (string) $s['min'])
+                    . ' mm, in không rõ) — rút gọn tên hoặc chọn cỡ lớn hơn.');
+            }
+            $kq[] = $t;
+        }
+        return implode(' / ', $kq);
+    }
+
+    /** Chữ hoa của ô (mm) khi app xếp tên vào hộp: = vua_o (co lại khi bề ngang PHẦN MỰC vượt hộp). */
+    private function vuaGiaDinh(string $t, array $s): bool
+    {
+        $b = $this->xem_truoc['bang'];
+        $x = 0.0;
+        $lo = INF;
+        $hi = -INF;
+        $truoc = null;
+        foreach (str_split($t) as $c) {
+            if ($truoc !== null) $x += (float) ($b['kern'][$truoc . $c] ?? 0);
+            $g = $b['g'][$c] ?? null;
+            if (!$g) return false;
+            if ($c !== ' ') {
+                $lo = min($lo, $x + (float) $g['l']);
+                $hi = max($hi, $x + (float) $g['r']);
+            }
+            $x += (float) $g['a'];
+            $truoc = $c;
+        }
+        $muc = $hi - $lo;
+        if ($muc <= 0) return true;
+        return min((float) $s['cap_max'], (float) $s['rong'] * (float) $b['cap10'] / $muc) >= (float) $s['min'] - 1e-9;
     }
 
     /** Mẫu dấu bánh quy (tên chạy cung dưới mặt dấu, app Thay tên mẫu dau_banh). */

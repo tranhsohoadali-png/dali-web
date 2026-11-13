@@ -164,7 +164,13 @@ class PodSo
             $chu = mb_substr(trim((string) ($d['chu'] ?? '')), 0, 300);
             if ($toiDa = $mau->tenToiDa($bt->kieu)) { // mẫu khắc tên: bắt buộc có tên, không quá số ký tự ô tên chứa được
                 if ($chu === '') throw ValidationException::withMessages(["dong.$i" => "Dòng $so: nhập tên cần in."]);
-                if ($mau->laDai()) { // chữ đuôi đai: chuẩn hoá thành "TÊN / NĂM", kiểm theo bề rộng thật
+                if ($mau->laGiaDinh()) { // ornament gia đình: nhiều ô "A / B / ...", kiểm từng ô theo cỡ đặt như app Thay tên
+                    try {
+                        $chu = $mau->chuanGiaDinh($chu, $bt->ten);
+                    } catch (\InvalidArgumentException $e) {
+                        throw ValidationException::withMessages(["dong.$i" => "Dòng $so: " . $e->getMessage()]);
+                    }
+                } elseif ($mau->laDai()) { // chữ đuôi đai: chuẩn hoá thành "TÊN / NĂM", kiểm theo bề rộng thật
                     try {
                         $chu = $mau->chuanDai($chu);
                     } catch (\InvalidArgumentException $e) {
