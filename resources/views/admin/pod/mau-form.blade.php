@@ -71,7 +71,7 @@
         <td><select name="bt[{{ $i }}][chat_lieu]">@foreach($bangGia as $cl => $g)<option value="{{ $cl }}" @selected(\App\Services\PodSo::chatLieu($b['chat_lieu'] ?? null) === $cl)>{{ $cl }} · {{ number_format($g, 0, ',', '.') }}đ/g</option>@endforeach</select></td>
         <td><input name="bt[{{ $i }}][kt]" value="{{ $b['kt'] ?? '' }}" maxlength="60" placeholder="{{ !empty($b['kt_ten']) ? 'đo theo tên (tự động)' : 'vd 76,2 × 87,7 × 3' }}"></td>
         <td><input name="bt[{{ $i }}][mau_sac]" value="{{ $b['mau_sac'] }}" maxlength="300" placeholder="Trắng, Hồng, Xanh"></td>
-        <td><input name="bt[{{ $i }}][file_in]" value="{{ $b['file_in'] }}" maxlength="300" placeholder="E:\POD\..."></td>
+        <td><input name="bt[{{ $i }}][file_in]" value="{{ $b['file_in'] }}" maxlength="2000" placeholder="E:\POD\..." title="{{ $b['file_in'] }}"></td>
       </tr>
       @endforeach
     </table>

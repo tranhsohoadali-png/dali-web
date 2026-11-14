@@ -171,7 +171,7 @@ class PodMauController extends Controller
             'bt.*.gram'      => 'nullable|numeric|min:0.1|max:5000',
             'bt.*.chat_lieu' => 'nullable|in:PETG,PLA',
             'bt.*.mau_sac'   => 'nullable|string|max:300',
-            'bt.*.file_in'   => 'nullable|string|max:300',
+            'bt.*.file_in'   => 'nullable|string|max:2000', // hướng dẫn in có thể dài (script đăng mẫu ghi tới ~1.000 ký tự)
             'bt.*.kt'        => 'nullable|string|max:60',
             'anh_moi'        => 'nullable|array|max:12',
             'anh_moi.*'      => 'image|mimes:jpg,jpeg,png,webp|max:8192',
@@ -180,6 +180,10 @@ class PodMauController extends Controller
             'file_in_moi.*'  => 'file|max:61440',
             'xoa_file_in'    => 'nullable|array',
             'xoa_file_in.*'  => 'string|max:200',
+        ], [
+            'bt.*.file_in.max' => 'Ô "File in" của một phân loại dài quá 2.000 ký tự.',
+            'bt.*.mau_sac.max' => 'Ô "Màu cho phép" của một phân loại dài quá 300 ký tự.',
+            'bt.*.ten.max'     => 'Tên phân loại dài quá 120 ký tự.',
         ]);
         foreach ((array) $request->file('file_in_moi', []) as $f) {
             if (!PodMau::tenFileIn($f->getClientOriginalName())) {

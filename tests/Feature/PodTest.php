@@ -513,6 +513,13 @@ class PodTest extends TestCase
         $admin->put('/admin/3d/pod/mau/' . $m->id, ['gia_gram' => ''] + $form)->assertSessionHasNoErrors();
         $this->assertNull($m->fresh()->gia_gram);
         $this->assertSame(900, PodSo::donGia($m->fresh(), 'PETG'));
+        // ô "File in" dài (script đăng mẫu ghi hướng dẫn ~1.000 ký tự, vd ornament Pilates) vẫn lưu được form
+        $dai = str_repeat('MỖI ĐƠN: bấm "Tạo file in" rồi in A1 PETG. ', 25);           // ~1.050 ký tự
+        $form['bt'][0]['file_in'] = $dai;
+        $admin->put('/admin/3d/pod/mau/' . $m->id, $form)->assertSessionHasNoErrors();
+        $this->assertSame(trim($dai), PodBienThe::find($this->bt($m))->file_in);
+        $form['bt'][0]['file_in'] = str_repeat('x', 2001);
+        $admin->put('/admin/3d/pod/mau/' . $m->id, $form)->assertSessionHasErrors(['bt.0.file_in' => 'Ô "File in" của một phân loại dài quá 2.000 ký tự.']);
     }
 
     public function test_admin_danh_sach_mau_gop_kieu_phan_loai_nhua(): void
