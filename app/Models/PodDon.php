@@ -12,6 +12,7 @@ class PodDon extends Model
     protected $casts = [
         'noi_giao' => 'array',
         'da_tru'   => 'boolean',
+        'xuong_tao'=> 'boolean',
         'giao_luc' => 'datetime',
         'huy_luc'  => 'datetime',
     ];

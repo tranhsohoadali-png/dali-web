@@ -6,6 +6,7 @@
 @endphp
 <div class="card"><div class="pad acts">
   @foreach($tabs as $k => $ten)<a class="btn-sm {{ $tt === $k ? 'btn-warn' : '' }}" href="{{ route('admin.pod.don.index', ['tt' => $k]) }}">{{ $ten }}</a>@endforeach
+  <a class="btn" href="{{ route('admin.pod.don.tao') }}" style="margin-left:auto">+ Tạo đơn hộ seller</a>
 </div></div>
 <div class="card">
   @if($tt === 'can_lam')<div class="card-h"><div class="card-hint">Hàng đợi in: đơn đã trừ ví, cũ nhất trước. Đơn Chờ nạp tiền chưa in (seller chưa đủ tiền).</div></div>@endif

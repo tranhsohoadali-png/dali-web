@@ -80,21 +80,20 @@ class PodSellerController extends Controller
     }
 
     /**
-     * Ví trả sau: đặt hạn mức nợ (đ). Đơn vẫn vào hàng đợi in khi ví âm, miễn không vượt −hạn mức;
-     * seller chuyển khoản "NAP <mã>" sau để trả. 0 = trả trước. Nới hạn mức thì đơn Chờ nạp tiền chạy ngay.
+     * Bật / tắt ví trả sau (KHÔNG giới hạn): bật thì mọi đơn vào hàng đợi in ngay, ví âm thành nợ, seller chuyển khoản
+     * "NAP <mã>" sau để trả (bấm Nạp tiền như thường). Bật thì đơn Chờ nạp tiền chạy luôn; tắt thì đơn mới phải đủ tiền.
      */
-    public function hanMuc(Request $request, PodSeller $seller)
+    public function traSau(Request $request, PodSeller $seller)
     {
-        $request->merge(['han_muc' => self::boCham($request->input('han_muc'))]);
-        $v = $request->validate(['han_muc' => 'required|integer|min:0|max:1000000000']);
-        $cu = (int) $seller->han_muc;
-        $seller->update(['han_muc' => (int) $v['han_muc']]);
+        $v = $request->validate(['tra_sau' => 'required|in:0,1']);
+        $seller->update(['tra_sau' => $v['tra_sau'] === '1']);
         $n = PodSo::xuLyChoNap($seller);
+        $no = -min(0, $seller->soDu());
         $tien = fn ($x) => number_format($x, 0, ',', '.') . 'đ';
-        return back()->with('ok', ($seller->han_muc > 0
-                ? 'Đã đặt ví trả sau cho ' . $seller->ten . ': hạn mức ' . $tien($seller->han_muc) . ' (cũ ' . $tien($cu) . ').'
-                : 'Đã tắt trả sau của ' . $seller->ten . ' — từ giờ phải nạp trước.')
-            . ($seller->soDu() < -$seller->han_muc ? ' Seller đang nợ ' . $tien(-$seller->soDu()) . ', vượt hạn mức: đơn mới chờ nạp tiền.' : '')
+        return back()->with('ok', ($seller->tra_sau
+                ? 'Đã bật trả sau cho ' . $seller->ten . ' (không giới hạn): đơn vào máy in ngay, ví âm thành nợ.'
+                : 'Đã tắt trả sau của ' . $seller->ten . ' — từ giờ phải nạp trước.'
+                    . ($no > 0 ? ' Seller đang nợ ' . $tien($no) . ': đơn mới chờ nạp tiền cho tới khi trả hết nợ.' : ''))
             . ($n > 0 ? " $n đơn chờ nạp tiền đã vào hàng đợi in." : ''));
     }
 

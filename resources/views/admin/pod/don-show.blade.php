@@ -1,6 +1,6 @@
 @include('admin.pod._dau', ['tieuDe' => 'Đơn ' . $don->ma])
 <div class="card">
-  <div class="card-h"><div class="card-t">{{ $don->ma }} · <span class="badge b-{{ $don->trang_thai }}">{{ $don->tenTrangThai() }}</span></div>
+  <div class="card-h"><div class="card-t">{{ $don->ma }} · <span class="badge b-{{ $don->trang_thai }}">{{ $don->tenTrangThai() }}</span>@if($don->xuong_tao) <span class="badge b-chung">Xưởng tạo hộ</span>@endif</div>
     <div class="card-hint">Đặt {{ optional($don->created_at)->format('d/m/Y H:i') }} · {{ $don->da_tru ? 'Đã trừ ví' : 'Chưa trừ ví' }}@if($don->huy_luc) · Huỷ {{ $don->huy_luc->format('d/m/Y H:i') }}@endif @if($don->giao_luc) · Giao {{ $don->giao_luc->format('d/m/Y H:i') }}@endif @if($don->nguoi_in) · In: {{ $don->nguoi_in }}@endif @if($don->nguoi_giao) · Giao bởi: {{ $don->nguoi_giao }}@endif</div></div>
   <div class="pad grid" style="align-items:start">
     <div><div class="muted">Seller</div><b>{{ optional($don->seller)->ten }}</b> ({{ optional($don->seller)->ma }})<div class="muted">{{ optional($don->seller)->sdt }}</div>@if($don->nhan_vien_id)<div class="muted">Người đặt: nhân viên {{ optional(\App\Models\PodNhanVien::find($don->nhan_vien_id))->ten ?? '#' . $don->nhan_vien_id }}</div>@endif</div>

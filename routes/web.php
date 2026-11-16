@@ -164,7 +164,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('seller/{seller}/duyet', [\App\Http\Controllers\Admin\PodSellerController::class, 'duyet'])->name('seller.duyet');
         Route::post('seller/{seller}/tu-choi', [\App\Http\Controllers\Admin\PodSellerController::class, 'tuChoi'])->name('seller.tuchoi');
         Route::post('seller/{seller}/nap',   [\App\Http\Controllers\Admin\PodSellerController::class, 'nap'])->name('seller.nap');
-        Route::post('seller/{seller}/han-muc', [\App\Http\Controllers\Admin\PodSellerController::class, 'hanMuc'])->name('seller.hanmuc');
+        Route::post('seller/{seller}/tra-sau', [\App\Http\Controllers\Admin\PodSellerController::class, 'traSau'])->name('seller.trasau');
         Route::get('seller/{seller}/vi',     [\App\Http\Controllers\Admin\PodSellerController::class, 'vi'])->name('seller.vi');
         Route::get('mau',                    [\App\Http\Controllers\Admin\PodMauController::class, 'index'])->name('mau.index');
         Route::get('mau/them',               [\App\Http\Controllers\Admin\PodMauController::class, 'create'])->name('mau.create');
@@ -176,6 +176,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::post('gia-gram',              [\App\Http\Controllers\Admin\PodMauController::class, 'giaGram'])->name('giagram');
         Route::get('nhat-ky',                [\App\Http\Controllers\Admin\PodMauController::class, 'nhatKy'])->name('nhatky');
         Route::get('don',                    [\App\Http\Controllers\Admin\PodDonController::class, 'index'])->name('don.index');
+        Route::get('don/tao',                [\App\Http\Controllers\Admin\PodDonController::class, 'tao'])->name('don.tao');      // trước don/{don}
+        Route::post('don/tao',               [\App\Http\Controllers\Admin\PodDonController::class, 'taoLuu'])->name('don.taoluu');
         Route::get('don/{don}',              [\App\Http\Controllers\Admin\PodDonController::class, 'show'])->name('don.show');
         Route::post('don/{don}/trang-thai',  [\App\Http\Controllers\Admin\PodDonController::class, 'trangThai'])->name('don.status');
         Route::post('don/{don}/huy',         [\App\Http\Controllers\Admin\PodDonController::class, 'huy'])->name('don.huy');

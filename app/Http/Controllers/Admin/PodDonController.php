@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PodBienThe;
 use App\Models\PodDon;
+use App\Models\PodMau;
+use App\Models\PodNoiGiao;
 use App\Models\PodSeller;
 use App\Services\PodSo;
 use Illuminate\Http\Request;
@@ -12,6 +14,88 @@ use Illuminate\Support\Facades\Storage;
 /** Cổng POD: hàng đợi in + đơn seller. Mặc định chỉ hiện đơn cần làm (Chờ in, Đang in). */
 class PodDonController extends Controller
 {
+    /**
+     * Xưởng tạo đơn hộ seller (seller gửi đơn qua Zalo...). Chỉ chọn được mẫu seller đó thấy (PodMau::hienCho — giữ kín
+     * mẫu riêng người khác); chữ/màu/font kiểm như seller tự đặt (PodSo::tinhDong); tiền trừ ví seller, thiếu thì Chờ nạp tiền.
+     */
+    public function tao(Request $request)
+    {
+        $sellers = PodSeller::where('cho_duyet', false)->orderBy('ten')->get();
+        $s = $request->filled('seller') ? $sellers->firstWhere('id', (int) $request->query('seller')) : null;
+        $mau = collect();
+        $noiGiao = collect();
+        $bt = [];
+        if ($s) {
+            $mau = PodMau::hienCho($s->id)->with('bienThe')->orderBy('ten')->get();
+            $noiGiao = PodNoiGiao::where('seller_id', $s->id)->orderBy('id')->get();
+            $bangGia = PodSo::bangGia();
+            foreach ($mau as $m) {
+                foreach ($m->bienThe as $b) {
+                    if ($b->laCu()) continue;
+                    $toiDa = $m->tenToiDa($b->kieu);
+                    $bt[$b->id] = [
+                        'gia'   => PodSo::giaBienThe($m, $b, $bangGia),
+                        'phi'   => (int) $m->phi_ca_nhan,
+                        'mau'   => $b->dsMau(),
+                        'font'  => $m->dsFont(),
+                        'goi_y' => ($toiDa <= 0 ? 'Chữ cá nhân hoá (không bắt buộc)'
+                            : ($m->laDai() ? 'Bắt buộc: TÊN / NĂM' : ($m->laGiaDinh() ? 'Bắt buộc: Tên 1 / Tên 2 / …' : 'Bắt buộc: tên in, tối đa ' . $toiDa . ' ký tự')))
+                            . ($m->phi_ca_nhan ? ' · +' . number_format($m->phi_ca_nhan, 0, ',', '.') . 'đ' : ''),
+                    ];
+                }
+            }
+        }
+        return view('admin.pod.don-tao', compact('sellers', 's', 'mau', 'noiGiao', 'bt'));
+    }
+
+    public function taoLuu(Request $request)
+    {
+        $v = $request->validate([
+            'seller_id'          => 'required|integer',
+            'dong'               => 'required|array|max:50',
+            'dong.*.bien_the_id' => 'nullable|integer',
+            'dong.*.so_luong'    => 'nullable|integer|min:1|max:' . PodSo::SL_TOI_DA,
+            'dong.*.mau_sac'     => 'nullable|string|max:60',
+            'dong.*.chu'         => 'nullable|string|max:300',
+            'dong.*.font'        => 'nullable|string|max:80',
+            'noi_giao_id'        => 'nullable|string|max:20',
+            'ng_ten'             => 'nullable|string|max:120',
+            'ng_dia_chi'         => 'nullable|string|max:500',
+            'ng_sdt'             => 'nullable|string|max:30',
+            'ng_ghi_chu'         => 'nullable|string|max:300',
+            'ma_don_san'         => 'nullable|string|max:60',
+            'ghi_chu'            => 'nullable|string|max:1000',
+            'nhan'               => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+        ]);
+        $s = PodSeller::where('cho_duyet', false)->find((int) $v['seller_id']);
+        if (!$s) return back()->withErrors(['seller_id' => 'Chọn seller.'])->withInput();
+        if (!$s->hien) return back()->withErrors(['seller_id' => 'Seller "' . $s->ten . '" đang bị khoá, mở khoá trước khi tạo đơn.'])->withInput();
+        // bỏ dòng trống, đánh lại số dòng theo thứ tự điền
+        $dong = array_values(array_map(fn ($d) => ['so_luong' => (int) ($d['so_luong'] ?? 0) ?: 1] + $d,
+            array_filter($v['dong'], fn ($d) => !empty($d['bien_the_id']))));
+        if (!$dong) return back()->withErrors(['dong' => 'Chọn phân loại cho ít nhất một dòng.'])->withInput();
+
+        $chon = (string) ($v['noi_giao_id'] ?? '');
+        if ($chon !== '' && $chon !== 'moi') {
+            $ng = PodNoiGiao::where('seller_id', $s->id)->whereKey((int) $chon)->first();
+            if (!$ng) return back()->withErrors(['noi_giao_id' => 'Nơi giao không thuộc seller này.'])->withInput();
+            $noiGiao = ['ten' => $ng->ten, 'dia_chi' => $ng->dia_chi, 'sdt' => $ng->sdt, 'ghi_chu' => $ng->ghi_chu];
+        } else {
+            $ten = trim((string) ($v['ng_ten'] ?? ''));
+            $diaChi = trim((string) ($v['ng_dia_chi'] ?? ''));
+            if ($ten === '' || $diaChi === '') return back()->withErrors(['noi_giao_id' => 'Chọn nơi giao của seller, hoặc nhập tên + địa chỉ nơi giao mới.'])->withInput();
+            $noiGiao = ['ten' => $ten, 'dia_chi' => $diaChi, 'sdt' => trim((string) ($v['ng_sdt'] ?? '')) ?: null, 'ghi_chu' => trim((string) ($v['ng_ghi_chu'] ?? '')) ?: null];
+        }
+
+        $don = PodSo::datDon($s, $dong, $noiGiao, trim((string) ($v['ma_don_san'] ?? '')) ?: null,
+            trim((string) ($v['ghi_chu'] ?? '')) ?: null, $request->file('nhan'), null, true);
+        $tien = fn ($x) => number_format($x, 0, ',', '.') . 'đ';
+        return redirect()->route('admin.pod.don.show', $don)->with('ok', 'Đã tạo đơn ' . $don->ma . ' hộ ' . $s->ten . ' · ' . $tien($don->tong_tien) . '. '
+            . ($don->trang_thai === 'cho_in'
+                ? 'Đã trừ ví, đơn vào hàng đợi in.' . (($du = $s->soDu()) < 0 ? ' Seller trả sau, đang nợ ' . $tien(-$du) . '.' : '')
+                : 'Ví seller chưa đủ (số dư ' . $tien($s->soDu()) . '): đơn Chờ nạp tiền, tự vào sản xuất khi seller nạp đủ.'));
+    }
+
     public function index(Request $request)
     {
         $tt = (string) $request->query('tt', 'can_lam');

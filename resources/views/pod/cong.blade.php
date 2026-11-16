@@ -504,8 +504,9 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
       (laNv()
         ? '<p class="mu" style="margin-top:12px">Tiền đơn trừ vào ví của shop. Ví chưa đủ thì đơn chờ chủ shop nạp tiền, tự vào sản xuất khi đủ.</p>'
         : '<p class="mu" style="margin-top:12px">Ví hiện có ' + tien(st.me.so_du) + '. ' +
-        (st.me.han_muc > 0 ? 'Trả sau còn dùng được ' + tien(Math.max(0, st.me.so_du + st.me.han_muc)) + ' (hạn mức ' + tien(st.me.han_muc) + '). ' : '') +
-        (st.me.so_du + (st.me.han_muc || 0) >= tong ? (st.me.so_du >= tong ? 'Đủ tiền: đơn vào hàng đợi in ngay khi gửi.' : 'Trong hạn mức trả sau: đơn vào hàng đợi in ngay, ví âm thành nợ — chuyển khoản sau để trả.') : 'Chưa đủ: đơn sẽ chờ nạp tiền, tự vào sản xuất khi nạp đủ.') + '</p>') +
+        (st.me.so_du >= tong ? 'Đủ tiền: đơn vào hàng đợi in ngay khi gửi.'
+          : st.me.tra_sau ? 'Ví trả sau: đơn vào hàng đợi in ngay, ví âm thành nợ — chuyển khoản sau để trả.'
+          : 'Chưa đủ: đơn sẽ chờ nạp tiền, tự vào sản xuất khi nạp đủ.') + '</p>') +
       '<button class="btn" id="gGui" style="margin-top:12px"' + (st.noiGiao.length ? '' : ' disabled') + '>Gửi đơn · ' + tien(tong) + '</button></div>';
     main.innerHTML = h;
     main.querySelectorAll('[data-sl]').forEach(function (inp) { inp.onchange = function () { st.gio[+inp.dataset.sl].so_luong = Math.max(1, Math.min(500, parseInt(inp.value, 10) || 1)); luuGio(); veGio(); }; });
@@ -536,7 +537,7 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
     var h = veMsg() + '<h2>Đơn của tôi</h2><p class="sub">Đơn Chờ nạp tiền và Chờ in còn huỷ được; đơn đã lên máy in thì không.</p>';
     if (!ds.length) { main.innerHTML = h + '<div class="box trong"><b>Chưa có đơn nào</b>Chọn mẫu rồi gửi đơn ở mục Đơn đang soạn.</div>'; return; }
     h += ds.map(function (d) {
-      return '<div class="box"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><b>' + esc(d.ma) + '</b> <span class="mu">· ' + esc(d.luc) + (d.ma_don_san ? ' · ' + esc(d.ma_don_san) : '') + (coNv ? ' · Người đặt: ' + esc(d.nguoi_dat) : '') + '</span></div>' +
+      return '<div class="box"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><b>' + esc(d.ma) + '</b> <span class="mu">· ' + esc(d.luc) + (d.ma_don_san ? ' · ' + esc(d.ma_don_san) : '') + (coNv || d.xuong_tao ? ' · Người đặt: ' + esc(d.nguoi_dat) : '') + '</span></div>' +
         '<span class="st st-' + d.trang_thai + '">' + esc(d.ten_tt) + '</span></div>' +
         '<table style="margin-top:8px">' + d.dong.map(function (x) {
           return '<tr><td>' + esc(x.ten_mau) + ' <span class="mu">· ' + esc(x.ten_bien_the) + (x.chat_lieu ? ' · ' + esc(x.chat_lieu) : '') + (x.mau_sac ? ' · ' + esc(x.mau_sac) : '') + (x.chu ? ' · "' + esc(x.chu) + '"' : '') + (x.font ? ' · ' + esc(x.font) : '') + '</span></td><td class="num">× ' + x.so_luong + '</td><td class="num">' + tien(x.thanh_tien) + '</td></tr>';
@@ -555,11 +556,11 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
 
   /* ---------- Ví ---------- */
   async function veVi() {
-    var v = await api('vi' + (st.viThang ? '?thang=' + encodeURIComponent(st.viThang) : '')); st.me.han_muc = v.han_muc; capNhatDu(v.so_du);
+    var v = await api('vi' + (st.viThang ? '?thang=' + encodeURIComponent(st.viThang) : '')); st.me.tra_sau = v.tra_sau; capNhatDu(v.so_du);
     var n = v.nap, oNho = '<div style="margin-top:8px;background:rgba(255,255,255,.18);border-radius:10px;padding:8px 12px;font-size:14px">';
-    var h = veMsg() + '<h2>Ví</h2><p class="sub">' + (v.han_muc > 0 ? 'Ví trả sau: đơn vẫn vào máy in khi ví âm, tới hạn mức xưởng cấp; chuyển khoản sau để trả nợ.' : 'Nạp trước, mỗi đơn trừ thẳng theo gram.') + ' ' + giaNhua() + '.</p>' +
+    var h = veMsg() + '<h2>Ví</h2><p class="sub">' + (v.tra_sau ? 'Ví trả sau: mọi đơn vào máy in ngay, ví âm thành nợ; chuyển khoản sau để trả nợ.' : 'Nạp trước, mỗi đơn trừ thẳng theo gram.') + ' ' + giaNhua() + '.</p>' +
       '<div class="du"><div style="opacity:.85;font-weight:600">' + (v.so_du < 0 ? 'Đang nợ xưởng' : 'Số dư') + '</div><div class="so">' + tien(v.so_du < 0 ? -v.so_du : v.so_du) + '</div>' +
-      (v.han_muc > 0 ? oNho + 'Hạn mức trả sau <b>' + tien(v.han_muc) + '</b> · còn dùng được <b>' + tien(Math.max(0, v.kha_dung)) + '</b>' + (v.so_du < 0 ? '. Chuyển khoản <b>' + tien(-v.so_du) + '</b> để hết nợ.' : '') + '</div>' : '') +
+      (v.tra_sau ? oNho + 'Ví <b>trả sau</b>' + (v.so_du < 0 ? ' · chuyển khoản <b>' + tien(-v.so_du) + '</b> để hết nợ.' : ': đơn không phải chờ nạp tiền.') + '</div>' : '') +
       (v.can_them > 0 ? oNho + 'Cần nạp thêm <b>' + tien(v.can_them) + '</b> để chạy các đơn đang chờ nạp tiền.</div>' : '') + '</div>' +
       '<div class="box"><b>Nạp tiền bằng chuyển khoản</b><div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;align-items:flex-start">' +
       '<img class="qr" src="' + esc(n.qr) + '" alt="Mã QR chuyển khoản">' +

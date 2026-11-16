@@ -152,7 +152,7 @@ class PodApiController extends Controller
             'dong_y'    => (bool) ($nv ? $nv->dong_y_luc : $s->dong_y_luc),
             // nhân viên KHÔNG thấy tiền trong ví của shop
             'so_du'     => $nv ? null : $s->soDu(),
-            'han_muc'   => $nv ? null : (int) $s->han_muc,  // ví trả sau: được nợ tới mức này (0 = trả trước)
+            'tra_sau'   => $nv ? null : $s->traSau(),  // ví trả sau: đơn luôn vào máy in, ví âm thành nợ (không giới hạn)
             'gia'       => PodSo::bangGia(),   // đ/gram theo chất liệu, vd {"PETG":900,"PLA":1300}
         ]);
     }
@@ -621,7 +621,8 @@ class PodApiController extends Controller
     {
         return [
             'ma'          => $d->ma,
-            'nguoi_dat'   => $d->nhan_vien_id ? ($tenNv[$d->nhan_vien_id] ?? 'Nhân viên') : 'Chủ shop',
+            'nguoi_dat'   => $d->xuong_tao ? 'Xưởng tạo hộ' : ($d->nhan_vien_id ? ($tenNv[$d->nhan_vien_id] ?? 'Nhân viên') : 'Chủ shop'),
+            'xuong_tao'   => (bool) $d->xuong_tao,
             'cua_toi'     => $this->nv ? (int) $d->nhan_vien_id === $this->nv->id : true,   // nhân viên chỉ huỷ đơn mình đặt
             'trang_thai'  => $d->trang_thai,
             'ten_tt'      => $d->tenTrangThai(),
@@ -704,10 +705,9 @@ class PodApiController extends Controller
         return response()->json([
             'ok'        => true,
             'so_du'     => $soDu,
-            'han_muc'   => (int) $s->han_muc,
-            'kha_dung'  => $s->khaDung(),
-            // nạp thêm bao nhiêu thì mọi đơn Chờ nạp tiền chạy hết (tính cả hạn mức trả sau)
-            'can_them'  => $soChoNap > 0 ? max(0, $soChoNap - $s->khaDung()) : 0,
+            'tra_sau'   => $s->traSau(),
+            // nạp thêm bao nhiêu thì mọi đơn Chờ nạp tiền chạy hết (trả sau không có đơn chờ nạp)
+            'can_them'  => $soChoNap > 0 && !$s->traSau() ? max(0, $soChoNap - $soDu) : 0,
             'nap'       => [
                 'ngan_hang' => $bin, 'stk' => $stk, 'chu_tk' => $ten, 'noi_dung' => $noiDung,
                 'qr' => 'https://img.vietqr.io/image/' . rawurlencode($bin) . '-' . rawurlencode($stk) . '-qr_only.png?addInfo=' . rawurlencode($noiDung) . '&accountName=' . rawurlencode($ten),

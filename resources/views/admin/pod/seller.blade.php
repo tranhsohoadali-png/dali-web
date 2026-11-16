@@ -36,8 +36,8 @@
         @endif
       </td>
       <td class="num"><b style="{{ $du < 0 ? 'color:#B91C1C' : '' }}">{{ number_format($du, 0, ',', '.') }}đ</b>
-        @if($s->han_muc > 0 || $du < 0)<div class="muted" style="white-space:nowrap">@if($du < 0)Đang nợ {{ number_format(-$du, 0, ',', '.') }}đ<br>@endif
-          @if($s->han_muc > 0)Trả sau {{ number_format($s->han_muc, 0, ',', '.') }}đ · còn {{ number_format(max(0, $du + $s->han_muc), 0, ',', '.') }}đ@endif</div>@endif
+        @if($du < 0)<div class="muted" style="white-space:nowrap">Đang nợ {{ number_format(-$du, 0, ',', '.') }}đ</div>@endif
+        @if($s->tra_sau)<div><span class="badge b-chung">Trả sau</span></div>@endif
       </td>
       <td>@if($cn)<span class="badge b-cho_nap">{{ $cn->n }} đơn · {{ number_format($cn->t, 0, ',', '.') }}đ</span>@else<span class="muted">—</span>@endif</td>
       <td>@if($s->dong_y_luc)<span class="muted">Đồng ý {{ $s->dong_y_luc->format('d/m/Y') }}</span>@else<span class="muted">Chưa đăng nhập</span>@endif</td>
@@ -63,14 +63,16 @@
             </form>
           </details>
           <details class="edit"><summary class="btn-sm">Trả sau</summary>
-            <form method="POST" action="{{ route('admin.pod.seller.hanmuc', $s) }}" class="edit-box">
+            <form method="POST" action="{{ route('admin.pod.seller.trasau', $s) }}" class="edit-box">
               @csrf
-              <label class="f"><span>Hạn mức trả sau (đ, 0 = nạp trước)</span><input name="han_muc" type="text" inputmode="numeric" data-tien autocomplete="off" value="{{ number_format((int) $s->han_muc, 0, ',', '.') }}" required></label>
-              <div class="muted" style="margin-top:6px;max-width:260px">Đơn vẫn vào máy in khi ví âm, tới đúng mức này. Seller chuyển khoản "NAP {{ $s->ma }}" để trả nợ, bấm Nạp tiền như thường.</div>
-              <button class="btn" style="margin-top:10px">Lưu hạn mức</button>
+              <input type="hidden" name="tra_sau" value="{{ $s->tra_sau ? 0 : 1 }}">
+              <div style="max-width:280px"><b>{{ $s->tra_sau ? 'Đang bật trả sau' : 'Đang nạp trước' }}</b></div>
+              <div class="muted" style="margin-top:6px;max-width:280px">Trả sau: mọi đơn vào máy in ngay, ví âm thành nợ, <b>không giới hạn</b>. Seller chuyển khoản "NAP {{ $s->ma }}" để trả nợ, bấm Nạp tiền như thường. Tắt thì đơn mới phải đủ tiền mới in.</div>
+              <button class="btn {{ $s->tra_sau ? 'btn-warn' : '' }}" style="margin-top:10px">{{ $s->tra_sau ? 'Tắt trả sau' : 'Bật trả sau' }}</button>
             </form>
           </details>
           <a class="btn-sm" href="{{ route('admin.pod.seller.vi', $s) }}">Sổ ví</a>
+          @if($s->hien)<a class="btn-sm" href="{{ route('admin.pod.don.tao', ['seller' => $s->id]) }}">Tạo đơn hộ</a>@endif
           <details class="edit"><summary class="btn-sm">Sửa</summary>
             <form method="POST" action="{{ route('admin.pod.seller.update', $s) }}" class="edit-box">
               @csrf @method('PUT')

@@ -220,15 +220,19 @@ class PodSo
         return $kq;
     }
 
-    /** Tạo đơn rồi thử trừ ví ngay. Đủ tiền -> Chờ in; thiếu -> Chờ nạp tiền. $nhanVienId = nhân viên đặt (null = chủ shop). */
-    public static function datDon(PodSeller $s, array $dongIn, ?array $noiGiao, ?string $maDonSan, ?string $ghiChu, ?UploadedFile $nhan, ?int $nhanVienId = null): PodDon
+    /**
+     * Tạo đơn rồi thử trừ ví ngay. Đủ tiền -> Chờ in; thiếu -> Chờ nạp tiền. $nhanVienId = nhân viên đặt (null = chủ shop).
+     * $xuongTao = xưởng tạo hộ ở admin: cùng kiểm mẫu/chữ/màu và trừ ví như seller tự đặt.
+     */
+    public static function datDon(PodSeller $s, array $dongIn, ?array $noiGiao, ?string $maDonSan, ?string $ghiChu, ?UploadedFile $nhan, ?int $nhanVienId = null, bool $xuongTao = false): PodDon
     {
         $dong = self::tinhDong($s, $dongIn);
-        $don = DB::transaction(function () use ($s, $dong, $noiGiao, $maDonSan, $ghiChu, $nhanVienId) {
+        $don = DB::transaction(function () use ($s, $dong, $noiGiao, $maDonSan, $ghiChu, $nhanVienId, $xuongTao) {
             $don = PodDon::create([
                 'ma'           => PodDon::taoMa(),
                 'seller_id'    => $s->id,
                 'nhan_vien_id' => $nhanVienId,
+                'xuong_tao'    => $xuongTao,
                 'noi_giao'   => $noiGiao,
                 'ma_don_san' => $maDonSan,
                 'ghi_chu'    => $ghiChu,
@@ -247,7 +251,7 @@ class PodSo
         return $don->fresh();
     }
 
-    /** Thử trừ ví cho một đơn Chờ nạp tiền. Trả true nếu đã trừ. Ví trả sau: số dư được âm tới −hạn mức. */
+    /** Thử trừ ví cho một đơn Chờ nạp tiền. Trả true nếu đã trừ. Seller trả sau (pod_seller.tra_sau): luôn trừ, ví âm không giới hạn. */
     public static function thuTru(PodDon $don): bool
     {
         if ($don->da_tru || $don->trang_thai !== 'cho_nap') return false;
@@ -258,8 +262,8 @@ class PodSo
                     'don_id' => $don->id, 'ghi_chu' => 'Đơn ' . $don->ma, 'nguoi_tao' => 'he_thong',
                 ]);
                 $soDu = (int) DB::table('pod_vi')->where('seller_id', $don->seller_id)->sum('so_tien');
-                $hanMuc = (int) DB::table('pod_seller')->where('id', $don->seller_id)->value('han_muc');
-                if ($soDu < -$hanMuc) throw new ThieuTien();
+                $traSau = (bool) DB::table('pod_seller')->where('id', $don->seller_id)->value('tra_sau');
+                if (!$traSau && $soDu < 0) throw new ThieuTien();
                 $don->update(['da_tru' => true]);
             });
             return true;

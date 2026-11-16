@@ -16,6 +16,7 @@ class PodSeller extends Model
         'dong_y_luc'    => 'datetime',
         'dang_nhap_luc' => 'datetime',
         'doi_mk_luc'    => 'datetime',
+        'tra_sau'       => 'boolean',
     ];
 
     public function nhanVien()
@@ -39,10 +40,10 @@ class PodSeller extends Model
         return (int) DB::table('pod_vi')->where('seller_id', $this->id)->sum('so_tien');
     }
 
-    /** Còn dùng được = số dư + hạn mức trả sau (pod_seller.han_muc, 0 = trả trước). Âm khi xưởng hạ hạn mức dưới số nợ. */
-    public function khaDung(): int
+    /** Ví trả sau (pod_seller.tra_sau): đơn luôn vào máy in, ví âm thành nợ, KHÔNG giới hạn; seller chuyển khoản sau để trả. */
+    public function traSau(): bool
     {
-        return $this->soDu() + (int) $this->han_muc;
+        return (bool) $this->tra_sau;
     }
 
     /** Mã seller 6 ký tự, bỏ chữ dễ nhầm (0/O, 1/I/L) vì seller gõ tay vào nội dung chuyển khoản. */
