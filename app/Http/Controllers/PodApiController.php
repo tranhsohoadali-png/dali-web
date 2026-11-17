@@ -433,7 +433,7 @@ class PodApiController extends Controller
                 'ten'       => $b->ten,
                 'kieu'      => $b->kieu,
                 'chat_lieu' => PodSo::chatLieu($b->chat_lieu),
-                'gram'      => (float) $b->gram,
+                // không gửi gram: seller chỉ thấy giá (chủ xưởng 11-16 "bỏ hiển thị gam trên sản phẩm")
                 'mau_sac'   => $b->dsMau(),
                 'kich_thuoc'=> $b->kich_thuoc,
                 'gia'       => PodSo::giaBienThe($m, $b, $gia),
@@ -639,7 +639,6 @@ class PodApiController extends Controller
                 'chat_lieu'    => $x->chat_lieu,
                 'mau_sac'      => $x->mau_sac,
                 'so_luong'     => (int) $x->so_luong,
-                'gram'         => (float) $x->gram,
                 'chu'          => $x->chu_ca_nhan,
                 'font'         => $x->font,
                 'thanh_tien'   => (int) $x->thanh_tien,

@@ -167,7 +167,6 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
   function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function tien(n) { return (Number(n) || 0).toLocaleString('vi-VN') + 'đ'; }
-  function gram(n) { return String(Number(n)).replace('.', ',') + ' g'; }
   function giaNhua() { var g = (st.me && st.me.gia) || {}; return 'Giá in PETG ' + tien(g.PETG) + ', PLA ' + tien(g.PLA) + ' mỗi gram'; }
   function $(id) { return document.getElementById(id); }
   var main = $('main');
@@ -421,7 +420,7 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
           : '<label class="f" style="margin-top:12px">' + (td && xt && xt.nhan1 ? esc(xt.nhan1) + ' (tối đa ' + td + ' ký tự)' : td ? 'Tên in trên mẫu (tối đa ' + td + ' ký tự)' : 'Chữ cá nhân hoá') + (m.phi_ca_nhan ? ' (+' + tien(m.phi_ca_nhan) + '/dòng)' : '') +
           '<input id="mChu" maxlength="' + (td || 300) + '" value="' + esc(sel.chu) + '" placeholder="' + esc(dai ? 'Vd: SOPHIA' : (xt && xt.goi_y) || (td ? 'Vd: Emma' : 'Bỏ trống nếu không')) + '"' + (hoa ? ' style="text-transform:uppercase"' : '') + '></label>') +
           (dai ? '<label class="f" style="margin-top:10px">' + esc(xt.nhan2) + '<input id="mChu2" maxlength="' + td + '" value="' + esc(sel.chu2) + '" placeholder="Vd: 2026" style="text-transform:uppercase"></label>' : '') +
-          '<div class="gia-chon"><div><div class="mu">Giá in 1 chiếc · ' + gram(b.gram) + '</div><b>' + tien(b.gia) + '</b></div>' +
+          '<div class="gia-chon"><div><div class="mu">Giá in 1 chiếc</div><b>' + tien(b.gia) + '</b></div>' +
           '<label class="f" style="width:110px">Số lượng<input id="mSl" type="number" min="1" max="500" value="' + sel.sl + '"></label></div>' +
           '<div class="msg err hide" id="mLoi" style="margin:10px 0 0"></div>' +
           '<button class="btn" id="mThem" style="margin-top:12px;width:100%">Thêm vào đơn đang soạn</button>';

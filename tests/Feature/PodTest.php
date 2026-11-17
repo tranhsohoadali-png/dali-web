@@ -493,6 +493,22 @@ class PodTest extends TestCase
         $this->assertSame(1300, PodSo::donGia($this->chung, 'PLA'));
     }
 
+    public function test_seller_khong_thay_gam_cua_san_pham(): void
+    {
+        // chủ xưởng 11-16: seller chỉ thấy giá, không thấy số gram (admin vẫn thấy)
+        $h = $this->token($this->a);
+        $bt = $this->getJson('/api/pod/mau/' . $this->chung->ma, $h)->assertOk()->json('mau.bien_the.0');
+        $this->assertArrayNotHasKey('gram', $bt);
+        $this->assertSame(24440, $bt['gia']);
+        foreach ($this->getJson('/api/pod/mau', $h)->json('mau') as $m) {
+            foreach ($m['bien_the'] ?? [] as $b) $this->assertArrayNotHasKey('gram', $b);
+        }
+        PodSo::datDon($this->a, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null);
+        $this->assertArrayNotHasKey('gram', $this->getJson('/api/pod/don', $h)->json('don.0.dong.0'));
+        $this->get('http://' . config('pod.domain') . '/cong')->assertOk()->assertDontSee('Giá in 1 chiếc · ', false);
+        $this->withSession(['admin_logged_in' => true])->get('/admin/3d/pod/mau')->assertSee('18,8 g'); // admin giữ gram
+    }
+
     public function test_don_gia_rieng_mot_mau_500d_gram(): void
     {
         $m = $this->taoMau('Book nook Gothic', null, 100.0, 'PETG');
@@ -606,6 +622,111 @@ class PodTest extends TestCase
         $this->b->update(['hien' => true]);
         $this->post('/admin/3d/pod/don/tao', $hop)->assertRedirect();
         $this->assertSame($n, PodDon::count());
+    }
+
+    /** File .xlsx tối giản như Excel lưu (sharedStrings + số), để thử nhập đơn. */
+    private function taoXlsx(array $hang, string $ten = 'Simple 3D Plastic-xưởng Tuấn.xlsx'): UploadedFile
+    {
+        $ss = [];
+        $so = function (string $s) use (&$ss) { $i = array_search($s, $ss, true); if ($i === false) { $ss[] = $s; $i = count($ss) - 1; } return $i; };
+        $rows = '';
+        foreach ($hang as $r => $cells) {
+            $rows .= '<row r="' . ($r + 1) . '">';
+            foreach (array_values($cells) as $c => $v) {
+                if ($v === null || $v === '') continue;
+                $ref = chr(65 + $c) . ($r + 1);
+                $rows .= is_int($v) || is_float($v) ? "<c r=\"$ref\"><v>$v</v></c>" : "<c r=\"$ref\" t=\"s\"><v>" . $so((string) $v) . '</v></c>';
+            }
+            $rows .= '</row>';
+        }
+        $ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+        $p = tempnam(sys_get_temp_dir(), 'xl');
+        $z = new \ZipArchive();
+        $z->open($p, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $z->addFromString('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>');
+        $z->addFromString('xl/workbook.xml', '<?xml version="1.0"?><workbook xmlns="' . $ns . '" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Trang tính1" sheetId="1" r:id="rId1"/></sheets></workbook>');
+        $z->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>');
+        $z->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0"?><worksheet xmlns="' . $ns . '"><sheetData>' . $rows . '</sheetData></worksheet>');
+        $z->addFromString('xl/sharedStrings.xml', '<?xml version="1.0"?><sst xmlns="' . $ns . '">' . implode('', array_map(fn ($s) => '<si><t>' . htmlspecialchars($s, ENT_XML1) . '</t></si>', $ss)) . '</sst>');
+        $z->close();
+        return new UploadedFile($p, $ten, null, null, true);
+    }
+
+    private function nhapFile(UploadedFile $f, PodSeller $s): string
+    {
+        $r = $this->withSession(['admin_logged_in' => true])->post('/admin/3d/pod/don/nhap', ['seller_id' => $s->id, 'file' => $f])->assertSessionHasNoErrors();
+        parse_str((string) parse_url((string) $r->headers->get('Location'), PHP_URL_QUERY), $q);
+        $this->assertNotEmpty($q['k'] ?? null);
+        return $q['k'];
+    }
+
+    public function test_admin_nhap_don_tu_file_moi_ma_mot_don_nho_khop_khong_tao_trung(): void
+    {
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $hong = $this->taoMau('Móc khoá hồng', null, 10.0, 'PETG');                 // 10 g × 900 = 9.000
+        $F = base64_encode(\App\Services\PodNhapDon::khoa('Frosted Frown Plush Keychain', '4.5cm'));
+        $P = base64_encode(\App\Services\PodNhapDon::khoa('Pinkmas Prankster Plush Keychain', '4.5cm'));
+        $file = fn () => $this->taoXlsx([
+            ['Ngày', 'ID', 'Mockup mặt trước', 'kích thước', 'Số lượng', 'name', 'Note'],
+            [46338, 127335, '', '4.5cm', 1, 'Frosted Frown Plush Keychain', ''],
+            [46338, 127334, '', '4.5cm', 1, 'Pinkmas Prankster Plush Keychain', 'gói quà'],
+            [46338, 127333, '', '4.5cm', 2, 'Frosted Frown Plush Keychain', ''],
+            [46338, 127333, '', '4.5cm', 1, 'Pinkmas Prankster Plush Keychain', ''],
+        ]);
+        $k = $this->nhapFile($file(), $this->a);
+        $admin->get('/admin/3d/pod/don/nhap?k=' . $k)->assertOk()
+            ->assertSee('Frosted Frown Plush Keychain')->assertSee('127333')->assertSee('4 dòng · 5 chiếc · 3 mã đơn');
+
+        // chưa chọn phân loại -> báo, không tạo
+        $ng = ['noi_giao_id' => 'moi', 'ng_ten' => 'Xưởng Tuấn', 'ng_dia_chi' => 'CHỜ ĐỊA CHỈ'];
+        $admin->post('/admin/3d/pod/don/nhap/tao', ['k' => $k, 'khop' => [$F => $this->bt($this->chung), $P => '']] + $ng)->assertSessionHasErrors('khop');
+        $this->assertSame(0, PodDon::count());
+
+        $admin->post('/admin/3d/pod/don/nhap/tao', ['k' => $k, 'khop' => [$F => $this->bt($this->chung), $P => $this->bt($hong)], 'gop' => '0'] + $ng)
+            ->assertRedirect(route('admin.pod.don.index', ['tt' => 'tat_ca']))->assertSessionHas('ok', fn ($m) => str_contains($m, 'tạo 3 đơn'));
+        $ds = PodDon::where('seller_id', $this->a->id)->orderBy('ma_don_san')->get();
+        $this->assertSame(['127333', '127334', '127335'], $ds->pluck('ma_don_san')->all());
+        $this->assertSame([2, 1, 1], $ds->map(fn ($d) => $d->dong()->count())->all());          // 127333 gộp 2 dòng
+        $this->assertSame([24440 * 2 + 9000, 9000, 24440], $ds->map(fn ($d) => (int) $d->tong_tien)->all());
+        $this->assertTrue($ds->every(fn ($d) => $d->xuong_tao && $d->noi_giao['ten'] === 'Xưởng Tuấn'));
+        $this->assertStringContainsString('gói quà', $ds[1]->ghi_chu);
+        $this->assertStringContainsString('Simple 3D Plastic-xưởng Tuấn.xlsx', $ds[0]->ghi_chu);
+        $this->assertSame(2, \App\Models\PodAnhXa::where('seller_id', $this->a->id)->count());
+
+        // nhập lại cùng file: tự chọn sẵn, đánh dấu đã có, không tạo trùng
+        $k2 = $this->nhapFile($file(), $this->a);
+        $admin->get('/admin/3d/pod/don/nhap?k=' . $k2)->assertSee('đã nhớ từ lần trước')->assertSee('· bỏ qua');
+        $admin->post('/admin/3d/pod/don/nhap/tao', ['k' => $k2, 'khop' => [$F => $this->bt($this->chung), $P => $this->bt($hong)]] + $ng)
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'tạo 0 đơn') && str_contains($m, 'Bỏ qua 3 mã'));
+        $this->assertSame(3, PodDon::count());
+
+        // CSV, gộp 1 đơn
+        $csv = UploadedFile::fake()->createWithContent('don.csv', "Order ID;Product;Qty\nA1;Frosted Frown Plush Keychain;1\nA2;Frosted Frown Plush Keychain;3\n");
+        $kc = $this->nhapFile($csv, $this->a);
+        $Fc = base64_encode(\App\Services\PodNhapDon::khoa('Frosted Frown Plush Keychain', ''));
+        $admin->post('/admin/3d/pod/don/nhap/tao', ['k' => $kc, 'khop' => [$Fc => $this->bt($this->chung)], 'gop' => '1'] + $ng)->assertSessionHas('ok', fn ($m) => str_contains($m, 'tạo 1 đơn'));
+        $g = PodDon::latest('id')->first();
+        $this->assertSame([null, 4], [$g->ma_don_san, (int) $g->dong()->sum('so_luong')]);
+        $this->assertStringContainsString('A1, A2', $g->ghi_chu);
+
+        // giữ kín: B không đặt được mẫu riêng của A qua file (lỗi riêng đơn đó, không tạo)
+        $kb = $this->nhapFile($csv, $this->b);
+        $admin->post('/admin/3d/pod/don/nhap/tao', ['k' => $kb, 'khop' => [$Fc => $this->bt($this->riengA)], 'gop' => '0'] + $ng)->assertSessionHasErrors('nhap');
+        $this->assertSame(0, PodDon::where('seller_id', $this->b->id)->count());
+        // file sai định dạng / phiên hết hạn
+        $admin->post('/admin/3d/pod/don/nhap', ['seller_id' => $this->a->id, 'file' => UploadedFile::fake()->create('don.pdf', 10)])->assertSessionHasErrors('file');
+        $admin->get('/admin/3d/pod/don/nhap?k=khongco')->assertRedirect(route('admin.pod.don.tao'));
+
+        // sửa nơi giao một đơn, áp cho mọi đơn chưa giao cùng nơi giao cũ, lưu sổ
+        $d = $ds[1];
+        $admin->get("/admin/3d/pod/don/{$d->id}")->assertSee('Áp nơi giao mới cho cả 3 đơn');
+        $ds[2]->update(['trang_thai' => 'da_giao']);
+        $admin->post("/admin/3d/pod/don/{$d->id}/thong-tin", ['noi_giao_id' => 'moi', 'ng_ten' => 'Xưởng Tuấn', 'ng_dia_chi' => '12 Lê Lợi, Q1', 'ng_sdt' => '0909',
+            'ma_don_san' => '127334', 'ghi_chu' => 'gói quà', 'ap_cung' => '1', 'luu_so' => '1'])->assertSessionHasNoErrors()->assertSessionHas('ok', fn ($m) => str_contains($m, 'cho 2 đơn khác'));
+        $this->assertSame(['12 Lê Lợi, Q1', '12 Lê Lợi, Q1', 'CHỜ ĐỊA CHỈ'], [$d->fresh()->noi_giao['dia_chi'], $ds[0]->fresh()->noi_giao['dia_chi'], $ds[2]->fresh()->noi_giao['dia_chi']]);
+        $this->assertSame('12 Lê Lợi, Q1', $g->fresh()->noi_giao['dia_chi']);   // đơn gộp cùng nơi giao cũ cũng được áp
+        $this->assertTrue(PodNoiGiao::where('seller_id', $this->a->id)->where('dia_chi', '12 Lê Lợi, Q1')->exists());
+        $admin->post("/admin/3d/pod/don/{$ds[2]->id}/thong-tin", ['noi_giao_id' => 'moi', 'ng_ten' => 'X', 'ng_dia_chi' => 'Y'])->assertSessionHasErrors('thong_tin');
     }
 
     public function test_admin_tai_file_in_tu_khop_phan_loai_mot_file_hoac_zip(): void

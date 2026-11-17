@@ -178,7 +178,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('don',                    [\App\Http\Controllers\Admin\PodDonController::class, 'index'])->name('don.index');
         Route::get('don/tao',                [\App\Http\Controllers\Admin\PodDonController::class, 'tao'])->name('don.tao');      // trước don/{don}
         Route::post('don/tao',               [\App\Http\Controllers\Admin\PodDonController::class, 'taoLuu'])->name('don.taoluu');
+        Route::get('don/nhap',               [\App\Http\Controllers\Admin\PodDonController::class, 'nhap'])->name('don.nhap');     // nhập đơn từ file seller
+        Route::post('don/nhap',              [\App\Http\Controllers\Admin\PodDonController::class, 'nhapDoc'])->name('don.nhapdoc');
+        Route::post('don/nhap/tao',          [\App\Http\Controllers\Admin\PodDonController::class, 'nhapTao'])->name('don.nhaptao');
         Route::get('don/{don}',              [\App\Http\Controllers\Admin\PodDonController::class, 'show'])->name('don.show');
+        Route::post('don/{don}/thong-tin',   [\App\Http\Controllers\Admin\PodDonController::class, 'thongTin'])->name('don.thongtin');
         Route::post('don/{don}/trang-thai',  [\App\Http\Controllers\Admin\PodDonController::class, 'trangThai'])->name('don.status');
         Route::post('don/{don}/huy',         [\App\Http\Controllers\Admin\PodDonController::class, 'huy'])->name('don.huy');
         Route::get('don/{don}/nhan',         [\App\Http\Controllers\Admin\PodDonController::class, 'nhan'])->name('don.nhan');

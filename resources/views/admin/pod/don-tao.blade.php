@@ -17,6 +17,15 @@
 </div>
 
 @if($s)
+<div class="card">
+  <div class="card-h"><div class="card-t">Nhập nhiều đơn từ file seller gửi</div><div class="card-hint">File Excel (.xlsx) hoặc .csv, dòng đầu là tiêu đề: mã đơn (ID / Order), tên sản phẩm (name / Product), số lượng, kích thước; có thể thêm chữ khắc (Personalization), màu, ghi chú. Bước sau chọn phân loại cho từng tên sản phẩm (nhớ cho lần sau), mỗi mã đơn thành một đơn.</div></div>
+  <form method="POST" action="{{ route('admin.pod.don.nhapdoc') }}" enctype="multipart/form-data" class="pad acts">
+    @csrf
+    <input type="hidden" name="seller_id" value="{{ $s->id }}">
+    <input type="file" name="file" accept=".xlsx,.csv" required>
+    <button class="btn-sm" @disabled(!$s->hien)>Đọc file</button>
+  </form>
+</div>
 <form method="POST" action="{{ route('admin.pod.don.taoluu') }}" enctype="multipart/form-data" id="fTao" data-so-du="{{ $du }}" data-tra-sau="{{ $s->traSau() ? 1 : 0 }}">
   @csrf
   <input type="hidden" name="seller_id" value="{{ $s->id }}">
@@ -29,17 +38,7 @@
       <tr><th style="min-width:320px">Mẫu · phân loại</th><th style="width:80px">SL</th><th style="width:150px">Màu</th><th style="min-width:200px">Chữ khắc</th><th style="width:150px">Font</th><th class="num" style="width:110px">Thành tiền</th></tr>
       @for($i = 0; $i < 8; $i++)
       <tr class="dong-tao" data-i="{{ $i }}">
-        <td><select name="dong[{{ $i }}][bien_the_id]" class="d-bt">
-          <option value="">—</option>
-          @foreach($mau as $m)
-          <optgroup label="{{ $m->ten }}{{ $m->laRieng() ? ' (mẫu riêng)' : '' }}">
-            @foreach($m->bienThe as $b)
-              @continue($b->laCu())
-              <option value="{{ $b->id }}" @selected((string) old("dong.$i.bien_the_id") === (string) $b->id)>{{ $m->ten }} · {{ trim(($m->tenKieu($b->kieu) ? $m->tenKieu($b->kieu) . ' · ' : '') . $b->ten) }} · {{ \App\Services\PodSo::chatLieu($b->chat_lieu) }} — {{ $tien($bt[$b->id]['gia'] ?? 0) }}</option>
-            @endforeach
-          </optgroup>
-          @endforeach
-        </select></td>
+        <td><select name="dong[{{ $i }}][bien_the_id]" class="d-bt">@include('admin.pod._chon_phan_loai', ['chon' => old("dong.$i.bien_the_id")])</select></td>
         <td><input name="dong[{{ $i }}][so_luong]" class="d-sl" type="number" min="1" max="{{ \App\Services\PodSo::SL_TOI_DA }}" value="{{ old("dong.$i.so_luong", 1) }}"></td>
         <td><select name="dong[{{ $i }}][mau_sac]" class="d-mau" data-old="{{ old("dong.$i.mau_sac") }}"><option value="">—</option></select></td>
         <td><input name="dong[{{ $i }}][chu]" class="d-chu" maxlength="300" value="{{ old("dong.$i.chu") }}" placeholder="—"></td>
@@ -56,20 +55,7 @@
   <div class="card">
     <div class="card-h"><div class="card-t">3 · Giao tới + thông tin đơn</div></div>
     <div class="pad grid" style="align-items:start">
-      <label class="f rong"><span>Nơi giao</span>
-        <select name="noi_giao_id" id="ngChon">
-          @foreach($noiGiao as $ng)<option value="{{ $ng->id }}" @selected((string) old('noi_giao_id', $s->noi_giao_mac_dinh ?? $noiGiao->first()?->id) === (string) $ng->id)>{{ $ng->ten }} — {{ $ng->dia_chi }}{{ (int) $s->noi_giao_mac_dinh === $ng->id ? ' (mặc định)' : '' }}</option>@endforeach
-          <option value="moi" @selected(old('noi_giao_id') === 'moi' || $noiGiao->isEmpty())>+ Nhập nơi giao khác (chỉ cho đơn này)</option>
-        </select>
-      </label>
-      <div class="f rong" id="ngMoi">
-        <div class="grid">
-          <label class="f"><span>Tên nơi giao / người nhận</span><input name="ng_ten" value="{{ old('ng_ten') }}" maxlength="120"></label>
-          <label class="f"><span>Số điện thoại</span><input name="ng_sdt" value="{{ old('ng_sdt') }}" maxlength="30"></label>
-          <label class="f rong"><span>Địa chỉ</span><input name="ng_dia_chi" value="{{ old('ng_dia_chi') }}" maxlength="500"></label>
-          <label class="f rong"><span>Ghi chú giao</span><input name="ng_ghi_chu" value="{{ old('ng_ghi_chu') }}" maxlength="300"></label>
-        </div>
-      </div>
+      @include('admin.pod._noi_giao', ['chonSan' => $s->noi_giao_mac_dinh ?? $noiGiao->first()?->id])
       <label class="f"><span>Mã đơn Etsy / Amazon (đối chiếu)</span><input name="ma_don_san" value="{{ old('ma_don_san') }}" maxlength="60"></label>
       <label class="f"><span>Nhãn line bay (nếu có)</span><input type="file" name="nhan" accept="image/*,application/pdf"></label>
       <label class="f rong"><span>Ghi chú (seller thấy)</span><textarea name="ghi_chu" rows="2" maxlength="1000">{{ old('ghi_chu') }}</textarea></label>
@@ -117,9 +103,6 @@
     r.querySelector('.d-sl').addEventListener('input', tinh);
     r.querySelector('.d-chu').addEventListener('input', tinh);
   });
-  var ng = document.getElementById('ngChon'), moi = document.getElementById('ngMoi');
-  function ngHien() { moi.style.display = ng.value === 'moi' ? '' : 'none'; }
-  ng.addEventListener('change', ngHien); ngHien();
   tinh();
 })();
 </script>

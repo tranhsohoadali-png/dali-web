@@ -61,6 +61,21 @@
     <button class="btn-sm btn-del">Huỷ đơn</button>
   </form>
 </div></div>
+<div class="card">
+  <details @if($errors->has('thong_tin')) open @endif><summary class="pad" style="cursor:pointer;font-weight:800;color:var(--gd)">Sửa nơi giao · mã đơn sàn · ghi chú</summary>
+  <form method="POST" action="{{ route('admin.pod.don.thongtin', $don) }}" class="pad grid" style="align-items:start;padding-top:0">
+    @csrf
+    @include('admin.pod._noi_giao', ['noiGiao' => $noiGiaoSeller, 'chonSan' => 'moi', 'ngCu' => (array) $don->noi_giao])
+    <label class="f"><span>Mã đơn sàn</span><input name="ma_don_san" value="{{ old('ma_don_san', $don->ma_don_san) }}" maxlength="60"></label>
+    <label class="f rong"><span>Ghi chú</span><textarea name="ghi_chu" rows="2" maxlength="1000">{{ old('ghi_chu', $don->ghi_chu) }}</textarea></label>
+    <div class="f rong">
+      @if($soCung > 0)<label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" name="ap_cung" value="1" style="width:auto" checked> Áp nơi giao mới cho cả {{ $soCung }} đơn chưa giao khác của seller đang ghi cùng nơi giao "{{ $don->noi_giao['ten'] ?? '' }}"</label>@endif
+      <label style="display:flex;gap:6px;align-items:center;font-size:13px;margin-top:6px"><input type="checkbox" name="luu_so" value="1" style="width:auto"> Lưu vào sổ nơi giao của seller (seller chọn được ở cổng)</label>
+    </div>
+    <div><button class="btn">Lưu thông tin giao</button></div>
+  </form>
+  </details>
+</div>
 @endif
 <a class="btn-sm" href="{{ route('admin.pod.don.index') }}">Về hàng đợi</a>
 @if($taoFile)
