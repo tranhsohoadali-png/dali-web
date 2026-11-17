@@ -428,6 +428,8 @@ class PodApiController extends Controller
             'co_kich_thuoc' => $m->coKichThuoc(),
             'ten_kieu'    => (object) $m->bienThe->pluck('kieu')->filter()->unique()->mapWithKeys(fn ($k) => [$k => $m->tenKieu($k)])->all(),
             'hinh_chieu'  => $chiTiet ? $this->hinhChieu($m, $s) : null,
+            'co_tai_lieu' => $m->coTaiLieu(),                                // danh sách: báo có để cổng tải chi tiết khi mở mẫu
+            'tai_lieu'    => $chiTiet ? $this->dsTaiLieu($m, $s) : null,   // hướng dẫn PDF: nút "Tải hướng dẫn" ở cổng
             'bien_the'    => $m->bienThe->map(fn ($b) => [
                 'id'        => $b->id,
                 'ten'       => $b->ten,
@@ -487,6 +489,27 @@ class PodApiController extends Controller
         $rel = $s ? PodMau::hienCho($s->id)->where('ma', $ma)->first()?->anhHinhChieu($mat, $kieu) : null;
         if (!$rel || !Storage::disk('local')->exists($rel)) abort(404);
         return response()->file(Storage::disk('local')->path($rel), ['Cache-Control' => 'private, max-age=600', 'X-Robots-Tag' => 'noindex']);
+    }
+
+    /** Link có chữ ký (10 phút) tới tài liệu PDF của mẫu (PodMau::taiLieu): [['ten', 'kb', 'url']]. */
+    private function dsTaiLieu(PodMau $m, PodSeller $s): array
+    {
+        $kq = [];
+        foreach ($m->taiLieu() as $i => $t) {
+            $kq[] = ['ten' => $t['ten'], 'kb' => $t['kb'], 'url' => URL::temporarySignedRoute('pod.tai-lieu', now()->addMinutes(10),
+                ['ma' => $m->ma, 'i' => $i, 's' => $s->id], absolute: false)];
+        }
+        return $kq;
+    }
+
+    /** GET /api/pod/tai-lieu/{ma}/{i}?s=&expires=&signature= — tài liệu PDF của mẫu; kiểm quyền seller như anh(). */
+    public function taiLieu(Request $request, string $ma, int $i)
+    {
+        $s = PodSeller::whereKey((int) $request->query('s'))->where('hien', true)->first();
+        $t = $s ? (PodMau::hienCho($s->id)->where('ma', $ma)->first()?->taiLieu()[$i] ?? null) : null;
+        if (!$t || !Storage::disk('local')->exists($t['rel'])) abort(404);
+        return response()->download(Storage::disk('local')->path($t['rel']), $t['ten'],
+            ['Content-Type' => 'application/pdf', 'Cache-Control' => 'private, max-age=600', 'X-Robots-Tag' => 'noindex']);
     }
 
     /* ============ Nơi giao ============ */

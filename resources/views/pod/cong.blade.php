@@ -345,8 +345,9 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
   async function moMau(m) {
     // Mẫu khắc tên: lấy dữ liệu khung xem trước (không có trong danh sách vì nặng)
     // + ảnh hình chiếu cho ảnh kích thước (link có chữ ký, chỉ có ở chi tiết)
-    if ((m.co_xem_truoc && !m.xem_truoc) || (m.co_kich_thuoc && m.hinh_chieu == null)) {
-      try { var ct = (await api('mau/' + encodeURIComponent(m.ma))).mau; m.xem_truoc = ct.xem_truoc; m.hinh_chieu = ct.hinh_chieu; m.anh = ct.anh; } catch (e) { baoLoi(e); return; }
+    // + link tải hướng dẫn PDF (có chữ ký, chỉ có ở chi tiết)
+    if ((m.co_xem_truoc && !m.xem_truoc) || (m.co_kich_thuoc && m.hinh_chieu == null) || (m.co_tai_lieu && m.tai_lieu == null)) {
+      try { var ct = (await api('mau/' + encodeURIComponent(m.ma))).mau; m.xem_truoc = ct.xem_truoc; m.hinh_chieu = ct.hinh_chieu; m.anh = ct.anh; m.tai_lieu = ct.tai_lieu; } catch (e) { baoLoi(e); return; }
     }
     var xt = m.xem_truoc, bt0 = m.bien_the[0] || {};
     var fonts = (xt && xt.fonts) || [];
@@ -404,7 +405,11 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
           '<canvas id="mKt" width="900" height="560" style="width:100%;height:auto;display:block;border:1px solid var(--bd);border-radius:12px;background:#fff"></canvas>' +
           '<button class="btn2" id="mTaiKt" style="margin-top:8px;width:100%">Tải ảnh kích thước (PNG)</button></div>' : '') +
         '</div><div>' + (m.rieng ? '<span class="tag t-rieng">' + IC_KHOA + (m.chia_se ? ' Mẫu dùng chung' : ' Mẫu độc quyền') + '</span>' : '<span class="tag t-chung">Kho chung</span>') + '<h2 style="margin-top:8px">' + esc(m.ten) + '</h2>' +
-        (m.mo_ta ? '<p class="sub" style="white-space:pre-line">' + esc(m.mo_ta) + '</p>' : '');
+        (m.mo_ta ? '<p class="sub" style="white-space:pre-line">' + esc(m.mo_ta) + '</p>' : '') +
+        (m.tai_lieu && m.tai_lieu.length ? '<div style="display:flex;flex-direction:column;gap:6px;margin:10px 0">' + m.tai_lieu.map(function (t) {
+          return '<a class="btn2" href="' + esc(t.url) + '" download style="text-align:center;text-decoration:none">📄 Tải hướng dẫn: ' + esc(t.ten) +
+            ' <small class="mu">(' + (t.kb >= 1024 ? (t.kb / 1024).toFixed(1).replace('.', ',') + ' MB' : t.kb + ' KB') + ')</small></a>';
+        }).join('') + '</div>' : '');
       if (!m.bien_the.length) { h += '<p class="msg err">Mẫu chưa có phân loại, chưa đặt được.</p></div></div>'; $('mbox').innerHTML = h; return; }
       h += nhom(xt ? 'Kiểu' : 'Mẫu', 'kieu', kieuDs, function (v) { return esc(tenKieu(v)); }) +
         nhom('Kích thước', 'ten', coDs, esc) +

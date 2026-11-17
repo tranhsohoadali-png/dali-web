@@ -84,7 +84,7 @@
     $nhan = fn ($b) => trim(($mau->tenKieu($b->kieu) ? $mau->tenKieu($b->kieu) . ' · ' : '') . $b->ten . ' · ' . \App\Services\PodSo::chatLieu($b->chat_lieu));
   @endphp
   <div class="card">
-    <div class="card-h"><div class="card-t">File in tải về ({{ count($tepIn) }})</div><div class="card-hint">Admin bấm tải ở trang đơn: hệ thống tự chọn file có tên được ghi trong ô "File in" của phân loại khách đặt, cộng file chung (không phân loại nào ghi tên). Trùng tên thì thay bản cũ. Mỗi lần lưu gửi tối đa {{ number_format($gioiHan / 1048576, 0) }} MB.</div></div>
+    <div class="card-h"><div class="card-t">File in tải về ({{ count($tepIn) }})</div><div class="card-hint">Admin bấm tải ở trang đơn: hệ thống tự chọn file có tên được ghi trong ô "File in" của phân loại khách đặt, cộng file chung (không phân loại nào ghi tên). File <b>PDF</b> (hướng dẫn lắp / in) thì seller cũng TẢI ĐƯỢC ở cổng (nút "Tải hướng dẫn"); file khác chỉ admin. Trùng tên thì thay bản cũ. Mỗi lần lưu gửi tối đa {{ number_format($gioiHan / 1048576, 0) }} MB.</div></div>
     <div class="pad">
       @if($tepIn)
       <table class="pl-bang" style="margin-bottom:12px">

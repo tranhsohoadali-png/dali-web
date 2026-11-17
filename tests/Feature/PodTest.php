@@ -812,6 +812,31 @@ class PodTest extends TestCase
         $this->get('http://' . config('pod.domain') . '/bang-gia')->assertOk()->assertSee('950đ')->assertSee('1.300đ');
     }
 
+    public function test_tai_lieu_pdf_cua_mau_seller_tai_o_cong_file_in_giu_kin(): void
+    {
+        // PDF trong thu muc File in = tai lieu (huong dan) cho seller; file in khac van chi admin
+        $dir = $this->riengA->thuMucFileIn();
+        Storage::disk('local')->put("$dir/Khung (A1).3mf", '3MF');
+        Storage::disk('local')->put("$dir/Huong dan (EN).pdf", '%PDF-1.4 thu');
+        $h = $this->token($this->a);
+        $ds = collect($this->getJson('/api/pod/mau', $h)->json('mau'))->firstWhere('ma', $this->riengA->ma);
+        $this->assertNull($ds['tai_lieu']);                                        // danh sach khong kem link
+        $this->assertTrue($ds['co_tai_lieu']);                                     // ... nhung bao co de cong tai chi tiet
+        $tl = $this->getJson('/api/pod/mau/' . $this->riengA->ma, $h)->json('mau.tai_lieu');
+        $this->assertSame(['Huong dan (EN).pdf'], array_column($tl, 'ten'));       // chi PDF, khong lo file in
+        $this->get($tl[0]['url'])->assertOk()->assertDownload('Huong dan (EN).pdf');
+        $this->get(str_replace('s=' . $this->a->id, 's=' . $this->b->id, $tl[0]['url']))->assertForbidden();   // sua link -> sai chu ky
+        // ky dung cho seller B (khong thay mau rieng cua A) van 404; chi so i ngoai danh sach 404
+        $this->get(URL::temporarySignedRoute('pod.tai-lieu', now()->addMinutes(10),
+            ['ma' => $this->riengA->ma, 'i' => 0, 's' => $this->b->id], absolute: false))->assertNotFound();
+        $this->get(URL::temporarySignedRoute('pod.tai-lieu', now()->addMinutes(10),
+            ['ma' => $this->riengA->ma, 'i' => 1, 's' => $this->a->id], absolute: false))->assertNotFound();
+        // mau khong co PDF -> rong; admin dua PDF len qua form duoc (duoi pdf hop le)
+        $this->assertSame([], $this->getJson('/api/pod/mau/' . $this->chung->ma, $h)->json('mau.tai_lieu'));
+        $this->assertFalse(collect($this->getJson('/api/pod/mau', $h)->json('mau'))->firstWhere('ma', $this->chung->ma)['co_tai_lieu']);
+        $this->assertSame('Huong dan (EN).pdf', PodMau::tenFileIn('Huong dan (EN).pdf'));
+    }
+
     private function token(PodSeller $s): array
     {
         $t = Str::random(48);

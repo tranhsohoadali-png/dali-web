@@ -59,7 +59,9 @@ class PodMau extends Model
 
     /* ---------- File in tải về (chỉ admin; đĩa private pod/file_in/<mã mẫu>/) ---------- */
 
-    public const DUOI_FILE_IN = ['3mf', 'stl', 'obj', 'step', 'stp', 'gcode', 'zip'];
+    public const DUOI_FILE_IN = ['3mf', 'stl', 'obj', 'step', 'stp', 'gcode', 'zip', 'pdf'];
+    /** File PDF trong "File in" = TÀI LIỆU (hướng dẫn lắp / in): seller tải được ở cổng; file in khác vẫn chỉ admin. */
+    public const DUOI_TAI_LIEU = ['pdf'];
 
     public function thuMucFileIn(): string
     {
@@ -74,6 +76,22 @@ class PodMau extends Model
             $d->files($this->thuMucFileIn()));
         usort($ds, fn ($a, $b) => strnatcasecmp($a['ten'], $b['ten']));
         return $ds;
+    }
+
+    /** Có tài liệu PDF không (nhẹ: chỉ liệt kê tên, dùng cho danh sách mẫu ở cổng). */
+    public function coTaiLieu(): bool
+    {
+        foreach (\Illuminate\Support\Facades\Storage::disk('local')->files($this->thuMucFileIn()) as $rel) {
+            if (in_array(strtolower(pathinfo($rel, PATHINFO_EXTENSION)), self::DUOI_TAI_LIEU, true)) return true;
+        }
+        return false;
+    }
+
+    /** Tài liệu cho seller (file PDF trong thư mục File in), cùng thứ tự tepIn(). */
+    public function taiLieu(): array
+    {
+        return array_values(array_filter($this->tepIn(),
+            fn ($t) => in_array(strtolower(pathinfo($t['ten'], PATHINFO_EXTENSION)), self::DUOI_TAI_LIEU, true)));
     }
 
     /**

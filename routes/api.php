@@ -61,6 +61,8 @@ Route::prefix('pod')->middleware('throttle:900,1,pod-anh')->group(function () {
         ->whereNumber('i')->middleware('signed:relative')->name('pod.anh');   // link ảnh có chữ ký, 10 phút
     Route::get('anh-kt/{ma}/{mat}/{kieu?}', [\App\Http\Controllers\PodApiController::class, 'anhKt'])
         ->whereIn('mat', ['truoc', 'ben', 'bia'])->where('kieu', '[a-z0-9_-]+')->middleware('signed:relative')->name('pod.anh-kt'); // hình chiếu + bìa từng kiểu
+    Route::get('tai-lieu/{ma}/{i}', [\App\Http\Controllers\PodApiController::class, 'taiLieu'])
+        ->whereNumber('i')->middleware('signed:relative')->name('pod.tai-lieu');   // tài liệu PDF của mẫu (hướng dẫn), link có chữ ký 10 phút
 });
 Route::prefix('pod')->middleware('throttle:120,1')->group(function () {
     Route::post('dang-nhap',       [\App\Http\Controllers\PodApiController::class, 'dangNhap']);
