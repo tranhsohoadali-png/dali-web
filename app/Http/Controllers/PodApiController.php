@@ -561,7 +561,8 @@ class PodApiController extends Controller
 
     /**
      * POST /api/pod/don (JSON hoặc multipart): dong[] {bien_the_id, so_luong, mau_sac?, chu?},
-     * noi_giao_id, ma_don_san?, ghi_chu?, nhan? (file). Giá tính ở server, không nhận số từ trình duyệt.
+     * noi_giao_id? (bỏ trống = chưa có địa chỉ, bổ sung sau ở "Đơn của tôi"), ma_don_san?, ghi_chu?, nhan? (file).
+     * Giá tính ở server, không nhận số từ trình duyệt.
      */
     public function donTao(Request $request)
     {
@@ -571,20 +572,45 @@ class PodApiController extends Controller
         $request->merge(['dong' => is_array($dong) ? $dong : []]);
         $v = $request->validate([
             'dong'        => 'required|array|min:1|max:50',
-            'noi_giao_id' => 'required|integer',
+            'noi_giao_id' => 'nullable|integer',
             'ma_don_san'  => 'nullable|string|max:60',
             'ghi_chu'     => 'nullable|string|max:1000',
             'nhan'        => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ]);
-        $ng = PodNoiGiao::where('seller_id', $s->id)->whereKey($v['noi_giao_id'])->first();
-        if (!$ng) return response()->json(['ok' => false, 'error' => 'Chọn nơi giao.'], 422);
+        $ng = null;
+        if (!empty($v['noi_giao_id'])) {
+            $ng = PodNoiGiao::where('seller_id', $s->id)->whereKey($v['noi_giao_id'])->first();
+            if (!$ng) return response()->json(['ok' => false, 'error' => 'Nơi giao không còn trong sổ, chọn lại.'], 422);
+        }
         $don = PodSo::datDon(
             $s, $v['dong'],
-            ['ten' => $ng->ten, 'dia_chi' => $ng->dia_chi, 'sdt' => $ng->sdt, 'ghi_chu' => $ng->ghi_chu],
+            $ng ? ['ten' => $ng->ten, 'dia_chi' => $ng->dia_chi, 'sdt' => $ng->sdt, 'ghi_chu' => $ng->ghi_chu] : null,
             $v['ma_don_san'] ?? null, $v['ghi_chu'] ?? null, $request->file('nhan'),
             $this->nv?->id   // ai đặt (tiền vẫn trừ ví của shop)
         );
         return response()->json(['ok' => true, 'don' => $this->donJson($don, $this->tenNguoiDat($s)), 'so_du' => $this->nv ? null : $s->soDu()]);
+    }
+
+    /**
+     * POST /api/pod/don/{ma}/noi-giao {noi_giao_id} — đặt / đổi nơi giao (lấy từ sổ nơi giao) cho đơn chưa giao, chưa huỷ.
+     * Dùng khi gửi đơn lúc chưa có địa chỉ. Nhân viên chỉ sửa đơn do chính mình đặt.
+     */
+    public function donNoiGiao(Request $request, string $ma)
+    {
+        $s = $this->seller($request);
+        $v = $request->validate(['noi_giao_id' => 'required|integer']);
+        $don = PodDon::where('seller_id', $s->id)->where('ma', $ma)->first();
+        if (!$don) return response()->json(['ok' => false, 'error' => 'Không tìm thấy đơn.'], 404);
+        if ($this->nv && (int) $don->nhan_vien_id !== $this->nv->id) {
+            return response()->json(['ok' => false, 'error' => 'Nhân viên chỉ sửa được đơn do chính mình đặt.'], 403);
+        }
+        if (!in_array($don->trang_thai, ['cho_nap', 'cho_in', 'dang_in'], true)) {
+            return response()->json(['ok' => false, 'error' => 'Đơn đã giao hoặc đã huỷ, không đổi nơi giao được.'], 422);
+        }
+        $ng = PodNoiGiao::where('seller_id', $s->id)->whereKey($v['noi_giao_id'])->first();
+        if (!$ng) return response()->json(['ok' => false, 'error' => 'Nơi giao không có trong sổ.'], 422);
+        $don->update(['noi_giao' => ['ten' => $ng->ten, 'dia_chi' => $ng->dia_chi, 'sdt' => $ng->sdt, 'ghi_chu' => $ng->ghi_chu]]);
+        return response()->json(['ok' => true, 'don' => $this->donJson($don->fresh('dong'), $this->tenNguoiDat($s))]);
     }
 
     /** GET /api/pod/don -> đơn của shop (mới nhất trước), kèm ai đặt. Nhân viên thấy mọi đơn của shop. */

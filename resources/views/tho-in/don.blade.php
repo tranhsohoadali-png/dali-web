@@ -17,7 +17,7 @@
 </div>
 <div class="box">
   <b>Giao tới</b>
-  @if($don->noi_giao)<div>{{ $don->noi_giao['ten'] ?? '' }}</div><div>{{ $don->noi_giao['dia_chi'] ?? '' }}</div><div class="mu">{{ $don->noi_giao['sdt'] ?? '' }} {{ $don->noi_giao['ghi_chu'] ?? '' }}</div>@endif
+  @if($don->noi_giao)<div>{{ $don->noi_giao['ten'] ?? '' }}</div><div>{{ $don->noi_giao['dia_chi'] ?? '' }}</div><div class="mu">{{ $don->noi_giao['sdt'] ?? '' }} {{ $don->noi_giao['ghi_chu'] ?? '' }}</div>@else<div><b style="color:#B45309">Chưa có địa chỉ</b> — vẫn in được; hỏi xưởng trước khi giao.</div>@endif
   <div style="margin-top:8px">@if($coNhan)<a class="btn2" href="{{ route('tho-in.nhan', $don) }}">Tải nhãn line bay</a>@else<span class="mu">Đơn này không có nhãn riêng.</span>@endif</div>
   @if($don->ma_don_san)<div class="mu" style="margin-top:6px">Mã đơn sàn: {{ $don->ma_don_san }}</div>@endif
   @if($don->ma_van_don)<div class="mu">Mã vận đơn: {{ $don->ma_van_don }}</div>@endif

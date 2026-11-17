@@ -1280,6 +1280,45 @@ class PodTest extends TestCase
         return PodNhanVien::create(['seller_id' => $s->id, 'ten' => 'NV Lan', 'sdt' => $sdt, 'matkhau' => Hash::make($mk), 'hien' => true, 'dong_y_luc' => now()]);
     }
 
+    public function test_gui_don_khong_can_dia_chi_bo_sung_sau(): void
+    {
+        $h = $this->token($this->a);
+        $dong = [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]];
+        // seller gửi đơn không chọn nơi giao: vẫn tạo được, ghi "chưa có địa chỉ"
+        $ma = $this->postJson('/api/pod/don', ['dong' => $dong], $h)->assertOk()->json('don.ma');
+        $don = PodDon::where('ma', $ma)->first();
+        $this->assertNull($don->noi_giao);
+        $this->postJson('/api/pod/don', ['dong' => $dong, 'noi_giao_id' => $this->noiGiao($this->b)], $h)->assertStatus(422); // sổ của người khác
+        $this->get('http://' . config('pod.domain') . '/cong')->assertOk()->assertSee('Chưa có địa chỉ — bổ sung sau', false);
+
+        // bổ sung sau từ sổ nơi giao; người khác / nơi giao lạ / đơn đã giao thì không
+        $ngA = $this->noiGiao($this->a);
+        $this->postJson("/api/pod/don/$ma/noi-giao", ['noi_giao_id' => $this->noiGiao($this->b)], $h)->assertStatus(422);
+        $this->postJson("/api/pod/don/$ma/noi-giao", ['noi_giao_id' => $ngA], $this->token($this->b))->assertNotFound();
+        $this->postJson("/api/pod/don/$ma/noi-giao", ['noi_giao_id' => $ngA], $h)->assertOk()->assertJsonPath('don.noi_giao.ten', 'Kho gom HN');
+        $this->assertSame('Hà Nội', $don->fresh()->noi_giao['dia_chi']);
+        $don->update(['trang_thai' => 'da_giao']);
+        $this->postJson("/api/pod/don/$ma/noi-giao", ['noi_giao_id' => $ngA], $h)->assertStatus(422);
+
+        // nhân viên không sửa đơn của chủ shop
+        $ma2 = $this->postJson('/api/pod/don', ['dong' => $dong], $h)->assertOk()->json('don.ma');
+        $this->postJson('/api/pod/nhan-vien', ['ten' => 'Lan', 'sdt' => '0911 222 333', 'matkhau' => 'nhanvien1', 'mk_chu' => 'matkhau1'], $h)->assertOk();
+        $hn = $this->dangNhap('0911222333', 'nhanvien1');
+        $this->postJson('/api/pod/dong-y', [], $hn)->assertOk();
+        $this->postJson("/api/pod/don/$ma2/noi-giao", ['noi_giao_id' => $ngA], $hn)->assertStatus(403);
+
+        // xưởng tạo đơn hộ "chưa có địa chỉ"; trang đơn + danh sách gắn nhãn; sửa thì áp cho mọi đơn chưa có địa chỉ
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $admin->post('/admin/3d/pod/don/tao', ['seller_id' => $this->a->id, 'noi_giao_id' => 'khong', 'dong' => $dong])->assertSessionHasNoErrors();
+        $d3 = PodDon::latest('id')->first();
+        $this->assertNull($d3->noi_giao);
+        $admin->get('/admin/3d/pod/don?tt=tat_ca')->assertSee('Chưa có địa chỉ');   // ví A trống nên đơn ở Chờ nạp tiền, không ở tab Cần làm
+        $admin->get("/admin/3d/pod/don/{$d3->id}")->assertSee('Chưa có địa chỉ')->assertSee('Áp nơi giao mới cho cả 1 đơn')->assertSee('cũng chưa có địa chỉ');
+        $admin->post("/admin/3d/pod/don/{$d3->id}/thong-tin", ['noi_giao_id' => 'khong'])->assertSessionHasErrors('thong_tin');
+        $admin->post("/admin/3d/pod/don/{$d3->id}/thong-tin", ['noi_giao_id' => (string) $ngA, 'ap_cung' => '1'])->assertSessionHasNoErrors();
+        $this->assertSame(['Kho gom HN', 'Kho gom HN'], [$d3->fresh()->noi_giao['ten'], PodDon::where('ma', $ma2)->first()->noi_giao['ten']]);
+    }
+
     private function dangNhap(string $sdt, string $mk): array
     {
         $tok = $this->postJson('/api/pod/dang-nhap', ['sdt' => $sdt, 'matkhau' => $mk])->assertOk()->json('token');

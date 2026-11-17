@@ -4,7 +4,7 @@
     <div class="card-hint">Đặt {{ optional($don->created_at)->format('d/m/Y H:i') }} · {{ $don->da_tru ? 'Đã trừ ví' : 'Chưa trừ ví' }}@if($don->huy_luc) · Huỷ {{ $don->huy_luc->format('d/m/Y H:i') }}@endif @if($don->giao_luc) · Giao {{ $don->giao_luc->format('d/m/Y H:i') }}@endif @if($don->nguoi_in) · In: {{ $don->nguoi_in }}@endif @if($don->nguoi_giao) · Giao bởi: {{ $don->nguoi_giao }}@endif</div></div>
   <div class="pad grid" style="align-items:start">
     <div><div class="muted">Seller</div><b>{{ optional($don->seller)->ten }}</b> ({{ optional($don->seller)->ma }})<div class="muted">{{ optional($don->seller)->sdt }}</div>@if($don->nhan_vien_id)<div class="muted">Người đặt: nhân viên {{ optional(\App\Models\PodNhanVien::find($don->nhan_vien_id))->ten ?? '#' . $don->nhan_vien_id }}</div>@endif</div>
-    <div><div class="muted">Giao tới</div>@if($don->noi_giao)<b>{{ $don->noi_giao['ten'] ?? '' }}</b><div>{{ $don->noi_giao['dia_chi'] ?? '' }}</div><div class="muted">{{ $don->noi_giao['sdt'] ?? '' }} {{ $don->noi_giao['ghi_chu'] ?? '' }}</div>@else<span class="muted">—</span>@endif</div>
+    <div><div class="muted">Giao tới</div>@if($don->noi_giao)<b>{{ $don->noi_giao['ten'] ?? '' }}</b><div>{{ $don->noi_giao['dia_chi'] ?? '' }}</div><div class="muted">{{ $don->noi_giao['sdt'] ?? '' }} {{ $don->noi_giao['ghi_chu'] ?? '' }}</div>@else<span class="badge b-cho_nap">Chưa có địa chỉ</span><div class="muted">Seller bổ sung ở Đơn của tôi, hoặc sửa ở mục bên dưới.</div>@endif</div>
     <div><div class="muted">Mã đơn sàn</div><b>{{ $don->ma_don_san ?: '—' }}</b>@if($don->ma_van_don)<div class="muted" style="margin-top:6px">Mã vận đơn</div><b>{{ $don->ma_van_don }}</b>@endif</div>
     <div><div class="muted">Nhãn line bay</div>@if($coNhan)<a class="btn-sm" href="{{ route('admin.pod.don.nhan', $don) }}">Tải nhãn</a>@else<span class="muted">Không có</span>@endif</div>
     @if($don->ghi_chu)<div class="f rong"><div class="muted">Ghi chú của seller</div>{{ $don->ghi_chu }}</div>@endif
@@ -69,7 +69,7 @@
     <label class="f"><span>Mã đơn sàn</span><input name="ma_don_san" value="{{ old('ma_don_san', $don->ma_don_san) }}" maxlength="60"></label>
     <label class="f rong"><span>Ghi chú</span><textarea name="ghi_chu" rows="2" maxlength="1000">{{ old('ghi_chu', $don->ghi_chu) }}</textarea></label>
     <div class="f rong">
-      @if($soCung > 0)<label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" name="ap_cung" value="1" style="width:auto" checked> Áp nơi giao mới cho cả {{ $soCung }} đơn chưa giao khác của seller đang ghi cùng nơi giao "{{ $don->noi_giao['ten'] ?? '' }}"</label>@endif
+      @if($soCung > 0)<label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" name="ap_cung" value="1" style="width:auto" checked> Áp nơi giao mới cho cả {{ $soCung }} đơn chưa giao khác của seller {{ $don->noi_giao ? 'đang ghi cùng nơi giao "' . ($don->noi_giao['ten'] ?? '') . '"' : 'cũng chưa có địa chỉ' }}</label>@endif
       <label style="display:flex;gap:6px;align-items:center;font-size:13px;margin-top:6px"><input type="checkbox" name="luu_so" value="1" style="width:auto"> Lưu vào sổ nơi giao của seller (seller chọn được ở cổng)</label>
     </div>
     <div><button class="btn">Lưu thông tin giao</button></div>

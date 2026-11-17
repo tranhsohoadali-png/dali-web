@@ -55,7 +55,7 @@
   <div class="card">
     <div class="card-h"><div class="card-t">3 · Giao tới + thông tin đơn</div></div>
     <div class="pad grid" style="align-items:start">
-      @include('admin.pod._noi_giao', ['chonSan' => $s->noi_giao_mac_dinh ?? $noiGiao->first()?->id])
+      @include('admin.pod._noi_giao', ['chonSan' => $s->noi_giao_mac_dinh ?? $noiGiao->first()?->id, 'coTrong' => true])
       <label class="f"><span>Mã đơn Etsy / Amazon (đối chiếu)</span><input name="ma_don_san" value="{{ old('ma_don_san') }}" maxlength="60"></label>
       <label class="f"><span>Nhãn line bay (nếu có)</span><input type="file" name="nhan" accept="image/*,application/pdf"></label>
       <label class="f rong"><span>Ghi chú (seller thấy)</span><textarea name="ghi_chu" rows="2" maxlength="1000">{{ old('ghi_chu') }}</textarea></label>

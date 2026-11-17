@@ -25,7 +25,7 @@
         @endforeach
       </td>
       <td class="num">{{ number_format($d->tong_tien, 0, ',', '.') }}đ</td>
-      <td><span class="badge b-{{ $d->trang_thai }}">{{ $d->tenTrangThai() }}</span></td>
+      <td><span class="badge b-{{ $d->trang_thai }}">{{ $d->tenTrangThai() }}</span>@if(!$d->noi_giao && !in_array($d->trang_thai, ['da_giao', 'da_huy'], true))<div style="margin-top:4px"><span class="badge b-cho_nap">Chưa có địa chỉ</span></div>@endif</td>
       <td><a class="btn-sm" href="{{ route('admin.pod.don.show', $d) }}">Xem</a></td>
     </tr>
     @endforeach

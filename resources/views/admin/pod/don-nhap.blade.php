@@ -60,8 +60,8 @@
   </div>
 
   <div class="card">
-    <div class="card-h"><div class="card-t">3 · Giao tới</div><div class="card-hint">Áp cho mọi đơn tạo từ file này. Chưa có địa chỉ thì nhập tạm, sửa sau ở trang đơn (có tuỳ chọn áp cho mọi đơn cùng nơi giao).</div></div>
-    <div class="pad grid" style="align-items:start">@include('admin.pod._noi_giao', ['chonSan' => $s->noi_giao_mac_dinh ?? $noiGiao->first()?->id])</div>
+    <div class="card-h"><div class="card-t">3 · Giao tới</div><div class="card-hint">Áp cho mọi đơn tạo từ file này. Chưa có địa chỉ thì chọn "Chưa có địa chỉ": seller bổ sung ở Đơn của tôi, hoặc xưởng sửa ở trang đơn (có tuỳ chọn áp cho mọi đơn cùng lúc).</div></div>
+    <div class="pad grid" style="align-items:start">@include('admin.pod._noi_giao', ['chonSan' => $s->noi_giao_mac_dinh ?? $noiGiao->first()?->id, 'coTrong' => true])</div>
   </div>
   <div class="acts"><button class="btn" @disabled(!$s->hien || $mau->isEmpty())>Tạo đơn hộ {{ $s->ten }}</button><a class="btn-sm" href="{{ route('admin.pod.don.tao', ['seller' => $s->id]) }}">Huỷ, về trang tạo đơn</a></div>
 </form>

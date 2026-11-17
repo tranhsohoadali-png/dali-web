@@ -57,10 +57,14 @@ class PodDonController extends Controller
         return [$mau, $bt];
     }
 
-    /** Nơi giao từ form (chọn nơi giao đã lưu của seller hoặc "moi" + nhập tay). Trả mảng nơi giao, hoặc chuỗi lỗi. */
-    private function noiGiaoTuForm(PodSeller $s, array $v): array|string
+    /**
+     * Nơi giao từ form: nơi giao đã lưu của seller, "moi" + nhập tay, hoặc "khong" = chưa có địa chỉ (bổ sung sau).
+     * Trả mảng nơi giao, null (chưa có địa chỉ), hoặc chuỗi lỗi.
+     */
+    private function noiGiaoTuForm(PodSeller $s, array $v): array|string|null
     {
         $chon = (string) ($v['noi_giao_id'] ?? '');
+        if ($chon === 'khong') return null;
         if ($chon !== '' && $chon !== 'moi') {
             $ng = PodNoiGiao::where('seller_id', $s->id)->whereKey((int) $chon)->first();
             if (!$ng) return 'Nơi giao không thuộc seller này.';
@@ -68,7 +72,7 @@ class PodDonController extends Controller
         }
         $ten = trim((string) ($v['ng_ten'] ?? ''));
         $diaChi = trim((string) ($v['ng_dia_chi'] ?? ''));
-        if ($ten === '' || $diaChi === '') return 'Chọn nơi giao của seller, hoặc nhập tên + địa chỉ nơi giao mới.';
+        if ($ten === '' || $diaChi === '') return 'Nhập tên + địa chỉ nơi giao mới, hoặc chọn "Chưa có địa chỉ — bổ sung sau".';
         return ['ten' => $ten, 'dia_chi' => $diaChi, 'sdt' => trim((string) ($v['ng_sdt'] ?? '')) ?: null, 'ghi_chu' => trim((string) ($v['ng_ghi_chu'] ?? '')) ?: null];
     }
 
@@ -195,6 +199,7 @@ class PodDonController extends Controller
         ]);
         $s = PodSeller::findOrFail($don->seller_id);
         $moi = $this->noiGiaoTuForm($s, $v);
+        if ($moi === null) $moi = 'Chọn hoặc nhập nơi giao.';
         if (is_string($moi)) return back()->withErrors(['thong_tin' => $moi])->withInput();
         $cu = (array) $don->noi_giao;
         $giong = fn ($d) => trim((string) (($d->noi_giao['ten'] ?? ''))) === trim((string) ($cu['ten'] ?? '')) && trim((string) ($d->noi_giao['dia_chi'] ?? '')) === trim((string) ($cu['dia_chi'] ?? ''));

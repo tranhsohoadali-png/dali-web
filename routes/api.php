@@ -77,6 +77,7 @@ Route::prefix('pod')->middleware('throttle:120,1')->group(function () {
     Route::get('don',              [\App\Http\Controllers\PodApiController::class, 'don']);
     Route::post('don',             [\App\Http\Controllers\PodApiController::class, 'donTao'])->middleware('throttle:30,1,pod-don');   // tham số 3 = bộ đếm riêng; thiếu nó thì dùng CHUNG bộ đếm IP với throttle:120 của nhóm -> chặn nhầm gửi đơn
     Route::post('don/{ma}/huy',    [\App\Http\Controllers\PodApiController::class, 'donHuy']);
+    Route::post('don/{ma}/noi-giao', [\App\Http\Controllers\PodApiController::class, 'donNoiGiao']);   // bổ sung nơi giao cho đơn gửi lúc chưa có địa chỉ
     Route::get('vi',               [\App\Http\Controllers\PodApiController::class, 'vi']);
     // Tài khoản: hồ sơ, đổi mật khẩu, thiết bị đăng nhập, nhân viên (2026-11-08)
     Route::get('ho-so',            [\App\Http\Controllers\PodApiController::class, 'hoSo']);

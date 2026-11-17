@@ -1,10 +1,17 @@
-{{-- Chọn nơi giao: sổ nơi giao của seller hoặc "Nhập nơi giao khác".
-     Biến: $noiGiao (collection PodNoiGiao), $chonSan (id | 'moi'), $ngCu (mảng ten/dia_chi/sdt/ghi_chu cho ô nhập tay). --}}
-@php $chonNg = (string) old('noi_giao_id', $chonSan ?? ''); $ngCu = $ngCu ?? []; @endphp
+{{-- Chọn nơi giao: sổ nơi giao của seller, "Nhập nơi giao khác", hoặc (khi $coTrong) "Chưa có địa chỉ — bổ sung sau".
+     Biến: $noiGiao (collection PodNoiGiao), $chonSan (id | 'moi' | 'khong'), $ngCu (mảng ten/dia_chi/sdt/ghi_chu cho ô nhập tay), $coTrong (bool). --}}
+@php
+  $coTrong = $coTrong ?? false;
+  $ngCu = $ngCu ?? [];
+  $chonNg = (string) old('noi_giao_id', $chonSan ?? '');
+  if (!in_array($chonNg, ['moi', 'khong'], true) && !$noiGiao->contains(fn ($n) => (string) $n->id === $chonNg)) $chonNg = $coTrong ? 'khong' : 'moi';
+  if ($chonNg === 'khong' && !$coTrong) $chonNg = 'moi';
+@endphp
 <label class="f rong"><span>Nơi giao</span>
   <select name="noi_giao_id" class="ng-chon">
     @foreach($noiGiao as $ng)<option value="{{ $ng->id }}" @selected($chonNg === (string) $ng->id)>{{ $ng->ten }} — {{ $ng->dia_chi }}</option>@endforeach
-    <option value="moi" @selected($chonNg === 'moi' || $noiGiao->isEmpty())>+ Nhập nơi giao khác</option>
+    <option value="moi" @selected($chonNg === 'moi')>+ Nhập nơi giao khác</option>
+    @if($coTrong)<option value="khong" @selected($chonNg === 'khong')>Chưa có địa chỉ — bổ sung sau (seller hoặc xưởng)</option>@endif
   </select>
 </label>
 <div class="f rong ng-moi">

@@ -496,7 +496,9 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
         '<td class="num">' + tien(giaDong(d)) + '</td><td class="num"><button class="btn2 btn-del" data-xoa="' + i + '">Bỏ</button></td></tr>';
     }).join('') + '<tr><td colspan="2" class="num"><b>Tổng tạm tính</b></td><td class="num gia">' + tien(tong) + '</td><td></td></tr></table></div>';
     h += '<div class="box"><div class="row">' +
-      '<label class="f">Giao tới' + (st.noiGiao.length ? '<select id="gNg">' + st.noiGiao.map(function (n) { return '<option value="' + n.id + '"' + (n.id === st.ngMd ? ' selected' : '') + '>' + esc(n.ten) + ' — ' + esc(n.dia_chi) + (n.id === st.ngMd ? ' (mặc định)' : '') + '</option>'; }).join('') + '</select>' : '<span class="msg err" style="margin:0">Chưa có nơi giao. <a href="#noigiao">Thêm nơi giao</a></span>') + '</label>' +
+      '<label class="f">Giao tới<select id="gNg">' + st.noiGiao.map(function (n) { return '<option value="' + n.id + '"' + (n.id === st.ngMd ? ' selected' : '') + '>' + esc(n.ten) + ' — ' + esc(n.dia_chi) + (n.id === st.ngMd ? ' (mặc định)' : '') + '</option>'; }).join('') +
+        '<option value=""' + (st.noiGiao.length ? '' : ' selected') + '>Chưa có địa chỉ — bổ sung sau ở Đơn của tôi</option></select>' +
+        (st.noiGiao.length ? '' : '<span class="mu" style="font-size:13px">Chưa có nơi giao trong sổ. <a href="#noigiao">Thêm nơi giao</a> hoặc gửi đơn trước, bổ sung địa chỉ sau.</span>') + '</label>' +
       '<label class="f">Mã đơn Etsy / Amazon (để đối chiếu)<input id="gSan" maxlength="60"></label></div>' +
       '<div class="row" style="margin-top:12px"><label class="f">Ghi chú cho xưởng<textarea id="gGc" rows="2" maxlength="1000"></textarea></label>' +
       '<label class="f">Nhãn line bay (nếu line yêu cầu dán từng kiện)<input id="gNhan" type="file" accept="image/*,application/pdf"></label></div>' +
@@ -506,7 +508,7 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
         (st.me.so_du >= tong ? 'Đủ tiền: đơn vào hàng đợi in ngay khi gửi.'
           : st.me.tra_sau ? 'Ví trả sau: đơn vào hàng đợi in ngay, ví âm thành nợ — chuyển khoản sau để trả.'
           : 'Chưa đủ: đơn sẽ chờ nạp tiền, tự vào sản xuất khi nạp đủ.') + '</p>') +
-      '<button class="btn" id="gGui" style="margin-top:12px"' + (st.noiGiao.length ? '' : ' disabled') + '>Gửi đơn · ' + tien(tong) + '</button></div>';
+      '<button class="btn" id="gGui" style="margin-top:12px">Gửi đơn · ' + tien(tong) + '</button></div>';
     main.innerHTML = h;
     main.querySelectorAll('[data-sl]').forEach(function (inp) { inp.onchange = function () { st.gio[+inp.dataset.sl].so_luong = Math.max(1, Math.min(500, parseInt(inp.value, 10) || 1)); luuGio(); veGio(); }; });
     main.querySelectorAll('[data-xoa]').forEach(function (b) { b.onclick = function () { st.gio.splice(+b.dataset.xoa, 1); luuGio(); veGio(); }; });
@@ -515,7 +517,7 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
       gui.disabled = true; gui.textContent = 'Đang gửi…';
       var fd = new FormData();
       fd.append('dong', JSON.stringify(st.gio.map(function (d) { return { bien_the_id: d.bien_the_id, so_luong: d.so_luong, mau_sac: d.mau_sac, chu: d.chu, font: d.font || '' }; })));
-      fd.append('noi_giao_id', $('gNg').value);
+      if ($('gNg').value) fd.append('noi_giao_id', $('gNg').value);
       if ($('gSan').value.trim()) fd.append('ma_don_san', $('gSan').value.trim());
       if ($('gGc').value.trim()) fd.append('ghi_chu', $('gGc').value.trim());
       if ($('gNhan').files[0]) fd.append('nhan', $('gNhan').files[0]);
@@ -533,6 +535,8 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
   /* ---------- Đơn của tôi ---------- */
   async function veDon() {
     var rd = await api('don'), ds = rd.don, coNv = rd.co_nhan_vien;
+    if (!st.noiGiao) await napNoiGiao();
+    var suaNg = function (d) { return !d.noi_giao && ['cho_nap', 'cho_in', 'dang_in'].indexOf(d.trang_thai) >= 0 && d.cua_toi !== false; };
     var h = veMsg() + '<h2>Đơn của tôi</h2><p class="sub">Đơn Chờ nạp tiền và Chờ in còn huỷ được; đơn đã lên máy in thì không.</p>';
     if (!ds.length) { main.innerHTML = h + '<div class="box trong"><b>Chưa có đơn nào</b>Chọn mẫu rồi gửi đơn ở mục Đơn đang soạn.</div>'; return; }
     h += ds.map(function (d) {
@@ -541,10 +545,21 @@ dl.hs{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:14px}d
         '<table style="margin-top:8px">' + d.dong.map(function (x) {
           return '<tr><td>' + esc(x.ten_mau) + ' <span class="mu">· ' + esc(x.ten_bien_the) + (x.chat_lieu ? ' · ' + esc(x.chat_lieu) : '') + (x.mau_sac ? ' · ' + esc(x.mau_sac) : '') + (x.chu ? ' · "' + esc(x.chu) + '"' : '') + (x.font ? ' · ' + esc(x.font) : '') + '</span></td><td class="num">× ' + x.so_luong + '</td><td class="num">' + tien(x.thanh_tien) + '</td></tr>';
         }).join('') + '<tr><td colspan="2" class="num"><b>Tổng</b></td><td class="num gia">' + tien(d.tong_tien) + '</td></tr></table>' +
-        '<div class="mu" style="margin-top:6px">Giao tới: ' + esc(d.noi_giao ? d.noi_giao.ten : '—') + (d.ma_van_don ? ' · Mã vận đơn: <b>' + esc(d.ma_van_don) + '</b>' : '') + '</div>' +
+        '<div class="mu" style="margin-top:6px">Giao tới: ' + (d.noi_giao ? esc(d.noi_giao.ten) : '<b style="color:#B45309">Chưa có địa chỉ</b>') + (d.ma_van_don ? ' · Mã vận đơn: <b>' + esc(d.ma_van_don) + '</b>' : '') + '</div>' +
+        (suaNg(d) ? (st.noiGiao.length
+          ? '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><select data-ng="' + esc(d.ma) + '" style="border:1.5px solid var(--bd);border-radius:9px;padding:6px 8px;max-width:100%">' + st.noiGiao.map(function (n) { return '<option value="' + n.id + '"' + (n.id === st.ngMd ? ' selected' : '') + '>' + esc(n.ten) + ' — ' + esc(n.dia_chi) + '</option>'; }).join('') + '</select><button class="btn2" data-luu-ng="' + esc(d.ma) + '">Lưu nơi giao</button></div>'
+          : '<div class="mu" style="margin-top:6px"><a href="#noigiao">Thêm nơi giao</a> rồi quay lại chọn cho đơn này.</div>') : '') +
         ((d.trang_thai === 'cho_nap' || d.trang_thai === 'cho_in') && d.cua_toi !== false ? '<button class="btn2 btn-del" style="margin-top:10px" data-huy="' + esc(d.ma) + '">Huỷ đơn</button>' : '') + '</div>';
     }).join('');
     main.innerHTML = h;
+    main.querySelectorAll('[data-luu-ng]').forEach(function (b) {
+      b.onclick = async function () {
+        var ma = b.dataset.luuNg, sel = main.querySelector('select[data-ng="' + ma + '"]');
+        b.disabled = true;
+        try { await api('don/' + encodeURIComponent(ma) + '/noi-giao', { body: { noi_giao_id: +sel.value } }); st.msg = { ok: 'Đã lưu nơi giao cho đơn ' + esc(ma) + '.' }; veDon(); }
+        catch (e) { b.disabled = false; baoLoi(e); }
+      };
+    });
     main.querySelectorAll('[data-huy]').forEach(function (b) {
       b.onclick = async function () {
         if (!b.dataset.chac) { b.dataset.chac = '1'; b.textContent = 'Bấm lần nữa để huỷ'; return; }
