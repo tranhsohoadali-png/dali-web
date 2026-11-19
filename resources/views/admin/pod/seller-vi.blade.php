@@ -1,6 +1,6 @@
 @include('admin.pod._dau', ['tieuDe' => 'Sổ ví ' . $seller->ten])
 <div class="card">
-  <div class="card-h"><div class="card-t">{{ $seller->ten }} ({{ $seller->ma }}) — số dư {{ number_format($soDu, 0, ',', '.') }}đ@if($soDu < 0) <span style="color:#B91C1C">(đang nợ {{ number_format(-$soDu, 0, ',', '.') }}đ)</span>@endif @if($seller->tra_sau)<span class="muted" style="font-weight:600"> · trả sau (không giới hạn)</span>@endif</div><div class="card-hint">Sổ chỉ thêm dòng, không sửa. Sai thì dùng Điều chỉnh ở trang Seller & ví.</div></div>
+  <div class="card-h"><div class="card-t">{{ $seller->ten }} ({{ $seller->ma }}) — số dư {{ number_format($soDu, 0, ',', '.') }}đ@if($soDu < 0) <span style="color:#B91C1C">(đang nợ {{ number_format(-$soDu, 0, ',', '.') }}đ)</span>@endif @if($seller->tra_sau)<span class="muted" style="font-weight:600"> · trả sau (không giới hạn)</span>@endif</div><div class="card-hint">Sổ chỉ thêm dòng, không sửa. Sai thì dùng Điều chỉnh ở trang Seller & ví. <a href="{{ route('admin.pod.don.index', ['seller' => $seller->id]) }}" style="color:var(--gd)">Lịch sử đơn</a></div></div>
   @if($dong->isEmpty())
     <div class="empty">Chưa có giao dịch.</div>
   @else
@@ -11,7 +11,7 @@
       <td class="muted">{{ optional($d->created_at)->format('d/m/Y H:i') }}</td>
       <td>{{ \App\Models\PodVi::LOAI[$d->loai] ?? $d->loai }}</td>
       <td class="num" style="color:{{ $d->so_tien < 0 ? '#B91C1C' : '#3E7A0A' }};font-weight:800">{{ $d->so_tien > 0 ? '+' : '' }}{{ number_format($d->so_tien, 0, ',', '.') }}đ</td>
-      <td>{{ $d->ghi_chu }}</td>
+      <td>@if($d->don_id)<a href="{{ route('admin.pod.don.show', $d->don_id) }}" style="color:var(--gd)">{{ $d->ghi_chu }}</a>@else{{ $d->ghi_chu }}@endif</td>
       <td class="muted">{{ $d->nguoi_tao }}</td>
     </tr>
     @endforeach

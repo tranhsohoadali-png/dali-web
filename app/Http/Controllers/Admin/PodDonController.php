@@ -259,16 +259,56 @@ class PodDonController extends Controller
                 : 'Ví seller chưa đủ (số dư ' . $tien($s->soDu()) . '): đơn Chờ nạp tiền, tự vào sản xuất khi seller nạp đủ.'));
     }
 
+    /**
+     * Danh sách đơn: tab trạng thái + lọc seller / tháng / tìm (mã đơn, mã sàn, tên mẫu, chữ khắc).
+     * Chọn một seller = xem lịch sử đơn của seller đó (mặc định tab Tất cả) kèm thẻ tổng hợp.
+     */
     public function index(Request $request)
     {
-        $tt = (string) $request->query('tt', 'can_lam');
-        $q = PodDon::with(['dong', 'seller'])->orderBy('id');
+        $seller = $request->filled('seller') ? PodSeller::find((int) $request->query('seller')) : null;
+        $thang = preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', (string) $request->query('thang')) ? (string) $request->query('thang') : '';
+        $tim = mb_substr(trim((string) $request->query('q', '')), 0, 60);
+        // có lọc (seller / tháng / tìm) thì mặc định xem Tất cả, không thì hàng đợi Cần làm
+        $tt = (string) $request->query('tt', $seller || $thang !== '' || $tim !== '' ? 'tat_ca' : 'can_lam');
+        $loc = function ($q) use ($seller, $thang, $tim) {
+            if ($seller) $q->where('seller_id', $seller->id);
+            if ($thang !== '') {
+                $dau = \Illuminate\Support\Carbon::parse($thang . '-01')->startOfMonth();
+                $q->whereBetween('created_at', [$dau, $dau->copy()->endOfMonth()]);
+            }
+            if ($tim !== '') {
+                $q->where(fn ($w) => $w->where('ma', 'like', "%$tim%")->orWhere('ma_don_san', 'like', "%$tim%")
+                    ->orWhereHas('dong', fn ($d) => $d->where('ten_mau', 'like', "%$tim%")->orWhere('chu_ca_nhan', 'like', "%$tim%")));
+            }
+            return $q;
+        };
+        $q = $loc(PodDon::with(['dong', 'seller']))->orderBy('id');
         if ($tt === 'can_lam') $q->whereIn('trang_thai', ['cho_in', 'dang_in']);
         elseif (isset(PodDon::TRANG_THAI[$tt])) $q->where('trang_thai', $tt)->reorder()->orderByDesc('id');
         else $q->reorder()->orderByDesc('id');
-        $items = $q->limit(500)->get();
-        $dem = PodDon::selectRaw('trang_thai, count(*) n')->groupBy('trang_thai')->pluck('n', 'trang_thai');
-        return view('admin.pod.don-index', compact('items', 'tt', 'dem'));
+        $items = $q->paginate(100)->withQueryString();
+        $dem = $loc(PodDon::query())->selectRaw('trang_thai, count(*) n')->groupBy('trang_thai')->pluck('n', 'trang_thai');
+        $cacThang = PodDon::query()->when($seller, fn ($w) => $w->where('seller_id', $seller->id))
+            ->selectRaw("strftime('%Y-%m', created_at) t")->distinct()->orderByDesc('t')->limit(36)->pluck('t')->filter()->values();
+        $sellers = PodSeller::where('cho_duyet', false)->orderBy('ten')->get(['id', 'ten', 'ma']);
+        $tong = null;
+        if ($seller) {
+            // lịch sử của seller (theo bộ lọc tháng / tìm, không tính đơn đã huỷ)
+            $con = $loc(PodDon::query())->where('trang_thai', '!=', 'da_huy');
+            $ids = (clone $con)->pluck('id');
+            $tong = [
+                'don'     => $ids->count(),
+                'tien'    => (int) (clone $con)->sum('tong_tien'),
+                'chiec'   => (int) \App\Models\PodDonDong::whereIn('don_id', $ids)->sum('so_luong'),
+                'da_giao' => (int) (clone $con)->where('trang_thai', 'da_giao')->count(),
+                'dau'     => (clone $con)->min('created_at'),
+                'cuoi'    => (clone $con)->max('created_at'),
+                'so_du'   => $seller->soDu(),
+                'mau'     => \App\Models\PodDonDong::whereIn('don_id', $ids)->selectRaw('ten_mau, sum(so_luong) sl, sum(thanh_tien) tien')
+                    ->groupBy('ten_mau')->orderByDesc('sl')->limit(8)->get(),
+            ];
+        }
+        return view('admin.pod.don-index', compact('items', 'tt', 'dem', 'seller', 'thang', 'tim', 'cacThang', 'sellers', 'tong'));
     }
 
     public function show(PodDon $don)

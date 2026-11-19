@@ -71,6 +71,7 @@
               <button class="btn {{ $s->tra_sau ? 'btn-warn' : '' }}" style="margin-top:10px">{{ $s->tra_sau ? 'Tắt trả sau' : 'Bật trả sau' }}</button>
             </form>
           </details>
+          <a class="btn-sm" href="{{ route('admin.pod.don.index', ['seller' => $s->id]) }}">Đơn ({{ (int) ($soDon[$s->id] ?? 0) }})</a>
           <a class="btn-sm" href="{{ route('admin.pod.seller.vi', $s) }}">Sổ ví</a>
           @if($s->hien)<a class="btn-sm" href="{{ route('admin.pod.don.tao', ['seller' => $s->id]) }}">Tạo đơn hộ</a>@endif
           <details class="edit"><summary class="btn-sm">Sửa</summary>

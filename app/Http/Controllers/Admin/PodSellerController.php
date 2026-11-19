@@ -20,7 +20,8 @@ class PodSellerController extends Controller
         $items = PodSeller::with('nhanVien')->orderByDesc('cho_duyet')->orderByDesc('created_at')->get();
         $soDu = DB::table('pod_vi')->selectRaw('seller_id, sum(so_tien) t')->groupBy('seller_id')->pluck('t', 'seller_id');
         $choNap = PodDon::where('trang_thai', 'cho_nap')->selectRaw('seller_id, count(*) n, sum(tong_tien) t')->groupBy('seller_id')->get()->keyBy('seller_id');
-        return view('admin.pod.seller', compact('items', 'soDu', 'choNap'));
+        $soDon = PodDon::where('trang_thai', '!=', 'da_huy')->selectRaw('seller_id, count(*) n')->groupBy('seller_id')->pluck('n', 'seller_id');
+        return view('admin.pod.seller', compact('items', 'soDu', 'choNap', 'soDon'));
     }
 
     public function store(Request $request)

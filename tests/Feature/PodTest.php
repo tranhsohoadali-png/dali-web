@@ -660,6 +660,35 @@ class PodTest extends TestCase
         return $q['k'];
     }
 
+    public function test_admin_lich_su_don_theo_seller_loc_thang_tim_va_tong_hop(): void
+    {
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        $dat = fn (PodSeller $s, PodMau $m, int $sl = 1, ?string $san = null) => PodSo::datDon($s, [['bien_the_id' => $this->bt($m), 'so_luong' => $sl]], ['ten' => 'Kho gom', 'dia_chi' => 'HN'], $san, null, null);
+        $d1 = $dat($this->a, $this->chung, 1, 'ETSY-111');          // 24.440
+        $d2 = $dat($this->a, $this->riengA, 1);                       // 12 g PLA = 15.600
+        $d3 = $dat($this->a, $this->chung, 2);
+        PodSo::huyDon($d3, 'admin');
+        $d4 = $dat($this->b, $this->chung, 1, 'ETSY-999');
+        $d1->forceFill(['created_at' => '2026-10-05 10:00:00'])->save();
+        $d2->forceFill(['created_at' => '2026-11-03 09:00:00'])->save();
+
+        // lịch sử seller A: chỉ đơn của A, mặc định tab Tất cả, tổng hợp không tính đơn huỷ
+        $admin->get('/admin/3d/pod/don?seller=' . $this->a->id)->assertOk()
+            ->assertSee('Lịch sử đơn · Seller A')->assertSee($d1->ma)->assertSee($d2->ma)->assertSee($d3->ma)->assertDontSee($d4->ma)
+            ->assertSee('40.040đ')->assertSee('Tháng 10/2026')->assertSee('Tháng 11/2026');
+        // lọc tháng 10 + tìm
+        $admin->get('/admin/3d/pod/don?seller=' . $this->a->id . '&thang=2026-10')->assertSee($d1->ma)->assertDontSee($d2->ma);
+        $admin->get('/admin/3d/pod/don?q=' . urlencode('Mẫu độc quyền'))->assertSee($d2->ma)->assertDontSee($d1->ma)->assertDontSee($d4->ma);
+        $admin->get('/admin/3d/pod/don?q=ETSY-999&tt=tat_ca')->assertSee($d4->ma)->assertDontSee($d1->ma);
+        $admin->get('/admin/3d/pod/don?seller=' . $this->a->id . '&tt=da_huy')->assertSee($d3->ma)->assertDontSee($d1->ma);
+        $admin->get('/admin/3d/pod/don?thang=khong-hop-le')->assertOk();
+        // nút ở Seller & ví, link từ trang đơn
+        $admin->get('/admin/3d/pod/seller')->assertSee('Đơn (2)')->assertSee('Đơn (1)');
+        $admin->get("/admin/3d/pod/don/{$d1->id}")->assertSee('lịch sử đơn');
+        // mặc định (không chọn seller) vẫn là hàng đợi Cần làm
+        $admin->get('/admin/3d/pod/don')->assertOk()->assertSee('Hàng đợi in');
+    }
+
     public function test_admin_nhap_don_tu_file_moi_ma_mot_don_nho_khop_khong_tao_trung(): void
     {
         $admin = $this->withSession(['admin_logged_in' => true]);
