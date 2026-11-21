@@ -660,6 +660,43 @@ class PodTest extends TestCase
         return $q['k'];
     }
 
+    public function test_admin_doi_trang_thai_hang_loat_bo_qua_don_sai_buoc(): void
+    {
+        $admin = $this->withSession(['admin_logged_in' => true]);
+        PodSo::napTien($this->a, 200000, 'nap', null);
+        $dat = fn (PodSeller $s) => PodSo::datDon($s, [['bien_the_id' => $this->bt($this->chung), 'so_luong' => 1]], null, null, null, null);   // 24.440
+        [$d1, $d2, $d5] = [$dat($this->a), $dat($this->a), $dat($this->a)];   // Chờ in (đã trừ ví A)
+        $d3 = $dat($this->b);                                                     // B ví trống: Chờ nạp tiền
+        $admin->get('/admin/3d/pod/don?tt=tat_ca')->assertOk()->assertSee('Đổi trạng thái')->assertSee('name="ids[]"', false);
+
+        // Bắt đầu in: 2 đơn Chờ in chuyển, đơn Chờ nạp tiền bỏ qua có lý do
+        $admin->post('/admin/3d/pod/don/hang-loat', ['ids' => [$d1->id, $d2->id, $d3->id], 'hanh_dong' => 'dang_in'])
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'Đã chuyển 2 đơn sang "Đang in"') && str_contains($m, 'Bỏ qua 1') && str_contains($m, $d3->ma));
+        $this->assertSame(['dang_in', 'dang_in', 'cho_nap'], [$d1->fresh()->trang_thai, $d2->fresh()->trang_thai, $d3->fresh()->trang_thai]);
+        $this->assertSame('Admin', $d1->fresh()->nguoi_in);
+
+        // Đã giao + mã vận đơn chung
+        $admin->post('/admin/3d/pod/don/hang-loat', ['ids' => [$d1->id, $d2->id], 'hanh_dong' => 'da_giao', 'ma_van_don' => 'VN123'])
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'Đã chuyển 2 đơn sang "Đã giao"'));
+        $this->assertSame(['da_giao', 'VN123'], [$d2->fresh()->trang_thai, $d2->fresh()->ma_van_don]);
+        $this->assertNotNull($d1->fresh()->giao_luc);
+
+        // Huỷ: phải tích chắc chắn; đơn đã giao bỏ qua; đơn đã trừ ví được hoàn tiền
+        $du = $this->a->soDu();
+        $admin->post('/admin/3d/pod/don/hang-loat', ['ids' => [$d3->id, $d5->id], 'hanh_dong' => 'huy'])->assertSessionHasErrors('hang_loat');
+        $this->assertSame('cho_in', $d5->fresh()->trang_thai);
+        $admin->post('/admin/3d/pod/don/hang-loat', ['ids' => [$d1->id, $d3->id, $d5->id], 'hanh_dong' => 'huy', 'chac' => '1'])
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'Đã chuyển 2 đơn sang "Đã huỷ"') && str_contains($m, 'Hoàn tiền vào ví cho 1 đơn') && str_contains($m, $d1->ma));
+        $this->assertSame(['da_giao', 'da_huy', 'da_huy'], [$d1->fresh()->trang_thai, $d3->fresh()->trang_thai, $d5->fresh()->trang_thai]);
+        $this->assertSame($du + 24440, $this->a->soDu());
+
+        $admin->post('/admin/3d/pod/don/hang-loat', ['ids' => [], 'hanh_dong' => 'dang_in'])->assertSessionHasErrors('ids');
+        $admin->post('/admin/3d/pod/don/hang-loat', ['ids' => [$d2->id], 'hanh_dong' => 'xoa'])->assertSessionHasErrors('hanh_dong');
+        $this->flushSession();
+        $this->post('/admin/3d/pod/don/hang-loat', ['ids' => [$d2->id], 'hanh_dong' => 'huy', 'chac' => '1'])->assertRedirect();
+        $this->assertSame('da_giao', $d2->fresh()->trang_thai);
+    }
+
     public function test_admin_lich_su_don_theo_seller_loc_thang_tim_va_tong_hop(): void
     {
         $admin = $this->withSession(['admin_logged_in' => true]);

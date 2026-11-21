@@ -54,10 +54,29 @@
   @if($items->isEmpty())
     <div class="empty">Không có đơn nào{{ $giu ? ' khớp bộ lọc' : '' }}.</div>
   @else
+  @php $conLam = fn ($d) => in_array($d->trang_thai, ['cho_nap', 'cho_in', 'dang_in'], true); $coChon = $items->contains($conLam); @endphp
+  <form method="POST" action="{{ route('admin.pod.don.hangloat') }}" id="fHL">
+  @csrf
+  @if($coChon)
+  <div class="pad acts" style="border-bottom:1px solid var(--gl);position:sticky;top:0;background:#fff;z-index:2">
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:700"><input type="checkbox" id="hlTat" style="width:auto"> Chọn tất cả trang này</label>
+    <span class="muted" id="hlDem">Chưa chọn đơn nào</span>
+    <select name="hanh_dong" id="hlViec" style="border:1.5px solid var(--bd);border-radius:9px;padding:7px 10px;font-size:13px;background:var(--gll)">
+      <option value="">— Đổi trạng thái —</option>
+      <option value="dang_in">Bắt đầu in (Chờ in → Đang in)</option>
+      <option value="da_giao">Đã giao (Chờ in / Đang in → Đã giao)</option>
+      <option value="huy">Huỷ đơn (hoàn tiền nếu đã trừ)</option>
+    </select>
+    <input name="ma_van_don" id="hlVd" maxlength="60" placeholder="Mã vận đơn chung (không bắt buộc)" style="display:none;border:1.5px solid var(--bd);border-radius:9px;padding:7px 10px;font-size:13px;background:var(--gll)">
+    <label id="hlChac" style="display:none;gap:6px;align-items:center;font-size:12px;color:#B91C1C"><input type="checkbox" name="chac" value="1" style="width:auto"> Chắc chắn huỷ các đơn đã chọn</label>
+    <button class="btn-sm" id="hlNut" disabled>Áp dụng</button>
+  </div>
+  @endif
   <div class="pl-cuon"><table>
-    <tr><th>Đơn</th>@if(!$seller)<th>Seller</th>@endif<th>Nội dung</th><th>Giao tới</th><th class="num">Tiền</th><th>Trạng thái</th><th></th></tr>
+    <tr>@if($coChon)<th style="width:28px"></th>@endif<th>Đơn</th>@if(!$seller)<th>Seller</th>@endif<th>Nội dung</th><th>Giao tới</th><th class="num">Tiền</th><th>Trạng thái</th><th></th></tr>
     @foreach($items as $d)
     <tr>
+      @if($coChon)<td>@if($conLam($d))<input type="checkbox" name="ids[]" value="{{ $d->id }}" class="hl-o" style="width:auto">@endif</td>@endif
       <td><b>{{ $d->ma }}</b><div class="muted">{{ optional($d->created_at)->format('d/m/Y H:i') }}@if($d->ma_don_san) · {{ $d->ma_don_san }}@endif</div>@if($d->xuong_tao)<span class="badge b-chung" style="margin-top:4px">Xưởng tạo hộ</span>@endif</td>
       @if(!$seller)<td><a href="{{ route('admin.pod.don.index', ['seller' => $d->seller_id]) }}" style="color:var(--gd);font-weight:700">{{ optional($d->seller)->ten }}</a><div class="muted">{{ optional($d->seller)->ma }}</div></td>@endif
       <td>
@@ -72,7 +91,30 @@
     </tr>
     @endforeach
   </table></div>
+  </form>
   @if($items->hasPages())<div class="pad">{{ $items->links('pagination::simple-default') }}</div>@endif
   @endif
 </div>
+<script>
+/* Đổi trạng thái hàng loạt: đếm đơn đã chọn, hiện ô mã vận đơn (Đã giao) / ô chắc chắn (Huỷ), chỉ bật nút khi đủ điều kiện. */
+(function () {
+  var f = document.getElementById('fHL'), tat = document.getElementById('hlTat');
+  if (!f || !tat) return;
+  var viec = document.getElementById('hlViec'), nut = document.getElementById('hlNut'), dem = document.getElementById('hlDem');
+  var vd = document.getElementById('hlVd'), chac = document.getElementById('hlChac');
+  var o = function () { return f.querySelectorAll('input.hl-o'); };
+  function cap() {
+    var n = Array.prototype.filter.call(o(), function (x) { return x.checked; }).length;
+    dem.textContent = n ? 'Đã chọn ' + n + ' đơn' : 'Chưa chọn đơn nào';
+    vd.style.display = viec.value === 'da_giao' ? '' : 'none';
+    chac.style.display = viec.value === 'huy' ? 'flex' : 'none';
+    nut.disabled = !n || !viec.value || (viec.value === 'huy' && !chac.querySelector('input').checked);
+    nut.textContent = n && viec.value ? 'Áp dụng cho ' + n + ' đơn' : 'Áp dụng';
+    tat.checked = n > 0 && n === o().length;
+  }
+  tat.addEventListener('change', function () { o().forEach(function (x) { x.checked = tat.checked; }); cap(); });
+  f.addEventListener('change', cap);
+  cap();
+})();
+</script>
 @include('admin.pod._cuoi')

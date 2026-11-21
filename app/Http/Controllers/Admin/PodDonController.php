@@ -369,6 +369,42 @@ class PodDonController extends Controller
         return back()->with('ok', 'Đã huỷ đơn ' . $don->ma . ($don->da_tru ? ', đã hoàn tiền vào ví seller.' : '.'));
     }
 
+    /**
+     * POST don/hang-loat — đổi trạng thái nhiều đơn một lần từ danh sách: Bắt đầu in (Chờ in -> Đang in),
+     * Đã giao (Chờ in / Đang in -> Đã giao, mã vận đơn chung nếu nhập), Huỷ (hoàn tiền nếu đã trừ, phải tích chắc chắn).
+     * Đơn không đúng bước thì bỏ qua và báo lý do — dùng đúng luật như đổi từng đơn (PodSo::chuyenTrangThai / huyDon).
+     */
+    public function hangLoat(Request $request)
+    {
+        $v = $request->validate([
+            'ids'        => 'required|array|min:1|max:500',
+            'ids.*'      => 'integer',
+            'hanh_dong'  => 'required|in:dang_in,da_giao,huy',
+            'ma_van_don' => 'nullable|string|max:60',
+            'chac'       => 'nullable|boolean',
+        ], ['ids.required' => 'Chưa chọn đơn nào.', 'hanh_dong.required' => 'Chọn việc cần làm.']);
+        if ($v['hanh_dong'] === 'huy' && !$request->boolean('chac')) {
+            return back()->withErrors(['hang_loat' => 'Huỷ hàng loạt cần tích "Chắc chắn huỷ".']);
+        }
+        $ten = ['dang_in' => 'Đang in', 'da_giao' => 'Đã giao', 'huy' => 'Đã huỷ'][$v['hanh_dong']];
+        $xong = $hoan = 0;
+        $bo = [];
+        foreach (PodDon::whereIn('id', array_unique($v['ids']))->orderBy('id')->get() as $don) {
+            if ($v['hanh_dong'] === 'huy') {
+                $daTru = $don->da_tru;
+                if (PodSo::huyDon($don, 'admin')) { $xong++; if ($daTru) $hoan++; }
+                else $bo[] = $don->ma . ' (đang "' . $don->tenTrangThai() . '")';
+                continue;
+            }
+            $loi = PodSo::chuyenTrangThai($don, $v['hanh_dong'], $v['ma_van_don'] ?? null, 'Admin');
+            if ($loi) $bo[] = $don->ma . ' (đang "' . $don->tenTrangThai() . '")';
+            else $xong++;
+        }
+        $bao = "Đã chuyển $xong đơn sang \"$ten\"." . ($hoan ? " Hoàn tiền vào ví cho $hoan đơn." : '')
+            . ($bo ? ' Bỏ qua ' . count($bo) . ' đơn không đúng bước: ' . implode(', ', array_slice($bo, 0, 15)) . (count($bo) > 15 ? '…' : '') . '.' : '');
+        return back()->with('ok', $bao);
+    }
+
     public function nhan(PodDon $don)
     {
         $rel = PodSo::duongNhan($don);

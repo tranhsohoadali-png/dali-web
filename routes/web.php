@@ -181,6 +181,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('don/nhap',               [\App\Http\Controllers\Admin\PodDonController::class, 'nhap'])->name('don.nhap');     // nhập đơn từ file seller
         Route::post('don/nhap',              [\App\Http\Controllers\Admin\PodDonController::class, 'nhapDoc'])->name('don.nhapdoc');
         Route::post('don/nhap/tao',          [\App\Http\Controllers\Admin\PodDonController::class, 'nhapTao'])->name('don.nhaptao');
+        Route::post('don/hang-loat',         [\App\Http\Controllers\Admin\PodDonController::class, 'hangLoat'])->name('don.hangloat');  // đổi trạng thái nhiều đơn
         Route::get('don/{don}',              [\App\Http\Controllers\Admin\PodDonController::class, 'show'])->name('don.show');
         Route::post('don/{don}/thong-tin',   [\App\Http\Controllers\Admin\PodDonController::class, 'thongTin'])->name('don.thongtin');
         Route::post('don/{don}/trang-thai',  [\App\Http\Controllers\Admin\PodDonController::class, 'trangThai'])->name('don.status');
